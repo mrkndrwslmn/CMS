@@ -37,7 +37,7 @@ return new class extends Migration
                 'pending', 
                 'approved', 
                 'rejected', 
-                'pending_payment', 
+                'pending_payment',
                 'paid', 
                 'in_progress', 
                 'completed'
@@ -53,7 +53,7 @@ return new class extends Migration
             $table->foreignId('approved_by')->nullable()->constrained('users');
             $table->timestamp('reviewed_at')->nullable();
             
-            // Payment workflow
+            // Payment tracking (Maya automatic payment)
             $table->string('payment_method')->nullable();
             $table->timestamp('payment_due_date')->nullable();
             $table->timestamp('payment_confirmed_at')->nullable();

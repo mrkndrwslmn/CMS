@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Project extends Model
 {
@@ -14,12 +17,16 @@ class Project extends Model
         'client_id',
         'title',
         'description',
+        'requirements',
+        'skills_required',
         'status',
         'budget',
+        'budget_type',
         'deadline',
         'priority',
         'started_at',
         'completed_at',
+        'attachments',
     ];
 
     protected function casts(): array
@@ -64,6 +71,22 @@ class Project extends Model
     public function tasks()
     {
         return $this->hasMany(Task::class, 'project_id');
+    }
+
+    /**
+     * Get all documents for this project (polymorphic).
+     */
+    public function documents(): MorphMany
+    {
+        return $this->morphMany(Document::class, 'documentable');
+    }
+
+    /**
+     * Get documents using legacy foreign key.
+     */
+    public function directDocuments(): HasMany
+    {
+        return $this->hasMany(Document::class, 'project_id');
     }
 
     /**

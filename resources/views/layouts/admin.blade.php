@@ -8,6 +8,9 @@
     <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -66,10 +69,31 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('admin.budget-requests.index') }}"
+                               class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.budget-requests.*') ? 'border-b-2 border-primary text-primary' : '' }}">
+                               Budget Requests
+                               @php
+                                   $pendingCount = \App\Models\BudgetChangeRequest::where('status', 'pending')->count();
+                               @endphp
+                               @if($pendingCount > 0)
+                                   <span class="ml-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingCount }}</span>
+                               @endif
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.payments.index') }}"
+                               class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.payments.*') ? 'border-b-2 border-primary text-primary' : '' }}">
+                               Payments
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('admin.reports.index') }}"
                                class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.reports.*') ? 'border-b-2 border-primary text-primary' : '' }}">
                                Reports
                             </a>
+                        </li>
+                        <li>
+                            @include('components.notification-bell')
                         </li>
                         <li class="relative group">
                             <a href="#" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium flex items-center">

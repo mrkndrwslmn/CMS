@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\Task;
-use App\Models\Form;
+use App\Models\ServiceRequest;
 use App\Models\Note;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +16,7 @@ class ClientManagementController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::where('role', 'client')->with(['tasks', 'forms']);
+        $query = User::where('role', 'client')->with(['tasks', 'serviceRequests']);
         
         // Search functionality
         if ($request->filled('search')) {
@@ -44,7 +44,7 @@ class ClientManagementController extends Controller
         $stats = [
             'total_clients' => User::where('role', 'client')->count(),
             'active_clients' => User::where('role', 'client')->where('status', 'active')->count(),
-            'total_projects' => Form::count(),
+            'total_requests' => ServiceRequest::count(),
             'active_projects' => Task::where('status', 'in_progress')->count(),
         ];
         
@@ -53,24 +53,23 @@ class ClientManagementController extends Controller
     
     public function show($id)
     {
-        $client = User::where('role', 'client')->with(['tasks', 'forms', 'feedbacks'])->findOrFail($id);
+        $client = User::where('role', 'client')->with(['tasks', 'serviceRequests'])->findOrFail($id);
         
         // Get client statistics
         $stats = [
-            'total_projects' => $client->forms()->count(),
+            'total_requests' => $client->serviceRequests()->count(),
             'completed_projects' => $client->tasks()->where('status', 'completed')->count(),
             'active_projects' => $client->tasks()->where('status', 'in_progress')->count(),
-            'total_feedback' => $client->feedbacks()->count(),
         ];
         
         // Get recent activities
         $recentTasks = $client->tasks()->latest()->take(5)->get();
-        $recentForms = $client->forms()->latest()->take(5)->get();
+        $recentRequests = $client->serviceRequests()->latest()->take(5)->get();
         
         // Get notes for this client
         $notes = Note::where('client_id', $id)->latest()->get();
         
-        return view('admin.clients.show', compact('client', 'stats', 'recentTasks', 'recentForms', 'notes'));
+        return view('admin.clients.show', compact('client', 'stats', 'recentTasks', 'recentRequests', 'notes'));
     }
     
     public function create()

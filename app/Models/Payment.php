@@ -12,6 +12,7 @@ class Payment extends Model
 
     protected $fillable = [
         'service_request_id',
+        'client_id',
         'amount',
         'payment_method',
         'payment_reference',
@@ -61,6 +62,14 @@ class Payment extends Model
     }
 
     /**
+     * Check if payment is cancelled
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+
+    /**
      * Get status badge color
      */
     public function getStatusColor(): string
@@ -70,6 +79,7 @@ class Payment extends Model
             'confirmed' => 'success',
             'failed' => 'error',
             'refunded' => 'info',
+            'cancelled' => 'neutral',
             default => 'neutral'
         };
     }

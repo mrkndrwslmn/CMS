@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Task;
-use App\Models\Form;
-use App\Models\Feedback;
+use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -75,12 +74,12 @@ class AdminController extends Controller
             'total_users' => User::count(),
             'total_clients' => User::where('role', 'client')->count(),
             'total_adiutors' => User::where('role', 'adiutor')->count(),
-            'pending_requests' => Form::where('status', 'pending')->count(),
+            'pending_requests' => ServiceRequest::where('status', 'pending')->count(),
             'active_tasks' => Task::whereIn('status', ['pending', 'in_progress'])->count(),
             'completed_tasks' => Task::where('status', 'completed')->count(),
-            'recent_feedback' => Feedback::orderBy('created_at', 'desc')->limit(5)->get(),
+            'pending_budget_requests' => \App\Models\BudgetChangeRequest::where('status', 'pending')->count(),
             'recent_users' => User::orderBy('created_at', 'desc')->limit(5)->get(),
-            'recent_requests' => Form::with('user')->orderBy('submissionDate', 'desc')->limit(5)->get(),
+            'recent_requests' => ServiceRequest::with('user')->orderBy('submission_date', 'desc')->limit(5)->get(),
         ];
 
         // Get monthly user registrations for chart
@@ -95,7 +94,14 @@ class AdminController extends Controller
             ->groupBy('status')
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'monthlyUsers', 'taskStats'));
+        // Get pending budget change requests
+        $pendingBudgetRequests = \App\Models\BudgetChangeRequest::with(['task', 'adiutor'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return view('admin.dashboard', compact('stats', 'monthlyUsers', 'taskStats', 'pendingBudgetRequests'));
     }
 
     /**
@@ -113,7 +119,7 @@ class AdminController extends Controller
      */
     public function requests()
     {
-        $requests = Form::with('user')->orderBy('submissionDate', 'desc')->paginate(15);
+        $requests = ServiceRequest::with('user')->orderBy('submission_date', 'desc')->paginate(15);
         
         return view('admin.requests', compact('requests'));
     }
@@ -123,7 +129,7 @@ class AdminController extends Controller
      */
     public function tasks()
     {
-        $tasks = Task::with(['form', 'assignedUser'])->orderBy('dateAssigned', 'desc')->paginate(15);
+        $tasks = Task::with(['project', 'assignedUser', 'client'])->orderBy('dateAssigned', 'desc')->paginate(15);
         
         return view('admin.tasks', compact('tasks'));
     }
@@ -146,14 +152,10 @@ class AdminController extends Controller
             'user_roles' => User::selectRaw('role, COUNT(*) as count')
                 ->groupBy('role')
                 ->get(),
-            'monthly_requests' => Form::selectRaw('strftime("%m", submissionDate) as month, COUNT(*) as count')
-                ->whereRaw('strftime("%Y", submissionDate) = ?', [date('Y')])
+            'monthly_requests' => ServiceRequest::selectRaw('strftime("%m", submission_date) as month, COUNT(*) as count')
+                ->whereRaw('strftime("%Y", submission_date) = ?', [date('Y')])
                 ->groupBy('month')
                 ->orderBy('month')
-                ->get(),
-            'feedback_ratings' => Feedback::selectRaw('rating, COUNT(*) as count')
-                ->groupBy('rating')
-                ->orderBy('rating')
                 ->get(),
         ];
         

@@ -1,6 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Task Details')
+@section('page-title', 'Task Details')
 
 @include('admin.tasks.helpers')
 
@@ -309,7 +310,7 @@
             <!-- Assigned User Card -->
             <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200 flex justify-between items-center">
-                    <h2 class="text-lg font-semibold text-primary-500">Assigned User</h2>
+                    <h2 class="text-lg font-semibold text-primary-500">Assigned Adiutor</h2>
                     <button type="button" id="assignUserBtn" class="inline-flex items-center px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors">
                         <i class="fas fa-user-plus mr-1"></i>Assign
                     </button>
@@ -454,7 +455,7 @@
                         <select name="assignedTo" id="assignedTo" required
                                 class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
                             <option value="">-- Select User --</option>
-                            @foreach($activities['adiutors'] as $adiutor)
+                            @foreach($adiutors as $adiutor)
                                 <option value="{{ $adiutor->id }}" {{ $task['assignedTo'] == $adiutor->id ? 'selected' : '' }}>
                                     {{ $adiutor->fullName }}
                                 </option>

@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Document Details')
+@section('page-title', 'Document Details')
 
 @section('content')
 <div class="container-fluid px-4">

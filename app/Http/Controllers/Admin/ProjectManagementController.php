@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Project;
+use App\Models\ServiceRequest;
+use App\Models\User;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Notifications\ProjectCompletedNotification;
 
 class ProjectManagementController extends Controller
 {
@@ -15,46 +20,39 @@ class ProjectManagementController extends Controller
      */
     public function index(Request $request)
     {
-        $query = DB::table('projects')
-            ->leftJoin('service_requests', 'projects.service_request_id', '=', 'service_requests.id')
-            ->leftJoin('users as clients', 'projects.client_id', '=', 'clients.id')
-            ->select(
-                'projects.*',
-                'service_requests.project_name as original_request_name',
-                'service_requests.status as request_status',
-                'clients.fullName as client_name',
-                'clients.email as client_email'
-            );
+        $query = Project::with(['serviceRequest', 'client', 'adiutors']);
 
         // Apply filters
         if ($request->filled('status')) {
-            $query->where('projects.status', $request->status);
+            $query->where('status', $request->status);
         }
 
         if ($request->filled('priority')) {
-            $query->where('projects.priority', $request->priority);
+            $query->where('priority', $request->priority);
         }
 
         if ($request->filled('client_id')) {
-            $query->where('projects.client_id', $request->client_id);
+            $query->where('client_id', $request->client_id);
         }
 
         if ($request->filled('search')) {
-            $searchTerm = '%' . $request->search . '%';
+            $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('projects.title', 'LIKE', $searchTerm)
-                  ->orWhere('projects.description', 'LIKE', $searchTerm)
-                  ->orWhere('clients.fullName', 'LIKE', $searchTerm)
-                  ->orWhere('clients.email', 'LIKE', $searchTerm);
+                $q->where('title', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('description', 'LIKE', "%{$searchTerm}%")
+                  ->orWhereHas('client', function($clientQuery) use ($searchTerm) {
+                      $clientQuery->where('fullName', 'LIKE', "%{$searchTerm}%")
+                                  ->orWhere('email', 'LIKE', "%{$searchTerm}%");
+                  });
             });
         }
 
         if ($request->filled('date_from')) {
-            $query->where('projects.created_at', '>=', $request->date_from);
+            $query->where('created_at', '>=', $request->date_from);
         }
 
         if ($request->filled('date_to')) {
-            $query->where('projects.created_at', '<=', $request->date_to . ' 23:59:59');
+            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
         }
 
         $sortField = $request->get('sort', 'created_at');
@@ -64,16 +62,16 @@ class ProjectManagementController extends Controller
 
         // Get statistics
         $stats = [
-            'total' => DB::table('projects')->count(),
-            'open' => DB::table('projects')->where('status', 'open')->count(),
-            'in_progress' => DB::table('projects')->where('status', 'in_progress')->count(),
-            'completed' => DB::table('projects')->where('status', 'completed')->count(),
-            'on_hold' => DB::table('projects')->where('status', 'on_hold')->count(),
-            'cancelled' => DB::table('projects')->where('status', 'cancelled')->count(),
+            'total' => Project::count(),
+            'active' => Project::where('status', 'active')->count(),
+            'in_progress' => Project::where('status', 'in_progress')->count(),
+            'completed' => Project::where('status', 'completed')->count(),
+            'review' => Project::where('status', 'review')->count(),
+            'cancelled' => Project::where('status', 'cancelled')->count(),
         ];
 
         // Get clients for filter dropdown
-        $clients = DB::table('users')->where('role', 'client')->select('id', 'fullName')->get();
+        $clients = User::where('role', 'client')->select('id', 'fullName')->get();
 
         return view('admin.projects.index', compact('projects', 'stats', 'clients'));
     }
@@ -83,57 +81,27 @@ class ProjectManagementController extends Controller
      */
     public function show($id)
     {
-        $project = DB::table('projects')
-            ->leftJoin('service_requests', 'projects.service_request_id', '=', 'service_requests.id')
-            ->leftJoin('users as clients', 'projects.client_id', '=', 'clients.id')
-            ->where('projects.id', $id)
-            ->select(
-                'projects.*',
-                'service_requests.project_name as original_request_name',
-                'service_requests.status as request_status',
-                'service_requests.payment_method',
-                'service_requests.payment_reference',
-                'clients.fullName as client_name',
-                'clients.email as client_email',
-                'clients.phone as client_phone'
-            )
-            ->first();
-
-        if (!$project) {
-            return redirect()->route('admin.projects.index')->with('error', 'Project not found.');
-        }
-
-        // Get project tasks
-        $tasks = DB::table('tasks')
-            ->leftJoin('users as assignees', 'tasks.assignedTo', '=', 'assignees.id')
-            ->leftJoin('users as creators', 'tasks.createdBy', '=', 'creators.id')
-            ->where('tasks.project_id', $id)
-            ->select(
-                'tasks.*',
-                'assignees.fullName as assignee_name',
-                'creators.fullName as creator_name'
-            )
-            ->orderBy('tasks.created_at', 'desc')
-            ->get();
+        $project = Project::with(['serviceRequest', 'client', 'adiutors', 'tasks.assignedUser', 'tasks.creator'])
+                         ->findOrFail($id);
 
         // Calculate budget overview
-        $totalAllocated = $tasks->sum('allocated_budget') ?? 0;
-        $totalSpent = $tasks->sum('actual_cost') ?? 0;
-        $remainingBudget = $project->approved_budget - $totalAllocated;
+        $totalAllocated = $project->tasks->sum('allocated_budget') ?? 0;
+        $totalSpent = $project->tasks->sum('actual_cost') ?? 0;
+        $remainingBudget = ($project->budget ?? 0) - $totalAllocated;
 
         $budgetOverview = [
-            'approved_budget' => $project->approved_budget,
+            'project_budget' => $project->budget,
             'total_allocated' => $totalAllocated,
             'total_spent' => $totalSpent,
             'remaining_budget' => $remainingBudget,
             'is_over_budget' => $remainingBudget < 0,
-            'budget_utilization_percentage' => $project->approved_budget > 0 ? round(($totalAllocated / $project->approved_budget) * 100, 2) : 0
+            'budget_utilization_percentage' => $project->budget > 0 ? round(($totalAllocated / $project->budget) * 100, 2) : 0
         ];
 
-        // Get available adiutors for task assignment
-        $adiutors = DB::table('users')->where('role', 'adiutor')->select('id', 'fullName')->get();
+        // Get available adiutors for assignment
+        $availableAdiutors = User::where('role', 'adiutor')->select('id', 'fullName')->get();
 
-        return view('admin.projects.show', compact('project', 'tasks', 'budgetOverview', 'adiutors'));
+        return view('admin.projects.show', compact('project', 'budgetOverview', 'availableAdiutors'));
     }
 
     /**
@@ -141,10 +109,15 @@ class ProjectManagementController extends Controller
      */
     public function create()
     {
-        // Projects are created automatically from service requests
+        // Projects are typically created automatically from paid service requests
         // This method can be used for manual project creation if needed
-        $clients = DB::table('users')->where('role', 'client')->select('id', 'fullName')->get();
-        return view('admin.projects.create', compact('clients'));
+        $clients = User::where('role', 'client')->select('id', 'fullName')->get();
+        $serviceRequests = ServiceRequest::where('status', 'paid')
+                                        ->whereDoesntHave('project')
+                                        ->with('client')
+                                        ->get();
+        
+        return view('admin.projects.create', compact('clients', 'serviceRequests'));
     }
 
     /**
@@ -153,32 +126,37 @@ class ProjectManagementController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'client_id' => 'required|exists:users,id',
+            'service_request_id' => 'required|exists:service_requests,id|unique:projects,service_request_id',
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:2000',
             'budget' => 'required|numeric|min:0',
-            'approved_budget' => 'required|numeric|min:0',
+            'budget_type' => 'required|in:fixed,hourly',
             'deadline' => 'nullable|date|after:today',
-            'priority' => 'required|in:low,medium,high',
-            'project_notes' => 'nullable|string|max:1000'
+            'priority' => 'required|in:low,medium,high,urgent',
+            'requirements' => 'nullable|json',
+            'skills_required' => 'nullable|json',
         ]);
 
-        $projectId = DB::table('projects')->insertGetId([
-            'client_id' => $request->client_id,
+        // Get service request to get client_id
+        $serviceRequest = ServiceRequest::findOrFail($request->service_request_id);
+
+        $project = Project::create([
+            'service_request_id' => $request->service_request_id,
+            'client_id' => $serviceRequest->client_id,
             'title' => $request->title,
             'description' => $request->description,
             'budget' => $request->budget,
-            'approved_budget' => $request->approved_budget,
+            'budget_type' => $request->budget_type,
             'deadline' => $request->deadline,
             'priority' => $request->priority,
-            'status' => 'open',
-            'project_notes' => $request->project_notes,
-            'project_started_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now()
+            'requirements' => $request->requirements ? json_decode($request->requirements) : null,
+            'skills_required' => $request->skills_required ? json_decode($request->skills_required) : null,
+            'status' => 'active',
+            'started_at' => now(),
         ]);
 
-        return redirect()->route('admin.projects.show', $projectId)->with('success', 'Project created successfully.');
+        return redirect()->route('admin.projects.show', $project->id)
+                        ->with('success', 'Project created successfully.');
     }
 
     /**
@@ -186,13 +164,8 @@ class ProjectManagementController extends Controller
      */
     public function edit($id)
     {
-        $project = DB::table('projects')->where('id', $id)->first();
-        
-        if (!$project) {
-            return redirect()->route('admin.projects.index')->with('error', 'Project not found.');
-        }
-
-        $clients = DB::table('users')->where('role', 'client')->select('id', 'fullName')->get();
+        $project = Project::with(['serviceRequest', 'client'])->findOrFail($id);
+        $clients = User::where('role', 'client')->select('id', 'fullName')->get();
         
         return view('admin.projects.edit', compact('project', 'clients'));
     }
@@ -202,34 +175,32 @@ class ProjectManagementController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $project = Project::findOrFail($id);
+        
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:2000',
             'budget' => 'required|numeric|min:0',
-            'approved_budget' => 'required|numeric|min:0',
+            'budget_type' => 'required|in:fixed,hourly',
             'deadline' => 'nullable|date',
-            'priority' => 'required|in:low,medium,high',
-            'project_notes' => 'nullable|string|max:1000'
+            'priority' => 'required|in:low,medium,high,urgent',
+            'requirements' => 'nullable|json',
+            'skills_required' => 'nullable|json',
         ]);
 
-        $updated = DB::table('projects')
-            ->where('id', $id)
-            ->update([
-                'title' => $request->title,
-                'description' => $request->description,
-                'budget' => $request->budget,
-                'approved_budget' => $request->approved_budget,
-                'deadline' => $request->deadline,
-                'priority' => $request->priority,
-                'project_notes' => $request->project_notes,
-                'updated_at' => now()
-            ]);
+        $project->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'budget' => $request->budget,
+            'budget_type' => $request->budget_type,
+            'deadline' => $request->deadline,
+            'priority' => $request->priority,
+            'requirements' => $request->requirements ? json_decode($request->requirements) : null,
+            'skills_required' => $request->skills_required ? json_decode($request->skills_required) : null,
+        ]);
 
-        if (!$updated) {
-            return redirect()->back()->with('error', 'Project not found or could not be updated.');
-        }
-
-        return redirect()->route('admin.projects.show', $id)->with('success', 'Project updated successfully.');
+        return redirect()->route('admin.projects.show', $id)
+                        ->with('success', 'Project updated successfully.');
     }
 
     /**
@@ -237,22 +208,46 @@ class ProjectManagementController extends Controller
      */
     public function destroy($id)
     {
-        $project = DB::table('projects')->where('id', $id)->first();
+        $project = Project::with('tasks')->findOrFail($id);
         
-        if (!$project) {
-            return redirect()->route('admin.projects.index')->with('error', 'Project not found.');
-        }
-
         // Check if project has tasks
-        $taskCount = DB::table('tasks')->where('project_id', $id)->count();
-        
-        if ($taskCount > 0) {
-            return redirect()->back()->with('error', 'Cannot delete project with assigned tasks. Please reassign or complete all tasks first.');
+        if ($project->tasks->count() > 0) {
+            return redirect()->back()
+                           ->with('error', 'Cannot delete project with assigned tasks. Please reassign or complete all tasks first.');
         }
 
-        DB::table('projects')->where('id', $id)->delete();
+        $project->delete();
 
-        return redirect()->route('admin.projects.index')->with('success', 'Project deleted successfully.');
+        return redirect()->route('admin.projects.index')
+                        ->with('success', 'Project deleted successfully.');
+    }
+
+    /**
+     * Mark project as completed
+     */
+    public function complete(Request $request, $id)
+    {
+        $request->validate([
+            'completion_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $project = Project::with('client')->findOrFail($id);
+        
+        // Update project to completed status
+        $project->update([
+            'status' => 'completed',
+            'completion_date' => now(),
+            'notes' => $request->completion_notes ? $project->notes . "\n\nCompletion Notes: " . $request->completion_notes : $project->notes,
+        ]);
+
+        // Create notification for client
+        $client = User::find($project->client_id);
+        if ($client) {
+            $client->notify(new ProjectCompletedNotification($project->id, $project->title));
+        }
+
+        return redirect()->route('admin.projects.show', $id)
+                        ->with('success', 'Project marked as completed successfully!');
     }
 
     /**
@@ -261,50 +256,94 @@ class ProjectManagementController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:open,in_progress,completed,on_hold,cancelled',
-            'status_notes' => 'nullable|string|max:500'
+            'status' => 'required|in:active,in_progress,review,completed,cancelled',
         ]);
 
-        $updated = DB::table('projects')
-            ->where('id', $id)
-            ->update([
-                'status' => $request->status,
-                'status_notes' => $request->status_notes,
-                'updated_at' => now()
-            ]);
-
-        if (!$updated) {
-            return redirect()->back()->with('error', 'Project not found.');
+        $project = Project::findOrFail($id);
+        
+        $updateData = ['status' => $request->status];
+        
+        // Update completed_at if status changed to completed
+        if ($request->status === 'completed' && $project->status !== 'completed') {
+            $updateData['completed_at'] = now();
+        } elseif ($request->status !== 'completed') {
+            $updateData['completed_at'] = null;
         }
+        
+        $project->update($updateData);
 
         return redirect()->back()->with('success', 'Project status updated successfully.');
     }
 
     /**
-     * Add a note to the project
+     * Assign adiutor to project
      */
-    public function addNote(Request $request, $id)
+    public function assignAdiutor(Request $request, $id)
     {
         $request->validate([
-            'note' => 'required|string|max:1000'
+            'adiutor_id' => 'required|exists:users,id',
+            'agreed_rate' => 'nullable|numeric|min:0',
+            'expected_completion' => 'nullable|date',
+            'notes' => 'nullable|string|max:500',
         ]);
 
-        $currentNotes = DB::table('projects')->where('id', $id)->value('project_notes') ?? '';
-        $newNote = "[" . now()->format('Y-m-d H:i:s') . " - " . Auth::user()->fullName . "] " . $request->note;
-        $updatedNotes = $currentNotes ? $currentNotes . "\n\n" . $newNote : $newNote;
-
-        $updated = DB::table('projects')
-            ->where('id', $id)
-            ->update([
-                'project_notes' => $updatedNotes,
-                'updated_at' => now()
-            ]);
-
-        if (!$updated) {
-            return redirect()->back()->with('error', 'Project not found.');
+        $project = Project::findOrFail($id);
+        
+        // Check if adiutor is already assigned
+        $existingAssignment = DB::table('project_assignments')
+            ->where('project_id', $id)
+            ->where('adiutor_id', $request->adiutor_id)
+            ->first();
+            
+        if ($existingAssignment) {
+            return redirect()->back()->with('error', 'Adiutor is already assigned to this project.');
         }
 
-        return redirect()->back()->with('success', 'Note added successfully.');
+        DB::table('project_assignments')->insert([
+            'project_id' => $id,
+            'adiutor_id' => $request->adiutor_id,
+            'agreed_rate' => $request->agreed_rate,
+            'start_date' => now(),
+            'expected_completion' => $request->expected_completion,
+            'status' => 'assigned',
+            'notes' => $request->notes,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Adiutor assigned to project successfully.');
+    }
+
+    /**
+     * Remove adiutor from project
+     */
+    public function removeAdiutor($projectId, $adiutorId)
+    {
+        DB::table('project_assignments')
+            ->where('project_id', $projectId)
+            ->where('adiutor_id', $adiutorId)
+            ->update([
+                'status' => 'removed',
+                'updated_at' => now(),
+            ]);
+
+        return redirect()->back()->with('success', 'Adiutor removed from project successfully.');
+    }
+
+    /**
+     * Get team members for a project (for AJAX)
+     */
+    public function getTeamMembers($projectId)
+    {
+        $teamMembers = DB::table('users')
+            ->join('project_assignments', 'users.id', '=', 'project_assignments.adiutor_id')
+            ->where('project_assignments.project_id', $projectId)
+            ->whereIn('project_assignments.status', ['assigned', 'accepted', 'in_progress'])
+            ->select('users.id', 'users.fullName')
+            ->orderBy('users.fullName')
+            ->get();
+        
+        return response()->json($teamMembers);
     }
 
     /**
@@ -324,8 +363,7 @@ class ProjectManagementController extends Controller
         switch ($action) {
             case 'delete':
                 // Check if any projects have tasks
-                $projectsWithTasks = DB::table('tasks')
-                    ->whereIn('project_id', $projectIds)
+                $projectsWithTasks = Task::whereIn('project_id', $projectIds)
                     ->pluck('project_id')
                     ->unique()
                     ->toArray();
@@ -334,30 +372,27 @@ class ProjectManagementController extends Controller
                     return redirect()->back()->with('error', 'Cannot delete projects with assigned tasks.');
                 }
 
-                DB::table('projects')->whereIn('id', $projectIds)->delete();
+                Project::whereIn('id', $projectIds)->delete();
                 return redirect()->back()->with('success', count($projectIds) . ' projects deleted successfully.');
 
             case 'update_status':
-                $request->validate(['bulk_status' => 'required|in:open,in_progress,completed,on_hold,cancelled']);
+                $request->validate(['bulk_status' => 'required|in:active,in_progress,review,completed,cancelled']);
                 
-                DB::table('projects')
-                    ->whereIn('id', $projectIds)
-                    ->update([
-                        'status' => $request->bulk_status,
-                        'updated_at' => now()
-                    ]);
+                $updateData = ['status' => $request->bulk_status];
+                
+                // If marking as completed, set completed_at
+                if ($request->bulk_status === 'completed') {
+                    $updateData['completed_at'] = now();
+                }
+                
+                Project::whereIn('id', $projectIds)->update($updateData);
                 
                 return redirect()->back()->with('success', count($projectIds) . ' projects status updated successfully.');
 
             case 'update_priority':
-                $request->validate(['bulk_priority' => 'required|in:low,medium,high']);
+                $request->validate(['bulk_priority' => 'required|in:low,medium,high,urgent']);
                 
-                DB::table('projects')
-                    ->whereIn('id', $projectIds)
-                    ->update([
-                        'priority' => $request->bulk_priority,
-                        'updated_at' => now()
-                    ]);
+                Project::whereIn('id', $projectIds)->update(['priority' => $request->bulk_priority]);
                 
                 return redirect()->back()->with('success', count($projectIds) . ' projects priority updated successfully.');
 

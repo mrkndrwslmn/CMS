@@ -402,7 +402,7 @@
                                                 <td class="py-3">
                                                     <div class="flex items-center text-neutral-600">
                                                         <i class="fas fa-building mr-2 text-neutral-400"></i>
-                                                        <span>{{ $request->companyName ?? 'Individual' }}</span>
+                                                        <span>{{ $request->company_name ?? 'Individual' }}</span>
                                                     </div>
                                                 </td>
                                                 <td class="py-3">
@@ -422,7 +422,7 @@
                                                 <td class="py-3 pr-3 text-right">
                                                     <div class="flex items-center justify-end text-neutral-500">
                                                         <i class="far fa-calendar-alt mr-1 opacity-70"></i>
-                                                        <span>{{ $request->submissionDate->format('M d, Y') }}</span>
+                                                        <span>{{ $request->submission_date ? $request->submission_date->format('M d, Y') : 'N/A' }}</span>
                                                     </div>
                                                 </td>
                                             </tr>

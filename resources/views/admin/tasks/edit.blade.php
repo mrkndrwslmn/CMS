@@ -1,6 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Edit Task')
+@section('page-title', 'Edit Task')
 
 @include('admin.tasks.helpers')
 
@@ -73,19 +74,20 @@
                 </div>
 
                 <div>
-                    <label for="formID" class="block text-sm font-medium text-neutral-700 mb-1">Related Form</label>
-                    <select name="formID" id="formID" 
-                            class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('formID') border-error-500 @enderror">
-                        <option value="">-- No Form --</option>
-                        @foreach($forms as $form)
-                            <option value="{{ $form->formID }}" {{ old('formID', $task->formID) == $form->formID ? 'selected' : '' }}>
-                                Form #{{ $form->formID }} - {{ $form->title }}
+                    <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">Related Project <span class="text-error-500">*</span></label>
+                    <select name="project_id" id="project_id" required
+                            class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('project_id') border-error-500 @enderror">
+                        <option value="">-- Select Project --</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}" {{ old('project_id', $task->project_id) == $project->id ? 'selected' : '' }}>
+                                {{ $project->title }} ({{ $project->client ? $project->client->fullName : 'No Client' }})
                             </option>
                         @endforeach
                     </select>
-                    @error('formID')
+                    @error('project_id')
                         <p class="text-error-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
+                    <small class="text-neutral-500 mt-1 block">Tasks must be associated with a project</small>
                 </div>
                 
                 <div>
@@ -109,6 +111,7 @@
                         <option value="low" {{ old('priority', $task->priority) === 'low' ? 'selected' : '' }}>Low</option>
                         <option value="medium" {{ old('priority', $task->priority) === 'medium' ? 'selected' : '' }}>Medium</option>
                         <option value="high" {{ old('priority', $task->priority) === 'high' ? 'selected' : '' }}>High</option>
+                        <option value="urgent" {{ old('priority', $task->priority) === 'urgent' ? 'selected' : '' }}>Urgent</option>
                     </select>
                     @error('priority')
                         <p class="text-error-500 text-sm mt-1">{{ $message }}</p>
@@ -126,19 +129,36 @@
                 </div>
                 
                 <div>
-                    <label for="client_id" class="block text-sm font-medium text-neutral-700 mb-1">Client</label>
-                    <select name="client_id" id="client_id" 
-                            class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('client_id') border-error-500 @enderror">
-                        <option value="">-- Select Client --</option>
-                        @foreach($clients as $client)
-                            <option value="{{ $client->id }}" {{ old('client_id', $task->client_id) == $client->id ? 'selected' : '' }}>
-                                {{ $client->fullName }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('client_id')
+                    <label for="allocated_budget" class="block text-sm font-medium text-neutral-700 mb-1">Allocated Budget</label>
+                    <input type="number" name="allocated_budget" id="allocated_budget" step="0.01" min="0"
+                           class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('allocated_budget') border-error-500 @enderror"
+                           value="{{ old('allocated_budget', $task->allocated_budget) }}" placeholder="0.00">
+                    @error('allocated_budget')
                         <p class="text-error-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
+                    <small class="text-neutral-500 mt-1 block">Budget allocated for this task</small>
+                </div>
+                
+                <div>
+                    <label for="actual_cost" class="block text-sm font-medium text-neutral-700 mb-1">Actual Cost</label>
+                    <input type="number" name="actual_cost" id="actual_cost" step="0.01" min="0"
+                           class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('actual_cost') border-error-500 @enderror"
+                           value="{{ old('actual_cost', $task->actual_cost) }}" placeholder="0.00">
+                    @error('actual_cost')
+                        <p class="text-error-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                    <small class="text-neutral-500 mt-1 block">Actual cost incurred for this task</small>
+                </div>
+                
+                <div>
+                    <label for="progress_percentage" class="block text-sm font-medium text-neutral-700 mb-1">Progress (%)</label>
+                    <input type="number" name="progress_percentage" id="progress_percentage" min="0" max="100"
+                           class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('progress_percentage') border-error-500 @enderror"
+                           value="{{ old('progress_percentage', $task->progress_percentage ?? 0) }}" placeholder="0">
+                    @error('progress_percentage')
+                        <p class="text-error-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                    <small class="text-neutral-500 mt-1 block">Task completion percentage (0-100)</small>
                 </div>
                 
                 <div>
@@ -189,6 +209,19 @@
                 @enderror
                 <small class="text-neutral-500 mt-1 block">Optional notes or comments about this task.</small>
             </div>
+            
+            <!-- Completion Notes -->
+            @if($task->status === 'completed')
+            <div class="mb-6">
+                <label for="completion_notes" class="block text-sm font-medium text-neutral-700 mb-1">Completion Notes</label>
+                <textarea name="completion_notes" id="completion_notes" rows="4"
+                          class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('completion_notes') border-error-500 @enderror">{{ old('completion_notes', $task->completion_notes) }}</textarea>
+                @error('completion_notes')
+                    <p class="text-error-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+                <small class="text-neutral-500 mt-1 block">Notes about task completion (deliverables, results, etc.)</small>
+            </div>
+            @endif
             
             <!-- Form Actions -->
             <div class="flex items-center justify-end pt-4 border-t border-neutral-200">

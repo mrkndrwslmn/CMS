@@ -22,9 +22,9 @@ return new class extends Migration
             
             // Payment details
             $table->decimal('amount', 10, 2);
-            $table->string('payment_method'); // bank_transfer, paypal, stripe, gcash, etc.
+            $table->string('payment_method'); // maya, bank_transfer, paypal, stripe, gcash, etc.
             $table->string('payment_reference')->nullable();
-            $table->enum('status', ['pending', 'confirmed', 'failed', 'refunded'])->default('pending');
+            $table->enum('status', ['pending', 'confirmed', 'failed', 'refunded', 'cancelled'])->default('pending');
             
             // Payment processing
             $table->text('notes')->nullable();
@@ -32,9 +32,9 @@ return new class extends Migration
             $table->foreignId('confirmed_by')->nullable()->constrained('users');
             $table->json('payment_details')->nullable(); // Store additional payment info
             
-            // Transaction tracking
+            // Transaction tracking (for Maya and other gateways)
             $table->string('transaction_id')->nullable();
-            $table->string('gateway_response')->nullable();
+            $table->text('gateway_response')->nullable(); // Store Maya/gateway response JSON
             $table->decimal('gateway_fee', 8, 2)->nullable();
             
             $table->timestamps();

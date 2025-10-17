@@ -1,6 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Tasks Management')
+@section('page-title', 'Tasks Management')
 
 @section('content')
 <div class="px-6 py-8">
@@ -136,10 +137,10 @@
                     </div>
                     
                     <div>
-                        <label for="assignee" class="block text-sm font-medium text-neutral-600 mb-1">Assignee</label>
+                        <label for="assignee" class="block text-sm font-medium text-neutral-600 mb-1">Adiutor</label>
                         <select name="assignee" id="assignee" 
                                 class="w-full rounded-lg border border-neutral-300 px-4 py-2 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
-                            <option value="">All Assignees</option>
+                            <option value="">All Adiutors</option>
                             @foreach($adiutors as $adiutor)
                                 <option value="{{ $adiutor->id }}" {{ request('assignee') == $adiutor->id ? 'selected' : '' }}>
                                     {{ $adiutor->fullName }}
@@ -215,7 +216,7 @@
                                 Client
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                                Assignee
+                                Adiutor
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                                 Status

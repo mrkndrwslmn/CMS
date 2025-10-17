@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Feedback;
 use App\Models\User;
 use App\Models\Task;
-use App\Models\Form;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,7 +14,7 @@ class FeedbackManagementController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Feedback::with(['client', 'adiutor', 'task', 'form']);
+        $query = Feedback::with(['client', 'adiutor', 'task', 'project']);
         
         // Search functionality
         if ($request->filled('search')) {
@@ -88,7 +88,7 @@ class FeedbackManagementController extends Controller
     
     public function show($id)
     {
-        $feedback = Feedback::with(['client', 'adiutor', 'task', 'form', 'responses'])->findOrFail($id);
+        $feedback = Feedback::with(['client', 'adiutor', 'task', 'project'])->findOrFail($id);
         
         return view('admin.feedback.show', compact('feedback'));
     }

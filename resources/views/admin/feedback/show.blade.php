@@ -1,6 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Feedback Details')
+@section('page-title', 'Feedback Details')
 
 @section('content')
 <div class="max-w-5xl mx-auto">

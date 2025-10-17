@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use App\Mail\NewUserCredentials;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
+use App\Notifications\NewServiceRequestNotification;
 
 class ServiceRequestController extends Controller
 {
@@ -151,20 +153,16 @@ class ServiceRequestController extends Controller
             }
         }
 
-        // Create notification for admins
-        $adminUsers = DB::table('users')->where('role', 'admin')->get();
-        foreach ($adminUsers as $admin) {
-            $userFullName = $isNewUser ? $request->full_name : (Auth::user()->fullName ?? 'Unknown');
-            DB::table('notifications')->insert([
-                'user_id' => $admin->id ?? $admin->userID,
-                'type' => 'new_service_request',
-                'title' => 'New Service Request',
-                'message' => "New service request '{$request->project_name}' submitted by {$userFullName}" . ($isNewUser ? ' (new user)' : ''),
-                'data' => json_encode(['service_request_id' => $serviceRequestId]),
-                'is_read' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        // Create notification for admins using Laravel's notification structure
+        $userFullName = $isNewUser ? $request->full_name : (Auth::user()->fullName ?? 'Unknown');
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewServiceRequestNotification(
+                $serviceRequestId,
+                $request->project_name,
+                $userFullName,
+                $isNewUser
+            ));
         }
 
         // If new user was created, send credentials via email
@@ -234,36 +232,22 @@ class ServiceRequestController extends Controller
             ->where('service_request_id', $id)
             ->get();
 
-        // For now, projects and service requests are separate entities
-        // This relationship might be implemented later if needed
-        $project = null;
+        // Get associated project if one exists
+        $project = DB::table('projects')
+            ->where('service_request_id', $id)
+            ->first();
 
         return view('client.requests.show', compact('user', 'request', 'attachments', 'project'));
     }
 
     /**
      * Show payment page for a service request
+     * Now redirects to Maya payment checkout
      */
     public function showPayment($id)
     {
-        $user = Auth::user();
-        
-        $request = DB::table('service_requests')
-            ->leftJoin('users as approver', 'service_requests.approved_by', '=', 'approver.id')
-            ->where('service_requests.id', $id)
-            ->where('service_requests.client_id', $user->id)
-            ->where('service_requests.status', 'pending_payment')
-            ->select(
-                'service_requests.*',
-                'approver.fullName as approved_by_name'
-            )
-            ->first();
-
-        if (!$request) {
-            return redirect()->route('client.requests')->with('error', 'Service request not found or not available for payment.');
-        }
-
-        return view('client.requests.show-payment', compact('user', 'request'));
+        // Redirect to Maya checkout instead of showing manual payment form
+        return redirect()->route('client.maya.checkout', ['serviceRequestId' => $id]);
     }
 
     /**

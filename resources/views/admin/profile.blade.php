@@ -1,9 +1,10 @@
 @extends('admin.layouts.app')
 
 @section('title', 'My Profile')
+@section('page-title', 'Profile Details')
 
 @section('content')
-<div class="max-w-5xl mx-auto">
+<div class=" mx-auto">
     <!-- Page Header -->
     <div class="mb-8">
         <div class="flex items-center justify-between">

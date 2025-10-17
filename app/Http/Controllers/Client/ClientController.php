@@ -91,12 +91,15 @@ class ClientController extends Controller
                 return $request;
             });
 
-        // Get recent messages (using notifications as messages for now)
+        // Get recent notifications/messages
         $recentMessages = DB::table('notifications')
-            ->where('notifications.user_id', $user->id)
-            ->where('notifications.is_read', false)
+            ->where('notifications.notifiable_id', $user->id)
+            ->where('notifications.notifiable_type', 'App\\Models\\User')
+            ->whereNull('notifications.read_at')
             ->select(
-                'notifications.message',
+                'notifications.id',
+                'notifications.type',
+                'notifications.data',
                 'notifications.created_at'
             )
             ->orderBy('notifications.created_at', 'desc')
@@ -106,9 +109,13 @@ class ClientController extends Controller
                 // Convert date string to Carbon instance
                 $notification->created_at = Carbon::parse($notification->created_at);
                 
+                // Parse JSON data and extract message
+                $data = json_decode($notification->data, true);
+                $notification->message = $data['message'] ?? $data['title'] ?? 'New notification';
+                
                 // Create a mock sender object structure that the view expects
                 $notification->sender = (object) [
-                    'fullName' => 'System'  // Since notifications table doesn't have created_by
+                    'fullName' => $data['sender_name'] ?? 'System'
                 ];
                 return $notification;
             });
@@ -194,8 +201,8 @@ class ClientController extends Controller
 
                 return $project;
             });
-        
-        return view('client.tasks', compact('user', 'projects'));
+
+        return view('client.projects.index', compact('user', 'projects'));
     }
 
     /**
@@ -272,5 +279,69 @@ class ClientController extends Controller
             ->get();
         
         return view('client.feedback', compact('user', 'givenFeedback', 'pendingFeedback'));
+    }
+
+    /**
+     * Show project details
+     */
+    public function showProject($id)
+    {
+        $user = Auth::user();
+        
+        // Get project with related data
+        $project = DB::table('projects')
+            ->leftJoin('service_requests', 'projects.service_request_id', '=', 'service_requests.id')
+            ->where('projects.id', $id)
+            ->where('projects.client_id', $user->id)
+            ->select(
+                'projects.*',
+                'service_requests.project_name as original_request_name',
+                'service_requests.service_type'
+            )
+            ->first();
+
+        if (!$project) {
+            return redirect()->route('client.tasks')->with('error', 'Project not found.');
+        }
+
+        // Get project assignments (adiutors working on this project)
+        $assignments = DB::table('project_assignments')
+            ->join('users', 'project_assignments.adiutor_id', '=', 'users.id')
+            ->leftJoin('adiutor_profiles', 'users.id', '=', 'adiutor_profiles.user_id')
+            ->where('project_assignments.project_id', $id)
+            ->select(
+                'project_assignments.*',
+                'users.fullName as adiutor_name',
+                'users.email as adiutor_email',
+                'adiutor_profiles.bio',
+                'adiutor_profiles.title',
+                'adiutor_profiles.hourly_rate',
+                'adiutor_profiles.portfolio_url'
+            )
+            ->get();
+
+        // Get project tasks
+        $tasks = DB::table('tasks')
+            ->leftJoin('users', 'tasks.assignedTo', '=', 'users.id')
+            ->where('tasks.project_id', $id)
+            ->select(
+                'tasks.*',
+                'users.fullName as assigned_to_name'
+            )
+            ->orderBy('tasks.created_at', 'desc')
+            ->get();
+
+        // Get project feedback
+        $feedback = DB::table('project_feedback')
+            ->join('users', 'project_feedback.adiutor_id', '=', 'users.id')
+            ->where('project_feedback.project_id', $id)
+            ->where('project_feedback.client_id', $user->id)
+            ->select(
+                'project_feedback.*',
+                'users.fullName as adiutor_name'
+            )
+            ->first();
+
+        return view('client.projects.show', compact('user', 'project', 'assignments', 'tasks', 'feedback'));
     }
 }

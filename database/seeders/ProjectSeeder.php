@@ -28,19 +28,21 @@ class ProjectSeeder extends Seeder
         $projects = [];
 
         foreach ($approvedRequests as $request) {
-            // Calculate project timeline and budget based on service
-            $basePrice = $request->estimated_budget ?? 5000; // Use estimated_budget directly or default
-            $finalPrice = $basePrice + ($basePrice * 0.1); // Add 10% for project management
+            // Calculate project budget based on approved budget
+            $finalPrice = ($request->approved_budget ?? $request->estimated_budget ?? 5000);
 
             $project = [
                 'service_request_id' => $request->id,
                 'client_id' => $request->client_id,
                 'title' => $request->project_name,
                 'description' => $request->request_description,
+                'requirements' => $request->requirements, // JSON requirements from service request
                 'budget' => $finalPrice,
+                'budget_type' => 'fixed',
+                'deadline' => $request->deadline,
                 'status' => $this->getRandomProjectStatus(),
                 'priority' => $request->priority,
-                'requirements' => $request->requirements, // JSON requirements from service request
+                'started_at' => now()->subDays(rand(1, 5)),
                 'created_at' => $request->approved_at,
                 'updated_at' => now(),
             ];
@@ -56,9 +58,26 @@ class ProjectSeeder extends Seeder
             $this->assignAdiutorsToProject($project, $adiutors);
         }
 
-        $this->command->info('Created ' . count($projects) . ' projects from approved service requests');
+                $this->command->info('Created ' . count($projects) . ' projects from approved service requests');
     }
 
+    private function getRandomProjectStatus(): string
+    {
+        $statuses = ['active', 'in_progress', 'review', 'completed', 'cancelled'];
+        $weights = [20, 50, 15, 10, 5]; // Higher chance for in_progress
+        
+        $rand = rand(1, 100);
+        $cumulative = 0;
+        
+        foreach ($weights as $index => $weight) {
+            $cumulative += $weight;
+            if ($rand <= $cumulative) {
+                return $statuses[$index];
+            }
+        }
+        
+        return 'in_progress';
+    }
 
     private function getCategoryFromServiceType(string $serviceType): string
     {
@@ -132,25 +151,6 @@ class ProjectSeeder extends Seeder
         return $durations[$serviceType] ?? 30;
     }
 
-    private function getRandomProjectStatus(): string
-    {
-        $statuses = ['active', 'in_progress', 'review', 'completed', 'cancelled'];
-        $weights = [20, 50, 20, 10]; // Higher chance for in_progress
-        
-        $rand = rand(1, 100);
-        $cumulative = 0;
-        
-        foreach ($weights as $index => $weight) {
-            $cumulative += $weight;
-            if ($rand <= $cumulative) {
-                return $statuses[$index];
-            }
-        }
-        
-        return 'in_progress';
-    }
-
-
     private function getPaymentStatus(): string
     {
         $statuses = ['pending', 'partial', 'paid', 'overdue'];
@@ -171,10 +171,10 @@ class ProjectSeeder extends Seeder
 
     private function assignAdiutorsToProject(Project $project, $adiutors)
     {
-        // Assign 1-3 adiutors based on project complexity
-        $adiutorCount = match($project->category) {
-            'Mobile Development', 'Web Development' => rand(2, 3),
-            'Design', 'Consulting' => rand(1, 2),
+        // Assign 1-3 adiutors based on project status
+        $adiutorCount = match($project->status) {
+            'active', 'in_progress' => rand(2, 3),
+            'review' => rand(1, 2),
             default => rand(1, 2)
         };
 
@@ -182,14 +182,14 @@ class ProjectSeeder extends Seeder
 
         foreach ($selectedAdiutors as $adiutor) {
             $hourlyRate = $adiutor->adiutorProfile->hourly_rate ?? 65.00;
-            $agreedRate = $hourlyRate * (1 + rand(-10, 15) / 100); // Negotiate rate ±15%
+            $agreedRate = $hourlyRate * (1 + rand(-10, 15) / 100);
 
-            $project->assignedAdiutors()->attach($adiutor->id, [
+            $project->adiutors()->attach($adiutor->id, [
                 'agreed_rate' => $agreedRate,
-                'start_date' => $project->start_date,
-                'expected_completion' => $project->estimated_completion,
+                'start_date' => $project->started_at ?? now(),
+                'expected_completion' => $project->deadline,
                 'status' => 'active',
-                'progress_percentage' => $project->progress_percentage,
+                'progress_percentage' => rand(0, 100),
                 'notes' => 'Assigned based on skills match and availability',
             ]);
         }

@@ -1,89 +1,108 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Feedback Management')
+@section('page-title', 'Feedback Management')
 
 @section('content')
-<div class="max-w-7xl mx-auto">
+<div class="px-6 py-8">
     <!-- Page Header -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Feedback Management</h1>
-                <nav class="flex items-center space-x-2 text-sm text-gray-500 mt-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-accent-500 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
-                    <span class="text-gray-900">Feedback</span>
-                </nav>
-            </div>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold text-primary-500 mb-1">Feedback Management</h1>
+            <p class="text-neutral-500 text-sm">View and manage all customer feedback</p>
         </div>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-6">
         <!-- Total Feedback -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-5 text-white transform hover:scale-105 transition-transform duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="bg-white/20 rounded-full p-3">
-                    <i class="fas fa-comments text-xl"></i>
+        <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-primary-500">
+            <div class="p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-semibold text-primary-500 uppercase mb-1">Total Feedback</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['total_feedback']) }}</div>
+                    </div>
+                    <div class="bg-primary-50 p-3 rounded-lg">
+                        <i class="fas fa-comments text-xl text-primary-500"></i>
+                    </div>
                 </div>
             </div>
-            <p class="text-blue-100 text-xs font-medium mb-1">Total Feedback</p>
-            <p class="text-2xl font-bold">{{ number_format($stats['total_feedback']) }}</p>
         </div>
 
         <!-- Average Rating -->
-        <div class="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg p-5 text-white transform hover:scale-105 transition-transform duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="bg-white/20 rounded-full p-3">
-                    <i class="fas fa-star text-xl"></i>
+        <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-amber-500">
+            <div class="p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-semibold text-amber-500 uppercase mb-1">Average Rating</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ $stats['average_rating'] ?? 'N/A' }}/5</div>
+                    </div>
+                    <div class="bg-amber-50 p-3 rounded-lg">
+                        <i class="fas fa-star text-xl text-amber-500"></i>
+                    </div>
                 </div>
             </div>
-            <p class="text-amber-100 text-xs font-medium mb-1">Average Rating</p>
-            <p class="text-2xl font-bold">{{ $stats['average_rating'] ?? 'N/A' }}/5</p>
         </div>
 
         <!-- Pending -->
-        <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-5 text-white transform hover:scale-105 transition-transform duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="bg-white/20 rounded-full p-3">
-                    <i class="fas fa-clock text-xl"></i>
+        <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-orange-500">
+            <div class="p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-semibold text-orange-500 uppercase mb-1">Pending</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['pending_feedback']) }}</div>
+                    </div>
+                    <div class="bg-orange-50 p-3 rounded-lg">
+                        <i class="fas fa-clock text-xl text-orange-500"></i>
+                    </div>
                 </div>
             </div>
-            <p class="text-orange-100 text-xs font-medium mb-1">Pending</p>
-            <p class="text-2xl font-bold">{{ number_format($stats['pending_feedback']) }}</p>
         </div>
 
         <!-- Resolved -->
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-5 text-white transform hover:scale-105 transition-transform duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="bg-white/20 rounded-full p-3">
-                    <i class="fas fa-check-circle text-xl"></i>
+        <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-green-500">
+            <div class="p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-semibold text-green-500 uppercase mb-1">Resolved</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['resolved_feedback']) }}</div>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded-lg">
+                        <i class="fas fa-check-circle text-xl text-green-500"></i>
+                    </div>
                 </div>
             </div>
-            <p class="text-green-100 text-xs font-medium mb-1">Resolved</p>
-            <p class="text-2xl font-bold">{{ number_format($stats['resolved_feedback']) }}</p>
         </div>
 
         <!-- Positive -->
-        <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-5 text-white transform hover:scale-105 transition-transform duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="bg-white/20 rounded-full p-3">
-                    <i class="fas fa-smile text-xl"></i>
+        <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-emerald-500">
+            <div class="p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-semibold text-emerald-500 uppercase mb-1">Positive</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['positive_feedback']) }}</div>
+                    </div>
+                    <div class="bg-emerald-50 p-3 rounded-lg">
+                        <i class="fas fa-smile text-xl text-emerald-500"></i>
+                    </div>
                 </div>
             </div>
-            <p class="text-emerald-100 text-xs font-medium mb-1">Positive</p>
-            <p class="text-2xl font-bold">{{ number_format($stats['positive_feedback']) }}</p>
         </div>
 
         <!-- Negative -->
-        <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-5 text-white transform hover:scale-105 transition-transform duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="bg-white/20 rounded-full p-3">
-                    <i class="fas fa-frown text-xl"></i>
+        <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-red-500">
+            <div class="p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-semibold text-red-500 uppercase mb-1">Negative</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['negative_feedback']) }}</div>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-lg">
+                        <i class="fas fa-frown text-xl text-red-500"></i>
+                    </div>
                 </div>
             </div>
-            <p class="text-red-100 text-xs font-medium mb-1">Negative</p>
-            <p class="text-2xl font-bold">{{ number_format($stats['negative_feedback']) }}</p>
         </div>
     </div>
 

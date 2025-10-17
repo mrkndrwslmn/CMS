@@ -45,9 +45,6 @@ return new class extends Migration
             $table->integer('progress_percentage')->default(0);
             $table->text('notes')->nullable();
             $table->text('completion_notes')->nullable();
-            
-            // LEGACY FIELDS (for backward compatibility, but deprecated)
-            $table->unsignedBigInteger('formID')->nullable(); // DEPRECATED
             $table->foreignId('service_request_id')->nullable()->constrained('service_requests')->onDelete('set null'); // DEPRECATED
             
             $table->timestamps();
@@ -57,9 +54,6 @@ return new class extends Migration
             $table->index(['assignedTo', 'status']);
             $table->index(['project_id', 'status']);
             $table->index(['client_id', 'status']);
-            
-            // Legacy foreign key (keep for backward compatibility)
-            $table->foreign('formID')->references('formID')->on('forms')->onDelete('set null');
         });
     }
 

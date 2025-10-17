@@ -49,7 +49,11 @@
                             <p class="text-sm"><strong>Email:</strong> {{ session('credentials.email') }}</p>
                             <p class="text-sm"><strong>Password:</strong> <code class="bg-neutral-100 px-2 py-1 rounded">{{ session('credentials.password') }}</code></p>
                         </div>
-                        <p class="text-sm text-success-600 mt-3">💌 These credentials have also been sent to your email.</p>
+                        @if(session('email_failed'))
+                            <p class="text-sm text-warning-600 mt-3 font-semibold">⚠️ {{ session('warning', 'We couldn\'t send the email. Please save these credentials now!') }}</p>
+                        @else
+                            <p class="text-sm text-success-600 mt-3">💌 These credentials have also been sent to your email.</p>
+                        @endif
                         <a href="{{ route('login') }}" class="btn-primary mt-4 inline-block">Login Now</a>
                     </div>
                 </div>

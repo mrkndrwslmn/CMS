@@ -8,6 +8,9 @@
     <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -52,6 +55,11 @@
                             <li><a href="{{ route('client.dashboard') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.dashboard') ? 'border-primary text-primary' : 'border-transparent' }}">Home</a></li>
                             <li><a href="{{ route('client.tasks') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.tasks') ? 'border-primary text-primary' : 'border-transparent' }}">Tasks</a></li>
                             <li><a href="{{ route('client.requests') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.requests') ? 'border-primary text-primary' : 'border-transparent' }}">My Request</a></li>
+                            
+                            <!-- Notification Bell -->
+                            <li>
+                                @include('components.notification-bell')
+                            </li>
                             
                             <!-- User profile dropdown -->
                             <li class="relative group">

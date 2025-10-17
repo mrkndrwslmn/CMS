@@ -1,6 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Client Details' . (isset($client) && is_object($client) ? ' - ' . $client->fullName : ''))
+@section('page-title', 'Client Management')
 
 @section('content')
 <div class="px-6 py-8" data-client-id="{{ isset($client) && is_object($client) ? $client->id : 0 }}">

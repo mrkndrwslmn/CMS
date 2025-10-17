@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
 use App\Mail\NewUserCredentials;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
+use App\Notifications\NewServiceRequestNotification;
 
 class PublicServiceRequestController extends Controller
 {
@@ -69,66 +71,56 @@ class PublicServiceRequestController extends Controller
             if ($existingUser) {
                 // User exists, use their ID
                 $userId = $existingUser->id ?? $existingUser->userID;
+                $isNewUser = false;
             } else {
                 // Create new user account
                 $generatedPassword = $request->password;
                 
-                try {
-                    $userId = DB::table('users')->insertGetId([
-                        'fullName' => $request->full_name,
-                        'email' => $email,
-                        'password' => Hash::make($generatedPassword),
-                        'role' => 'client',
-                        'status' => 'active',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                    
-                    $isNewUser = true;
-                    
-                    // Create client profile
-                    DB::table('client_profiles')->insert([
-                        'user_id' => $userId,
-                        'phone' => $request->contact_method === 'phone' ? $request->contact_details : null,
-                        'preferred_contact_method' => $request->contact_method,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                } catch (\Exception $e) {
-                    // If there's a duplicate entry error, fetch the user
-                    if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                        $existingUser = DB::table('users')->where('email', $email)->first();
-                        $userId = $existingUser->id ?? $existingUser->userID;
-                        $isNewUser = false;
-                    } else {
-                        throw $e;
-                    }
-                }
+                $userId = DB::table('users')->insertGetId([
+                    'fullName' => $request->full_name,
+                    'email' => $email,
+                    'password' => Hash::make($generatedPassword),
+                    'role' => 'client',
+                    'status' => 'active',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                
+                $isNewUser = true;
+                
+                // Create client profile
+                DB::table('client_profiles')->insert([
+                    'user_id' => $userId,
+                    'contact_phone' => $request->contact_method === 'phone' ? $request->contact_details : null,
+                    'contact_email' => $request->contact_method === 'email' ? $request->contact_details : null,
+                    'preferred_contact_methods' => json_encode([$request->contact_method]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
         } else {
             // User is logged in
             $userId = Auth::id();
         }
 
-        // Insert form data into the forms table
-        $formId = DB::table('forms')->insertGetId([
+        // Insert service request data into the service_requests table
+        $serviceRequestId = DB::table('service_requests')->insertGetId([
             'client_id' => $userId,
             'contact_method' => $request->contact_method,
             'contact_details' => $request->contact_details,
             'service_type' => $request->service_type,
             'project_name' => $request->project_name,
             'request_description' => $request->request_description,
-            'projectDescription' => $request->request_description, // Also populate the old column for backward compatibility
             'deadline' => $request->deadline,
             'expectations' => $request->expectations,
             'additional_notes' => $request->additional_notes,
             'status' => 'pending',
-            'submitted_at' => now(),
+            'priority' => 'medium',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Handle file uploads
+        // Handle file uploads (TODO: Implement documents table)
         if ($request->hasFile('file_upload')) {
             $uploadDir = storage_path('app/public/documents/user-uploads/');
             
@@ -144,14 +136,19 @@ class PublicServiceRequestController extends Controller
                 // Store the file
                 $file->storeAs('public/' . dirname($relativePath), basename($relativePath));
 
-                // Insert into form_files table
-                DB::table('form_files')->insert([
-                    'formid' => $formId,
-                    'filename' => $originalName,
-                    'filepath' => '/storage/' . $relativePath,
-                    'filetype' => $file->getClientMimeType(),
-                    'filesize' => $file->getSize(),
-                    'uploaded_at' => now(),
+                // Insert into documents table
+                DB::table('documents')->insert([
+                    'service_request_id' => $serviceRequestId,
+                    'client_id' => $userId,
+                    'uploaded_by' => $userId,
+                    'fileName' => $originalName,
+                    'filePath' => '/storage/' . $relativePath,
+                    'fileType' => $file->getClientMimeType(),
+                    'fileSize' => $file->getSize(),
+                    'document_type' => 'requirement',
+                    'is_public' => false,
+                    'is_archived' => false,
+                    'uploadedAt' => now(),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -159,31 +156,29 @@ class PublicServiceRequestController extends Controller
         }
 
         // Create notifications for admins
-        $adminUsers = DB::table('users')->where('role', 'admin')->get();
-        foreach ($adminUsers as $admin) {
-            DB::table('notifications')->insert([
-                'user_id' => $admin->id ?? $admin->userID,
-                'type' => 'new_service_request',
-                'title' => 'New Service Request',
-                'message' => "New service request '{$request->project_name}' submitted" . ($isNewUser ? ' by a new user' : ''),
-                'data' => json_encode(['form_id' => $formId]),
-                'is_read' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewServiceRequestNotification(
+                $serviceRequestId,
+                $request->project_name,
+                $request->full_name ?? 'Unknown',
+                $isNewUser ?? false
+            ));
         }
 
         // If new user was created, send credentials via email
         if ($isNewUser && $generatedPassword) {
+            Log::info('Attempting to send credentials email to: ' . $request->email);
+            
             try {
-                $userData = DB::table('users')->where('id', $userId)->orWhere('userID', $userId)->first();
-                
                 // Send email with credentials
                 Mail::to($request->email)->send(new NewUserCredentials(
                     $request->full_name,
                     $request->email,
                     $generatedPassword
                 ));
+                
+                Log::info('Credentials email sent successfully to: ' . $request->email);
                 
                 // Show success message with credentials
                 return redirect()->route('get-started')->with([
@@ -195,7 +190,8 @@ class PublicServiceRequestController extends Controller
                 ]);
             } catch (\Exception $e) {
                 // If email fails, still show credentials on screen
-                Log::error('Failed to send credentials email: ' . $e->getMessage());
+                Log::error('Failed to send credentials email to ' . $request->email . ': ' . $e->getMessage());
+                Log::error('Stack trace: ' . $e->getTraceAsString());
                 
                 return redirect()->route('get-started')->with([
                     'success' => 'Your service request has been submitted successfully!',
@@ -203,7 +199,8 @@ class PublicServiceRequestController extends Controller
                     'credentials' => [
                         'email' => $request->email,
                         'password' => $generatedPassword,
-                    ]
+                    ],
+                    'warning' => 'We couldn\'t send the email with your credentials. Please save them now!'
                 ]);
             }
         }

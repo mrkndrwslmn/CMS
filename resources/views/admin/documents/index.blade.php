@@ -1,108 +1,111 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Document Management')
+@section('page-title', 'Document Management')
 
 @section('content')
-<div class="max-w-7xl mx-auto">
+<div class="px-6 py-8">
     <!-- Page Header -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Document Management</h1>
-                <nav class="flex items-center space-x-2 text-sm text-gray-500 mt-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-accent-500 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
-                    <span class="text-gray-900">Documents</span>
-                </nav>
-            </div>
-            <a href="{{ route('admin.documents.create') }}" class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-accent-500 to-accent-600 text-white font-medium rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all duration-200 shadow-lg shadow-accent-500/30">
-                <i class="fas fa-plus mr-2"></i>
-                Upload New Document
-            </a>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold text-primary-500 mb-1">Document Management</h1>
+            <p class="text-neutral-500 text-sm">Upload, manage and organize all documents</p>
         </div>
+        <a href="{{ route('admin.documents.create') }}" class="mt-4 sm:mt-0 flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
+            <i class="fas fa-plus mr-2"></i>Upload New Document
+        </a>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-6">
         <!-- Total Documents -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform duration-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-blue-100 text-sm font-medium mb-1">Total Documents</p>
-                    <p class="text-3xl font-bold">{{ number_format($stats['total_documents']) }}</p>
-                </div>
-                <div class="bg-white/20 rounded-full p-4">
-                    <i class="fas fa-file-alt text-2xl"></i>
+        <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-primary-500">
+            <div class="p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-semibold text-primary-500 uppercase mb-1">Total Documents</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['total_documents']) }}</div>
+                    </div>
+                    <div class="bg-primary-50 p-3 rounded-lg">
+                        <i class="fas fa-file-alt text-xl text-primary-500"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Total Size -->
-        <div class="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform duration-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-amber-100 text-sm font-medium mb-1">Total Size</p>
-                    <p class="text-3xl font-bold">{{ number_format($stats['total_size'] / (1024 * 1024), 2) }} MB</p>
-                </div>
-                <div class="bg-white/20 rounded-full p-4">
-                    <i class="fas fa-database text-2xl"></i>
+        <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-blue-500">
+            <div class="p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-semibold text-blue-500 uppercase mb-1">Total Size</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['total_size'] / (1024 * 1024), 2) }} MB</div>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-lg">
+                        <i class="fas fa-database text-xl text-blue-500"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- This Month -->
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform duration-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-green-100 text-sm font-medium mb-1">Added This Month</p>
-                    <p class="text-3xl font-bold">{{ number_format($stats['this_month']) }}</p>
-                </div>
-                <div class="bg-white/20 rounded-full p-4">
-                    <i class="fas fa-calendar-alt text-2xl"></i>
+        <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-green-500">
+            <div class="p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-semibold text-green-500 uppercase mb-1">Added This Month</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['this_month']) }}</div>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded-lg">
+                        <i class="fas fa-calendar-alt text-xl text-green-500"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- File Types -->
-        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform duration-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-purple-100 text-sm font-medium mb-1">File Types</p>
-                    <p class="text-3xl font-bold">{{ count($stats['by_type']) }}</p>
-                </div>
-                <div class="bg-white/20 rounded-full p-4">
-                    <i class="fas fa-list-alt text-2xl"></i>
+        <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-indigo-500">
+            <div class="p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-semibold text-indigo-500 uppercase mb-1">File Types</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ count($stats['by_type']) }}</div>
+                    </div>
+                    <div class="bg-indigo-50 p-3 rounded-lg">
+                        <i class="fas fa-list-alt text-xl text-indigo-500"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Main Content Card -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
         <!-- Card Header -->
-        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center">
-                <i class="fas fa-folder-open text-gray-600 mr-2"></i>
-                <h2 class="text-lg font-semibold text-gray-800">All Documents</h2>
-            </div>
+        <div class="px-6 py-4 border-b border-neutral-200">
+            <h6 class="text-lg font-semibold text-primary-500">All Documents</h6>
         </div>
 
         <div class="p-6">
             <!-- Search and Filter Form -->
             <form method="GET" action="{{ route('admin.documents.index') }}" class="mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-4">
-                    <div class="md:col-span-6 lg:col-span-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 mb-1">Search</label>
                         <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <i class="fas fa-search text-neutral-400"></i>
+                            </div>
                             <input type="text" 
                                    name="search" 
                                    value="{{ request('search') }}" 
                                    placeholder="Search documents..." 
-                                   class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all">
-                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                   class="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 transition-colors">
                         </div>
                     </div>
-                    <div class="md:col-span-2 lg:col-span-2">
-                        <select name="type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all">
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 mb-1">Document Type</label>
+                        <select name="type" class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 transition-colors">
                             <option value="">All Types</option>
                             <option value="contract" {{ request('type') == 'contract' ? 'selected' : '' }}>Contract</option>
                             <option value="report" {{ request('type') == 'report' ? 'selected' : '' }}>Report</option>
@@ -111,8 +114,9 @@
                             <option value="other" {{ request('type') == 'other' ? 'selected' : '' }}>Other</option>
                         </select>
                     </div>
-                    <div class="md:col-span-2 lg:col-span-3">
-                        <select name="client" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all">
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 mb-1">Client</label>
+                        <select name="client" class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 transition-colors">
                             <option value="">All Clients</option>
                             @foreach($clients as $client)
                                 <option value="{{ $client->id }}" {{ request('client') == $client->id ? 'selected' : '' }}>
@@ -121,14 +125,12 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="md:col-span-1 lg:col-span-2">
-                        <button type="submit" class="w-full px-4 py-2.5 bg-accent-500 text-white font-medium rounded-lg hover:bg-accent-600 transition-colors">
-                            Filter
+                    <div class="flex space-x-3 items-end">
+                        <button type="submit" class="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
+                            <i class="fas fa-search mr-2"></i> Filter
                         </button>
-                    </div>
-                    <div class="md:col-span-1 lg:col-span-1">
-                        <a href="{{ route('admin.documents.index') }}" class="block w-full px-4 py-2.5 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors text-center">
-                            Reset
+                        <a href="{{ route('admin.documents.index') }}" class="flex-1 border border-neutral-300 text-neutral-700 hover:bg-neutral-100 py-2 px-4 rounded-lg flex items-center justify-center transition-colors">
+                            <i class="fas fa-times mr-2"></i> Clear
                         </a>
                     </div>
                 </div>
@@ -137,9 +139,9 @@
             <!-- File Types Chart -->
             @if(count($stats['by_type']) > 0)
             <div class="mb-8">
-                <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                        <i class="fas fa-chart-pie text-accent-500 mr-2"></i>
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-neutral-100">
+                    <h3 class="text-base font-semibold text-primary-500 mb-4 flex items-center">
+                        <i class="fas fa-chart-pie text-primary-500 mr-2"></i>
                         Documents by Type
                     </h3>
                     <div class="max-w-md mx-auto">
@@ -152,83 +154,88 @@
             <!-- Bulk Actions Form -->
             <form id="bulk-actions-form" method="POST" action="{{ route('admin.documents.bulk-action') }}">
                 @csrf
-                <div class="flex flex-col sm:flex-row gap-4 mb-6">
-                    <select name="action" id="bulk-action" class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all" required>
-                        <option value="">Select Bulk Action</option>
-                        <option value="delete">Delete Selected</option>
-                    </select>
-                    <button type="submit" class="px-6 py-2.5 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 transition-colors shadow-md hover:shadow-lg" id="apply-bulk-action">
-                        Apply Action
-                    </button>
+                <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center">
+                    <div class="w-full sm:w-auto">
+                        <label class="block text-sm font-medium text-neutral-700 mb-1">Bulk Actions</label>
+                        <select name="action" id="bulk-action" class="px-4 py-2 border border-neutral-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 transition-colors" required>
+                            <option value="">Select Action</option>
+                            <option value="delete">Delete Selected</option>
+                        </select>
+                    </div>
+                    <div class="w-full sm:w-auto sm:self-end">
+                        <button type="submit" class="w-full sm:w-auto px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center" id="apply-bulk-action">
+                            <i class="fas fa-check mr-2"></i> Apply
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Documents Table -->
-                <div class="overflow-x-auto rounded-lg border border-gray-200">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                <div class="overflow-x-auto rounded-lg border border-neutral-200">
+                    <table class="min-w-full divide-y divide-neutral-200">
+                        <thead class="bg-neutral-50">
                             <tr>
                                 <th class="px-4 py-3 text-left">
-                                    <input type="checkbox" id="select-all" class="w-4 h-4 text-accent-600 rounded border-gray-300 focus:ring-accent-500">
+                                    <input type="checkbox" id="select-all" class="w-4 h-4 text-primary-600 rounded border-neutral-300 focus:ring-primary-500">
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">File Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Size</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Related Task</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Uploaded</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">File Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Size</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Related Task</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Uploaded</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-neutral-200">
                             @forelse($documents as $document)
-                                <tr class="hover:bg-gray-50 transition-colors">
+                                <tr class="hover:bg-neutral-50 transition-colors">
                                     <td class="px-4 py-4">
-                                        <input type="checkbox" name="document_ids[]" value="{{ $document->documentID }}" class="document-checkbox w-4 h-4 text-accent-600 rounded border-gray-300 focus:ring-accent-500">
+                                        <input type="checkbox" name="document_ids[]" value="{{ $document->documentID }}" class="document-checkbox w-4 h-4 text-primary-600 rounded border-neutral-300 focus:ring-primary-500">
                                     </td>
                                     <td class="px-6 py-4">
-                                        <a href="{{ route('admin.documents.show', $document->documentID) }}" class="text-accent-600 hover:text-accent-700 font-medium flex items-center">
-                                            <i class="fas fa-file-alt text-gray-400 mr-2"></i>
+                                        <a href="{{ route('admin.documents.show', $document->documentID) }}" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                                            <i class="fas fa-file-alt text-neutral-400 mr-2"></i>
                                             {{ $document->fileName }}
                                         </a>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
                                             {{ $document->fileType ?? 'Unknown' }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-600">
+                                    <td class="px-6 py-4 text-sm text-neutral-600">
                                         {{ number_format($document->fileSize / 1024, 2) }} KB
                                     </td>
                                     <td class="px-6 py-4 text-sm">
                                         @if($document->task)
-                                            <a href="{{ route('admin.tasks.show', $document->task->taskID) }}" class="text-accent-600 hover:text-accent-700">
+                                            <a href="{{ route('admin.tasks.show', $document->task->taskID) }}" class="text-primary-600 hover:text-primary-700">
                                                 {{ Str::limit($document->task->taskTitle, 30) }}
                                             </a>
                                         @else
-                                            <span class="text-gray-400 italic">None</span>
+                                            <span class="text-neutral-400 italic">None</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-600">
+                                    <td class="px-6 py-4 text-sm text-neutral-600">
                                         {{ $document->created_at->format('M d, Y') }}
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center space-x-2">
                                             <a href="{{ route('admin.documents.show', $document->documentID) }}" 
-                                               class="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                               class="text-primary-600 hover:text-primary-800 hover:bg-primary-50 p-2 rounded-lg transition-colors"
                                                title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <a href="{{ route('admin.documents.download', $document->documentID) }}" 
-                                               class="inline-flex items-center justify-center w-8 h-8 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                               class="text-primary-600 hover:text-primary-800 hover:bg-primary-50 p-2 rounded-lg transition-colors"
                                                title="Download">
                                                 <i class="fas fa-download"></i>
                                             </a>
                                             <a href="{{ route('admin.documents.edit', $document->documentID) }}" 
-                                               class="inline-flex items-center justify-center w-8 h-8 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                               class="text-primary-600 hover:text-primary-800 hover:bg-primary-50 p-2 rounded-lg transition-colors"
                                                title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <button type="button" 
-                                                    class="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:bg-red-50 rounded-lg transition-colors delete-document" 
+                                                    class="text-error-600 hover:text-error-800 hover:bg-error-50 p-2 rounded-lg transition-colors delete-document" 
                                                     data-document-id="{{ $document->documentID }}"
                                                     data-document-name="{{ $document->fileName }}"
                                                     title="Delete">
@@ -240,9 +247,11 @@
                             @empty
                                 <tr>
                                     <td colspan="7" class="px-6 py-12 text-center">
-                                        <div class="flex flex-col items-center justify-center text-gray-400">
-                                            <i class="fas fa-folder-open text-6xl mb-4"></i>
-                                            <p class="text-lg font-medium text-gray-500">No documents found</p>
+                                        <div class="flex flex-col items-center justify-center text-neutral-400">
+                                            <div class="bg-neutral-100 p-6 rounded-full mb-4">
+                                                <i class="fas fa-folder-open text-4xl text-neutral-400"></i>
+                                            </div>
+                                            <p class="text-lg font-medium text-neutral-500">No documents found</p>
                                             <p class="text-sm mt-1">Upload your first document to get started</p>
                                         </div>
                                     </td>
@@ -255,44 +264,46 @@
 
             <!-- Pagination -->
             <div class="mt-6 flex justify-center">
-                {{ $documents->links() }}
+                @if(isset($documents) && !is_array($documents) && method_exists($documents, 'links'))
+                    {{ $documents->links() }}
+                @endif
             </div>
         </div>
     </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 items-center justify-center p-4" style="display: none;">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full transform transition-all">
-        <div class="px-6 py-4 border-b border-gray-200">
+<div id="deleteModal" class="fixed inset-0 bg-neutral-900 bg-opacity-50 z-50 items-center justify-center p-4" style="display: none;">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all">
+        <div class="px-6 py-4 border-b border-neutral-200">
             <div class="flex items-center justify-between">
-                <h3 class="text-xl font-semibold text-gray-900">Confirm Deletion</h3>
-                <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors" onclick="document.getElementById('deleteModal').style.display='none'">
-                    <i class="fas fa-times text-xl"></i>
+                <h3 class="text-lg font-semibold text-neutral-800">Confirm Deletion</h3>
+                <button type="button" class="text-neutral-400 hover:text-neutral-600 transition-colors" onclick="document.getElementById('deleteModal').style.display='none'">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
         <div class="px-6 py-4">
             <div class="flex items-start space-x-4">
-                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                <div class="bg-error-100 p-3 rounded-full">
+                    <i class="fas fa-exclamation-triangle text-error-500"></i>
                 </div>
                 <div class="flex-1">
-                    <p class="text-gray-700 mb-2">Are you sure you want to delete this document? This action cannot be undone.</p>
-                    <p class="text-red-600 font-semibold" id="delete-document-name"></p>
+                    <p class="text-neutral-700 text-sm mb-2">Are you sure you want to delete this document? This action cannot be undone.</p>
+                    <p class="text-error-600 font-medium text-sm" id="delete-document-name"></p>
                 </div>
             </div>
         </div>
-        <div class="px-6 py-4 bg-gray-50 rounded-b-xl flex justify-end space-x-3">
+        <div class="px-6 py-4 bg-neutral-50 rounded-b-lg flex justify-end space-x-3">
             <button type="button" 
-                    class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                    class="px-4 py-2 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-100 transition-colors"
                     onclick="document.getElementById('deleteModal').style.display='none'">
                 Cancel
             </button>
             <form id="delete-form" method="POST" action="">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors shadow-md hover:shadow-lg">
+                <button type="submit" class="px-4 py-2 bg-error-600 text-white font-medium rounded-lg hover:bg-error-700 transition-colors">
                     Delete Document
                 </button>
             </form>

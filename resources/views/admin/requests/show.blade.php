@@ -1,34 +1,29 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Request Details')
+@section('page-title', 'Request Details')
 
 @section('content')
-<script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('modalState', () => ({
-            showApproveModal: false,
-            showRejectModal: false,
-            showCreateTaskModal: false,
-            
-            openApproveModal() {
-                this.showApproveModal = true;
-                console.log('Opening Approve Modal', this.showApproveModal);
-            },
-            
-            openRejectModal() {
-                this.showRejectModal = true;
-                console.log('Opening Reject Modal', this.showRejectModal);
-            },
-            
-            openCreateTaskModal() {
-                this.showCreateTaskModal = true;
-                console.log('Opening Create Task Modal', this.showCreateTaskModal);
-            }
-        }));
-    });
-</script>
-
-<div class="px-6 py-8" x-data="modalState">
+<div class="px-6 py-8" x-data="{
+    showApproveModal: false,
+    showRejectModal: false,
+    showCreateTaskModal: false,
+    
+    openApproveModal() {
+        this.showApproveModal = true;
+        console.log('Opening Approve Modal', this.showApproveModal);
+    },
+    
+    openRejectModal() {
+        this.showRejectModal = true;
+        console.log('Opening Reject Modal', this.showRejectModal);
+    },
+    
+    openCreateTaskModal() {
+        this.showCreateTaskModal = true;
+        console.log('Opening Create Task Modal', this.showCreateTaskModal);
+    }
+}">
     <!-- Alert Messages -->
     @if(session('success'))
         <div class="bg-success-50 border-l-4 border-success-500 text-success-700 p-6 rounded-lg shadow-sm mb-6">
@@ -65,7 +60,9 @@
                     $statusBadgeClasses = [
                         'pending' => 'bg-warning-100 text-warning-800',
                         'approved' => 'bg-success-100 text-success-800',
-                        'rejected' => 'bg-error-100 text-error-800'
+                        'rejected' => 'bg-error-100 text-error-800',
+                        'pending_payment' => 'bg-warning-100 text-warning-800',
+                        'paid' => 'bg-success-100 text-success-800',
                     ];
                     $statusBadgeClass = $statusBadgeClasses[$requestStatus] ?? 'bg-neutral-100 text-neutral-800';
                 @endphp
@@ -76,6 +73,10 @@
                         <span class="h-2 w-2 rounded-full bg-success-500 mr-1.5"></span>Approved
                     @elseif($requestStatus === 'rejected')
                         <span class="h-2 w-2 rounded-full bg-error-500 mr-1.5"></span>Rejected
+                    @elseif($requestStatus === 'pending_payment')
+                        <span class="h-2 w-2 rounded-full bg-warning-500 mr-1.5"></span>Pending Payment
+                    @elseif($requestStatus === 'paid')
+                        <span class="h-2 w-2 rounded-full bg-success-500 mr-1.5"></span>Paid
                     @else
                         <span class="h-2 w-2 rounded-full bg-neutral-500 mr-1.5"></span>{{ ucfirst($requestStatus) }}
                     @endif
@@ -123,14 +124,6 @@
                 <i class="fas fa-arrow-left mr-2"></i>Back to Requests
             </a>
             
-            <!-- Debug: Test Alpine.js -->
-            <div x-data="{ test: false }">
-                <button @click="test = !test; console.log('Alpine clicked! test =', test)" 
-                        class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
-                    <span x-text="test ? 'Alpine Works!' : 'Test Alpine'"></span>
-                </button>
-            </div>
-            
             @if($requestStatus === 'pending')
                 <button type="button" 
                         @click="openApproveModal()"
@@ -142,7 +135,13 @@
                         class="inline-flex items-center px-4 py-2 bg-error-500 hover:bg-error-600 text-white rounded-lg transition-colors">
                     <i class="fas fa-times mr-2"></i>Reject
                 </button>
-            @elseif($requestStatus === 'approved' || $requestStatus === 'rejected')
+            @elseif($requestStatus === 'approved' || $requestStatus === 'pending_payment')
+                <a href="{{ route('client.maya.checkout', $request['id']) }}" 
+                   target="_blank"
+                   class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
+                    <i class="fas fa-credit-card mr-2"></i>View Payment Link
+                </a>
+            @elseif($requestStatus === 'rejected')
                 <form action="{{ route('admin.requests.reopen', $request['id']) }}" method="POST" class="inline">
                     @csrf
                     <button type="submit"
@@ -297,6 +296,70 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Payment Information Card (Maya automatic payment info) -->
+            @if($requestStatus === 'approved' || $requestStatus === 'pending_payment')
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6 border-2 border-primary-200">
+                <div class="px-6 py-4 border-b border-primary-200 bg-primary-50">
+                    <h2 class="text-lg font-semibold text-primary-700 flex items-center">
+                        <i class="fas fa-credit-card mr-2"></i>
+                        Payment Information
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center mb-3">
+                            <i class="fas fa-info-circle text-primary-600 mr-2"></i>
+                            <p class="text-primary-800 font-medium">This request uses Maya automatic payment gateway</p>
+                        </div>
+                        <p class="text-primary-700 text-sm">Client will pay via Maya, and the payment will be automatically verified. Once confirmed, the project will be created automatically.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-3">Payment Details</h3>
+                            <div class="space-y-3">
+                                <div class="flex">
+                                    <div class="w-36 text-neutral-500">Amount:</div>
+                                    <div class="flex-1 text-neutral-800 font-semibold text-lg">
+                                        ₱{{ number_format($request['approved_budget'] ?? 0, 2) }}
+                                    </div>
+                                </div>
+                                
+                                <div class="flex">
+                                    <div class="w-36 text-neutral-500">Payment Method:</div>
+                                    <div class="flex-1 text-neutral-800">
+                                        Maya Payment Gateway
+                                    </div>
+                                </div>
+                                
+                                @if(!empty($request['payment_due_date']))
+                                <div class="flex">
+                                    <div class="w-36 text-neutral-500">Due Date:</div>
+                                    <div class="flex-1 text-neutral-800">
+                                        {{ \Carbon\Carbon::parse($request['payment_due_date'])->format('M d, Y') }}
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-3">Payment Status</h3>
+                            <div class="space-y-3">
+                                <div class="bg-warning-50 border border-warning-200 rounded-lg p-4">
+                                    <div class="flex items-center text-warning-800">
+                                        <i class="fas fa-clock mr-2"></i>
+                                        <span class="font-medium">Waiting for Client Payment</span>
+                                    </div>
+                                    <p class="text-warning-700 text-sm mt-2">Client needs to complete payment via Maya</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
             
             <!-- Attached Files -->
             <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
@@ -590,22 +653,21 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- Approve Request Modal -->
-<div x-show="showApproveModal" 
+    <!-- Approve Request Modal -->
+    <div x-show="showApproveModal" 
      x-cloak 
      @keydown.escape.window="showApproveModal = false"
      class="fixed inset-0 z-50 overflow-y-auto" 
      style="display: none;">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <!-- Background overlay -->
-        <div x-show="showApproveModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showApproveModal = false" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+        <div x-show="showApproveModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showApproveModal = false" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-50 z-40" aria-hidden="true"></div>
         
         <!-- Center modal -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         
-        <div x-show="showApproveModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div x-show="showApproveModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
             <form action="{{ route('admin.requests.approve', $request['id']) }}" method="POST">
                 @csrf
                 <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4 flex justify-between items-center">
@@ -615,6 +677,40 @@
                     </button>
                 </div>
                 <div class="modal-body p-6">
+                    <!-- Budget and Payment Section -->
+                    <div class="bg-primary-50 rounded-lg p-4 mb-5">
+                        <h3 class="text-neutral-800 font-medium mb-3 flex items-center">
+                            <i class="fas fa-dollar-sign mr-2 text-primary-600"></i>
+                            Budget & Payment
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="approved_budget" class="block text-sm font-medium text-neutral-700 mb-1">Approved Budget *</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
+                                    <input type="number" id="approved_budget" name="approved_budget" step="0.01" min="0" required
+                                           class="w-full pl-8 pr-4 py-2 rounded-lg border border-neutral-300 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                           placeholder="0.00">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="payment_due_date" class="block text-sm font-medium text-neutral-700 mb-1">Payment Due Date *</label>
+                                <input type="date" id="payment_due_date" name="payment_due_date" required
+                                       min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                       class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="payment_instructions" class="block text-sm font-medium text-neutral-700 mb-1">Payment Instructions (Optional)</label>
+                            <textarea id="payment_instructions" name="payment_instructions" rows="2" 
+                                      class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                      placeholder="e.g., Bank transfer details, payment link, etc."></textarea>
+                        </div>
+                    </div>
+                    
                     <div class="mb-5">
                         <label for="admin_notes" class="block text-sm font-medium text-neutral-700 mb-1">Admin Notes (Optional)</label>
                         <textarea id="admin_notes" name="admin_notes" rows="3" 
@@ -702,12 +798,12 @@
      style="display: none;">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <!-- Background overlay -->
-        <div x-show="showRejectModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showRejectModal = false" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+        <div x-show="showRejectModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showRejectModal = false" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 z-40" aria-hidden="true"></div>
         
         <!-- Center modal -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         
-        <div x-show="showRejectModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div x-show="showRejectModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
             <form action="{{ route('admin.requests.reject', $request['id']) }}" method="POST">
                 @csrf
                 <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4 flex justify-between items-center">
@@ -752,12 +848,12 @@
      style="display: none;">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <!-- Background overlay -->
-        <div x-show="showCreateTaskModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showCreateTaskModal = false" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+        <div x-show="showCreateTaskModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showCreateTaskModal = false" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 z-40" aria-hidden="true"></div>
         
         <!-- Center modal -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         
-        <div x-show="showCreateTaskModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div x-show="showCreateTaskModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
             <form action="{{ route('admin.requests.approve', $request['id']) }}" method="POST">
                 @csrf
                 <input type="hidden" name="create_task" value="1">
@@ -827,6 +923,9 @@
     </div>
 </div>
 
+</div>
+<!-- End of Alpine.js scope -->
+
 @endsection
 
 @section('scripts')
@@ -835,11 +934,11 @@ $(document).ready(function() {
     // Toggle task fields based on checkbox
     $('#create_task').on('change', function() {
         if($(this).is(':checked')) {
-            $('#task_fields').removeClass('hidden');
+            $('#task_fields').removeClass('hidden').slideDown();
             
             // Pre-populate fields with default values
             var requestId = '{{ $request["id"] ?? "" }}';
-            var requestTitle = '{{ $request["title"] ?? "" }}';
+            var requestTitle = '{{ $request["project_name"] ?? $request["title"] ?? "" }}';
             
             if (requestTitle) {
                 $('#task_title').val('Task for: ' + requestTitle);
@@ -849,38 +948,16 @@ $(document).ready(function() {
             
             $('#task_description').val('Based on client request #' + requestId);
             
-            // Make fields required
-            $('#task_title, #task_description, #task_priority').prop('required', true);
+            // Don't set HTML5 required - we handle this on server side
         } else {
-            $('#task_fields').addClass('hidden');
+            $('#task_fields').slideUp().addClass('hidden');
             
-            // Make fields not required
-            $('#task_title, #task_description, #task_priority').prop('required', false);
+            // Clear fields when unchecked
+            $('#task_title, #task_description').val('');
         }
     });
     
-    // Form validation
-    $('form').on('submit', function(e) {
-        if($(this).find('#create_task').is(':checked')) {
-            if(!$(this).find('#task_title').val()) {
-                e.preventDefault();
-                alert('Please enter a task title');
-                return false;
-            }
-            
-            if(!$(this).find('#task_description').val()) {
-                e.preventDefault();
-                alert('Please enter a task description');
-                return false;
-            }
-            
-            if(!$(this).find('#task_priority').val()) {
-                e.preventDefault();
-                alert('Please select a task priority');
-                return false;
-            }
-        }
-    });
+    // No need for form validation since server handles it
 });
 </script>
 @endsection

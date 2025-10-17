@@ -266,4 +266,41 @@ class DocumentManagementController extends Controller
             
         return view('admin.documents.search', compact('documents', 'query'));
     }
+
+    /**
+     * Upload document to project (not tied to task)
+     */
+    public function uploadToProject(Request $request, $projectId)
+    {
+        $request->validate([
+            'file' => 'required|file|max:20480', // 20MB
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'document_type' => 'required|in:contract,deliverable,requirement,other',
+        ]);
+        
+        $project = \App\Models\Project::findOrFail($projectId);
+        
+        // Store file
+        $file = $request->file('file');
+        $fileName = time() . '_' . \Illuminate\Support\Str::slug($request->title) . '.' . $file->getClientOriginalExtension();
+        $filePath = $file->storeAs('documents/projects/' . $projectId, $fileName, 'public');
+        
+        $document = Document::create([
+            'project_id' => $projectId,
+            'taskID' => null, // Project-level document
+            'client_id' => $project->client_id,
+            'uploaded_by' => Auth::id(),
+            'fileName' => $fileName,
+            'filePath' => $filePath,
+            'fileType' => $file->getClientOriginalExtension(),
+            'fileSize' => $file->getSize(),
+            'document_type' => $request->document_type,
+            'description' => $request->description,
+            'uploadedAt' => now(),
+        ]);
+        
+        return redirect()->back()
+            ->with('success', 'Document uploaded successfully.');
+    }
 }

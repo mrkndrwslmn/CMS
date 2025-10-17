@@ -1,6 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Client Management')
+@section('page-title', 'Client Management')
 
 @section('content')
 <div class="px-6 py-8">
@@ -47,16 +48,16 @@
             </div>
         </div>
 
-        <!-- Total Projects Card -->
+        <!-- Total Service Requests Card -->
         <div class="bg-white rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 border-l-4 border-accent-500">
             <div class="p-5">
                 <div class="flex justify-between items-center">
                     <div>
-                        <div class="text-xs font-semibold text-accent-500 uppercase mb-1">Total Projects</div>
-                        <div class="text-2xl font-bold text-primary-600">{{ $stats['total_projects'] }}</div>
+                        <div class="text-xs font-semibold text-accent-500 uppercase mb-1">Total Requests</div>
+                        <div class="text-2xl font-bold text-primary-600">{{ $stats['total_requests'] }}</div>
                     </div>
                     <div class="bg-accent-50 p-3 rounded-lg">
-                        <i class="fas fa-project-diagram text-xl text-accent-500"></i>
+                        <i class="fas fa-file-alt text-xl text-accent-500"></i>
                     </div>
                 </div>
             </div>

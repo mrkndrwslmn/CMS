@@ -60,16 +60,7 @@
                     <div class="relative ml-6">
                         <div class="flex items-center space-x-3">
                             <!-- Notifications -->
-                            <button class="relative text-neutral-600 hover:text-primary-600 transition-colors">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5V3h5v14z"/>
-                                </svg>
-                                @if(auth()->user()->unreadNotificationsCount() > 0)
-                                    <span class="absolute -top-1 -right-1 bg-accent-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                        {{ auth()->user()->unreadNotificationsCount() }}
-                                    </span>
-                                @endif
-                            </button>
+                            @include('components.notification-bell')
                             
                             <!-- Profile -->
                             <div class="flex items-center space-x-2">

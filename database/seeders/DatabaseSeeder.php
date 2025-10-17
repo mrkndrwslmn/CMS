@@ -31,17 +31,23 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ServiceRequestSeeder::class,  // Client submissions (some approved, some pending)
             ProjectSeeder::class,         // Convert approved requests to projects
-            TaskSeeder::class,           // Break down projects into assignable tasks
+            TaskSeeder::class,            // Break down projects into tasks
+        ]);
+
+        // 4. Finally seed feedback from clients
+        $this->call([
+            FeedbackSeeder::class,        // Client feedback on completed work
         ]);
 
         $this->command->info('✅ Database seeding completed successfully!');
         $this->command->info('');
         $this->command->info('🎯 Summary:');
         $this->command->info('   • Users: Admins, Clients with realistic profiles, Adiutors with skills');
-        $this->command->info('   • Services: 16 realistic service offerings across multiple categories');
+        $this->command->info('   • Services: 15 realistic service offerings across multiple categories');
         $this->command->info('   • Service Requests: Client submissions with various statuses');
         $this->command->info('   • Projects: Approved requests converted to active projects');
-        $this->command->info('   • Tasks: Project breakdowns assigned to skilled adiutors');
+        $this->command->info('   • Tasks: Project work broken down into actionable tasks');
+        $this->command->info('   • Feedback: Client feedback with ratings and admin responses');
         $this->command->info('');
         $this->command->info('🔑 Login credentials:');
         $this->command->info('   Admin: admin@treisadiutor.com / admin123');

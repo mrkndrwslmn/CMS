@@ -77,6 +77,14 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
+// Notification routes (for all authenticated users)
+Route::middleware('auth')->group(function () {
+    Route::get('/notifications/fetch', [\App\Http\Controllers\NotificationController::class, 'fetch'])->name('notifications.fetch');
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
+});
+
 // Admin authentication routes
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -90,6 +98,26 @@ Route::prefix('admin')->name('admin.')->group(function () {
 // Admin routes
 Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    
+    // Budget Change Requests
+    Route::prefix('budget-requests')->name('budget-requests.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\BudgetChangeRequestController::class, 'index'])->name('index');
+        Route::get('/{id}', [\App\Http\Controllers\Admin\BudgetChangeRequestController::class, 'show'])->name('show');
+        Route::post('/{id}/approve', [\App\Http\Controllers\Admin\BudgetChangeRequestController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [\App\Http\Controllers\Admin\BudgetChangeRequestController::class, 'reject'])->name('reject');
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\BudgetChangeRequestController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Payment Management
+    Route::prefix('payments')->name('payments.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'index'])->name('index');
+        Route::get('/export', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'export'])->name('export');
+        Route::get('/{id}', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'show'])->name('show');
+        Route::patch('/{id}/status', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'updateStatus'])->name('update-status');
+    });
     
     // User Management
     Route::resource('users', \App\Http\Controllers\Admin\UserManagementController::class);
@@ -117,6 +145,7 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::post('/requests/{request}/reject', [\App\Http\Controllers\Admin\RequestManagementController::class, 'reject'])->name('requests.reject');
     Route::post('/requests/{request}/reopen', [\App\Http\Controllers\Admin\RequestManagementController::class, 'reopen'])->name('requests.reopen');
     Route::post('/requests/{request}/request-payment', [\App\Http\Controllers\Admin\RequestManagementController::class, 'requestPayment'])->name('requests.request-payment');
+    // Note: confirmPayment is deprecated - Maya payment gateway handles confirmation automatically
     Route::post('/requests/{request}/confirm-payment', [\App\Http\Controllers\Admin\RequestManagementController::class, 'confirmPayment'])->name('requests.confirm-payment');
     Route::patch('/requests/{request}/priority', [\App\Http\Controllers\Admin\RequestManagementController::class, 'updatePriority'])->name('requests.update-priority');
     Route::post('/requests/{request}/notes', [\App\Http\Controllers\Admin\RequestManagementController::class, 'addNote'])->name('requests.add-note');
@@ -130,6 +159,7 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::get('/documents/{document}/preview', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'preview'])->name('documents.preview');
     Route::post('/documents/bulk-action', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'bulkAction'])->name('documents.bulk-action');
     Route::get('/documents/search', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'search'])->name('documents.search');
+    Route::post('/projects/{project}/documents', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'uploadToProject'])->name('projects.documents.upload');
     
     // Feedback Management
     Route::resource('feedback', \App\Http\Controllers\Admin\FeedbackManagementController::class, ['only' => ['index', 'show']]);
@@ -155,7 +185,13 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::resource('projects', \App\Http\Controllers\Admin\ProjectManagementController::class);
     Route::post('/projects/{project}/notes', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'addNote'])->name('projects.notes.store');
     Route::patch('/projects/{project}/status', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'updateStatus'])->name('projects.update-status');
+    Route::patch('/projects/{project}/complete', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'complete'])->name('projects.complete');
     Route::post('/projects/bulk-action', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'bulkAction'])->name('projects.bulk-action');
+    
+    // Team Management routes
+    Route::post('/projects/{project}/assign-adiutor', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'assignAdiutor'])->name('projects.assign-adiutor');
+    Route::delete('/projects/{project}/adiutors/{adiutor}', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'removeAdiutor'])->name('projects.remove-adiutor');
+    Route::get('/projects/{project}/team-members', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'getTeamMembers'])->name('projects.team-members');
     
     // Reporting and Analytics
     Route::prefix('reports')->name('reports.')->group(function () {
@@ -180,6 +216,11 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
     Route::get('/tasks', [ClientController::class, 'tasks'])->name('tasks');
     Route::get('/requests', [ClientController::class, 'requests'])->name('requests');
     Route::get('/feedback', [ClientController::class, 'feedback'])->name('feedback');
+    Route::get('/profile', [ClientController::class, 'profile'])->name('profile');
+    Route::put('/profile', [ClientController::class, 'updateProfile'])->name('profile.update');
+    
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     
     // Service Request routes (authenticated only)
     Route::prefix('requests')->name('requests.')->group(function () {
@@ -189,6 +230,21 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
         Route::put('/{id}', [\App\Http\Controllers\Client\ServiceRequestController::class, 'update'])->name('update');
         Route::delete('/{id}', [\App\Http\Controllers\Client\ServiceRequestController::class, 'destroy'])->name('destroy');
         Route::get('/{requestId}/attachments/{attachmentId}/download', [\App\Http\Controllers\Client\ServiceRequestController::class, 'downloadAttachment'])->name('attachment.download');
+    });
+    
+    // Maya Payment routes
+    Route::prefix('maya')->name('maya.')->group(function () {
+        Route::get('/checkout/{serviceRequestId}', [\App\Http\Controllers\Client\MayaPaymentController::class, 'checkout'])->name('checkout');
+        Route::get('/success', [\App\Http\Controllers\Client\MayaPaymentController::class, 'success'])->name('success');
+        Route::get('/failure', [\App\Http\Controllers\Client\MayaPaymentController::class, 'failure'])->name('failure');
+        Route::get('/cancel', [\App\Http\Controllers\Client\MayaPaymentController::class, 'cancel'])->name('cancel');
+    });
+    
+    // Payment History routes
+    Route::prefix('payments')->name('payments.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Client\PaymentHistoryController::class, 'index'])->name('index');
+        Route::get('/{id}', [\App\Http\Controllers\Client\PaymentHistoryController::class, 'show'])->name('show');
+        Route::get('/{id}/receipt', [\App\Http\Controllers\Client\PaymentHistoryController::class, 'receipt'])->name('receipt');
     });
     
     // Project routes
@@ -211,12 +267,20 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
     Route::get('/documents', [AdiutorController::class, 'documents'])->name('documents');
     Route::get('/feedback', [AdiutorController::class, 'feedback'])->name('feedback');
     
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    
     // Task/Project management routes
     Route::prefix('tasks')->name('tasks.')->group(function () {
         Route::get('/{assignment}', [\App\Http\Controllers\Adiutor\TaskController::class, 'show'])->name('show');
         Route::post('/{assignment}/accept', [\App\Http\Controllers\Adiutor\TaskController::class, 'accept'])->name('accept');
         Route::post('/{assignment}/decline', [\App\Http\Controllers\Adiutor\TaskController::class, 'decline'])->name('decline');
         Route::post('/{assignment}/update-progress', [\App\Http\Controllers\Adiutor\TaskController::class, 'updateProgress'])->name('update-progress');
+        
+        // New routes for task management
+        Route::post('/create', [\App\Http\Controllers\Adiutor\TaskController::class, 'store'])->name('store');
+        Route::post('/{task}/complete', [\App\Http\Controllers\Adiutor\TaskController::class, 'markCompleted'])->name('complete');
+        Route::post('/{task}/budget-request', [\App\Http\Controllers\Adiutor\TaskController::class, 'requestBudgetChange'])->name('budget-request');
     });
     
     // Profile management routes

@@ -5,15 +5,16 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\User;
-use App\Models\Form;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TaskManagementController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Task::with(['client', 'assignedUser', 'form']);
+        $query = Task::with(['client', 'assignedUser', 'project', 'creator']);
         
         // Search functionality
         if ($request->filled('search')) {
@@ -71,24 +72,24 @@ class TaskManagementController extends Controller
     
     public function show($id)
     {
-        $task = Task::with(['client', 'assignedUser', 'form', 'documents'])->findOrFail($id);
+        $task = Task::with(['client', 'assignedUser', 'project', 'creator', 'documents'])->findOrFail($id);
         
         // Get task history/activity log if available
         $activities = []; // This could be implemented with a separate Activity model
         
         // Get adiutors for assignment dropdown
-        $activities['adiutors'] = User::where('role', 'adiutor')->orderBy('fullName')->get();
+        $adiutors = User::where('role', 'adiutor')->orderBy('fullName')->get();
         
-        return view('admin.tasks.show', compact('task', 'activities'));
+        return view('admin.tasks.show', compact('task', 'activities', 'adiutors'));
     }
     
     public function create()
     {
         $clients = User::where('role', 'client')->orderBy('fullName')->get();
-        $adiutors = User::where('role', 'adiutor')->orderBy('fullName')->get();
-        $forms = Form::all();
+        $projects = Project::with('client')->orderBy('created_at', 'desc')->get();
+        // Don't fetch adiutors here - let the view handle it dynamically based on selected project
         
-        return view('admin.tasks.create', compact('clients', 'adiutors', 'forms'));
+        return view('admin.tasks.create', compact('clients', 'projects'));
     }
     
     public function store(Request $request)
@@ -96,38 +97,52 @@ class TaskManagementController extends Controller
         $request->validate([
             'taskTitle' => 'required|string|max:255',
             'taskDescription' => 'required|string',
-            'client_id' => 'required|exists:users,id',
+            'project_id' => 'required|exists:projects,id',
             'assignedTo' => 'nullable|exists:users,id',
-            'formID' => 'nullable|exists:forms,formID',
-            'service_request_id' => 'nullable|exists:service_requests,id',
-            'priority' => 'required|in:low,medium,high',
+            'priority' => 'required|in:low,medium,high,urgent',
             'deadline' => 'nullable|date|after:today',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'allocated_budget' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
         ]);
         
-        // Check budget allocation if service request is specified
-        if ($request->service_request_id && $request->allocated_budget) {
-            $serviceRequest = \App\Models\ServiceRequest::find($request->service_request_id);
-            if ($serviceRequest && $serviceRequest->getRemainingBudget() < $request->allocated_budget) {
+        // Get project and client_id from project
+        $project = Project::findOrFail($request->project_id);
+        
+        // ⚠️ Validate that assigned adiutor is a team member
+        if ($request->assignedTo) {
+            if (!$this->isProjectTeamMember($project->id, $request->assignedTo)) {
                 return redirect()->back()
                     ->withInput()
-                    ->withErrors(['allocated_budget' => 'Allocated budget exceeds remaining project budget.']);
+                    ->withErrors(['assignedTo' => 'The selected adiutor is not a team member of this project. Please assign them to the project first.']);
+            }
+        }
+        
+        // Check budget allocation against project budget
+        if ($request->allocated_budget) {
+            $totalAllocated = Task::where('project_id', $project->id)->sum('allocated_budget') ?? 0;
+            $newTotal = $totalAllocated + $request->allocated_budget;
+            
+            if ($project->budget && $newTotal > $project->budget) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['allocated_budget' => 'Total allocated budget would exceed project budget.']);
             }
         }
         
         $task = Task::create([
+            'project_id' => $request->project_id,
             'taskTitle' => $request->taskTitle,
             'taskDescription' => $request->taskDescription,
-            'client_id' => $request->client_id,
+            'client_id' => $project->client_id,
             'assignedTo' => $request->assignedTo,
-            'formID' => $request->formID,
-            'service_request_id' => $request->service_request_id,
             'priority' => $request->priority,
             'deadline' => $request->deadline,
             'status' => $request->status,
             'allocated_budget' => $request->allocated_budget,
+            'notes' => $request->notes,
             'createdBy' => Auth::id(),
+            'dateAssigned' => $request->assignedTo ? now() : null,
         ]);
         
         return redirect()->route('admin.tasks.index')
@@ -136,34 +151,89 @@ class TaskManagementController extends Controller
     
     public function edit($id)
     {
-        $task = Task::findOrFail($id);
+        $task = Task::with('project')->findOrFail($id);
         $clients = User::where('role', 'client')->orderBy('fullName')->get();
-        $adiutors = User::where('role', 'adiutor')->orderBy('fullName')->get();
-        $forms = Form::all();
+        $projects = Project::with('client')->orderBy('created_at', 'desc')->get();
         
-        return view('admin.tasks.edit', compact('task', 'clients', 'adiutors', 'forms'));
+        // ⚠️ Get only team members of this task's project
+        $adiutors = DB::table('users')
+            ->join('project_assignments', 'users.id', '=', 'project_assignments.adiutor_id')
+            ->where('project_assignments.project_id', $task->project_id)
+            ->whereIn('project_assignments.status', ['assigned', 'accepted', 'in_progress'])
+            ->select('users.id', 'users.fullName')
+            ->orderBy('users.fullName')
+            ->get();
+        
+        return view('admin.tasks.edit', compact('task', 'clients', 'adiutors', 'projects'));
     }
     
     public function update(Request $request, $id)
     {
-        $task = Task::findOrFail($id);
+        $task = Task::with('project')->findOrFail($id);
         
         $request->validate([
             'taskTitle' => 'required|string|max:255',
             'taskDescription' => 'required|string',
-            'client_id' => 'required|exists:users,id',
             'assignedTo' => 'nullable|exists:users,id',
-            'formID' => 'nullable|exists:forms,formID',
-            'priority' => 'required|in:low,medium,high',
+            'priority' => 'required|in:low,medium,high,urgent',
             'deadline' => 'nullable|date',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'notes' => 'nullable|string',
+            'allocated_budget' => 'nullable|numeric|min:0',
+            'actual_cost' => 'nullable|numeric|min:0',
+            'progress_percentage' => 'nullable|integer|min:0|max:100',
         ]);
         
-        $task->update($request->only([
-            'taskTitle', 'taskDescription', 'client_id', 'assignedTo', 'formID', 
-            'priority', 'deadline', 'status', 'notes'
-        ]));
+        // ⚠️ Validate that assigned adiutor is a team member (if changing assignment)
+        if ($request->assignedTo && $request->assignedTo != $task->assignedTo) {
+            if (!$this->isProjectTeamMember($task->project_id, $request->assignedTo)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['assignedTo' => 'The selected adiutor is not a team member of this project. Please assign them to the project first.']);
+            }
+        }
+        
+        // Check budget allocation if changed
+        if ($request->allocated_budget && $request->allocated_budget != $task->allocated_budget) {
+            $project = $task->project;
+            $totalAllocated = Task::where('project_id', $project->id)
+                                 ->where('taskID', '!=', $task->taskID)
+                                 ->sum('allocated_budget') ?? 0;
+            $newTotal = $totalAllocated + $request->allocated_budget;
+            
+            if ($project->budget && $newTotal > $project->budget) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['allocated_budget' => 'Total allocated budget would exceed project budget.']);
+            }
+        }
+        
+        $updateData = [
+            'taskTitle' => $request->taskTitle,
+            'taskDescription' => $request->taskDescription,
+            'assignedTo' => $request->assignedTo,
+            'priority' => $request->priority,
+            'deadline' => $request->deadline,
+            'status' => $request->status,
+            'notes' => $request->notes,
+            'allocated_budget' => $request->allocated_budget,
+            'actual_cost' => $request->actual_cost,
+            'progress_percentage' => $request->progress_percentage,
+        ];
+        
+        // Update dateAssigned if assigning to someone new
+        if ($request->assignedTo && $request->assignedTo != $task->assignedTo) {
+            $updateData['dateAssigned'] = now();
+        }
+        
+        // Update completedAt if status changed to completed
+        if ($request->status === 'completed' && $task->status !== 'completed') {
+            $updateData['completedAt'] = now();
+        } elseif ($request->status !== 'completed') {
+            $updateData['completedAt'] = null;
+        }
+        
+        $task->update($updateData);
         
         return redirect()->route('admin.tasks.show', $task->taskID)
                         ->with('success', 'Task updated successfully.');
@@ -278,15 +348,17 @@ class TaskManagementController extends Controller
             'actual_cost' => 'nullable|numeric|min:0',
         ]);
         
-        $task = Task::findOrFail($id);
+        $task = Task::with('project')->findOrFail($id);
         
-        // Check budget allocation if service request is specified
-        if ($task->service_request_id && $request->allocated_budget) {
-            $serviceRequest = $task->serviceRequest;
-            $currentAllocated = $serviceRequest->getTotalAllocatedBudget() - ($task->allocated_budget ?? 0);
-            $newTotal = $currentAllocated + $request->allocated_budget;
+        // Check budget allocation against project budget
+        if ($request->allocated_budget) {
+            $project = $task->project;
+            $totalAllocated = Task::where('project_id', $project->id)
+                                 ->where('taskID', '!=', $task->taskID)
+                                 ->sum('allocated_budget') ?? 0;
+            $newTotal = $totalAllocated + $request->allocated_budget;
             
-            if ($serviceRequest->approved_budget && $newTotal > $serviceRequest->approved_budget) {
+            if ($project->budget && $newTotal > $project->budget) {
                 return redirect()->back()
                     ->withErrors(['allocated_budget' => 'Total allocated budget would exceed project budget.']);
             }
@@ -301,17 +373,23 @@ class TaskManagementController extends Controller
     }
     
     /**
-     * Get budget overview for a service request.
+     * Get budget overview for a project.
      */
-    public function budgetOverview($serviceRequestId)
+    public function budgetOverview($projectId)
     {
-        $serviceRequest = \App\Models\ServiceRequest::with('tasks')->findOrFail($serviceRequestId);
+        $project = Project::with('tasks')->findOrFail($projectId);
+        
+        $totalAllocated = $project->tasks->sum('allocated_budget') ?? 0;
+        $totalSpent = $project->tasks->sum('actual_cost') ?? 0;
+        $remainingBudget = ($project->budget ?? 0) - $totalAllocated;
         
         $budgetData = [
-            'approved_budget' => $serviceRequest->approved_budget,
-            'total_allocated' => $serviceRequest->getTotalAllocatedBudget(),
-            'remaining_budget' => $serviceRequest->getRemainingBudget(),
-            'tasks' => $serviceRequest->tasks->map(function ($task) {
+            'project_budget' => $project->budget,
+            'total_allocated' => $totalAllocated,
+            'total_spent' => $totalSpent,
+            'remaining_budget' => $remainingBudget,
+            'budget_utilization_percentage' => $project->budget > 0 ? round(($totalAllocated / $project->budget) * 100, 2) : 0,
+            'tasks' => $project->tasks->map(function ($task) {
                 return [
                     'id' => $task->taskID,
                     'title' => $task->taskTitle,
@@ -324,5 +402,17 @@ class TaskManagementController extends Controller
         ];
         
         return response()->json($budgetData);
+    }
+
+    /**
+     * Check if adiutor is a team member of the project
+     */
+    protected function isProjectTeamMember($projectId, $adiutorId)
+    {
+        return DB::table('project_assignments')
+            ->where('project_id', $projectId)
+            ->where('adiutor_id', $adiutorId)
+            ->whereIn('status', ['assigned', 'accepted', 'in_progress'])
+            ->exists();
     }
 }

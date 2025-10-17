@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Create New Task')
-
+@section('page-title', 'Create New Task')
 @include('admin.tasks.helpers')
 
 @section('content')
@@ -72,19 +72,20 @@
                 </div>
 
                 <div>
-                    <label for="formID" class="block text-sm font-medium text-neutral-700 mb-1">Related Form</label>
-                    <select name="formID" id="formID" 
-                            class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('formID') border-error-500 @enderror">
-                        <option value="">-- No Form --</option>
-                        @foreach($forms as $form)
-                            <option value="{{ $form->formID }}" {{ old('formID') == $form->formID ? 'selected' : '' }}>
-                                Form #{{ $form->formID }} - {{ $form->title }}
+                    <label for="project_id" class="block text-sm font-medium text-neutral-700 mb-1">Related Project <span class="text-error-500">*</span></label>
+                    <select name="project_id" id="project_id" required
+                            class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('project_id') border-error-500 @enderror">
+                        <option value="">-- Select Project --</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
+                                {{ $project->title }} ({{ $project->client ? $project->client->fullName : 'No Client' }})
                             </option>
                         @endforeach
                     </select>
-                    @error('formID')
+                    @error('project_id')
                         <p class="text-error-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
+                    <small class="text-neutral-500 mt-1 block">Tasks must be associated with a project</small>
                 </div>
                 
                 <div>
@@ -108,6 +109,7 @@
                         <option value="low" {{ old('priority', 'medium') === 'low' ? 'selected' : '' }}>Low</option>
                         <option value="medium" {{ old('priority', 'medium') === 'medium' ? 'selected' : '' }}>Medium</option>
                         <option value="high" {{ old('priority', 'medium') === 'high' ? 'selected' : '' }}>High</option>
+                        <option value="urgent" {{ old('priority', 'medium') === 'urgent' ? 'selected' : '' }}>Urgent</option>
                     </select>
                     @error('priority')
                         <p class="text-error-500 text-sm mt-1">{{ $message }}</p>
@@ -125,35 +127,27 @@
                 </div>
                 
                 <div>
-                    <label for="client_id" class="block text-sm font-medium text-neutral-700 mb-1">Client</label>
-                    <select name="client_id" id="client_id" 
-                            class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('client_id') border-error-500 @enderror">
-                        <option value="">-- Select Client --</option>
-                        @foreach($clients as $client)
-                            <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
-                                {{ $client->fullName }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('client_id')
+                    <label for="allocated_budget" class="block text-sm font-medium text-neutral-700 mb-1">Allocated Budget</label>
+                    <input type="number" name="allocated_budget" id="allocated_budget" step="0.01" min="0"
+                           class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('allocated_budget') border-error-500 @enderror"
+                           value="{{ old('allocated_budget') }}" placeholder="0.00">
+                    @error('allocated_budget')
                         <p class="text-error-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
+                    <small class="text-neutral-500 mt-1 block">Budget allocated for this task</small>
                 </div>
                 
                 <div>
                     <label for="assignedTo" class="block text-sm font-medium text-neutral-700 mb-1">Assign To</label>
                     <select name="assignedTo" id="assignedTo" 
-                            class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('assignedTo') border-error-500 @enderror">
-                        <option value="">-- Not Assigned --</option>
-                        @foreach($adiutors as $adiutor)
-                            <option value="{{ $adiutor->id }}" {{ old('assignedTo') == $adiutor->id ? 'selected' : '' }}>
-                                {{ $adiutor->fullName }}
-                            </option>
-                        @endforeach
+                            class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 @error('assignedTo') border-error-500 @enderror"
+                            disabled>
+                        <option value="">-- Select Project First --</option>
                     </select>
                     @error('assignedTo')
                         <p class="text-error-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
+                    <small class="text-neutral-500 mt-1 block">Only team members of the selected project can be assigned</small>
                 </div>
                 
                 <div>
@@ -208,6 +202,53 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const projectSelect = document.getElementById('project_id');
+        const adiutorSelect = document.getElementById('assignedTo');
+        
+        // Dynamic team member loading based on project selection
+        if (projectSelect && adiutorSelect) {
+            projectSelect.addEventListener('change', function() {
+                const projectId = this.value;
+                
+                if (!projectId) {
+                    adiutorSelect.innerHTML = '<option value="">-- Select Project First --</option>';
+                    adiutorSelect.disabled = true;
+                    return;
+                }
+                
+                // Show loading state
+                adiutorSelect.innerHTML = '<option value="">Loading team members...</option>';
+                adiutorSelect.disabled = true;
+                
+                // Fetch team members for this project
+                fetch(`/admin/projects/${projectId}/team-members`)
+                    .then(response => response.json())
+                    .then(data => {
+                        adiutorSelect.innerHTML = '<option value="">-- Not Assigned --</option>';
+                        
+                        if (data.length === 0) {
+                            adiutorSelect.innerHTML += '<option value="" disabled>⚠️ No team members assigned to this project</option>';
+                        } else {
+                            data.forEach(member => {
+                                adiutorSelect.innerHTML += `<option value="${member.id}">${member.fullName}</option>`;
+                            });
+                        }
+                        
+                        adiutorSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching team members:', error);
+                        adiutorSelect.innerHTML = '<option value="">-- Error loading team members --</option>';
+                        adiutorSelect.disabled = true;
+                    });
+            });
+            
+            // Disable adiutor select initially if no project is selected
+            if (!projectSelect.value) {
+                adiutorSelect.disabled = true;
+            }
+        }
+        
         // Auto-update status based on completed date
         const completedAtInput = document.getElementById('completedAt');
         const statusSelect = document.getElementById('status');

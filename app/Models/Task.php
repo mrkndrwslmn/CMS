@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Task extends Model
 {
@@ -88,11 +89,12 @@ class Task extends Model
     /**
      * @deprecated Use project() relationship instead
      * Get the form this task belongs to.
+     * COMMENTED OUT: forms table no longer exists in new architecture
      */
-    public function form(): BelongsTo
-    {
-        return $this->belongsTo(Form::class, 'formID', 'formID');
-    }
+    // public function form(): BelongsTo
+    // {
+    //     return $this->belongsTo(Form::class, 'formID', 'formID');
+    // }
 
     /**
      * @deprecated Tasks should belong to projects, not service requests directly
@@ -104,11 +106,19 @@ class Task extends Model
     }
 
     /**
-     * Get the documents associated with this task.
+     * Get the documents associated with this task (legacy foreign key).
      */
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class, 'taskID');
+    }
+
+    /**
+     * Get all documents for this task (polymorphic).
+     */
+    public function allDocuments(): MorphMany
+    {
+        return $this->morphMany(Document::class, 'documentable');
     }
 
     /**

@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -139,8 +140,8 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
-    /**
-     * Get projects created by this client
+        /**
+     * Get projects created by this user (for clients)
      */
     public function createdProjects()
     {
@@ -148,19 +149,12 @@ class User extends Authenticatable
     }
 
     /**
-     * Get notifications for this user
-     */
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');
-    }
-
-    /**
      * Get unread notifications count
+     * Uses Laravel's built-in Notifiable trait
      */
     public function unreadNotificationsCount()
     {
-        return $this->notifications()->where('is_read', false)->count();
+        return $this->unreadNotifications()->count();
     }
 
     /**
@@ -181,10 +175,19 @@ class User extends Authenticatable
 
     /**
      * Get forms/requests submitted by this user (for clients)
+     * Now returns ServiceRequest instead of deprecated Form model
      */
-    public function forms()
+    public function forms(): HasMany
     {
-        return $this->hasMany(Form::class, 'client_id');
+        return $this->hasMany(ServiceRequest::class, 'client_id');
+    }
+
+    /**
+     * Get service requests submitted by this user (preferred method)
+     */
+    public function serviceRequests(): HasMany
+    {
+        return $this->hasMany(ServiceRequest::class, 'client_id');
     }
 
     /**

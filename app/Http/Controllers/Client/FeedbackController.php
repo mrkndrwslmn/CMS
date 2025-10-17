@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectFeedback;
-use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
+use App\Notifications\FeedbackReceivedNotification;
 
 class FeedbackController extends Controller
 {
@@ -73,17 +74,16 @@ class FeedbackController extends Controller
 
         // Notify the Adiutor
         if ($project->assignedAdiutor) {
-            Notification::create([
-                'user_id' => $project->assignedAdiutor->user_id,
-                'type' => 'feedback_received',
-                'title' => 'New Feedback Received',
-                'message' => auth()->user()->fullName . ' left feedback for project: ' . $project->title,
-                'data' => json_encode([
-                    'project_id' => $projectId,
-                    'feedback_id' => $feedback->id,
-                    'rating' => $validated['rating']
-                ])
-            ]);
+            $adiutorUser = User::find($project->assignedAdiutor->user_id);
+            if ($adiutorUser) {
+                $adiutorUser->notify(new FeedbackReceivedNotification(
+                    $projectId,
+                    $project->title,
+                    $feedback->id,
+                    $validated['rating'],
+                    auth()->user()->fullName
+                ));
+            }
         }
 
         return redirect()->route('client.feedback')

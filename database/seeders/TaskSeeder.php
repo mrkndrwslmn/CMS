@@ -32,8 +32,8 @@ class TaskSeeder extends Seeder
             $tasks = $this->getTasksForProject($project);
             
             foreach ($tasks as $taskData) {
-                // Select appropriate adiutor based on project assignments or skills
-                $assignedAdiutor = $this->getAdiutorForTask($project, $adiutors, $taskData['category']);
+                // Select appropriate adiutor based on project assignments
+                $assignedAdiutor = $this->getAdiutorForTask($project, $adiutors, null);
                 
                 Task::create([
                     'project_id' => $project->id,
@@ -43,17 +43,15 @@ class TaskSeeder extends Seeder
                     'createdBy' => $admins->random()->id,
                     'taskTitle' => $taskData['title'],
                     'taskDescription' => $taskData['description'],
-                    'category' => $taskData['category'],
                     'priority' => $taskData['priority'],
                     'status' => $taskData['status'],
-                    'estimatedHours' => $taskData['estimated_hours'],
-                    'actualHours' => $taskData['actual_hours'],
-                    'hourlyRate' => $assignedAdiutor->adiutorProfile->hourly_rate ?? 65.00,
+                    'allocated_budget' => $taskData['budget'] ?? null,
+                    'actual_cost' => $taskData['actual_cost'] ?? null,
                     'deadline' => now()->addDays($taskData['deadline_days']),
-                    'tags' => json_encode($taskData['tags']),
-                    'requirements' => $taskData['requirements'],
-                    'dependencies' => $taskData['dependencies'],
+                    'dateAssigned' => $project->started_at ?? now(),
+                    'completedAt' => $taskData['status'] === 'completed' ? now()->subDays(rand(1, 5)) : null,
                     'progress_percentage' => $taskData['progress'],
+                    'notes' => $taskData['notes'] ?? 'Task created from project breakdown',
                     'created_at' => $project->created_at->addHours(rand(1, 72)),
                 ]);
                 
@@ -66,17 +64,9 @@ class TaskSeeder extends Seeder
 
     private function getTasksForProject(Project $project): array
     {
-        return match($project->category) {
-            'Web Development' => $this->getWebDevelopmentTasks($project),
-            'Mobile Development' => $this->getMobileDevelopmentTasks($project),
-            'Design' => $this->getDesignTasks($project),
-            'Backend Development' => $this->getBackendTasks($project),
-            'Consulting' => $this->getConsultingTasks($project),
-            'Integration' => $this->getIntegrationTasks($project),
-            'Maintenance' => $this->getMaintenanceTasks($project),
-            'Marketing' => $this->getMarketingTasks($project),
-            default => $this->getGeneralTasks($project)
-        };
+        // Simplified task generation based on project status
+        // All projects get similar tasks, varying by complexity
+        return $this->getGeneralTasks($project);
     }
 
     private function getWebDevelopmentTasks(Project $project): array
@@ -597,73 +587,63 @@ class TaskSeeder extends Seeder
 
     private function getGeneralTasks(Project $project): array
     {
+        // Calculate budget allocation based on project budget
+        $projectBudget = $project->budget ?? 5000;
+        $taskBudgets = [
+            $projectBudget * 0.20, // 20% for requirements
+            $projectBudget * 0.60, // 60% for development
+            $projectBudget * 0.20, // 20% for testing
+        ];
+
         return [
             [
                 'title' => 'Project Requirements Analysis',
-                'description' => 'Analyze and document project requirements in detail',
-                'category' => 'Planning',
+                'description' => 'Analyze and document project requirements in detail, including stakeholder interviews, scope definition, and technical specifications.',
                 'priority' => 'high',
                 'status' => 'completed',
-                'estimated_hours' => 8,
-                'actual_hours' => 10,
+                'budget' => round($taskBudgets[0], 2),
+                'actual_cost' => round($taskBudgets[0] * rand(90, 110) / 100, 2),
                 'deadline_days' => 5,
-                'tags' => ['requirements', 'analysis', 'documentation'],
-                'requirements' => 'Requirements documentation, stakeholder interviews, scope definition',
-                'dependencies' => null,
                 'progress' => 100,
+                'notes' => 'Requirements documentation completed with stakeholder approval',
             ],
             [
                 'title' => 'Implementation & Development',
-                'description' => 'Main development work for the project',
-                'category' => 'Development',
+                'description' => 'Main development work for the project including coding, feature implementation, and integration with required systems.',
                 'priority' => 'high',
-                'status' => $this->getRandomStatus(['in_progress', 'review']),
-                'estimated_hours' => 40,
-                'actual_hours' => rand(25, 45),
+                'status' => $this->getRandomStatus(['in_progress', 'completed']),
+                'budget' => round($taskBudgets[1], 2),
+                'actual_cost' => $this->getRandomStatus(['in_progress', 'completed']) === 'completed' 
+                    ? round($taskBudgets[1] * rand(90, 110) / 100, 2) 
+                    : round($taskBudgets[1] * rand(40, 70) / 100, 2),
                 'deadline_days' => 30,
-                'tags' => ['development', 'implementation', 'coding'],
-                'requirements' => 'Code implementation, feature development, integration work',
-                'dependencies' => 'Project Requirements Analysis',
-                'progress' => rand(40, 90),
+                'progress' => rand(40, 100),
+                'notes' => 'Core development in progress with regular client updates',
             ],
             [
                 'title' => 'Testing & Quality Assurance',
-                'description' => 'Comprehensive testing and quality assurance',
-                'category' => 'Testing',
+                'description' => 'Comprehensive testing including unit tests, integration tests, and end-to-end quality assurance to ensure project meets requirements.',
                 'priority' => 'medium',
                 'status' => $this->getRandomStatus(['pending', 'in_progress']),
-                'estimated_hours' => 16,
-                'actual_hours' => rand(0, 12),
+                'budget' => round($taskBudgets[2], 2),
+                'actual_cost' => $this->getRandomStatus(['pending', 'in_progress']) === 'in_progress' 
+                    ? round($taskBudgets[2] * rand(20, 50) / 100, 2) 
+                    : 0,
                 'deadline_days' => 35,
-                'tags' => ['testing', 'qa', 'quality'],
-                'requirements' => 'Test case creation, bug testing, performance testing',
-                'dependencies' => 'Implementation & Development',
                 'progress' => rand(0, 60),
+                'notes' => 'QA testing planned after development completion',
             ],
         ];
     }
 
-    private function getAdiutorForTask(Project $project, $adiutors, string $taskCategory): User
+    private function getAdiutorForTask(Project $project, $adiutors, ?string $taskCategory = null): User
     {
         // First try to get an adiutor already assigned to this project
-        $projectAdiutors = $project->assignedAdiutors;
+        $projectAdiutors = $project->adiutors;
         
-        if ($projectAdiutors->isNotEmpty()) {
-            // Find adiutor with matching skills for the task category
-            foreach ($projectAdiutors as $adiutor) {
-                if ($this->adiutorHasSkillForCategory($adiutor, $taskCategory)) {
-                    return $adiutor;
-                }
-            }
-            // If no perfect match, return random project adiutor
+        if ($projectAdiutors && $projectAdiutors->isNotEmpty()) {
+            // Return random project adiutor
             return $projectAdiutors->random();
-        }
-        
-        // If no project adiutors, find best match from all adiutors
-        foreach ($adiutors as $adiutor) {
-            if ($this->adiutorHasSkillForCategory($adiutor, $taskCategory)) {
-                return $adiutor;
-            }
         }
         
         // Fallback to random adiutor

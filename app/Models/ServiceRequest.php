@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class ServiceRequest extends Model
 {
@@ -59,6 +60,15 @@ class ServiceRequest extends Model
     }
 
     /**
+     * Get the user (client) that owns the service request
+     * Alias for client() relationship for backward compatibility
+     */
+    public function user(): BelongsTo
+    {
+        return $this->client();
+    }
+
+    /**
      * Get the admin who approved the request
      */
     public function approvedBy(): BelongsTo
@@ -81,6 +91,22 @@ class ServiceRequest extends Model
     public function project(): HasOne
     {
         return $this->hasOne(Project::class, 'service_request_id');
+    }
+
+    /**
+     * Get all documents for this service request (polymorphic).
+     */
+    public function documents(): MorphMany
+    {
+        return $this->morphMany(Document::class, 'documentable');
+    }
+
+    /**
+     * Get documents using legacy foreign key.
+     */
+    public function directDocuments(): HasMany
+    {
+        return $this->hasMany(Document::class, 'service_request_id');
     }
 
     /**

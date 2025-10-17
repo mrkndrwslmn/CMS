@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Form;
 use App\Models\User;
 use App\Models\Task;
-use App\Models\FormFile;
 use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Models\RequestAttachment;
@@ -17,30 +15,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class RequestManagementController extends Controller
 {
     public function index(Request $request)
     {
-        // Handle both ServiceRequests (new) and Forms (legacy) in one unified view
-        $serviceRequests = ServiceRequest::with(['client', 'attachments']);
-        $forms = Form::with(['client', 'files']);
+        $query = ServiceRequest::with(['client', 'attachments', 'project']);
         
         // Search functionality for ServiceRequests
         if ($request->filled('search')) {
             $search = $request->search;
-            $serviceRequests->where(function($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('project_name', 'like', "%{$search}%")
                   ->orWhere('request_description', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($clientQuery) use ($search) {
-                      $clientQuery->where('fullName', 'like', "%{$search}%");
-                  });
-            });
-            
-            // Search functionality for Forms
-            $forms->where(function($q) use ($search) {
-                $q->where('projectDescription', 'like', "%{$search}%")
-                  ->orWhere('companyName', 'like', "%{$search}%")
                   ->orWhereHas('client', function($clientQuery) use ($search) {
                       $clientQuery->where('fullName', 'like', "%{$search}%");
                   });
@@ -49,85 +37,46 @@ class RequestManagementController extends Controller
         
         // Status filter
         if ($request->filled('status')) {
-            $serviceRequests->where('status', $request->status);
-            $forms->where('status', $request->status);
+            $query->where('status', $request->status);
         }
         
-        // Type filter - handle different field names
+        // Service type filter
         if ($request->filled('type')) {
-            $serviceRequests->where('service_type', $request->type);
-            $forms->where('businessType', $request->type);
+            $query->where('service_type', $request->type);
         }
         
         // Priority filter
         if ($request->filled('priority')) {
-            $serviceRequests->where('priority', $request->priority);
-            $forms->where('priority', $request->priority);
+            $query->where('priority', $request->priority);
         }
         
         // Client filter
         if ($request->filled('client')) {
-            $serviceRequests->where('client_id', $request->client);
-            $forms->where('client_id', $request->client);
+            $query->where('client_id', $request->client);
         }
         
         // Date range filter
         if ($request->filled('date_from')) {
-            $serviceRequests->whereDate('created_at', '>=', $request->date_from);
-            $forms->whereDate('created_at', '>=', $request->date_from);
+            $query->whereDate('created_at', '>=', $request->date_from);
         }
         
         if ($request->filled('date_to')) {
-            $serviceRequests->whereDate('created_at', '<=', $request->date_to);
-            $forms->whereDate('created_at', '<=', $request->date_to);
+            $query->whereDate('created_at', '<=', $request->date_to);
         }
         
-        // Get collections and merge them
-        $serviceRequestCollection = $serviceRequests->get()->map(function($request) {
-            $request->type = 'service_request';
-            $request->display_title = $request->project_name ?? 'Request #' . $request->id;
-            $request->display_description = $request->request_description;
-            $request->display_type = $request->service_type;
-            $request->display_id = $request->id;
-            return $request;
-        });
-        
-        $formCollection = $forms->get()->map(function($form) {
-            $form->type = 'form';
-            $form->display_title = $form->companyName ?? 'Form #' . $form->formID;
-            $form->display_description = $form->projectDescription;
-            $form->display_type = $form->businessType;
-            $form->display_id = $form->formID;
-            return $form;
-        });
-        
-        // Merge and sort collections
-        $allRequests = $serviceRequestCollection->concat($formCollection);
-        
         // Sort by created_at descending
-        $allRequests = $allRequests->sortByDesc('created_at');
-        
-        // Manual pagination
-        $page = $request->get('page', 1);
-        $perPage = 15;
-        $total = $allRequests->count();
-        $offset = ($page - 1) * $perPage;
-        $items = $allRequests->slice($offset, $perPage)->values();
-        
-        $requests = new \Illuminate\Pagination\LengthAwarePaginator(
-            $items, $total, $perPage, $page,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
+        $requests = $query->orderBy('created_at', 'desc')->paginate(15);
         
         // Get filter options
         $clients = User::where('role', 'client')->orderBy('fullName')->get();
         
-        // Get combined statistics
+        // Get statistics
         $stats = [
-            'total_requests' => ServiceRequest::count() + Form::count(),
-            'pending_requests' => ServiceRequest::where('status', 'pending')->count() + Form::where('status', 'pending')->count(),
-            'approved_requests' => ServiceRequest::where('status', 'approved')->count() + Form::where('status', 'approved')->count(),
-            'rejected_requests' => ServiceRequest::where('status', 'rejected')->count() + Form::where('status', 'rejected')->count(),
+            'total_requests' => ServiceRequest::count(),
+            'pending_requests' => ServiceRequest::where('status', 'pending')->count(),
+            'approved_requests' => ServiceRequest::where('status', 'approved')->count(),
+            'rejected_requests' => ServiceRequest::where('status', 'rejected')->count(),
+            'paid_requests' => ServiceRequest::where('status', 'paid')->count(),
         ];
         
         return view('admin.requests.index', compact('requests', 'clients', 'stats'));
@@ -135,24 +84,10 @@ class RequestManagementController extends Controller
     
     public function show($id)
     {
-        // Try to find in ServiceRequests first (new system)
-        $serviceRequest = ServiceRequest::with(['client', 'attachments', 'tasks', 'payments'])->find($id);
+        $serviceRequest = ServiceRequest::with(['client', 'attachments', 'project.tasks', 'payments'])
+                                       ->findOrFail($id);
         
-        if ($serviceRequest) {
-            $serviceRequest->type = 'service_request';
-            return view('admin.requests.show', ['request' => $serviceRequest]);
-        }
-        
-        // If not found, try Forms table (legacy system)
-        $form = Form::with(['client', 'files', 'tasks'])->where('formID', $id)->first();
-        
-        if ($form) {
-            $form->type = 'form';
-            return view('admin.requests.show', ['request' => $form]);
-        }
-        
-        // If neither found, throw 404
-        abort(404, 'Request not found');
+        return view('admin.requests.show', ['request' => $serviceRequest]);
     }
     
     public function approve(Request $request, $id)
@@ -162,17 +97,23 @@ class RequestManagementController extends Controller
         $request->validate([
             'admin_notes' => 'nullable|string',
             'approved_budget' => 'required|numeric|min:0',
-            'payment_method' => 'required|string',
             'payment_due_date' => 'required|date|after:today',
             'payment_instructions' => 'nullable|string',
+            // Task creation fields - only validate if create_task is checked
+            'create_task' => 'nullable|boolean',
+            'task_title' => 'nullable|required_if:create_task,on|string|max:255',
+            'task_description' => 'nullable|required_if:create_task,on|string',
+            'task_priority' => 'nullable|required_if:create_task,on|in:low,medium,high,urgent',
+            'task_due_date' => 'nullable|date',
+            'adiutor_id' => 'nullable|exists:users,id',
         ]);
         
-        // Update request status to approved and set budget
+        // Update request status to approved
         $serviceRequest->update([
             'status' => 'approved',
             'admin_notes' => $request->admin_notes,
             'approved_budget' => $request->approved_budget,
-            'payment_method' => $request->payment_method,
+            'payment_method' => $serviceRequest->contact_method ?? 'email', // Use client's preferred contact method
             'payment_due_date' => $request->payment_due_date,
             'payment_instructions' => $request->payment_instructions,
             'approved_by' => Auth::id(),
@@ -180,12 +121,46 @@ class RequestManagementController extends Controller
             'reviewed_at' => now(),
         ]);
         
+        // Create task if requested
+        if ($request->has('create_task') && $request->create_task && $request->filled('task_title')) {
+            $taskData = [
+                'service_request_id' => $serviceRequest->id,
+                'client_id' => $serviceRequest->client_id,
+                'title' => $request->task_title,
+                'description' => $request->task_description,
+                'priority' => $request->task_priority ?? 'medium',
+                'status' => 'pending',
+                'created_by' => Auth::id(),
+            ];
+            
+            if ($request->filled('task_due_date')) {
+                $taskData['due_date'] = $request->task_due_date;
+            }
+            
+            if ($request->filled('adiutor_id')) {
+                $taskData['adiutor_id'] = $request->adiutor_id;
+                $taskData['status'] = 'assigned';
+            }
+            
+            \App\Models\Task::create($taskData);
+        }
+        
         // Send email notification
-        Mail::to($serviceRequest->client->email)
-            ->send(new RequestApproved($serviceRequest));
+        try {
+            // Refresh the service request to get the latest data
+            $serviceRequest->refresh();
+            $serviceRequest->load('client');
+            
+            Mail::to($serviceRequest->client->email)
+                ->send(new RequestApproved($serviceRequest));
+                
+            Log::info('Approval email sent to: ' . $serviceRequest->client->email);
+        } catch (\Exception $e) {
+            Log::error('Failed to send approval email: ' . $e->getMessage());
+        }
         
         return redirect()->route('admin.requests.show', $serviceRequest->id)
-                        ->with('success', 'Request approved successfully. Client will be notified to proceed with payment.');
+                        ->with('success', 'Request approved successfully. Client has been notified via email.');
     }
     
     public function requestPayment($id)
@@ -207,51 +182,26 @@ class RequestManagementController extends Controller
     
     public function confirmPayment(Request $request, $id)
     {
-        $serviceRequest = ServiceRequest::findOrFail($id);
+        // THIS METHOD IS NO LONGER USED
+        // Maya payment gateway handles payment confirmation automatically
+        // When payment is successful, MayaPaymentController automatically:
+        // 1. Confirms payment
+        // 2. Updates service request status to 'paid'
+        // 3. Creates project
+        // 4. Sends confirmation emails
         
-        $request->validate([
-            'payment_reference' => 'required|string',
-            'payment_notes' => 'nullable|string',
-        ]);
-        
-        // Create payment record
-        $payment = Payment::create([
-            'service_request_id' => $serviceRequest->id,
-            'amount' => $serviceRequest->approved_budget,
-            'payment_method' => $serviceRequest->payment_method,
-            'payment_reference' => $request->payment_reference,
-            'status' => 'confirmed',
-            'notes' => $request->payment_notes,
-            'confirmed_at' => now(),
-            'confirmed_by' => Auth::id(),
-        ]);
-        
-        // Update service request status
-        $serviceRequest->update([
-            'status' => 'paid',
-            'payment_confirmed_at' => now(),
-            'payment_reference' => $request->payment_reference,
-        ]);
-        
-        // IMPORTANT: Create a PROJECT from the paid service request
-        $project = Project::create([
-            'service_request_id' => $serviceRequest->id,
-            'client_id' => $serviceRequest->client_id,
-            'title' => $serviceRequest->project_name,
-            'description' => $serviceRequest->request_description,
-            'status' => 'active',
-            'budget' => $serviceRequest->approved_budget,
-            'deadline' => $serviceRequest->deadline,
-            'priority' => $serviceRequest->priority,
-            'started_at' => now(),
-        ]);
-        
-        // Send payment confirmation email
-        Mail::to($serviceRequest->client->email)
-            ->send(new PaymentConfirmed($serviceRequest));
-        
-        return redirect()->route('admin.requests.show', $serviceRequest->id)
-                        ->with('success', 'Payment confirmed successfully. Project #' . $project->id . ' has been created and can now have tasks assigned.');
+        return redirect()->route('admin.requests.show', $id)
+                        ->with('info', 'Payment is handled automatically by Maya payment gateway. Manual confirmation is no longer needed.');
+    }
+    
+    /**
+     * View payment proof - DEPRECATED
+     * Maya payment gateway handles payment verification automatically.
+     * This method is kept for backward compatibility but no longer functional.
+     */
+    public function viewPaymentProof($id)
+    {
+        return redirect()->back()->with('info', 'Payment proof viewing is no longer available. Maya payment gateway handles verification automatically.');
     }
     
     public function reject(Request $request, $id)
@@ -370,11 +320,11 @@ class RequestManagementController extends Controller
     
     public function downloadFile($requestId, $fileId)
     {
-        // Check if this is an attachment for ServiceRequest
+        // Get attachment for ServiceRequest
         $attachment = RequestAttachment::where('service_request_id', $requestId)->findOrFail($fileId);
         
         if (Storage::exists($attachment->file_path)) {
-            return Storage::download($attachment->file_path, $attachment->original_name);
+            return Storage::download($attachment->file_path, $attachment->original_filename);
         }
         
         return redirect()->back()->with('error', 'File not found.');

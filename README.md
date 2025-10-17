@@ -1,61 +1,218 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Treis Adiutor - Client Management System (CMS)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A client management system designed to facilitate service request handling, project management, task assignment, and collaboration between Clients, Adiutors (service providers), and Administrators.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Backend:** Laravel 12.33.0, PHP 8.2.12
+- **Database:** SQLite (development), Supabase PostgreSQL (production)
+- **Frontend:** Tailwind CSS, Alpine.js
+- **Payment Gateway:** Maya Business
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Service Request Management
+- Public and authenticated request submission
+- File attachment support
+- Admin approval/rejection
+- Priority management
+- Status tracking (pending, approved, rejected, pending_payment, paid, in_progress, completed)
+- Budget estimation and approval
 
-## Learning Laravel
+### Project Management
+- Automatic project creation from paid requests
+- Project-adiutor assignment
+- Multiple adiutor support per project
+- Budget tracking and overview
+- Status management
+- Project completion workflow
+- Timeline tracking
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Task Management
+- Task creation by admins and adiutors
+- Task assignment validation (team members only)
+- Task status tracking
+- Budget allocation per task
+- Progress percentage
+- Task completion by adiutors
+- Budget change requests
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Document Management
+- File upload and storage
+- Project-level documents
+- Task-level documents
+- Document download
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Feedback System
+- Client project feedback
+- Rating system (1-5 stars)
+- Admin response capability
+- Feedback history
 
-## Laravel Sponsors
+### User Management
+- Multi-role support (admin, client, adiutor)
+- Profile management
+- Status management (active/inactive)
+- Client and adiutor profile extensions
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Login Credentials
 
-### Premium Partners
+### Administrator
+- **Email:** admin@treisadiutor.com
+- **Password:** admin123
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+or
 
-## Contributing
+- **Email:** manager@treisadiutor.com
+- **Password:** admin123
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Client
+- **Email:** john.smith@techstartup.com
+- **Password:** client123
 
-## Code of Conduct
+### Adiutor (Service Provider)
+- **Email:** alex@treisadiutor.com
+- **Password:** adiutor123
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## System Workflow
 
-## Security Vulnerabilities
+### 1. Service Request Creation (Client)
+- Client submits service request via public form or authenticated dashboard
+- Request enters admin queue with status `pending`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 2. Request Review & Approval (Admin)
+- Admin reviews request details
+- Admin approves or rejects the request
+- If approved, payment request is sent to client
+- Status changes: `pending` → `approved` → `pending_payment`
+
+### 3. Payment Processing
+- Client makes payment through Maya payment gateway
+- System confirms payment (via webhook)
+- Status changes: `pending_payment` → `paid`
+
+### 4. Project Creation
+- System automatically creates project when payment is confirmed
+- Admin assigns adiutors to project
+- Adiutors accept or decline project assignment
+- Status changes: `assigned` → `accepted` (when adiutor accepts)
+
+### 5. Task Management
+- Tasks created for project by admin or assigned adiutors
+- Tasks assigned to project team members
+- Budget validated against project budget
+- Adiutors work on assigned tasks and update progress
+- Budget change requests can be submitted if needed
+
+### 6. Project Completion
+- All tasks marked as completed
+- Admin marks project complete
+- Client provides feedback and ratings
+- Data stored for future reference
+
+## Getting Started
+
+### Prerequisites
+- PHP 8.2+
+- Composer
+- Node.js & npm
+- SQLite (for development)
+- PostgreSQL support (for production with Supabase)
+
+### Installation
+
+1. Clone the repository:
+```
+git clone https://github.com/mrkndrwslmn/CMS.git
+cd cms
+```
+
+2. Install PHP dependencies:
+```
+composer install
+```
+
+3. Install JavaScript dependencies:
+```
+npm install
+```
+
+4. Create and configure environment file:
+```
+copy .env.example .env
+php artisan key:generate
+```
+
+5. Set up the database (SQLite for development):
+```
+touch database/database.sqlite
+php artisan migrate
+```
+
+6. Seed the database with initial data:
+```
+php artisan db:seed
+```
+
+### Running the Application
+
+1. Start the Laravel development server:
+```
+php artisan serve
+```
+
+2. Compile assets and watch for changes:
+```
+npm run dev
+```
+
+3. Access the application:
+   - Public site: http://localhost:8000
+   - Admin panel: http://localhost:8000/admin/login
+   - Client dashboard: http://localhost:8000/login (then login as client)
+   - Adiutor dashboard: http://localhost:8000/login (then login as adiutor)
+
+### Additional Commands
+
+- Run all migrations from scratch (caution: deletes all data):
+```
+php artisan migrate:fresh
+```
+
+- Run all migrations and seed the database:
+```
+php artisan migrate:fresh --seed
+```
+
+- Clear application cache:
+```
+php artisan optimize:clear
+```
+
+- Run the application in one command (server, queue, logs, Vite):
+```
+composer run dev
+```
+
+## Supabase Integration (Production)
+
+For production environments, the system is designed to work with Supabase. See `SUPABASE_SETUP.md` for detailed configuration instructions.
+
+## Payment Gateway Integration
+
+The system integrates with Maya Payment Gateway for processing client payments. Configuration settings can be found in `config/maya.php`.
+
+## Known Issues & Limitations
+
+- Notification system database entries exist but UI display is incomplete
+- Maya payment gateway integration needs webhook implementation
+- Budget approval UI for budget change requests is missing
+- No direct messaging system between clients and adiutors
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited.
+
+## Contributors
+
+- Mark Andrew S. (Lead Developer)

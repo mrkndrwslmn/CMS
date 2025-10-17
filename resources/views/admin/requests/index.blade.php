@@ -1,6 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Client Requests')
+@section('page-title', 'Client Requests')
 
 @section('content')
 <div class="px-6 py-8">
@@ -176,83 +177,83 @@
         </div>
         <div class="p-6">
             @if(count($requests) > 0)
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto -mx-6 px-6">
                     <form id="bulkActionForm" action="{{ route('admin.requests.bulk-action') }}" method="POST">
                         @csrf
-                        <table class="w-full whitespace-nowrap">
+                        <table class="w-full min-w-max">
                             <thead>
                                 <tr class="bg-neutral-50 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                                    <th class="px-4 py-3 rounded-l-lg">
+                                    <th class="px-3 py-3 rounded-l-lg w-10">
                                         <div class="flex items-center">
                                             <input type="checkbox" id="selectAll" class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
                                         </div>
                                     </th>
-                                    <th class="px-4 py-3">
+                                    <th class="px-3 py-3 min-w-[200px]">
                                         <a href="{{ route('admin.requests.index', array_merge(request()->query(), ['sort' => 'title', 'direction' => request('direction') == 'asc' && request('sort') == 'title' ? 'desc' : 'asc'])) }}" 
                                            class="flex items-center group">
                                             <span>Request</span>
                                             <i class="fas fa-sort ml-1 text-neutral-300 group-hover:text-primary-500"></i>
                                         </a>
                                     </th>
-                                    <th class="px-4 py-3">
+                                    <th class="px-3 py-3 min-w-[150px]">
                                         <a href="{{ route('admin.requests.index', array_merge(request()->query(), ['sort' => 'client_id', 'direction' => request('direction') == 'asc' && request('sort') == 'client_id' ? 'desc' : 'asc'])) }}" 
                                            class="flex items-center group">
                                             <span>Client</span>
                                             <i class="fas fa-sort ml-1 text-neutral-300 group-hover:text-primary-500"></i>
                                         </a>
                                     </th>
-                                    <th class="px-4 py-3">Type</th>
-                                    <th class="px-4 py-3">
+                                    <th class="px-3 py-3 min-w-[120px]">Type</th>
+                                    <th class="px-3 py-3 min-w-[110px]">
                                         <a href="{{ route('admin.requests.index', array_merge(request()->query(), ['sort' => 'deadline', 'direction' => request('direction') == 'asc' && request('sort') == 'deadline' ? 'desc' : 'asc'])) }}" 
                                            class="flex items-center group">
                                             <span>Deadline</span>
                                             <i class="fas fa-sort ml-1 text-neutral-300 group-hover:text-primary-500"></i>
                                         </a>
                                     </th>
-                                    <th class="px-4 py-3">Status</th>
-                                    <th class="px-4 py-3">Priority</th>
-                                    <th class="px-4 py-3">
+                                    <th class="px-3 py-3 min-w-[100px]">Status</th>
+                                    <th class="px-3 py-3 min-w-[90px]">Priority</th>
+                                    <th class="px-3 py-3 min-w-[100px]">
                                         <a href="{{ route('admin.requests.index', array_merge(request()->query(), ['sort' => 'created_at', 'direction' => request('direction') == 'asc' && request('sort') == 'created_at' ? 'desc' : 'asc'])) }}" 
                                            class="flex items-center group">
                                             <span>Date</span>
                                             <i class="fas fa-sort ml-1 text-neutral-300 group-hover:text-primary-500"></i>
                                         </a>
                                     </th>
-                                    <th class="px-4 py-3 rounded-r-lg text-right">Actions</th>
+                                    <th class="px-3 py-3 rounded-r-lg text-right min-w-[120px]">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-neutral-100">
                                 @foreach($requests as $request)
                                 <tr class="hover:bg-neutral-50">
-                                    <td class="px-4 py-4">
+                                    <td class="px-3 py-4">
                                         <div class="flex items-center">
-                                            <input type="checkbox" name="request_ids[]" value="{{ $request->display_id }}" class="request-checkbox rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                                            <input type="checkbox" name="request_ids[]" value="{{ $request->id }}" class="request-checkbox rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
                                         </div>
                                     </td>
-                                    <td class="px-4 py-4">
-                                        <div class="font-medium text-neutral-900">
-                                            <a href="{{ route('admin.requests.show', $request->display_id) }}" class="hover:text-primary-600">
-                                                {{ $request->display_title }}
+                                    <td class="px-3 py-4">
+                                        <div class="font-medium text-neutral-900 whitespace-normal">
+                                            <a href="{{ route('admin.requests.show', $request->id) }}" class="hover:text-primary-600">
+                                                {{ $request->project_name }}
                                             </a>
-                                            <span class="ml-2 px-2 py-1 text-xs rounded-full {{ $request->type === 'service_request' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
-                                                {{ $request->type === 'service_request' ? 'Service Request' : 'Form' }}
+                                            <span class="ml-2 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 whitespace-nowrap">
+                                                Service Request
                                             </span>
                                         </div>
-                                        @if(!empty($request->display_description))
-                                            <div class="text-neutral-500 text-sm truncate max-w-xs">
-                                                {{ Str::limit($request->display_description, 50) }}
+                                        @if(!empty($request->request_description))
+                                            <div class="text-neutral-500 text-sm mt-1 line-clamp-2">
+                                                {{ Str::limit($request->request_description, limit: 50) }}
                                             </div>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-4">
+                                    <td class="px-3 py-4">
                                         @if($request->client)
-                                            <div class="font-medium text-neutral-900">{{ $request->client->fullName }}</div>
-                                            <div class="text-neutral-500 text-sm">{{ $request->client->email }}</div>
+                                            <div class="font-medium text-neutral-900 whitespace-nowrap">{{ $request->client->fullName }}</div>
+                                            <div class="text-neutral-500 text-sm truncate max-w-[150px]">{{ $request->client->email }}</div>
                                         @else
-                                            <span class="text-neutral-400">No client assigned</span>
+                                            <span class="text-neutral-400 whitespace-nowrap">No client assigned</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-4">
+                                    <td class="px-3 py-4">
                                         @php
                                             $typeClasses = [
                                                 'web_development' => 'bg-blue-100 text-blue-800',
@@ -261,19 +262,14 @@
                                                 'consulting' => 'bg-green-100 text-green-800',
                                                 'seo' => 'bg-orange-100 text-orange-800',
                                                 'other' => 'bg-gray-100 text-gray-800',
-                                                // Legacy form business types
-                                                'E-commerce' => 'bg-purple-100 text-purple-800',
-                                                'Technology' => 'bg-blue-100 text-blue-800',
-                                                'Education' => 'bg-green-100 text-green-800',
-                                                'Healthcare' => 'bg-cyan-100 text-cyan-800',
                                             ];
-                                            $class = $typeClasses[$request->display_type] ?? 'bg-neutral-100 text-neutral-800';
+                                            $class = $typeClasses[$request->service_type] ?? 'bg-neutral-100 text-neutral-800';
                                         @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $class }}">
-                                            {{ ucfirst(str_replace('_', ' ', $request->display_type ?? 'Unknown')) }}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap {{ $class }}">
+                                            {{ ucfirst(str_replace('_', ' ', $request->service_type ?? 'Unknown')) }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-4">
+                                    <td class="px-3 py-4 whitespace-nowrap">
                                         @if($request->deadline)
                                             @php 
                                                 $deadline = \Carbon\Carbon::parse($request->deadline);
@@ -286,12 +282,12 @@
                                                 @if($isPast)
                                                     <span class="block text-xs mt-1">
                                                         <i class="fas fa-exclamation-circle"></i> 
-                                                        {{ $deadline->diffForHumans() }}
+                                                        Overdue
                                                     </span>
                                                 @elseif($isClose)
                                                     <span class="block text-xs mt-1">
                                                         <i class="fas fa-clock"></i> 
-                                                        {{ $deadline->diffForHumans() }}
+                                                        Soon
                                                     </span>
                                                 @endif
                                             </span>
@@ -299,7 +295,7 @@
                                             <span class="text-neutral-400">Not set</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-4">
+                                    <td class="px-3 py-4 whitespace-nowrap">
                                         @if($request->status === 'pending')
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
                                                 <span class="h-1.5 w-1.5 rounded-full bg-warning-500 mr-1.5"></span>
@@ -322,7 +318,7 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-4">
+                                    <td class="px-3 py-4 whitespace-nowrap">
                                         @php
                                             $priorityClasses = [
                                                 'low' => 'bg-info-100 text-info-800',
@@ -345,12 +341,12 @@
                                             {{ ucfirst($request->priority ?? 'Low') }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-4 text-neutral-500 text-sm">
+                                    <td class="px-3 py-4 text-neutral-500 text-sm whitespace-nowrap">
                                         {{ date('M d, Y', strtotime($request->created_at)) }}
                                     </td>
-                                    <td class="px-4 py-4 text-right">
-                                        <div class="flex justify-end items-center space-x-2">
-                                            <a href="{{ route('admin.requests.show', $request->display_id) }}" 
+                                    <td class="px-3 py-4 text-right">
+                                        <div class="flex justify-end items-center space-x-1">
+                                            <a href="{{ route('admin.requests.show', $request->id) }}" 
                                                class="p-2 text-neutral-600 hover:text-primary-600 hover:bg-primary-50 rounded-full" 
                                                title="View Details">
                                                 <i class="fas fa-eye"></i>
@@ -358,15 +354,13 @@
                                             @if($request->status === 'pending')
                                                 <button type="button"
                                                         class="approve-request p-2 text-success-600 hover:bg-success-50 rounded-full"
-                                                        data-id="{{ $request->display_id }}" 
-                                                        data-type="{{ $request->type }}"
+                                                        data-id="{{ $request->id }}" 
                                                         title="Approve Request">
                                                     <i class="fas fa-check"></i>
                                                 </button>
                                                 <button type="button"
                                                         class="reject-request p-2 text-error-600 hover:bg-error-50 rounded-full"
-                                                        data-id="{{ $request->display_id }}" 
-                                                        data-type="{{ $request->type }}"
+                                                        data-id="{{ $request->id }}" 
                                                         title="Reject Request">
                                                     <i class="fas fa-times"></i>
                                                 </button>
