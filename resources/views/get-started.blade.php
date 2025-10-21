@@ -10,7 +10,7 @@
 
 @section('content')
 
-    <div class="max-w-8xl mx-auto pt-32">
+    <div class="max-w-8xl mx-auto pt-32 pb-32">
         <!-- Header -->
         <div class="text-center mb-12">
             <h1 class="text-4xl font-bold text-neutral-900 mb-4">Get Started with Your Project</h1>
@@ -228,23 +228,22 @@
                         @enderror
                     </div>
 
-                    <!-- Service Type -->
+                    <!-- Service Category -->
                     <div>
                         <label for="service_type" class="block text-sm font-medium text-neutral-700 mb-2">
-                            What type of service do you need? <span class="text-error-500">*</span>
+                            What category of service do you need? <span class="text-error-500">*</span>
                         </label>
                         <select id="service_type" 
                                 name="service_type" 
                                 class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('service_type') border-error-300 @enderror" 
                                 required>
-                            <option value="">Select a service type</option>
-                            <option value="Programming" {{ old('service_type') === 'Programming' ? 'selected' : '' }}>💻 Programming & Development</option>
-                            <option value="Editing & Arts" {{ old('service_type') === 'Editing & Arts' ? 'selected' : '' }}>🎨 Editing & Creative Arts</option>
-                            <option value="Writing" {{ old('service_type') === 'Writing' ? 'selected' : '' }}>✍️ Writing & Content</option>
+                            <option value="">Loading service categories...</option>
+                            <!-- Service categories will be populated dynamically -->
                         </select>
                         @error('service_type')
                             <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
                         @enderror
+                        <p class="mt-1 text-xs text-neutral-500">Choose the category that best matches your project needs</p>
                     </div>
 
                     <!-- Project Description -->
@@ -377,7 +376,10 @@
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Populate service categories from API
+        await populateServiceCategories();
+        
         // Auto-populate form from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         
@@ -393,14 +395,28 @@
                 notice.classList.remove('hidden');
             }
             
-            // Populate service type
+            // Populate service type (wait for categories to load first)
             if (serviceType) {
-                const serviceTypeSelect = document.getElementById('service_type');
-                if (serviceTypeSelect) {
-                    serviceTypeSelect.value = serviceType;
-                    // Add visual feedback
-                    serviceTypeSelect.classList.add('ring-2', 'ring-primary-300', 'bg-primary-50/30');
-                }
+                setTimeout(() => {
+                    const serviceTypeSelect = document.getElementById('service_type');
+                    if (serviceTypeSelect) {
+                        // Find the option that matches the service type
+                        const options = serviceTypeSelect.querySelectorAll('option');
+                        let matched = false;
+                        
+                        options.forEach(option => {
+                            if (option.value === serviceType) {
+                                option.selected = true;
+                                matched = true;
+                            }
+                        });
+                        
+                        // If matched, add visual feedback
+                        if (matched) {
+                            serviceTypeSelect.classList.add('ring-2', 'ring-primary-300', 'bg-primary-50/30');
+                        }
+                    }
+                }, 500); // Wait for API call to complete
             }
             
             // Populate description with service details
@@ -535,6 +551,70 @@
             });
         }
     });
+
+    // Function to populate service categories from API
+    async function populateServiceCategories() {
+        try {
+            const response = await fetch('/api/services');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const services = await response.json();
+            const categories = [...new Set(services.map(service => service.service_type))];
+            
+            const serviceTypeSelect = document.getElementById('service_type');
+            if (serviceTypeSelect) {
+                // Clear loading state and set proper placeholder
+                serviceTypeSelect.innerHTML = '<option value="">Select a service category</option>';
+                
+                // Category icons mapping
+                const categoryIcons = {
+                    'Web Development': '💻',
+                    'Mobile Development': '📱',
+                    'Design': '🎨',
+                    'Backend Development': '⚙️',
+                    'Integration': '🔗',
+                    'Consulting': '👥',
+                    'Maintenance': '🔧',
+                    'Marketing': '📢'
+                };
+                
+                // Add category options with icons
+                categories.sort().forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    const icon = categoryIcons[category] || '📋';
+                    option.textContent = `${icon} ${category}`;
+                    
+                    // Check if this category should be selected from old input
+                    const oldValue = '{{ old("service_type") }}';
+                    if (oldValue === category) {
+                        option.selected = true;
+                    }
+                    
+                    serviceTypeSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching service categories:', error);
+            // Fallback to basic categories if API fails
+            const serviceTypeSelect = document.getElementById('service_type');
+            if (serviceTypeSelect) {
+                serviceTypeSelect.innerHTML = `
+                    <option value="">Select a service category</option>
+                    <option value="Web Development">💻 Web Development</option>
+                    <option value="Mobile Development">📱 Mobile Development</option>
+                    <option value="Design">🎨 Design</option>
+                    <option value="Backend Development">⚙️ Backend Development</option>
+                    <option value="Integration">🔗 Integration</option>
+                    <option value="Consulting">👥 Consulting</option>
+                    <option value="Maintenance">🔧 Maintenance</option>
+                    <option value="Marketing">📢 Marketing</option>
+                `;
+            }
+        }
+    }
 
     function removeFile(index) {
         const fileInput = document.getElementById('file_upload');

@@ -15,11 +15,18 @@ class ServiceController extends Controller
     public function index()
     {
         try {
-            // Fetch all services from the services table
+            // Fetch all services from the services table with correct column mapping
             $services = DB::table('services')
-                ->select('id', 'service_type', 'service_name', 'description', 'price')
-                ->orderBy('service_type')
-                ->orderBy('service_name')
+                ->select(
+                    'id', 
+                    'category as service_type', 
+                    'name as service_name', 
+                    'description', 
+                    'base_price as price'
+                )
+                ->where('is_active', true)
+                ->orderBy('category')
+                ->orderBy('name')
                 ->get();
 
             return response()->json($services);

@@ -35,36 +35,91 @@
   <section class="py-24 relative">
     <div class="max-w-7xl mx-auto px-6">
       
-      <!-- Controls: Filter Buttons & Search Bar -->
+      <!-- Controls: Search Bar & Filters -->
       <div class="mb-12 sticky top-24 z-30" data-aos="fade-up" data-aos-delay="100">
         <div class="glass-dark rounded-2xl shadow-lg p-6 border border-neutral-200">
-          <div class="flex flex-col md:flex-row gap-6 items-center">
-            <!-- Search Bar -->
-            <div class="relative w-full md:w-auto md:flex-1">
-              <input type="text" id="serviceSearch" placeholder="Search for a service... (e.g., 'React App')" 
-                class="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-300 text-neutral-700 placeholder-neutral-400 shadow-sm">
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">
+          <div class="flex flex-col gap-6">
+            <!-- Search Bar with Button -->
+            <div class="relative w-full flex">
+              <div class="relative flex-1">
+                <input type="text" id="serviceSearch" placeholder="Search for a service... (e.g., 'React App')" 
+                  class="w-full pl-12 pr-4 py-3 rounded-l-xl bg-white border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-300 text-neutral-700 placeholder-neutral-400 shadow-sm border-r-0">
+                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+              </div>
+              <button id="searchButton" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-r-xl transition-all duration-300 border border-primary-600 shadow-sm flex items-center">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
-              </div>
+                <span class="ml-2 hidden sm:inline">Search</span>
+              </button>
             </div>  
             
-            <!-- Filter Buttons -->
-            <div class="flex flex-wrap justify-center gap-2 md:gap-3">
-              <button class="filter-btn text-sm px-5 py-2.5 rounded-xl font-medium transition-all duration-300 selected bg-primary-600 text-white shadow-md" data-filter="All Services">
-                All Services
+            <!-- Filters Row -->
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+              <!-- Category Dropdown -->
+              <div class="relative w-full md:w-auto">
+                <select id="categoryFilter" class="w-full md:w-48 px-4 py-3 rounded-xl bg-white border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-300 text-neutral-700 appearance-none cursor-pointer">
+                  <option value="All Services">All Categories</option>
+                  <!-- Categories will be populated dynamically -->
+                </select>
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Price Range Filter -->
+              <div class="relative w-full md:w-auto">
+                <select id="priceFilter" class="w-full md:w-48 px-4 py-3 rounded-xl bg-white border border-neutral-200 focus:ring-2 focus:ring-secondary-500 focus:border-transparent outline-none transition-all duration-300 text-neutral-700 appearance-none cursor-pointer">
+                  <option value="all">All Prices</option>
+                  <option value="0-2000">₱0 - ₱2,000</option>
+                  <option value="2000-5000">₱2,000 - ₱5,000</option>
+                  <option value="5000-10000">₱5,000 - ₱10,000</option>
+                  <option value="10000+">₱10,000+</option>
+                </select>
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Sort By -->
+              <div class="relative w-full md:w-auto">
+                <select id="sortFilter" class="w-full md:w-48 px-4 py-3 rounded-xl bg-white border border-neutral-200 focus:ring-2 focus:ring-accent-500 focus:border-transparent outline-none transition-all duration-300 text-neutral-700 appearance-none cursor-pointer">
+                  <option value="name">Sort by Name</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="category">Sort by Category</option>
+                </select>
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Clear Filters Button -->
+              <button id="clearFilters" class="w-full md:w-auto px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-xl transition-all duration-300 border border-neutral-200">
+                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Clear Filters
               </button>
-              <button class="filter-btn text-sm px-5 py-2.5 rounded-xl font-medium transition-all duration-300 bg-white text-neutral-700 hover:bg-primary-50 hover:text-primary-600 border border-neutral-200" data-filter="Writing">
-                Writing
-              </button>
-              <button class="filter-btn text-sm px-5 py-2.5 rounded-xl font-medium transition-all duration-300 bg-white text-neutral-700 hover:bg-secondary-50 hover:text-secondary-600 border border-neutral-200" data-filter="Editing & Arts">
-                Editing & Arts
-              </button>
-              <button class="filter-btn text-sm px-5 py-2.5 rounded-xl font-medium transition-all duration-300 bg-white text-neutral-700 hover:bg-success-50 hover:text-success-600 border border-neutral-200" data-filter="Programming">
-                Programming
-              </button>
-            </div>            
+            </div>
+
+            <!-- Active Filters Display -->
+            <div id="activeFilters" class="hidden">
+              <div class="flex flex-wrap gap-2">
+                <span class="text-sm text-neutral-600 font-medium">Active filters:</span>
+                <!-- Active filter tags will appear here -->
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -77,7 +132,7 @@
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
           <p class="text-lg font-medium text-neutral-700">Searching for services...</p>
-          <p class="text-sm text-neutral-500 mt-2">Using AI to find the best match</p>
+          <p class="text-sm text-neutral-500 mt-2">Finding the best match</p>
         </div>
       </div>
 
@@ -162,6 +217,13 @@
 
       const loadingIndicator = document.getElementById('loading-indicator');
       const servicesGrid = document.getElementById('services-grid');
+      const categoryFilter = document.getElementById('categoryFilter');
+      const priceFilter = document.getElementById('priceFilter');
+      const sortFilter = document.getElementById('sortFilter');
+      const searchInput = document.getElementById('serviceSearch');
+      const searchButton = document.getElementById('searchButton');
+      const clearFiltersBtn = document.getElementById('clearFilters');
+      const activeFiltersDiv = document.getElementById('activeFilters');
 
       async function fetchServices() {
           try {
@@ -171,11 +233,27 @@
               }
               const data = await response.json();
               allServices = data;
+              populateCategories();
               renderServices(allServices);
           } catch (error) {
               console.error('Error fetching services:', error);
               servicesGrid.innerHTML = `<div class="col-span-full text-center text-neutral-500">Failed to load services. Please try again later.</div>`;
           }
+      }
+
+      function populateCategories() {
+          const categories = [...new Set(allServices.map(service => service.service_type))];
+          
+          // Clear existing options except the first one
+          categoryFilter.innerHTML = '<option value="All Services">All Categories</option>';
+          
+          // Add category options
+          categories.forEach(category => {
+              const option = document.createElement('option');
+              option.value = category;
+              option.textContent = category;
+              categoryFilter.appendChild(option);
+          });
       }
       
       function renderServices(services) {
@@ -254,108 +332,283 @@
       }
       
       function getServiceColor(serviceType) {
-        switch (serviceType) {
-            case 'Writing':
-                return { 
-                  badge: 'bg-primary-100 text-primary-700', 
-                  iconBg: 'bg-primary-100',
-                  buttonBg: 'bg-primary-600',
-                  buttonText: 'text-white',
-                  buttonHover: 'hover:bg-primary-700'
-                };
-            case 'Editing & Arts':
-                return { 
-                  badge: 'bg-secondary-100 text-secondary-700', 
-                  iconBg: 'bg-secondary-100',
-                  buttonBg: 'bg-secondary-600',
-                  buttonText: 'text-white',
-                  buttonHover: 'hover:bg-secondary-700'
-                };
-            case 'Programming':
-                return { 
-                  badge: 'bg-success-100 text-success-700', 
-                  iconBg: 'bg-success-100',
-                  buttonBg: 'bg-success-600',
-                  buttonText: 'text-white',
-                  buttonHover: 'hover:bg-success-700'
-                };
-            default:
-                return { 
-                  badge: 'bg-neutral-100 text-neutral-700', 
-                  iconBg: 'bg-neutral-100',
-                  buttonBg: 'bg-neutral-600',
-                  buttonText: 'text-white',
-                  buttonHover: 'hover:bg-neutral-700'
-                };
-        }
+        const colorMap = {
+            'Web Development': {
+                badge: 'bg-primary-100 text-primary-700', 
+                iconBg: 'bg-primary-100',
+                buttonBg: 'bg-primary-600',
+                buttonText: 'text-white',
+                buttonHover: 'hover:bg-primary-700'
+            },
+            'Mobile Development': {
+                badge: 'bg-secondary-100 text-secondary-700', 
+                iconBg: 'bg-secondary-100',
+                buttonBg: 'bg-secondary-600',
+                buttonText: 'text-white',
+                buttonHover: 'hover:bg-secondary-700'
+            },
+            'Design': {
+                badge: 'bg-accent-100 text-accent-700', 
+                iconBg: 'bg-accent-100',
+                buttonBg: 'bg-accent-600',
+                buttonText: 'text-white',
+                buttonHover: 'hover:bg-accent-700'
+            },
+            'Backend Development': {
+                badge: 'bg-success-100 text-success-700', 
+                iconBg: 'bg-success-100',
+                buttonBg: 'bg-success-600',
+                buttonText: 'text-white',
+                buttonHover: 'hover:bg-success-700'
+            },
+            'Integration': {
+                badge: 'bg-purple-100 text-purple-700', 
+                iconBg: 'bg-purple-100',
+                buttonBg: 'bg-purple-600',
+                buttonText: 'text-white',
+                buttonHover: 'hover:bg-purple-700'
+            },
+            'Consulting': {
+                badge: 'bg-indigo-100 text-indigo-700', 
+                iconBg: 'bg-indigo-100',
+                buttonBg: 'bg-indigo-600',
+                buttonText: 'text-white',
+                buttonHover: 'hover:bg-indigo-700'
+            },
+            'Maintenance': {
+                badge: 'bg-orange-100 text-orange-700', 
+                iconBg: 'bg-orange-100',
+                buttonBg: 'bg-orange-600',
+                buttonText: 'text-white',
+                buttonHover: 'hover:bg-orange-700'
+            },
+            'Marketing': {
+                badge: 'bg-pink-100 text-pink-700', 
+                iconBg: 'bg-pink-100',
+                buttonBg: 'bg-pink-600',
+                buttonText: 'text-white',
+                buttonHover: 'hover:bg-pink-700'
+            }
+        };
+
+        return colorMap[serviceType] || {
+            badge: 'bg-neutral-100 text-neutral-700', 
+            iconBg: 'bg-neutral-100',
+            buttonBg: 'bg-neutral-600',
+            buttonText: 'text-white',
+            buttonHover: 'hover:bg-neutral-700'
+        };
       }
 
       function getServiceIcon(serviceType) {
           const iconClasses = "w-8 h-8";
-          switch (serviceType) {
-              case 'Writing':
-                  return `<svg class="${iconClasses} text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`;
-              case 'Editing & Arts':
-                  return `<svg class="${iconClasses} text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
-              case 'Programming':
-                  return `<svg class="${iconClasses} text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>`;
-              default:
-                  return `<svg class="${iconClasses} text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>`;
-          }
+          const colorClass = getServiceColor(serviceType);
+          const iconColor = colorClass.buttonBg.replace('bg-', '').replace('-600', '-600');
+          
+          const iconMap = {
+              'Web Development': `<svg class="${iconClasses} text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>`,
+              'Mobile Development': `<svg class="${iconClasses} text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"></path></svg>`,
+              'Design': `<svg class="${iconClasses} text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`,
+              'Backend Development': `<svg class="${iconClasses} text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>`,
+              'Integration': `<svg class="${iconClasses} text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>`,
+              'Consulting': `<svg class="${iconClasses} text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>`,
+              'Maintenance': `<svg class="${iconClasses} text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`,
+              'Marketing': `<svg class="${iconClasses} text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>`
+          };
+
+          return iconMap[serviceType] || `<svg class="${iconClasses} text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>`;
       }
 
-      function setupFilterButtons() {
-        const filterButtons = document.querySelectorAll('button[data-filter]');
-        filterButtons.forEach(button => {
-          button.addEventListener('click', () => {
-            // Remove selected state from all buttons
-            filterButtons.forEach(btn => {
-              btn.classList.remove('selected', 'bg-primary-600', 'text-white', 'shadow-md');
-              btn.classList.add('bg-white', 'text-neutral-700', 'border', 'border-neutral-200');
-            });
-            
-            // Add selected state to clicked button
-            button.classList.remove('bg-white', 'text-neutral-700', 'border', 'border-neutral-200');
-            button.classList.add('selected', 'bg-primary-600', 'text-white', 'shadow-md');
-            
-            const filter = button.getAttribute('data-filter');
-            const searchQuery = searchInput.value.toLowerCase();
-            filterServices(filter, searchQuery);
-          });
+      function setupFilterEventListeners() {
+        // Category filter
+        categoryFilter.addEventListener('change', applyFilters);
+        
+        // Price filter
+        priceFilter.addEventListener('change', applyFilters);
+        
+        // Sort filter
+        sortFilter.addEventListener('change', applyFilters);
+        
+        // Search input - debounced search as you type
+        searchInput.addEventListener('input', () => {
+          clearTimeout(aiSearchTimer);
+          aiSearchTimer = setTimeout(applyFilters, 300); // Debounce search
         });
+        
+        // Search button - immediate search
+        searchButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          
+          // Add visual feedback
+          searchButton.classList.add('bg-primary-700');
+          const originalContent = searchButton.innerHTML;
+          searchButton.innerHTML = `
+            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="ml-2 hidden sm:inline">Searching...</span>
+          `;
+          
+          clearTimeout(aiSearchTimer); // Clear any pending debounced search
+          applyFilters(); // Apply filters immediately
+          
+          // Reset button after a short delay
+          setTimeout(() => {
+            searchButton.classList.remove('bg-primary-700');
+            searchButton.innerHTML = originalContent;
+          }, 500);
+        });
+        
+        // Enter key in search input - immediate search
+        searchInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            
+            // Add visual feedback to search button
+            searchButton.classList.add('bg-primary-700');
+            const originalContent = searchButton.innerHTML;
+            searchButton.innerHTML = `
+              <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span class="ml-2 hidden sm:inline">Searching...</span>
+            `;
+            
+            clearTimeout(aiSearchTimer); // Clear any pending debounced search
+            applyFilters(); // Apply filters immediately
+            
+            // Reset button after a short delay
+            setTimeout(() => {
+              searchButton.classList.remove('bg-primary-700');
+              searchButton.innerHTML = originalContent;
+            }, 500);
+          }
+        });
+        
+        // Clear filters button
+        clearFiltersBtn.addEventListener('click', clearAllFilters);
+      }
+
+      function clearAllFilters() {
+        categoryFilter.value = 'All Services';
+        priceFilter.value = 'all';
+        sortFilter.value = 'name';
+        searchInput.value = '';
+        applyFilters();
+      }
+
+      function applyFilters() {
+        const categoryValue = categoryFilter.value;
+        const priceValue = priceFilter.value;
+        const sortValue = sortFilter.value;
+        const searchQuery = searchInput.value.toLowerCase();
+        
+        let filteredServices = [...allServices];
+        
+        // Apply category filter
+        if (categoryValue !== 'All Services') {
+          filteredServices = filteredServices.filter(service => service.service_type === categoryValue);
+        }
+        
+        // Apply price filter
+        if (priceValue !== 'all') {
+          filteredServices = filteredServices.filter(service => {
+            const price = parseFloat(service.price);
+            switch (priceValue) {
+              case '0-2000':
+                return price >= 0 && price <= 2000;
+              case '2000-5000':
+                return price > 2000 && price <= 5000;
+              case '5000-10000':
+                return price > 5000 && price <= 10000;
+              case '10000+':
+                return price > 10000;
+              default:
+                return true;
+            }
+          });
+        }
+        
+        // Apply search filter
+        if (searchQuery) {
+          filteredServices = filteredServices.filter(service =>
+            service.service_name.toLowerCase().includes(searchQuery) ||
+            service.description.toLowerCase().includes(searchQuery) ||
+            service.service_type.toLowerCase().includes(searchQuery)
+          );
+        }
+        
+        // Apply sorting
+        filteredServices.sort((a, b) => {
+          switch (sortValue) {
+            case 'name':
+              return a.service_name.localeCompare(b.service_name);
+            case 'price-low':
+              return parseFloat(a.price) - parseFloat(b.price);
+            case 'price-high':
+              return parseFloat(b.price) - parseFloat(a.price);
+            case 'category':
+              return a.service_type.localeCompare(b.service_type);
+            default:
+              return 0;
+          }
+        });
+        
+        // Show AI search if no results and search query exists
+        if (filteredServices.length === 0 && searchQuery) {
+          loadingIndicator.classList.remove('hidden');
+          clearTimeout(aiSearchTimer);
+          aiSearchTimer = setTimeout(() => {
+            aiSearch(searchQuery, allServices);
+          }, 1000);
+        } else {
+          loadingIndicator.classList.add('hidden');
+          renderServices(filteredServices);
+        }
+        
+        updateActiveFilters(categoryValue, priceValue, searchQuery);
+      }
+
+      function updateActiveFilters(category, price, search) {
+        const activeFiltersContainer = activeFiltersDiv.querySelector('div');
+        let activeFilters = [];
+        
+        if (category !== 'All Services') {
+          activeFilters.push(`Category: ${category}`);
+        }
+        
+        if (price !== 'all') {
+          const priceLabels = {
+            '0-2000': '₱0 - ₱2,000',
+            '2000-5000': '₱2,000 - ₱5,000',
+            '5000-10000': '₱5,000 - ₱10,000',
+            '10000+': '₱10,000+'
+          };
+          activeFilters.push(`Price: ${priceLabels[price]}`);
+        }
+        
+        if (search) {
+          activeFilters.push(`Search: "${search}"`);
+        }
+        
+        if (activeFilters.length > 0) {
+          activeFiltersContainer.innerHTML = `
+            <span class="text-sm text-neutral-600 font-medium">Active filters:</span>
+            ${activeFilters.map(filter => `
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                ${filter}
+              </span>
+            `).join('')}
+          `;
+          activeFiltersDiv.classList.remove('hidden');
+        } else {
+          activeFiltersDiv.classList.add('hidden');
+        }
       }
       
-      function filterServices(filter, query) {
-        let filteredServices = allServices;
-        
-        if (filter !== 'All Services') {
-            filteredServices = filteredServices.filter(service => service.service_type === filter);
-        }
-        
-        if (query) {
-            filteredServices = filteredServices.filter(service =>
-                service.service_name.toLowerCase().includes(query) ||
-                service.description.toLowerCase().includes(query) ||
-                service.service_type.toLowerCase().includes(query)
-            );
-        }
-      
-        
-            if (filteredServices.length === 0) {
-                servicesGrid.innerHTML = '';
-                clearTimeout(aiSearchTimer); 
 
-                loadingIndicator.classList.remove('hidden');
-
-                aiSearchTimer = setTimeout(() => {
-                    aiSearch(query, allServices); 
-                }, 1000); 
-            
-            } else {
-                clearTimeout(aiSearchTimer); 
-                renderServices(filteredServices);
-            }
-        }
 
         // AI Search - Semantic matching and dynamic pricing generation
         async function aiSearch(query, allServices) {
@@ -491,17 +744,9 @@
             }
         }
 
-        // Search input event listener
-        const searchInput = document.getElementById('serviceSearch');
-        searchInput.addEventListener('input', () => {
-        const activeFilter = document.querySelector('button.selected').getAttribute('data-filter');
-        const searchQuery = searchInput.value.toLowerCase();
-        filterServices(activeFilter, searchQuery);
-        });
-    
-        // Fetch services and setup filter buttons
+        // Fetch services and setup filters
         await fetchServices();
-        setupFilterButtons();
+        setupFilterEventListeners();
         });
     </script>
 
