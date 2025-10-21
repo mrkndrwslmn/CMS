@@ -1,4 +1,4 @@
-# Treis Adiutor - Client Management System
+# Treis Adiutor - Client Management System (CMS)
 
 A client management system designed to facilitate service request handling, project management, task assignment, and collaboration between Clients, Adiutors (service providers), and Administrators.
 
