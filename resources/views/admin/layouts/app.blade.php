@@ -48,77 +48,51 @@
                     TREIS ADIUTOR
                 </a>
             </div>
-            <nav class="mt-6 px-4 overflow-y-auto" style="max-height: calc(100vh - 120px);">
-                <!-- Dashboard -->
+            <nav class="mt-6 px-4">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.dashboard') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-tachometer-alt w-5 mr-3"></i>
                     <span>Dashboard</span>
                 </a>
                 
-                <!-- User Management Section -->
-                <div class="mt-6 mb-2">
-                    <p class="px-4 text-xs font-semibold text-white/50 uppercase tracking-wider">User Management</p>
-                </div>
+                <!-- User & Client Management -->
                 <a href="{{ route('admin.users.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.users*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-users w-5 mr-3"></i>
-                    <span>Users</span>
+                    <span>User Management</span>
                 </a>
                 <a href="{{ route('admin.clients.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.clients*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-user-tie w-5 mr-3"></i>
-                    <span>Clients</span>
+                    <span>Client Management</span>
                 </a>
                 
-                <!-- Operations Section -->
-                <div class="mt-6 mb-2">
-                    <p class="px-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Operations</p>
-                </div>
+                <!-- Operations -->
                 <a href="{{ route('admin.requests.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.requests*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-clipboard-list w-5 mr-3"></i>
                     <span>Service Requests</span>
                 </a>
                 <a href="{{ route('admin.projects.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.projects*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-project-diagram w-5 mr-3"></i>
-                    <span>Projects</span>
+                    <span>Projects Management</span>
                 </a>
                 <a href="{{ route('admin.tasks.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.tasks*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-tasks w-5 mr-3"></i>
-                    <span>Tasks</span>
+                    <span>Task Management</span>
                 </a>
-                <a href="{{ route('admin.budget-requests.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.budget-requests*') ? 'bg-white/10 text-white' : '' }}">
-                    <i class="fas fa-money-bill-wave w-5 mr-3"></i>
-                    <span>Budget Requests</span>
-                </a>
-                <a href="{{ route('admin.payments.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.payments*') ? 'bg-white/10 text-white' : '' }}">
-                    <i class="fas fa-credit-card w-5 mr-3"></i>
-                    <span>Payments</span>
-                </a>
-                
-                <!-- Resources Section -->
-                <div class="mt-6 mb-2">
-                    <p class="px-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Resources</p>
-                </div>
                 <a href="{{ route('admin.documents.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.documents*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-folder-open w-5 mr-3"></i>
-                    <span>Documents</span>
+                    <span>Document Management</span>
                 </a>
                 <a href="{{ route('admin.feedback.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.feedback*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-comments w-5 mr-3"></i>
-                    <span>Feedback</span>
+                    <span>Feedback Management</span>
                 </a>
                 
-                <!-- Analytics Section -->
-                <div class="mt-6 mb-2">
-                    <p class="px-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Analytics</p>
-                </div>
+                <!-- Analytics & Reports -->
                 <a href="{{ route('admin.reports.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.reports*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-chart-bar w-5 mr-3"></i>
-                    <span>Reports</span>
+                    <span>Reports & Analytics</span>
                 </a>
                 
-                <!-- Account Section -->
-                <div class="mt-6 mb-2">
-                    <p class="px-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Account</p>
-                </div>
+                <div class="border-t border-white/20 my-6"></div>
                 <a href="{{ route('admin.profile') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.profile') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-user w-5 mr-3"></i>
                     <span>Profile</span>
