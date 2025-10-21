@@ -14,6 +14,10 @@ use App\Http\Controllers\PublicServiceRequestController;
 Route::prefix('api')->group(function () {
     Route::get('/services', [ServiceController::class, 'index']);
     Route::post('/aiSearch', [AiSearchController::class, 'search']);
+    
+    // Chatbot routes
+    Route::post('/chatbot/chat', [\App\Http\Controllers\ChatbotController::class, 'chat']);
+    Route::get('/chatbot/greeting', [\App\Http\Controllers\ChatbotController::class, 'greeting']);
 });
 
 // Public routes

@@ -10,6 +10,13 @@ A client management system designed to facilitate service request handling, proj
 
 ## Features
 
+### AI-Powered Chatbot 🤖 (NEW!)
+- Intelligent customer support powered by Google Gemini AI
+- Instant answers about services, pricing, and processes
+- Smart caching with 1-hour conversation persistence
+- Beautiful floating widget on all public pages
+- [Setup Guide](CHATBOT_QUICK_SETUP.md) | [Full Documentation](CHATBOT_DOCUMENTATION.md)
+
 ### Service Request Management
 - Public and authenticated request submission
 - File attachment support

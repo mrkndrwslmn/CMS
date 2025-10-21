@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Home') - @yield('site_name', 'Treis Adiutor')</title>
     
     <!-- SEO Meta Tags -->
@@ -146,6 +147,17 @@
   
     <!-- External Scripts -->
     <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    
+    <!-- Mobile Menu Toggle -->
+    <script>
+        document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
+    
+    <!-- Chatbot Widget -->
+    <script src="{{ asset('js/chatbot.js') }}"></script>
     
     @stack('scripts')
 </body>
