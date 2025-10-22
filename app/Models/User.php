@@ -230,4 +230,55 @@ class User extends Authenticatable
     {
         return $this->hasMany(Note::class, 'client_id');
     }
+
+    /**
+     * Get messages sent by this user
+     */
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    /**
+     * Get messages received by this user
+     */
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'recipient_id');
+    }
+
+    /**
+     * Get conversations for this client
+     */
+    public function conversations()
+    {
+        return $this->hasMany(Conversation::class, 'client_id');
+    }
+
+    /**
+     * Get total unread message count for this user
+     */
+    public function unreadMessagesCount(): int
+    {
+        if ($this->isAdmin()) {
+            // Admins see all conversations' unread counts
+            return Conversation::sum('unread_count_admin');
+        } elseif ($this->isClient()) {
+            // Clients only see their own conversations' unread counts
+            return $this->conversations()->sum('unread_count_client');
+        }
+
+        return 0;
+    }
+
+    /**
+     * Update FCM token for push notifications
+     */
+    public function updateFcmToken(?string $token): void
+    {
+        $this->update([
+            'fcm_token' => $token,
+            'fcm_token_updated_at' => $token ? now() : null,
+        ]);
+    }
 }

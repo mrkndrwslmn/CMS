@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Dashboard') - CMS</title>
+    
+    <!-- Firebase Configuration -->
+    <script>
+        window.firebaseConfig = {
+            apiKey: "{{ config('firebase.api_key') }}",
+            authDomain: "{{ config('firebase.auth_domain') }}",
+            projectId: "{{ config('firebase.project_id') }}",
+            storageBucket: "{{ config('firebase.storage_bucket') }}",
+            messagingSenderId: "{{ config('firebase.messaging_sender_id') }}",
+            appId: "{{ config('firebase.app_id') }}",
+            vapidKey: "{{ config('firebase.vapidKey') }}"
+        };
+    </script>
     
     <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
@@ -84,6 +98,13 @@
                             <a href="{{ route('admin.payments.index') }}"
                                class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.payments.*') ? 'border-b-2 border-primary text-primary' : '' }}">
                                Payments
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.messages.index') }}"
+                               class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.messages.*') ? 'border-b-2 border-primary text-primary' : '' }}">
+                               Messages
+                               <span id="unread-badge" class="ml-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full" style="display:none;">0</span>
                             </a>
                         </li>
                         <li>
@@ -217,6 +238,8 @@
     </footer>
 
     @stack('scripts')
+    
+    @vite(['resources/js/app.js', 'resources/js/messaging.js'])
     
     <script>
         // Mobile menu toggle

@@ -10,6 +10,7 @@ use Carbon\Carbon;
 
 class ClientController extends Controller
 {
+    use \App\Http\Controllers\Client\ClientMessagingMethods;
     /**
      * Show client dashboard
      */

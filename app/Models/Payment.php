@@ -12,6 +12,8 @@ class Payment extends Model
 
     protected $fillable = [
         'service_request_id',
+        'milestone_id',
+        'payment_type',
         'client_id',
         'amount',
         'payment_method',
@@ -35,6 +37,22 @@ class Payment extends Model
     public function serviceRequest(): BelongsTo
     {
         return $this->belongsTo(ServiceRequest::class);
+    }
+
+    /**
+     * Get the milestone this payment belongs to (for milestone payments)
+     */
+    public function milestone(): BelongsTo
+    {
+        return $this->belongsTo(ProjectMilestone::class, 'milestone_id');
+    }
+
+    /**
+     * Get the client who made this payment
+     */
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'client_id');
     }
 
     /**
@@ -82,5 +100,75 @@ class Payment extends Model
             'cancelled' => 'neutral',
             default => 'neutral'
         };
+    }
+
+    /**
+     * Check if this is a full payment
+     */
+    public function isFullPayment(): bool
+    {
+        return $this->payment_type === 'full_payment';
+    }
+
+    /**
+     * Check if this is a milestone payment
+     */
+    public function isMilestonePayment(): bool
+    {
+        return $this->payment_type === 'milestone_payment';
+    }
+
+    /**
+     * Check if this is a downpayment
+     */
+    public function isDownpayment(): bool
+    {
+        return $this->payment_type === 'downpayment';
+    }
+
+    /**
+     * Check if this is a remaining balance payment
+     */
+    public function isRemainingBalance(): bool
+    {
+        return $this->payment_type === 'remaining_balance';
+    }
+
+    /**
+     * Get payment type label
+     */
+    public function getPaymentTypeLabel(): string
+    {
+        return match($this->payment_type) {
+            'full_payment' => 'Full Payment',
+            'milestone_payment' => 'Milestone Payment',
+            'downpayment' => 'Downpayment',
+            'remaining_balance' => 'Remaining Balance',
+            default => 'Not Specified'
+        };
+    }
+
+    /**
+     * Scope: Get milestone payments
+     */
+    public function scopeMilestonePayments($query)
+    {
+        return $query->where('payment_type', 'milestone_payment');
+    }
+
+    /**
+     * Scope: Get downpayments
+     */
+    public function scopeDownpayments($query)
+    {
+        return $query->where('payment_type', 'downpayment');
+    }
+
+    /**
+     * Scope: Get full payments
+     */
+    public function scopeFullPayments($query)
+    {
+        return $query->where('payment_type', 'full_payment');
     }
 }

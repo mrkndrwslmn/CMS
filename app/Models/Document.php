@@ -106,6 +106,66 @@ class Document extends Model
     }
 
     /**
+     * Get all revision requests for this document.
+     */
+    public function revisionRequests()
+    {
+        return $this->hasMany(RevisionRequest::class, 'document_id', 'documentID');
+    }
+
+    /**
+     * Get the latest revision request.
+     */
+    public function latestRevisionRequest()
+    {
+        return $this->hasOne(RevisionRequest::class, 'document_id', 'documentID')->latest();
+    }
+
+    /**
+     * Get pending revision requests.
+     */
+    public function pendingRevisionRequests()
+    {
+        return $this->hasMany(RevisionRequest::class, 'document_id', 'documentID')
+                    ->where('status', 'pending');
+    }
+
+    /**
+     * Check if document has pending revision requests.
+     */
+    public function hasPendingRevision(): bool
+    {
+        return $this->revisionRequests()->where('status', 'pending')->exists();
+    }
+
+    /**
+     * Check if document has any revision requests.
+     */
+    public function hasRevisionRequests(): bool
+    {
+        return $this->revisionRequests()->exists();
+    }
+
+    /**
+     * Get total number of revision requests.
+     */
+    public function getRevisionCount(): int
+    {
+        return $this->revisionRequests()->count();
+    }
+
+    /**
+     * Check if document can be revised (not already under revision).
+     */
+    public function canRequestRevision(): bool
+    {
+        // Can't request revision if there's already a pending or approved request
+        return !$this->revisionRequests()
+                     ->whereIn('status', ['pending', 'approved'])
+                     ->exists();
+    }
+
+    /**
      * Get the file size in human readable format.
      */
     public function getFormattedSizeAttribute(): string
@@ -132,5 +192,139 @@ class Document extends Model
     public function getFileExtensionAttribute(): string
     {
         return pathinfo($this->fileName, PATHINFO_EXTENSION);
+    }
+
+    /**
+     * Check if this document is accessible to the client based on payment status
+     * Documents follow the same accessibility rules as their parent (task/project)
+     * 
+     * @return bool
+     */
+    public function isAccessibleToClient(): bool
+    {
+        // If document is explicitly public, it's accessible
+        if ($this->is_public) {
+            return true;
+        }
+
+        // Determine the payment type from the related entity
+        $serviceRequest = null;
+
+        // Try to get service request through different relationships
+        if ($this->documentable_type === 'App\\Models\\Task' && $this->documentable) {
+            $serviceRequest = $this->documentable->project->serviceRequest ?? null;
+        } elseif ($this->documentable_type === 'App\\Models\\Project' && $this->documentable) {
+            $serviceRequest = $this->documentable->serviceRequest ?? null;
+        } elseif ($this->documentable_type === 'App\\Models\\ServiceRequest' && $this->documentable) {
+            $serviceRequest = $this->documentable;
+        } elseif ($this->taskID) {
+            // Legacy: Use taskID relationship
+            $serviceRequest = $this->task->project->serviceRequest ?? null;
+        } elseif ($this->project_id) {
+            // Legacy: Use project_id relationship
+            $serviceRequest = $this->project->serviceRequest ?? null;
+        } elseif ($this->service_request_id) {
+            // Legacy: Use service_request_id relationship
+            $serviceRequest = $this->serviceRequest;
+        }
+
+        // If no service request found, default to accessible
+        if (!$serviceRequest || !$serviceRequest->payment_type) {
+            return true;
+        }
+
+        // Full payment: All documents accessible if paid
+        if ($serviceRequest->isFullPayment()) {
+            return $serviceRequest->isPaid();
+        }
+
+        // Milestone payment: Check task's phase payment status
+        if ($serviceRequest->isMilestonePayment()) {
+            // If document belongs to a task with a phase
+            if ($this->documentable_type === 'App\\Models\\Task' && $this->documentable && $this->documentable->phase_id) {
+                return $this->documentable->phase->isPaid();
+            }
+            
+            // Legacy check
+            if ($this->taskID && $this->task && $this->task->phase_id) {
+                return $this->task->phase->isPaid();
+            }
+
+            // If no phase association, accessible by default
+            return true;
+        }
+
+        // Downpayment: Documents accessible only after remaining balance paid
+        if ($serviceRequest->isDownpayment()) {
+            return $serviceRequest->isRemainingBalancePaid();
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the lock status for UI display
+     */
+    public function getLockStatus(): array
+    {
+        $isAccessible = $this->isAccessibleToClient();
+        
+        if ($isAccessible) {
+            return [
+                'locked' => false,
+                'message' => 'Accessible',
+                'icon' => 'unlock',
+            ];
+        }
+
+        // Determine lock reason
+        $serviceRequest = null;
+
+        if ($this->documentable_type === 'App\\Models\\Task' && $this->documentable) {
+            $serviceRequest = $this->documentable->project->serviceRequest ?? null;
+            $phase = $this->documentable->phase;
+        } elseif ($this->taskID && $this->task) {
+            $serviceRequest = $this->task->project->serviceRequest ?? null;
+            $phase = $this->task->phase;
+        } elseif ($this->documentable_type === 'App\\Models\\Project' && $this->documentable) {
+            $serviceRequest = $this->documentable->serviceRequest ?? null;
+        } elseif ($this->project_id && $this->project) {
+            $serviceRequest = $this->project->serviceRequest ?? null;
+        }
+
+        if ($serviceRequest && $serviceRequest->isMilestonePayment() && isset($phase) && $phase) {
+            return [
+                'locked' => true,
+                'message' => "Locked: Payment required for {$phase->phase_name}",
+                'icon' => 'lock',
+                'phase' => $phase->phase_name,
+            ];
+        }
+
+        if ($serviceRequest && $serviceRequest->isDownpayment()) {
+            return [
+                'locked' => true,
+                'message' => 'Locked: Remaining balance payment required',
+                'icon' => 'lock',
+            ];
+        }
+
+        return [
+            'locked' => true,
+            'message' => 'Locked: Payment required',
+            'icon' => 'lock',
+        ];
+    }
+
+    /**
+     * Scope: Get only accessible documents for a client
+     */
+    public function scopeAccessibleToClient($query)
+    {
+        // This is a simplified version - you may need to adjust based on your specific needs
+        return $query->where('is_public', true)
+                    ->orWhereHas('task', function($q) {
+                        // Add logic to check task accessibility
+                    });
     }
 }

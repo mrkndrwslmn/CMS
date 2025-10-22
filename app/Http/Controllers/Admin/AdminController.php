@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Task;
 use App\Models\ServiceRequest;
+use App\Models\Project;
+use App\Models\Conversation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -13,6 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
+    use \App\Http\Controllers\Admin\AdminMessagingMethods;
     /**
      * Show admin login form.
      */

@@ -1,4 +1,4 @@
-@extends('layouts.client')
+@extends('client.layout')
 
 @section('title', 'Notifications')
 

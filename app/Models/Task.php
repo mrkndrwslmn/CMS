@@ -20,6 +20,7 @@ class Task extends Model
      */
     protected $fillable = [
         'project_id',           // CORRECT: Tasks belong to PROJECTS, not requests
+        'phase_id',             // Milestone phase this task belongs to
         'assignedTo',
         'taskTitle',
         'taskDescription',
@@ -58,6 +59,14 @@ class Task extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    /**
+     * Get the milestone phase this task belongs to
+     */
+    public function phase(): BelongsTo
+    {
+        return $this->belongsTo(ProjectMilestone::class, 'phase_id');
     }
 
     /**
@@ -222,5 +231,93 @@ class Task extends Model
             return 0;
         }
         return ($this->actual_cost / $this->allocated_budget) * 100;
+    }
+
+    /**
+     * Check if this task is accessible to the client based on payment status
+     * 
+     * @return bool
+     */
+    public function isAccessibleToClient(): bool
+    {
+        // Get the project's payment type through service request
+        $serviceRequest = $this->project->serviceRequest;
+        
+        if (!$serviceRequest || !$serviceRequest->payment_type) {
+            // Default: accessible if no payment type set
+            return true;
+        }
+
+        // Full payment: All tasks are accessible if paid
+        if ($serviceRequest->isFullPayment()) {
+            return $serviceRequest->isPaid();
+        }
+
+        // Milestone payment: Task accessible if its phase is paid
+        if ($serviceRequest->isMilestonePayment()) {
+            // If task has no phase, it's accessible (edge case)
+            if (!$this->phase_id) {
+                return true;
+            }
+
+            // Check if the phase this task belongs to is paid
+            return $this->phase && $this->phase->isPaid();
+        }
+
+        // Downpayment: Tasks accessible only after remaining balance is paid
+        if ($serviceRequest->isDownpayment()) {
+            return $serviceRequest->isRemainingBalancePaid();
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if task's associated documents are accessible to client
+     */
+    public function areDocumentsAccessible(): bool
+    {
+        return $this->isAccessibleToClient();
+    }
+
+    /**
+     * Get the lock status for UI display
+     */
+    public function getLockStatus(): array
+    {
+        $isAccessible = $this->isAccessibleToClient();
+        $serviceRequest = $this->project->serviceRequest;
+
+        if ($isAccessible) {
+            return [
+                'locked' => false,
+                'message' => 'Accessible',
+                'icon' => 'unlock',
+            ];
+        }
+
+        // Determine lock reason based on payment type
+        if ($serviceRequest->isMilestonePayment() && $this->phase_id) {
+            return [
+                'locked' => true,
+                'message' => "Locked: Payment required for {$this->phase->phase_name}",
+                'icon' => 'lock',
+                'phase' => $this->phase->phase_name,
+            ];
+        }
+
+        if ($serviceRequest->isDownpayment()) {
+            return [
+                'locked' => true,
+                'message' => 'Locked: Remaining balance payment required',
+                'icon' => 'lock',
+            ];
+        }
+
+        return [
+            'locked' => true,
+            'message' => 'Locked: Payment required',
+            'icon' => 'lock',
+        ];
     }
 }

@@ -136,8 +136,14 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                     </svg>
                 </div>
-                <p class="text-xs text-neutral-500 font-medium mb-1">{{ $request->approved_budget ? 'Approved' : 'Estimated' }} Budget</p>
-                <p class="text-lg font-bold text-primary-600">₱{{ number_format($request->approved_budget ?? $request->estimated_budget, 0) }}</p>
+                @if(($request->status === 'pending_payment' || $request->status === 'approved') && $request->payment_type)
+                    <p class="text-xs text-neutral-500 font-medium mb-1">Amount Due</p>
+                    <p class="text-lg font-bold text-error-600">₱{{ number_format($request->getCurrentPaymentAmountDue(), 0) }}</p>
+                    <p class="text-xs text-neutral-500 mt-1">{{ $request->getCurrentPaymentDescription() }}</p>
+                @else
+                    <p class="text-xs text-neutral-500 font-medium mb-1">{{ $request->approved_budget ? 'Approved' : 'Estimated' }} Budget</p>
+                    <p class="text-lg font-bold text-primary-600">₱{{ number_format($request->approved_budget ?? $request->estimated_budget, 0) }}</p>
+                @endif
             </div>
         @endif
 
@@ -376,6 +382,10 @@
 
             <!-- Payment Action Card (if applicable) -->
             @if($request->status === 'pending_payment' || $request->status === 'approved')
+                @php
+                    $paymentAmountDue = $request->getCurrentPaymentAmountDue();
+                    $paymentDescription = $request->getCurrentPaymentDescription();
+                @endphp
                 <div class="glass-card overflow-hidden border-2 border-secondary-300 shadow-lg">
                     <div class="bg-gradient-to-br from-secondary-500 to-primary-600 p-6 text-center">
                         <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 shadow-lg">
@@ -384,7 +394,30 @@
                             </svg>
                         </div>
                         <h3 class="text-xl font-bold text-white mb-2">Payment Required</h3>
-                        <p class="text-white/90 text-sm mb-4">Your request has been approved. Complete payment to start your project.</p>
+                        <p class="text-white/90 text-sm mb-2">{{ $paymentDescription }}</p>
+                        <p class="text-3xl font-bold text-white mb-4">₱{{ number_format($paymentAmountDue, 2) }}</p>
+                        
+                        @if($request->payment_type)
+                            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-3 mb-4 text-left">
+                                <p class="text-xs font-semibold text-white/90 uppercase tracking-wide mb-2">Payment Type</p>
+                                <p class="text-sm font-bold text-white">{{ $request->getPaymentTypeLabel() }}</p>
+                                
+                                @if($request->isMilestonePayment() && $request->project)
+                                    @php
+                                        $totalMilestones = $request->project->milestones()->count();
+                                        $paidMilestones = $request->project->milestones()->where('is_paid', true)->count();
+                                    @endphp
+                                    <p class="text-xs text-white/80 mt-1">Phase {{ $paidMilestones + 1 }} of {{ $totalMilestones }}</p>
+                                @elseif($request->isDownpayment())
+                                    @if(!$request->downpayment_paid)
+                                        <p class="text-xs text-white/80 mt-1">{{ number_format($request->downpayment_percentage, 0) }}% of total budget</p>
+                                    @else
+                                        <p class="text-xs text-white/80 mt-1">Final payment</p>
+                                    @endif
+                                @endif
+                            </div>
+                        @endif
+                        
                         <a href="{{ route('client.maya.checkout', $request->id) }}" 
                            class="inline-flex items-center justify-center px-6 py-3 bg-white text-secondary-600 font-bold rounded-lg hover:bg-secondary-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 w-full">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

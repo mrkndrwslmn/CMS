@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - TREIS ADIUTOR</title>
+    
+    <!-- Firebase Configuration -->
+    <script>
+        window.firebaseConfig = {
+            apiKey: "{{ config('firebase.api_key') }}",
+            authDomain: "{{ config('firebase.auth_domain') }}",
+            projectId: "{{ config('firebase.project_id') }}",
+            storageBucket: "{{ config('firebase.storage_bucket') }}",
+            messagingSenderId: "{{ config('firebase.messaging_sender_id') }}",
+            appId: "{{ config('firebase.app_id') }}",
+            vapidKey: "{{ config('firebase.vapidKey') }}"
+        };
+    </script>
     
     <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
@@ -55,6 +69,10 @@
                             <li><a href="{{ route('client.dashboard') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.dashboard') ? 'border-primary text-primary' : 'border-transparent' }}">Home</a></li>
                             <li><a href="{{ route('client.tasks') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.tasks') ? 'border-primary text-primary' : 'border-transparent' }}">Tasks</a></li>
                             <li><a href="{{ route('client.requests') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.requests') ? 'border-primary text-primary' : 'border-transparent' }}">My Request</a></li>
+                            <li><a href="{{ route('client.messages.index') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.messages.*') ? 'border-primary text-primary' : 'border-transparent' }}">
+                                Messages
+                                <span id="unread-badge" class="ml-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full" style="display:none;">0</span>
+                            </a></li>
                             
                             <!-- Notification Bell -->
                             <li>
@@ -100,6 +118,9 @@
                         </a></li>
                         <li><a href="{{ route('client.requests') }}" class="block py-2 px-3 rounded {{ request()->routeIs('client.requests') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">
                             <i class="fas fa-tasks mr-2"></i> My Requests
+                        </a></li>
+                        <li><a href="{{ route('client.messages.index') }}" class="block py-2 px-3 rounded {{ request()->routeIs('client.messages.*') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">
+                            <i class="fas fa-comments mr-2"></i> Messages
                         </a></li>
                         <li><a href="{{ route('client.profile') }}" class="block py-2 px-3 rounded {{ request()->routeIs('client.profile') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">
                             <i class="fas fa-user mr-2"></i> Profile
@@ -157,6 +178,7 @@
     });
 </script>
 
+    @vite(['resources/js/app.js'])
 
     <!-- Footer -->
     <footer class="bg-dark text-white py-12">

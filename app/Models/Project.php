@@ -74,6 +74,46 @@ class Project extends Model
     }
 
     /**
+     * Get milestones/phases for this project
+     */
+    public function milestones(): HasMany
+    {
+        return $this->hasMany(ProjectMilestone::class);
+    }
+
+    /**
+     * Get ordered milestones (by phase_order)
+     */
+    public function orderedMilestones()
+    {
+        return $this->milestones()->orderBy('phase_order', 'asc');
+    }
+
+    /**
+     * Get the current active milestone
+     */
+    public function currentMilestone()
+    {
+        return $this->milestones()->where('status', 'in_progress')->first();
+    }
+
+    /**
+     * Get paid milestones
+     */
+    public function paidMilestones()
+    {
+        return $this->milestones()->where('is_paid', true);
+    }
+
+    /**
+     * Get unpaid milestones
+     */
+    public function unpaidMilestones()
+    {
+        return $this->milestones()->where('is_paid', false);
+    }
+
+    /**
      * Get all documents for this project (polymorphic).
      */
     public function documents(): MorphMany
@@ -95,5 +135,21 @@ class Project extends Model
     public function feedback()
     {
         return $this->hasMany(ProjectFeedback::class);
+    }
+
+    /**
+     * Get messages for this project
+     */
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    /**
+     * Get conversation for this project
+     */
+    public function conversation()
+    {
+        return $this->hasOne(Conversation::class);
     }
 }

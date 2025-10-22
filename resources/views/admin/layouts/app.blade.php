@@ -18,8 +18,21 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
     
+    <!-- Firebase Configuration -->
+    <script>
+        window.firebaseConfig = {
+            apiKey: "{{ config('firebase.api_key') }}",
+            authDomain: "{{ config('firebase.auth_domain') }}",
+            projectId: "{{ config('firebase.project_id') }}",
+            storageBucket: "{{ config('firebase.storage_bucket') }}",
+            messagingSenderId: "{{ config('firebase.messaging_sender_id') }}",
+            appId: "{{ config('firebase.app_id') }}",
+            vapidKey: "{{ config('firebase.vapidKey') }}"
+        };
+    </script>
+    
     <!-- Tailwind CSS (Local Build) -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/messaging.js'])
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -48,51 +61,91 @@
                     TREIS ADIUTOR
                 </a>
             </div>
-            <nav class="mt-6 px-4">
+            <nav class="mt-6 px-4 overflow-y-auto" style="max-height: calc(100vh - 100px);">
+                <!-- Dashboard -->
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.dashboard') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-tachometer-alt w-5 mr-3"></i>
                     <span>Dashboard</span>
                 </a>
                 
-                <!-- User & Client Management -->
+                <div class="border-t border-white/20 my-4"></div>
+                
+                <!-- User Management Section -->
+                <div class="px-3 mb-2">
+                    <p class="text-xs font-semibold text-white/50 uppercase tracking-wider">User Management</p>
+                </div>
                 <a href="{{ route('admin.users.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.users*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-users w-5 mr-3"></i>
-                    <span>User Management</span>
+                    <span>Users</span>
                 </a>
                 <a href="{{ route('admin.clients.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.clients*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-user-tie w-5 mr-3"></i>
-                    <span>Client Management</span>
+                    <span>Clients</span>
                 </a>
                 
-                <!-- Operations -->
+                <div class="border-t border-white/20 my-4"></div>
+                
+                <!-- Project Management Section -->
+                <div class="px-3 mb-2">
+                    <p class="text-xs font-semibold text-white/50 uppercase tracking-wider">Project Management</p>
+                </div>
                 <a href="{{ route('admin.requests.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.requests*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-clipboard-list w-5 mr-3"></i>
                     <span>Service Requests</span>
                 </a>
                 <a href="{{ route('admin.projects.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.projects*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-project-diagram w-5 mr-3"></i>
-                    <span>Projects Management</span>
+                    <span>Projects</span>
                 </a>
                 <a href="{{ route('admin.tasks.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.tasks*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-tasks w-5 mr-3"></i>
-                    <span>Task Management</span>
-                </a>
-                <a href="{{ route('admin.documents.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.documents*') ? 'bg-white/10 text-white' : '' }}">
-                    <i class="fas fa-folder-open w-5 mr-3"></i>
-                    <span>Document Management</span>
-                </a>
-                <a href="{{ route('admin.feedback.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.feedback*') ? 'bg-white/10 text-white' : '' }}">
-                    <i class="fas fa-comments w-5 mr-3"></i>
-                    <span>Feedback Management</span>
+                    <span>Tasks</span>
                 </a>
                 
-                <!-- Analytics & Reports -->
+                <div class="border-t border-white/20 my-4"></div>
+                
+                <!-- Communication Section -->
+                <div class="px-3 mb-2">
+                    <p class="text-xs font-semibold text-white/50 uppercase tracking-wider">Communication</p>
+                </div>
+                <a href="{{ route('admin.messages.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.messages*') ? 'bg-white/10 text-white' : '' }}">
+                    <i class="fas fa-comments w-5 mr-3"></i>
+                    <span class="flex-1">Messages</span>
+                    @if(auth()->user()->unreadMessagesCount() > 0)
+                        <span class="bg-accent-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                            {{ auth()->user()->unreadMessagesCount() }}
+                        </span>
+                    @endif
+                </a>
+                <a href="{{ route('admin.feedback.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.feedback*') ? 'bg-white/10 text-white' : '' }}">
+                    <i class="fas fa-star w-5 mr-3"></i>
+                    <span>Feedback</span>
+                </a>
+                
+                <div class="border-t border-white/20 my-4"></div>
+                
+                <!-- Content Management Section -->
+                <div class="px-3 mb-2">
+                    <p class="text-xs font-semibold text-white/50 uppercase tracking-wider">Content</p>
+                </div>
+                <a href="{{ route('admin.documents.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.documents*') ? 'bg-white/10 text-white' : '' }}">
+                    <i class="fas fa-folder-open w-5 mr-3"></i>
+                    <span>Documents</span>
+                </a>
+                
+                <div class="border-t border-white/20 my-4"></div>
+                
+                <!-- Analytics Section -->
+                <div class="px-3 mb-2">
+                    <p class="text-xs font-semibold text-white/50 uppercase tracking-wider">Analytics</p>
+                </div>
                 <a href="{{ route('admin.reports.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.reports*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-chart-bar w-5 mr-3"></i>
                     <span>Reports & Analytics</span>
                 </a>
                 
-                <div class="border-t border-white/20 my-6"></div>
+                <div class="border-t border-white/20 my-4"></div>
+                
                 <a href="{{ route('admin.profile') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.profile') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-user w-5 mr-3"></i>
                     <span>Profile</span>

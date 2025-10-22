@@ -676,7 +676,78 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="modal-body p-6">
+                <div class="modal-body p-6" x-data="{
+                    paymentType: 'full_payment',
+                    totalMilestones: 3,
+                    milestonePhases: [
+                        { name: 'Phase 1', percentage: 30, description: '' },
+                        { name: 'Phase 2', percentage: 40, description: '' },
+                        { name: 'Phase 3', percentage: 30, description: '' }
+                    ],
+                    downpaymentPercentage: 30,
+                    budgetDisplay: '',
+                    budgetValue: '',
+                    
+                    init() {
+                        // Set default payment due date to +7 days from today
+                        const today = new Date();
+                        today.setDate(today.getDate() + 7);
+                        const year = today.getFullYear();
+                        const month = String(today.getMonth() + 1).padStart(2, '0');
+                        const day = String(today.getDate()).padStart(2, '0');
+                        document.getElementById('payment_due_date').value = `${year}-${month}-${day}`;
+                    },
+                    
+                    formatBudget(event) {
+                        // Remove all non-digit characters
+                        let value = event.target.value.replace(/[^\d.]/g, '');
+                        
+                        // Store raw value
+                        this.budgetValue = value;
+                        
+                        // Format with commas
+                        if (value) {
+                            const parts = value.split('.');
+                            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                            this.budgetDisplay = parts.join('.');
+                        } else {
+                            this.budgetDisplay = '';
+                        }
+                        
+                        // Update display
+                        event.target.value = this.budgetDisplay;
+                    },
+                    
+                    addPhase() {
+                        this.milestonePhases.push({ 
+                            name: 'Phase ' + (this.milestonePhases.length + 1), 
+                            percentage: 0, 
+                            description: '' 
+                        });
+                        this.totalMilestones = this.milestonePhases.length;
+                    },
+                    
+                    removePhase(index) {
+                        if (this.milestonePhases.length > 1) {
+                            this.milestonePhases.splice(index, 1);
+                            this.totalMilestones = this.milestonePhases.length;
+                            // Renumber phases
+                            this.milestonePhases.forEach((phase, idx) => {
+                                if (!phase.name || phase.name.startsWith('Phase ')) {
+                                    phase.name = 'Phase ' + (idx + 1);
+                                }
+                            });
+                        }
+                    },
+                    
+                    getTotalPercentage() {
+                        return this.milestonePhases.reduce((sum, phase) => sum + parseFloat(phase.percentage || 0), 0);
+                    },
+                    
+                    isPercentageValid() {
+                        return this.getTotalPercentage() === 100;
+                    }
+                }" x-init="init()">
                     <!-- Budget and Payment Section -->
                     <div class="bg-primary-50 rounded-lg p-4 mb-5">
                         <h3 class="text-neutral-800 font-medium mb-3 flex items-center">
@@ -688,11 +759,15 @@
                             <div>
                                 <label for="approved_budget" class="block text-sm font-medium text-neutral-700 mb-1">Approved Budget *</label>
                                 <div class="relative">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
-                                    <input type="number" id="approved_budget" name="approved_budget" step="0.01" min="0" required
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">₱</span>
+                                    <input type="text" id="approved_budget_display" 
+                                           @input="formatBudget($event)"
                                            class="w-full pl-8 pr-4 py-2 rounded-lg border border-neutral-300 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-                                           placeholder="0.00">
+                                           placeholder="0.00"
+                                           required>
+                                    <input type="hidden" id="approved_budget" name="approved_budget" :value="budgetValue" required>
                                 </div>
+                                <p class="text-xs text-neutral-500 mt-1">Amount will be formatted with commas (e.g., 100,000.00)</p>
                             </div>
                             
                             <div>
@@ -700,10 +775,144 @@
                                 <input type="date" id="payment_due_date" name="payment_due_date" required
                                        min="{{ date('Y-m-d', strtotime('+1 day')) }}"
                                        class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                                <p class="text-xs text-neutral-500 mt-1">Default: 7 days from today</p>
                             </div>
                         </div>
                         
+                        <!-- Payment Type Selection -->
                         <div class="mb-4">
+                            <label class="block text-sm font-medium text-neutral-700 mb-2">Payment Type *</label>
+                            <div class="space-y-3">
+                                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-primary-50 transition-colors" 
+                                       :class="paymentType === 'full_payment' ? 'border-primary-500 bg-primary-50' : 'border-neutral-300'">
+                                    <input type="radio" name="payment_type" value="full_payment" 
+                                           x-model="paymentType" required
+                                           class="mt-1 text-primary-600 focus:ring-primary-500">
+                                    <div class="ml-3">
+                                        <div class="font-medium text-neutral-800">Full Payment</div>
+                                        <div class="text-sm text-neutral-600">Client pays entire amount upfront. All tasks and documents are immediately accessible.</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-primary-50 transition-colors"
+                                       :class="paymentType === 'milestone_payment' ? 'border-primary-500 bg-primary-50' : 'border-neutral-300'">
+                                    <input type="radio" name="payment_type" value="milestone_payment" 
+                                           x-model="paymentType"
+                                           class="mt-1 text-primary-600 focus:ring-primary-500">
+                                    <div class="ml-3">
+                                        <div class="font-medium text-neutral-800">Milestone Payment</div>
+                                        <div class="text-sm text-neutral-600">Client pays per phase. Tasks and documents are locked per phase until paid.</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-primary-50 transition-colors"
+                                       :class="paymentType === 'downpayment' ? 'border-primary-500 bg-primary-50' : 'border-neutral-300'">
+                                    <input type="radio" name="payment_type" value="downpayment" 
+                                           x-model="paymentType"
+                                           class="mt-1 text-primary-600 focus:ring-primary-500">
+                                    <div class="ml-3">
+                                        <div class="font-medium text-neutral-800">Downpayment</div>
+                                        <div class="text-sm text-neutral-600">Client pays initial downpayment to start. All content locked until remaining balance is paid.</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Milestone Payment Configuration -->
+                        <div x-show="paymentType === 'milestone_payment'" 
+                             x-transition
+                             class="mt-4 p-4 bg-white rounded-lg border border-primary-200">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-medium text-neutral-800">Configure Phases</h4>
+                                <button type="button" @click="addPhase()" 
+                                        class="text-sm px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
+                                    <i class="fas fa-plus mr-1"></i>Add Phase
+                                </button>
+                            </div>
+                            
+                            <input type="hidden" name="total_milestones" :value="milestonePhases.length">
+                            
+                            <div class="space-y-3 mb-3">
+                                <template x-for="(phase, index) in milestonePhases" :key="index">
+                                    <div class="p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-sm font-medium text-neutral-700" x-text="'Phase ' + (index + 1)"></span>
+                                            <button type="button" @click="removePhase(index)" 
+                                                    x-show="milestonePhases.length > 1"
+                                                    class="text-error-600 hover:text-error-700 text-sm">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <input type="text" 
+                                                       :name="'milestone_phases[' + index + '][name]'"
+                                                       x-model="phase.name"
+                                                       placeholder="Phase name"
+                                                       class="w-full text-sm rounded border border-neutral-300 px-2 py-1.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                                            </div>
+                                            <div class="relative">
+                                                <input type="number" 
+                                                       :name="'milestone_phases[' + index + '][percentage]'"
+                                                       x-model="phase.percentage"
+                                                       min="0" max="100" step="0.01"
+                                                       placeholder="Percentage"
+                                                       class="w-full text-sm rounded border border-neutral-300 pl-2 pr-7 py-1.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">%</span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <input type="text" 
+                                                   :name="'milestone_phases[' + index + '][description]'"
+                                                   x-model="phase.description"
+                                                   placeholder="Description (optional)"
+                                                   class="w-full text-sm rounded border border-neutral-300 px-2 py-1.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-3 rounded-lg"
+                                 :class="isPercentageValid() ? 'bg-success-50 border border-success-200' : 'bg-warning-50 border border-warning-200'">
+                                <span class="text-sm font-medium" 
+                                      :class="isPercentageValid() ? 'text-success-700' : 'text-warning-700'">
+                                    Total Percentage:
+                                </span>
+                                <span class="text-lg font-bold"
+                                      :class="isPercentageValid() ? 'text-success-700' : 'text-warning-700'"
+                                      x-text="getTotalPercentage() + '%'"></span>
+                            </div>
+                            <p class="text-xs text-neutral-600 mt-2" x-show="!isPercentageValid()">
+                                <i class="fas fa-exclamation-triangle text-warning-600 mr-1"></i>
+                                Percentages must total exactly 100%
+                            </p>
+                        </div>
+                        
+                        <!-- Downpayment Configuration -->
+                        <div x-show="paymentType === 'downpayment'" 
+                             x-transition
+                             class="mt-4 p-4 bg-white rounded-lg border border-primary-200">
+                            <h4 class="font-medium text-neutral-800 mb-3">Downpayment Configuration</h4>
+                            <div>
+                                <label for="downpayment_percentage" class="block text-sm font-medium text-neutral-700 mb-1">
+                                    Downpayment Percentage *
+                                </label>
+                                <div class="relative">
+                                    <input type="number" id="downpayment_percentage" name="downpayment_percentage" 
+                                           x-model="downpaymentPercentage"
+                                           min="1" max="99" step="0.01"
+                                           class="w-full rounded border border-neutral-300 pl-3 pr-10 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                           placeholder="30">
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500">%</span>
+                                </div>
+                                <p class="text-xs text-neutral-600 mt-1">
+                                    Client will pay <span class="font-medium" x-text="downpaymentPercentage + '%'"></span> upfront, 
+                                    then <span class="font-medium" x-text="(100 - downpaymentPercentage) + '%'"></span> as remaining balance.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
                             <label for="payment_instructions" class="block text-sm font-medium text-neutral-700 mb-1">Payment Instructions (Optional)</label>
                             <textarea id="payment_instructions" name="payment_instructions" rows="2" 
                                       class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"

@@ -13,9 +13,8 @@ Great news! Your project request "{{ $serviceRequest->project_name }}" has been 
 
 ## Next Steps
 
-To proceed with your project, please complete the payment using the details below:
+To proceed with your project, please complete the payment in your request details.
 
-**Payment Method:** {{ ucfirst($serviceRequest->payment_method) }}
 **Amount:** ${{ number_format($serviceRequest->approved_budget, 2) }}
 **Due Date:** {{ \Carbon\Carbon::parse($serviceRequest->payment_due_date)->format('M d, Y') }}
 

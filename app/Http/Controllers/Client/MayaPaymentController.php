@@ -29,8 +29,8 @@ class MayaPaymentController extends Controller
     {
         $user = Auth::user();
 
-        // Get service request
-        $serviceRequest = DB::table('service_requests')
+        // Get service request using Eloquent to access relationships and methods
+        $serviceRequest = \App\Models\ServiceRequest::with('project.milestones')
             ->where('id', $serviceRequestId)
             ->where('client_id', $user->id)
             ->whereIn('status', ['pending_payment', 'approved'])
@@ -41,12 +41,13 @@ class MayaPaymentController extends Controller
                 ->with('error', 'Service request not found or not available for payment.');
         }
 
-        // Determine payment amount (use approved budget or estimated budget)
-        $amount = $serviceRequest->approved_budget ?? $serviceRequest->estimated_budget ?? 0;
+        // Get current payment amount due based on payment type
+        $amount = $serviceRequest->getCurrentPaymentAmountDue();
+        $paymentDescription = $serviceRequest->getCurrentPaymentDescription();
 
         if ($amount <= 0) {
             return redirect()->route('client.requests.show', $serviceRequestId)
-                ->with('error', 'Payment amount is not set. Please contact admin.');
+                ->with('error', 'No payment is currently due. Please contact admin if you believe this is an error.');
         }
 
         // Create unique reference number
@@ -55,7 +56,7 @@ class MayaPaymentController extends Controller
         // Prepare items array for Maya
         $items = [
             [
-                'name' => $serviceRequest->project_name,
+                'name' => $serviceRequest->project_name . ' - ' . $paymentDescription,
                 'quantity' => 1,
                 'code' => 'SERVICE-' . $serviceRequestId,
                 'description' => substr($serviceRequest->request_description, 0, 100),
@@ -119,20 +120,38 @@ class MayaPaymentController extends Controller
 
         // Store payment record
         try {
+            // Determine payment type and milestone (if applicable)
+            $paymentType = $serviceRequest->payment_type ?? 'full_payment';
+            $milestoneId = null;
+
+            if ($serviceRequest->isMilestonePayment() && $serviceRequest->project) {
+                $nextUnpaidMilestone = $serviceRequest->project->milestones()
+                    ->where('is_paid', false)
+                    ->orderBy('phase_order', 'asc')
+                    ->first();
+                
+                if ($nextUnpaidMilestone) {
+                    $milestoneId = $nextUnpaidMilestone->id;
+                }
+            }
+
             DB::table('payments')->insert([
                 'service_request_id' => $serviceRequestId,
                 'client_id' => $user->id,
                 'amount' => $amount,
                 'payment_method' => 'maya',
                 'payment_reference' => $referenceNumber,
+                'payment_type' => $paymentType,
+                'milestone_id' => $milestoneId,
                 'status' => 'pending',
                 'payment_details' => json_encode([
                     'checkout_id' => $response['data']['checkoutId'],
-                    'environment' => $this->mayaService->getEnvironment()
+                    'environment' => $this->mayaService->getEnvironment(),
+                    'payment_description' => $paymentDescription
                 ]),
                 'created_at' => now(),
                 'updated_at' => now()
-            ]);
+            ]);;
 
             // Update service request - keep status as pending_payment until Maya confirms
             DB::table('service_requests')
@@ -208,14 +227,22 @@ class MayaPaymentController extends Controller
                             'updated_at' => now()
                         ]);
 
-                    // Update service request
-                    DB::table('service_requests')
-                        ->where('id', $payment->service_request_id)
-                        ->update([
-                            'status' => 'paid',
-                            'payment_confirmed_at' => now(),
-                            'updated_at' => now()
-                        ]);
+                    // Get service request model to access payment type methods
+                    $serviceRequest = \App\Models\ServiceRequest::with('project.milestones')->find($payment->service_request_id);
+
+                    // Handle payment based on payment type
+                    if ($serviceRequest) {
+                        $this->handlePaymentConfirmation($serviceRequest, $payment);
+                    } else {
+                        // Fallback: update service request to paid status
+                        DB::table('service_requests')
+                            ->where('id', $payment->service_request_id)
+                            ->update([
+                                'status' => 'paid',
+                                'payment_confirmed_at' => now(),
+                                'updated_at' => now()
+                            ]);
+                    }
 
                     // Check if project already exists
                     $existingProject = DB::table('projects')
@@ -379,5 +406,138 @@ class MayaPaymentController extends Controller
         return view('client.payments.maya-cancel', [
             'referenceNumber' => $referenceNumber
         ]);
+    }
+
+    /**
+     * Handle payment confirmation based on payment type
+     */
+    protected function handlePaymentConfirmation($serviceRequest, $payment)
+    {
+        // Full payment
+        if ($serviceRequest->isFullPayment() || !$serviceRequest->payment_type) {
+            DB::table('service_requests')
+                ->where('id', $serviceRequest->id)
+                ->update([
+                    'status' => 'paid',
+                    'payment_confirmed_at' => now(),
+                    'updated_at' => now()
+                ]);
+            
+            Log::info('Full payment confirmed', [
+                'service_request_id' => $serviceRequest->id
+            ]);
+            return;
+        }
+
+        // Downpayment
+        if ($serviceRequest->isDownpayment()) {
+            if (!$serviceRequest->downpayment_paid) {
+                // This is the downpayment
+                DB::table('service_requests')
+                    ->where('id', $serviceRequest->id)
+                    ->update([
+                        'downpayment_paid' => true,
+                        'downpayment_paid_at' => now(),
+                        'status' => 'in_progress', // Start project after downpayment
+                        'payment_confirmed_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                
+                Log::info('Downpayment confirmed', [
+                    'service_request_id' => $serviceRequest->id,
+                    'amount' => $payment->amount
+                ]);
+            } elseif (!$serviceRequest->remaining_balance_paid) {
+                // This is the remaining balance
+                DB::table('service_requests')
+                    ->where('id', $serviceRequest->id)
+                    ->update([
+                        'remaining_balance_paid' => true,
+                        'remaining_balance_paid_at' => now(),
+                        'status' => 'paid', // Fully paid
+                        'updated_at' => now()
+                    ]);
+                
+                Log::info('Remaining balance paid', [
+                    'service_request_id' => $serviceRequest->id,
+                    'amount' => $payment->amount
+                ]);
+            }
+            return;
+        }
+
+        // Milestone payment
+        if ($serviceRequest->isMilestonePayment()) {
+            // Find the milestone that was paid
+            if ($payment->milestone_id) {
+                $milestone = \App\Models\ProjectMilestone::find($payment->milestone_id);
+                
+                if ($milestone) {
+                    // Mark milestone as paid
+                    $milestone->update([
+                        'is_paid' => true,
+                        'paid_at' => now()
+                    ]);
+
+                    // Create milestone payment record
+                    \App\Models\MilestonePayment::create([
+                        'milestone_id' => $milestone->id,  // Corrected field name
+                        'service_request_id' => $serviceRequest->id,
+                        'payment_id' => $payment->id,
+                        'client_id' => $payment->client_id,
+                        'amount_due' => $milestone->amount,
+                        'amount_paid' => $payment->amount,
+                        'status' => 'paid',
+                        'due_date' => $serviceRequest->payment_due_date,
+                        'paid_at' => now()
+                    ]);
+
+                    Log::info('Milestone payment confirmed', [
+                        'service_request_id' => $serviceRequest->id,
+                        'milestone_id' => $milestone->id,
+                        'phase' => $milestone->phase_order,
+                        'amount' => $payment->amount
+                    ]);
+
+                    // Check if all milestones are paid
+                    $unpaidMilestones = $serviceRequest->project->milestones()
+                        ->where('is_paid', false)
+                        ->count();
+
+                    if ($unpaidMilestones === 0) {
+                        // All milestones paid - mark as fully paid
+                        DB::table('service_requests')
+                            ->where('id', $serviceRequest->id)
+                            ->update([
+                                'status' => 'paid',
+                                'payment_confirmed_at' => now(),
+                                'updated_at' => now()
+                            ]);
+                        
+                        Log::info('All milestones paid', [
+                            'service_request_id' => $serviceRequest->id
+                        ]);
+                    } else {
+                        // Still has unpaid milestones - keep in progress or pending_payment
+                        DB::table('service_requests')
+                            ->where('id', $serviceRequest->id)
+                            ->update([
+                                'status' => 'in_progress',
+                                'updated_at' => now()
+                            ]);
+                    }
+                }
+            }
+            return;
+        }
+
+        // Default fallback
+        DB::table('service_requests')
+            ->where('id', $serviceRequest->id)
+            ->update([
+                'status' => 'paid',
+                'payment_confirmed_at' => now(),
+                'updated_at' => now()
+            ]);
     }
 }

@@ -38,6 +38,16 @@ class ServiceRequest extends Model
         'admin_notes',
         'rejection_reason',
         'reviewed_at',
+        // Milestone payment fields
+        'payment_type',
+        'downpayment_percentage',
+        'downpayment_amount',
+        'remaining_balance',
+        'downpayment_paid',
+        'downpayment_paid_at',
+        'remaining_balance_paid',
+        'remaining_balance_paid_at',
+        'total_milestones',
     ];
 
     protected $casts = [
@@ -49,6 +59,14 @@ class ServiceRequest extends Model
         'payment_confirmed_at' => 'datetime',
         'estimated_budget' => 'decimal:2',
         'approved_budget' => 'decimal:2',
+        // Milestone payment casts
+        'downpayment_percentage' => 'decimal:2',
+        'downpayment_amount' => 'decimal:2',
+        'remaining_balance' => 'decimal:2',
+        'downpayment_paid' => 'boolean',
+        'downpayment_paid_at' => 'datetime',
+        'remaining_balance_paid' => 'boolean',
+        'remaining_balance_paid_at' => 'datetime',
     ];
 
     /**
@@ -168,6 +186,114 @@ class ServiceRequest extends Model
     }
 
     /**
+     * Get milestone payments for this service request
+     */
+    public function milestonePayments(): HasMany
+    {
+        return $this->hasMany(MilestonePayment::class);
+    }
+
+    /**
+     * Check if this request uses full payment type
+     */
+    public function isFullPayment(): bool
+    {
+        return $this->payment_type === 'full_payment';
+    }
+
+    /**
+     * Check if this request uses milestone payment type
+     */
+    public function isMilestonePayment(): bool
+    {
+        return $this->payment_type === 'milestone_payment';
+    }
+
+    /**
+     * Check if this request uses downpayment type
+     */
+    public function isDownpayment(): bool
+    {
+        return $this->payment_type === 'downpayment';
+    }
+
+    /**
+     * Check if downpayment has been paid
+     */
+    public function isDownpaymentPaid(): bool
+    {
+        return $this->downpayment_paid;
+    }
+
+    /**
+     * Check if remaining balance has been paid (for downpayment type)
+     */
+    public function isRemainingBalancePaid(): bool
+    {
+        return $this->remaining_balance_paid;
+    }
+
+    /**
+     * Calculate downpayment amount based on percentage
+     */
+    public function calculateDownpaymentAmount(): float
+    {
+        if (!$this->approved_budget || !$this->downpayment_percentage) {
+            return 0;
+        }
+        return round(($this->approved_budget * $this->downpayment_percentage) / 100, 2);
+    }
+
+    /**
+     * Calculate remaining balance after downpayment
+     */
+    public function calculateRemainingBalance(): float
+    {
+        if (!$this->approved_budget || !$this->downpayment_amount) {
+            return $this->approved_budget ?? 0;
+        }
+        return round($this->approved_budget - $this->downpayment_amount, 2);
+    }
+
+    /**
+     * Get the payment type label
+     */
+    public function getPaymentTypeLabel(): string
+    {
+        return match($this->payment_type) {
+            'full_payment' => 'Full Payment',
+            'milestone_payment' => 'Milestone Payment',
+            'downpayment' => 'Downpayment',
+            default => 'Not Set'
+        };
+    }
+
+    /**
+     * Check if initial payment has been made
+     * For full_payment: check if full amount paid
+     * For milestone_payment: check if phase 1 paid
+     * For downpayment: check if downpayment paid
+     */
+    public function hasInitialPayment(): bool
+    {
+        if ($this->isFullPayment()) {
+            return $this->isPaid();
+        }
+
+        if ($this->isMilestonePayment()) {
+            // Check if first milestone is paid
+            $firstMilestone = $this->project?->milestones()->ordered()->first();
+            return $firstMilestone?->isPaid() ?? false;
+        }
+
+        if ($this->isDownpayment()) {
+            return $this->isDownpaymentPaid();
+        }
+
+        return false;
+    }
+
+    /**
      * Get total allocated budget for all tasks
      */
     public function getTotalAllocatedBudget(): float
@@ -234,5 +360,93 @@ class ServiceRequest extends Model
             'completed' => 'Completed',
             default => 'Unknown'
         };
+    }
+
+    /**
+     * Get the current payment amount due for the client
+     * This varies based on payment type:
+     * - full_payment: full approved budget
+     * - milestone_payment: amount for current/next unpaid milestone phase
+     * - downpayment: downpayment amount (if not paid) or remaining balance
+     */
+    public function getCurrentPaymentAmountDue(): float
+    {
+        if (!$this->approved_budget) {
+            return 0;
+        }
+
+        // Full payment: return full amount
+        if ($this->isFullPayment() || !$this->payment_type) {
+            return (float) $this->approved_budget;
+        }
+
+        // Downpayment: return downpayment if not paid, else remaining balance
+        if ($this->isDownpayment()) {
+            if (!$this->downpayment_paid) {
+                return (float) ($this->downpayment_amount ?? $this->calculateDownpaymentAmount());
+            }
+            
+            if (!$this->remaining_balance_paid) {
+                return (float) ($this->remaining_balance ?? $this->calculateRemainingBalance());
+            }
+            
+            // Both paid - return 0
+            return 0;
+        }
+
+        // Milestone payment: get next unpaid milestone amount
+        if ($this->isMilestonePayment() && $this->project) {
+            $nextUnpaidMilestone = $this->project->milestones()
+                ->where('is_paid', false)
+                ->orderBy('phase_order', 'asc')
+                ->first();
+
+            if ($nextUnpaidMilestone) {
+                return (float) $nextUnpaidMilestone->amount;
+            }
+
+            // All milestones paid
+            return 0;
+        }
+
+        // Fallback: return full budget
+        return (float) $this->approved_budget;
+    }
+
+    /**
+     * Get the description of what the current payment is for
+     */
+    public function getCurrentPaymentDescription(): string
+    {
+        if ($this->isFullPayment() || !$this->payment_type) {
+            return 'Full Project Payment';
+        }
+
+        if ($this->isDownpayment()) {
+            if (!$this->downpayment_paid) {
+                return 'Downpayment (' . number_format($this->downpayment_percentage, 0) . '%)';
+            }
+            
+            if (!$this->remaining_balance_paid) {
+                return 'Remaining Balance';
+            }
+            
+            return 'Payment Complete';
+        }
+
+        if ($this->isMilestonePayment() && $this->project) {
+            $nextUnpaidMilestone = $this->project->milestones()
+                ->where('is_paid', false)
+                ->orderBy('phase_order', 'asc')
+                ->first();
+
+            if ($nextUnpaidMilestone) {
+                return 'Phase ' . $nextUnpaidMilestone->phase_order . ': ' . $nextUnpaidMilestone->phase_name;
+            }
+
+            return 'All Milestones Paid';
+        }
+
+        return 'Payment';
     }
 }

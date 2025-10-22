@@ -18,6 +18,30 @@ Route::prefix('api')->group(function () {
     // Chatbot routes
     Route::post('/chatbot/chat', [\App\Http\Controllers\ChatbotController::class, 'chat']);
     Route::get('/chatbot/greeting', [\App\Http\Controllers\ChatbotController::class, 'greeting']);
+    
+    // Messaging API routes (requires authentication)
+    Route::middleware('auth')->group(function () {
+        Route::prefix('messages')->name('api.messages.')->group(function () {
+            Route::get('/conversations', [\App\Http\Controllers\Api\MessageController::class, 'index'])->name('conversations');
+            Route::get('/unread-count', [\App\Http\Controllers\Api\MessageController::class, 'unreadCount'])->name('unread-count');
+            Route::post('/fcm-token', [\App\Http\Controllers\Api\MessageController::class, 'updateFcmToken'])->name('update-fcm-token');
+            Route::get('/projects/{project}', [\App\Http\Controllers\Api\MessageController::class, 'show'])->name('show');
+            Route::post('/projects/{project}', [\App\Http\Controllers\Api\MessageController::class, 'store'])->name('store');
+            Route::post('/projects/{project}/mark-read', [\App\Http\Controllers\Api\MessageController::class, 'markAsRead'])->name('mark-read');
+            Route::delete('/{message}', [\App\Http\Controllers\Api\MessageController::class, 'destroy'])->name('destroy');
+        });
+        
+        // Meeting API routes
+        Route::prefix('meetings')->name('api.meetings.')->group(function () {
+            Route::get('/projects/{project}', [\App\Http\Controllers\Api\MeetingController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Api\MeetingController::class, 'store'])->name('store');
+            Route::put('/{meeting}/approve', [\App\Http\Controllers\Api\MeetingController::class, 'approve'])->name('approve');
+            Route::put('/{meeting}/reschedule', [\App\Http\Controllers\Api\MeetingController::class, 'reschedule'])->name('reschedule');
+            Route::put('/{meeting}/reject', [\App\Http\Controllers\Api\MeetingController::class, 'reject'])->name('reject');
+            Route::put('/{meeting}/approve-reschedule', [\App\Http\Controllers\Api\MeetingController::class, 'approveReschedule'])->name('approve-reschedule');
+            Route::delete('/{meeting}', [\App\Http\Controllers\Api\MeetingController::class, 'destroy'])->name('destroy');
+        });
+    });
 });
 
 // Public routes
@@ -165,6 +189,15 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::get('/documents/search', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'search'])->name('documents.search');
     Route::post('/projects/{project}/documents', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'uploadToProject'])->name('projects.documents.upload');
     
+    // Revision Management
+    Route::prefix('revisions')->name('revisions.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\RevisionController::class, 'index'])->name('index');
+        Route::get('/{revision}', [\App\Http\Controllers\Admin\RevisionController::class, 'show'])->name('show');
+        Route::post('/{revision}/approve', [\App\Http\Controllers\Admin\RevisionController::class, 'approve'])->name('approve');
+        Route::post('/{revision}/reject', [\App\Http\Controllers\Admin\RevisionController::class, 'reject'])->name('reject');
+        Route::post('/{revision}/reassign', [\App\Http\Controllers\Admin\RevisionController::class, 'reassign'])->name('reassign');
+    });
+    
     // Feedback Management
     Route::resource('feedback', \App\Http\Controllers\Admin\FeedbackManagementController::class, ['only' => ['index', 'show']]);
     Route::post('/feedback/{feedback}/respond', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'respond'])->name('feedback.respond');
@@ -208,6 +241,12 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::get('/documents', [\App\Http\Controllers\Admin\ReportingController::class, 'documents'])->name('documents');
         Route::get('/export', [\App\Http\Controllers\Admin\ReportingController::class, 'export'])->name('export');
         Route::get('/custom', [\App\Http\Controllers\Admin\ReportingController::class, 'customReport'])->name('custom');
+    });
+    
+    // Messaging routes
+    Route::prefix('messages')->name('messages.')->group(function () {
+        Route::get('/', [AdminController::class, 'messages'])->name('index');
+        Route::get('/projects/{project}', [AdminController::class, 'showMessages'])->name('show');
     });
     
     Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
@@ -261,6 +300,21 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
         Route::get('/{projectId}/create', [\App\Http\Controllers\Client\FeedbackController::class, 'create'])->name('create');
         Route::post('/{projectId}', [\App\Http\Controllers\Client\FeedbackController::class, 'store'])->name('store');
     });
+    
+    // Revision Request routes
+    Route::prefix('revisions')->name('revisions.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Client\RevisionRequestController::class, 'index'])->name('index');
+        Route::get('/{revision}', [\App\Http\Controllers\Client\RevisionRequestController::class, 'show'])->name('show');
+        Route::get('/documents/{document}/create', [\App\Http\Controllers\Client\RevisionRequestController::class, 'create'])->name('create');
+        Route::post('/documents/{document}', [\App\Http\Controllers\Client\RevisionRequestController::class, 'store'])->name('store');
+        Route::post('/{revision}/cancel', [\App\Http\Controllers\Client\RevisionRequestController::class, 'cancel'])->name('cancel');
+    });
+    
+    // Messaging routes
+    Route::prefix('messages')->name('messages.')->group(function () {
+        Route::get('/', [ClientController::class, 'messages'])->name('index');
+        Route::get('/projects/{project}', [ClientController::class, 'showMessages'])->name('show');
+    });
 });
 
 // Adiutor routes
@@ -293,5 +347,13 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
         Route::get('/edit', [\App\Http\Controllers\Adiutor\ProfileController::class, 'edit'])->name('edit');
         Route::put('/update', [\App\Http\Controllers\Adiutor\ProfileController::class, 'update'])->name('update');
         Route::put('/skills', [\App\Http\Controllers\Adiutor\ProfileController::class, 'updateSkills'])->name('skills.update');
+    });
+    
+    // Revision Management routes
+    Route::prefix('revisions')->name('revisions.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Adiutor\RevisionController::class, 'index'])->name('index');
+        Route::get('/{revision}', [\App\Http\Controllers\Adiutor\RevisionController::class, 'show'])->name('show');
+        Route::get('/{revision}/upload', [\App\Http\Controllers\Adiutor\RevisionController::class, 'uploadForm'])->name('upload');
+        Route::post('/{revision}/complete', [\App\Http\Controllers\Adiutor\RevisionController::class, 'complete'])->name('complete');
     });
 });

@@ -213,14 +213,10 @@ class ServiceRequestController extends Controller
     {
         $user = Auth::user();
         
-        $request = DB::table('service_requests')
-            ->leftJoin('users as approver', 'service_requests.approved_by', '=', 'approver.id')
-            ->where('service_requests.id', $id)
-            ->where('service_requests.client_id', $user->id)
-            ->select(
-                'service_requests.*',
-                'approver.fullName as approved_by_name'
-            )
+        // Use Eloquent to access relationships and methods
+        $request = \App\Models\ServiceRequest::with(['project.milestones', 'approvedBy'])
+            ->where('id', $id)
+            ->where('client_id', $user->id)
             ->first();
 
         if (!$request) {
@@ -232,10 +228,8 @@ class ServiceRequestController extends Controller
             ->where('service_request_id', $id)
             ->get();
 
-        // Get associated project if one exists
-        $project = DB::table('projects')
-            ->where('service_request_id', $id)
-            ->first();
+        // Get associated project (already loaded via relationship)
+        $project = $request->project;
 
         return view('client.requests.show', compact('user', 'request', 'attachments', 'project'));
     }

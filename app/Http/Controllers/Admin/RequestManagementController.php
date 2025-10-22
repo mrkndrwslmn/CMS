@@ -99,6 +99,12 @@ class RequestManagementController extends Controller
             'approved_budget' => 'required|numeric|min:0',
             'payment_due_date' => 'required|date|after:today',
             'payment_instructions' => 'nullable|string',
+            // Payment type fields
+            'payment_type' => 'required|in:full_payment,milestone_payment,downpayment',
+            'milestone_phases' => 'nullable|required_if:payment_type,milestone_payment|array',
+            'milestone_phases.*.name' => 'nullable|string|max:255',
+            'milestone_phases.*.percentage' => 'nullable|numeric|min:1|max:100',
+            'downpayment_percentage' => 'nullable|required_if:payment_type,downpayment|numeric|min:1|max:99',
             // Task creation fields - only validate if create_task is checked
             'create_task' => 'nullable|boolean',
             'task_title' => 'nullable|required_if:create_task,on|string|max:255',
@@ -107,19 +113,90 @@ class RequestManagementController extends Controller
             'task_due_date' => 'nullable|date',
             'adiutor_id' => 'nullable|exists:users,id',
         ]);
-        
-        // Update request status to approved
-        $serviceRequest->update([
+
+        // Validate milestone percentages total 100% if milestone payment
+        if ($request->payment_type === 'milestone_payment' && $request->has('milestone_phases')) {
+            $totalPercentage = collect($request->milestone_phases)->sum('percentage');
+            if (abs($totalPercentage - 100) > 0.01) { // Allow for small floating point differences
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['milestone_phases' => 'Milestone percentages must total exactly 100%. Current total: ' . $totalPercentage . '%']);
+            }
+        }
+
+        // Prepare service request update data
+        $updateData = [
             'status' => 'approved',
             'admin_notes' => $request->admin_notes,
             'approved_budget' => $request->approved_budget,
-            'payment_method' => $serviceRequest->contact_method ?? 'email', // Use client's preferred contact method
+            'payment_method' => $serviceRequest->contact_method ?? 'email',
             'payment_due_date' => $request->payment_due_date,
             'payment_instructions' => $request->payment_instructions,
+            'payment_type' => $request->payment_type,
             'approved_by' => Auth::id(),
             'approved_at' => now(),
             'reviewed_at' => now(),
-        ]);
+        ];
+
+        // Handle downpayment type
+        if ($request->payment_type === 'downpayment') {
+            $updateData['downpayment_percentage'] = $request->downpayment_percentage;
+            $updateData['downpayment_amount'] = ($request->approved_budget * $request->downpayment_percentage) / 100;
+            $updateData['remaining_balance'] = $request->approved_budget - $updateData['downpayment_amount'];
+        }
+
+        // Handle milestone payment type
+        if ($request->payment_type === 'milestone_payment' && $request->has('milestone_phases')) {
+            $updateData['total_milestones'] = count($request->milestone_phases);
+        }
+        
+        // Update request
+        $serviceRequest->update($updateData);
+        
+        // Create project immediately when approved (needed for milestones)
+        $project = Project::firstOrCreate(
+            ['service_request_id' => $serviceRequest->id],
+            [
+                'client_id' => $serviceRequest->client_id,
+                'title' => $serviceRequest->project_name,
+                'description' => $serviceRequest->request_description,
+                'budget' => $request->approved_budget,
+                'deadline' => $serviceRequest->deadline,
+                'status' => 'active', // Project is active once approved, will move to in_progress after payment
+                'priority' => $serviceRequest->priority ?? 'medium',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]
+        );
+
+        // Create milestone phases if milestone payment type
+        if ($request->payment_type === 'milestone_payment' && $request->has('milestone_phases')) {
+            // Delete existing milestones if any
+            $project->milestones()->delete();
+            
+            $phaseOrder = 1;
+            foreach ($request->milestone_phases as $phase) {
+                if (!empty($phase['name']) && !empty($phase['percentage'])) {
+                    $phaseAmount = ($request->approved_budget * $phase['percentage']) / 100;
+                    
+                    \App\Models\ProjectMilestone::create([
+                        'project_id' => $project->id,
+                        'service_request_id' => $serviceRequest->id,
+                        'phase_name' => $phase['name'],
+                        'phase_order' => $phaseOrder,
+                        'percentage' => $phase['percentage'],
+                        'amount' => $phaseAmount,
+                        'is_paid' => false,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                    
+                    $phaseOrder++;
+                }
+            }
+            
+            Log::info('Created ' . ($phaseOrder - 1) . ' milestone phases for project ' . $project->id);
+        }
         
         // Create task if requested
         if ($request->has('create_task') && $request->create_task && $request->filled('task_title')) {
@@ -160,7 +237,7 @@ class RequestManagementController extends Controller
         }
         
         return redirect()->route('admin.requests.show', $serviceRequest->id)
-                        ->with('success', 'Request approved successfully. Client has been notified via email.');
+                        ->with('success', 'Request approved successfully with ' . ucfirst(str_replace('_', ' ', $request->payment_type)) . '. Client has been notified via email.');
     }
     
     public function requestPayment($id)
