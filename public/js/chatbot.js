@@ -104,7 +104,7 @@ class ChatbotWidget {
                             id="chatbot-send" 
                             class="bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-full w-10 h-10 flex items-center justify-center hover:from-primary-700 hover:to-primary-800 transition-all duration-300 transform hover:scale-105"
                         >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                             </svg>
                         </button>
