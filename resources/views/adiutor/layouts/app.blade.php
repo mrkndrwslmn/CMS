@@ -43,9 +43,13 @@
                        class="nav-link {{ request()->routeIs('adiutor.dashboard') ? 'text-primary-600' : 'text-neutral-600 hover:text-primary-600' }} transition-colors">
                         Dashboard
                     </a>
-                    <a href="{{ route('adiutor.tasks') }}" 
-                       class="nav-link {{ request()->routeIs('adiutor.tasks') ? 'text-primary-600' : 'text-neutral-600 hover:text-primary-600' }} transition-colors">
+                    <a href="{{ route('adiutor.projects.index') }}" 
+                       class="nav-link {{ request()->routeIs('adiutor.projects.*') ? 'text-primary-600' : 'text-neutral-600 hover:text-primary-600' }} transition-colors">
                         Projects
+                    </a>
+                    <a href="{{ route('adiutor.tasks.index') }}" 
+                       class="nav-link {{ request()->routeIs('adiutor.tasks.*') ? 'text-primary-600' : 'text-neutral-600 hover:text-primary-600' }} transition-colors">
+                        Tasks
                     </a>
                     <a href="{{ route('adiutor.clients') }}" 
                        class="nav-link {{ request()->routeIs('adiutor.clients') ? 'text-primary-600' : 'text-neutral-600 hover:text-primary-600' }} transition-colors">
@@ -99,7 +103,8 @@
         <div id="mobile-menu" class="md:hidden bg-white border-t border-neutral-200">
             <div class="px-2 pt-2 pb-3 space-y-1">
                 <a href="{{ route('adiutor.dashboard') }}" class="block px-3 py-2 text-neutral-600 hover:text-primary-600">Dashboard</a>
-                <a href="{{ route('adiutor.tasks') }}" class="block px-3 py-2 text-neutral-600 hover:text-primary-600">Projects</a>
+                <a href="{{ route('adiutor.projects.index') }}" class="block px-3 py-2 text-neutral-600 hover:text-primary-600">Projects</a>
+                <a href="{{ route('adiutor.tasks.index') }}" class="block px-3 py-2 text-neutral-600 hover:text-primary-600">Tasks</a>
                 <a href="{{ route('adiutor.clients') }}" class="block px-3 py-2 text-neutral-600 hover:text-primary-600">Clients</a>
                 <a href="{{ route('adiutor.profile.show') }}" class="block px-3 py-2 text-neutral-600 hover:text-primary-600">Profile</a>
                 <form method="POST" action="{{ route('logout') }}" class="mt-2">

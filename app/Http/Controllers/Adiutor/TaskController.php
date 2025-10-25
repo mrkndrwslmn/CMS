@@ -18,39 +18,112 @@ use Illuminate\Support\Facades\DB;
 class TaskController extends Controller
 {
     /**
-     * Show task/project details
+     * Display a listing of all tasks assigned to adiutor
      */
-    public function show($assignmentId)
+    public function index(Request $request)
     {
         $user = Auth::user();
         
-        // Get assignment with project and client details
-        $assignment = DB::table('project_assignments')
-            ->join('projects', 'project_assignments.project_id', '=', 'projects.id')
-            ->join('users', 'projects.client_id', '=', 'users.id')
-            ->where('project_assignments.id', $assignmentId)
+        // Get all tasks across all projects assigned to this adiutor
+        $query = DB::table('tasks')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->join('users as clients', 'projects.client_id', '=', 'clients.id')
+            ->join('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
             ->where('project_assignments.adiutor_id', $user->id)
+            ->where('tasks.assignedTo', $user->id)
             ->select(
-                'projects.*',
-                'project_assignments.id as assignment_id',
-                'project_assignments.status as assignment_status',
-                'project_assignments.agreed_rate',
-                'project_assignments.start_date',
-                'project_assignments.expected_completion',
-                'project_assignments.progress_percentage',
-                'project_assignments.notes as assignment_notes',
-                'project_assignments.created_at as assigned_at',
-                'users.fullName as client_name',
-                'users.email as client_email',
-                'users.phoneNumber as client_phone'
+                'tasks.*',
+                'projects.title as project_title',
+                'projects.status as project_status',
+                'clients.fullName as client_name',
+                'clients.profilePic as client_photo'
+            );
+        
+        // Filter by project if specified
+        if ($request->has('project')) {
+            $query->where('tasks.project_id', $request->project);
+        }
+        
+        // Filter by status if specified
+        if ($request->has('status') && $request->status != 'all') {
+            $query->where('tasks.status', $request->status);
+        }
+        
+        // Filter by priority if specified
+        if ($request->has('priority') && $request->priority != 'all') {
+            $query->where('tasks.priority', $request->priority);
+        }
+        
+        $tasks = $query->orderBy('tasks.deadline', 'asc')
+            ->orderBy('tasks.priority', 'desc')
+            ->get();
+        
+        // Get projects for filter dropdown
+        $projects = DB::table('projects')
+            ->join('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
+            ->where('project_assignments.adiutor_id', $user->id)
+            ->select('projects.id', 'projects.title')
+            ->get();
+        
+        return view('adiutor.tasks.index', compact('user', 'tasks', 'projects'));
+    }
+
+    /**
+     * Show task details
+     */
+    public function show($taskId)
+    {
+        $user = Auth::user();
+        
+        // Get task with project, client, and phase details
+        $task = DB::table('tasks')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->join('users as clients', 'projects.client_id', '=', 'clients.id')
+            ->leftJoin('users as assignee', 'tasks.assignedTo', '=', 'assignee.id')
+            ->leftJoin('project_milestones as phase', 'tasks.phase_id', '=', 'phase.id')
+            ->where('tasks.taskID', $taskId)
+            ->where('tasks.assignedTo', $user->id)
+            ->select(
+                'tasks.*',
+                'projects.title as project_title',
+                'projects.status as project_status',
+                'projects.budget as project_budget',
+                'projects.deadline as project_deadline',
+                'clients.fullName as client_name',
+                'clients.email as client_email',
+                'clients.phoneNumber as client_phone',
+                'clients.profilePic as client_photo',
+                'assignee.fullName as assignee_name',
+                'phase.phase_name as phase_name',
+                'phase.amount as phase_budget',
+                'phase.is_paid as phase_is_paid'
             )
             ->first();
         
-        if (!$assignment) {
-            abort(404, 'Assignment not found');
+        if (!$task) {
+            abort(404, 'Task not found or you do not have access to it');
         }
         
-        return view('adiutor.tasks.show', compact('user', 'assignment'));
+        // Get project assignment info
+        $assignment = DB::table('project_assignments')
+            ->where('project_id', $task->project_id)
+            ->where('adiutor_id', $user->id)
+            ->first();
+        
+        // Get task files
+        $taskFiles = DB::table('documents')
+            ->where('taskID', $taskId)
+            ->where('is_archived', false)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Check for pending budget change request
+        $pendingBudgetRequest = DB::table('budget_change_requests')
+            ->where('task_id', $taskId)
+            ->where('status', 'pending')
+            ->first();
+        
+        return view('adiutor.tasks.show', compact('user', 'task', 'assignment', 'taskFiles', 'pendingBudgetRequest'));
     }
 
     /**
@@ -339,5 +412,118 @@ class TaskController extends Controller
         return redirect()->back()
             ->with('success', 'Budget change request submitted. Awaiting admin approval.');
     }
-}
 
+    /**
+     * Upload file for task
+     */
+    public function uploadFile(Request $request, $taskId)
+    {
+        $request->validate([
+            'file' => 'required|file|max:10240', // 10MB max
+            'description' => 'nullable|string|max:255',
+        ]);
+        
+        $user = Auth::user();
+        
+        // Verify task is assigned to this adiutor
+        $task = DB::table('tasks')
+            ->where('taskID', $taskId)
+            ->where('assignedTo', $user->id)
+            ->first();
+            
+        if (!$task) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Task not found or you do not have access to it.']);
+        }
+        
+        // Store the file
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $fileName = time() . '_' . $originalName;
+        $filePath = $file->storeAs('task_files', $fileName, 'public');
+        
+        // Save to documents table
+        DB::table('documents')->insert([
+            'taskID' => $taskId,
+            'uploaded_by' => $user->id,
+            'fileName' => $originalName,
+            'filePath' => $filePath,
+            'fileType' => $file->getClientMimeType(),
+            'fileSize' => $file->getSize(),
+            'description' => $request->description,
+            'is_archived' => false,
+            'uploadedAt' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        
+        return redirect()->back()
+            ->with('success', 'File uploaded successfully.');
+    }
+
+    /**
+     * Download task file
+     */
+    public function downloadFile($fileId)
+    {
+        $user = Auth::user();
+        
+        // Get file and verify access
+        $file = DB::table('documents')
+            ->join('tasks', 'documents.taskID', '=', 'tasks.taskID')
+            ->where('documents.documentID', $fileId)
+            ->where('tasks.assignedTo', $user->id)
+            ->where('documents.is_archived', false)
+            ->select('documents.*')
+            ->first();
+            
+        if (!$file) {
+            abort(404, 'File not found or you do not have access to it.');
+        }
+        
+        $filePath = storage_path('app/public/' . $file->filePath);
+        
+        if (!file_exists($filePath)) {
+            abort(404, 'File not found on server.');
+        }
+        
+        return response()->download($filePath, $file->fileName);
+    }
+
+    /**
+     * Delete task file (only if uploaded by current user)
+     */
+    public function deleteFile($fileId)
+    {
+        $user = Auth::user();
+        
+        // Get file and verify ownership
+        $file = DB::table('documents')
+            ->join('tasks', 'documents.taskID', '=', 'tasks.taskID')
+            ->where('documents.documentID', $fileId)
+            ->where('tasks.assignedTo', $user->id)
+            ->where('documents.uploaded_by', $user->id) // Only allow deletion if they uploaded it
+            ->where('documents.is_archived', false)
+            ->select('documents.*')
+            ->first();
+            
+        if (!$file) {
+            return redirect()->back()
+                ->withErrors(['error' => 'File not found or you do not have permission to delete it.']);
+        }
+        
+        // Delete physical file from storage
+        $filePath = storage_path('app/public/' . $file->filePath);
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+        
+        // Delete record from database
+        DB::table('documents')
+            ->where('documentID', $fileId)
+            ->delete();
+        
+        return redirect()->back()
+            ->with('success', 'File deleted successfully.');
+    }
+}

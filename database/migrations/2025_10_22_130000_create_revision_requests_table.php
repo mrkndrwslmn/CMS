@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('revision_requests', function (Blueprint $table) {
             $table->id();
             
-            // Document reference
-            $table->foreignId('document_id')->constrained('documents')->onDelete('cascade');
+            // Document reference - references documentID column
+            $table->foreignId('document_id')->constrained('documents', 'documentID')->onDelete('cascade');
             
             // Who requested the revision (client)
             $table->foreignId('requested_by')->constrained('users')->onDelete('cascade');
@@ -39,8 +39,8 @@ return new class extends Migration
             $table->text('admin_notes')->nullable(); // Admin's notes/reason for approval/rejection
             $table->timestamp('reviewed_at')->nullable();
             
-            // Task reference (if document is task-based)
-            $table->foreignId('task_id')->nullable()->constrained('tasks')->onDelete('set null');
+            // Task reference (if document is task-based) - tasks use taskID as primary key
+            $table->foreignId('task_id')->nullable()->constrained('tasks', 'taskID')->onDelete('set null');
             
             // Service request / Project reference
             $table->foreignId('service_request_id')->nullable()->constrained('service_requests')->onDelete('cascade');

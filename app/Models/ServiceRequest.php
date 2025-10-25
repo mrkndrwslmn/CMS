@@ -449,4 +449,63 @@ class ServiceRequest extends Model
 
         return 'Payment';
     }
+
+    /**
+     * Get total amount paid so far
+     */
+    public function getTotalPaid(): float
+    {
+        // Sum all confirmed payments for this service request
+        $totalPaid = $this->payments()
+            ->where('status', 'confirmed')
+            ->sum('amount');
+
+        return (float) $totalPaid;
+    }
+
+    /**
+     * Get remaining balance to be paid
+     */
+    public function getRemainingPaymentBalance(): float
+    {
+        if (!$this->approved_budget) {
+            return 0;
+        }
+
+        $totalPaid = $this->getTotalPaid();
+        $remainingBalance = $this->approved_budget - $totalPaid;
+
+        return max(0, $remainingBalance);
+    }
+
+    /**
+     * Check if there are any outstanding payments
+     */
+    public function hasOutstandingPayments(): bool
+    {
+        return $this->getRemainingPaymentBalance() > 0;
+    }
+
+    /**
+     * Get payment progress percentage
+     */
+    public function getPaymentProgress(): float
+    {
+        if (!$this->approved_budget || $this->approved_budget == 0) {
+            return 0;
+        }
+
+        $totalPaid = $this->getTotalPaid();
+        $progress = ($totalPaid / $this->approved_budget) * 100;
+
+        return min(100, max(0, $progress));
+    }
+
+    /**
+     * Check if fully paid
+     */
+    public function isFullyPaid(): bool
+    {
+        return $this->getRemainingPaymentBalance() <= 0 && $this->approved_budget > 0;
+    }
 }

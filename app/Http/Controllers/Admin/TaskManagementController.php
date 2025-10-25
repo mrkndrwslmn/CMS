@@ -72,7 +72,7 @@ class TaskManagementController extends Controller
     
     public function show($id)
     {
-        $task = Task::with(['client', 'assignedUser', 'project', 'creator', 'documents'])->findOrFail($id);
+        $task = Task::with(['client', 'assignedUser', 'project.serviceRequest', 'creator', 'documents', 'phase'])->findOrFail($id);
         
         // Get task history/activity log if available
         $activities = []; // This could be implemented with a separate Activity model
@@ -83,13 +83,20 @@ class TaskManagementController extends Controller
         return view('admin.tasks.show', compact('task', 'activities', 'adiutors'));
     }
     
-    public function create()
+    public function create(Request $request)
     {
         $clients = User::where('role', 'client')->orderBy('fullName')->get();
         $projects = Project::with('client')->orderBy('created_at', 'desc')->get();
-        // Don't fetch adiutors here - let the view handle it dynamically based on selected project
         
-        return view('admin.tasks.create', compact('clients', 'projects'));
+        // Check if project_id is passed in the URL
+        $preSelectedProjectId = $request->query('project_id');
+        $preSelectedProject = null;
+        
+        if ($preSelectedProjectId) {
+            $preSelectedProject = Project::find($preSelectedProjectId);
+        }
+        
+        return view('admin.tasks.create', compact('clients', 'projects', 'preSelectedProject'));
     }
     
     public function store(Request $request)
@@ -98,6 +105,7 @@ class TaskManagementController extends Controller
             'taskTitle' => 'required|string|max:255',
             'taskDescription' => 'required|string',
             'project_id' => 'required|exists:projects,id',
+            'phase_id' => 'nullable|exists:project_milestones,id',
             'assignedTo' => 'nullable|exists:users,id',
             'priority' => 'required|in:low,medium,high,urgent',
             'deadline' => 'nullable|date|after:today',
@@ -107,7 +115,28 @@ class TaskManagementController extends Controller
         ]);
         
         // Get project and client_id from project
-        $project = Project::findOrFail($request->project_id);
+        $project = Project::with('serviceRequest')->findOrFail($request->project_id);
+        
+        // Validate phase_id if project has milestone payment
+        if ($project->serviceRequest && $project->serviceRequest->payment_type === 'milestone_payment') {
+            if (!$request->phase_id) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['phase_id' => 'Phase selection is required for milestone payment projects.']);
+            }
+            
+            // Validate that the phase belongs to this project
+            $phaseExists = DB::table('project_milestones')
+                ->where('id', $request->phase_id)
+                ->where('project_id', $project->id)
+                ->exists();
+            
+            if (!$phaseExists) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['phase_id' => 'The selected phase does not belong to this project.']);
+            }
+        }
         
         // ⚠️ Validate that assigned adiutor is a team member
         if ($request->assignedTo) {
@@ -132,6 +161,7 @@ class TaskManagementController extends Controller
         
         $task = Task::create([
             'project_id' => $request->project_id,
+            'phase_id' => $request->phase_id,
             'taskTitle' => $request->taskTitle,
             'taskDescription' => $request->taskDescription,
             'client_id' => $project->client_id,
@@ -174,19 +204,47 @@ class TaskManagementController extends Controller
         $request->validate([
             'taskTitle' => 'required|string|max:255',
             'taskDescription' => 'required|string',
+            'project_id' => 'required|exists:projects,id',
+            'phase_id' => 'nullable|exists:project_milestones,id',
             'assignedTo' => 'nullable|exists:users,id',
             'priority' => 'required|in:low,medium,high,urgent',
             'deadline' => 'nullable|date',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'notes' => 'nullable|string',
+            'completion_notes' => 'nullable|string',
             'allocated_budget' => 'nullable|numeric|min:0',
             'actual_cost' => 'nullable|numeric|min:0',
             'progress_percentage' => 'nullable|integer|min:0|max:100',
+            'completedAt' => 'nullable|date',
         ]);
+        
+        // Get project info for validation
+        $project = Project::with('serviceRequest')->findOrFail($request->project_id);
+        
+        // Validate phase_id if project has milestone payment
+        if ($project->serviceRequest && $project->serviceRequest->payment_type === 'milestone_payment') {
+            if (!$request->phase_id) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['phase_id' => 'Phase selection is required for milestone payment projects.']);
+            }
+            
+            // Validate that the phase belongs to this project
+            $phaseExists = DB::table('project_milestones')
+                ->where('id', $request->phase_id)
+                ->where('project_id', $project->id)
+                ->exists();
+            
+            if (!$phaseExists) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['phase_id' => 'The selected phase does not belong to this project.']);
+            }
+        }
         
         // ⚠️ Validate that assigned adiutor is a team member (if changing assignment)
         if ($request->assignedTo && $request->assignedTo != $task->assignedTo) {
-            if (!$this->isProjectTeamMember($task->project_id, $request->assignedTo)) {
+            if (!$this->isProjectTeamMember($request->project_id, $request->assignedTo)) {
                 return redirect()->back()
                     ->withInput()
                     ->withErrors(['assignedTo' => 'The selected adiutor is not a team member of this project. Please assign them to the project first.']);
@@ -195,8 +253,7 @@ class TaskManagementController extends Controller
         
         // Check budget allocation if changed
         if ($request->allocated_budget && $request->allocated_budget != $task->allocated_budget) {
-            $project = $task->project;
-            $totalAllocated = Task::where('project_id', $project->id)
+            $totalAllocated = Task::where('project_id', $request->project_id)
                                  ->where('taskID', '!=', $task->taskID)
                                  ->sum('allocated_budget') ?? 0;
             $newTotal = $totalAllocated + $request->allocated_budget;
@@ -209,6 +266,8 @@ class TaskManagementController extends Controller
         }
         
         $updateData = [
+            'project_id' => $request->project_id,
+            'phase_id' => $request->phase_id,
             'taskTitle' => $request->taskTitle,
             'taskDescription' => $request->taskDescription,
             'assignedTo' => $request->assignedTo,
@@ -216,18 +275,26 @@ class TaskManagementController extends Controller
             'deadline' => $request->deadline,
             'status' => $request->status,
             'notes' => $request->notes,
+            'completion_notes' => $request->completion_notes,
             'allocated_budget' => $request->allocated_budget,
             'actual_cost' => $request->actual_cost,
             'progress_percentage' => $request->progress_percentage,
         ];
+        
+        // Update client_id if project changed
+        if ($request->project_id != $task->project_id) {
+            $updateData['client_id'] = $project->client_id;
+        }
         
         // Update dateAssigned if assigning to someone new
         if ($request->assignedTo && $request->assignedTo != $task->assignedTo) {
             $updateData['dateAssigned'] = now();
         }
         
-        // Update completedAt if status changed to completed
-        if ($request->status === 'completed' && $task->status !== 'completed') {
+        // Update completedAt based on input or status
+        if ($request->filled('completedAt')) {
+            $updateData['completedAt'] = $request->completedAt;
+        } elseif ($request->status === 'completed' && $task->status !== 'completed') {
             $updateData['completedAt'] = now();
         } elseif ($request->status !== 'completed') {
             $updateData['completedAt'] = null;

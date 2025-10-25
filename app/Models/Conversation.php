@@ -47,7 +47,8 @@ class Conversation extends Model
      */
     public function lastMessage(): BelongsTo
     {
-        return $this->belongsTo(Message::class, 'last_message_id');
+        // Prevent circular reference by not loading conversation on lastMessage
+        return $this->belongsTo(Message::class, 'last_message_id')->withoutGlobalScopes();
     }
 
     /**

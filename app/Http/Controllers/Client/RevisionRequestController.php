@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\Project;
+use App\Models\Task;
 use App\Models\RevisionRequest;
 use App\Models\User;
 use App\Notifications\RevisionRequestedNotification;
@@ -237,6 +239,176 @@ class RevisionRequestController extends Controller
         ->paginate(15);
 
         return view('client.revisions.index', compact('revisions'));
+    }
+
+    /**
+     * Store a project-level revision request
+     */
+    public function storeForProject(Request $request, $projectId)
+    {
+        $user = Auth::user();
+        
+        // Debug: Log the request data
+        Log::info('Revision request received', [
+            'project_id' => $projectId,
+            'user_id' => $user->id,
+            'request_data' => $request->all()
+        ]);
+        
+        $project = Project::with(['serviceRequest', 'assignments'])
+            ->where('id', $projectId)
+            ->whereHas('serviceRequest', function($query) use ($user) {
+                $query->where('client_id', $user->id);
+            })
+            ->firstOrFail();
+
+        // Check if project is completed or in review
+        if (!in_array($project->status, ['completed', 'review'])) {
+            Log::warning('Revision request rejected - invalid project status', [
+                'project_id' => $projectId,
+                'status' => $project->status
+            ]);
+            return redirect()->back()
+                ->with('error', 'Revisions can only be requested for completed or projects under review.');
+        }
+
+        // Validate input
+        $validated = $request->validate([
+            'revision_scope' => 'required|in:project,task',
+            'task_ids' => 'required_if:revision_scope,task|array',
+            'task_ids.*' => 'exists:tasks,taskID',
+            'reason' => 'required|string|min:20|max:2000',
+            'requested_due_date' => 'nullable|date|after:today',
+            'priority' => 'nullable|in:normal,high,urgent'
+        ]);
+        
+        Log::info('Validation passed', ['validated_data' => $validated]);
+
+        try {
+            DB::beginTransaction();
+
+            // Get assigned adiutor
+            $assignment = $project->assignments()->where('status', 'active')->first();
+            $adiutorId = $assignment ? $assignment->adiutor_id : null;
+
+            if ($validated['revision_scope'] === 'project') {
+                // Create project-wide revision request
+                $revisionNumber = RevisionRequest::where('project_id', $projectId)
+                    ->whereNull('task_id')
+                    ->count() + 1;
+
+                $revisionRequest = RevisionRequest::create([
+                    'document_id' => null,
+                    'requested_by' => $user->id,
+                    'reason' => $validated['reason'],
+                    'requested_due_date' => $validated['requested_due_date'] ?? null,
+                    'revision_number' => $revisionNumber,
+                    'status' => 'pending',
+                    'task_id' => null,
+                    'project_id' => $projectId,
+                    'service_request_id' => $project->service_request_id,
+                    'source_type' => 'project',
+                    'assigned_adiutor_id' => $adiutorId,
+                    'priority' => $validated['priority'] ?? 'normal'
+                ]);
+
+                $message = 'Project revision request submitted successfully.';
+                
+            } else {
+                // Create task-specific revision requests
+                $revisionsCreated = 0;
+                $revisionRequests = [];
+
+                foreach ($validated['task_ids'] as $taskId) {
+                    $task = Task::where('taskID', $taskId)
+                        ->where('projectID', $projectId)
+                        ->first();
+                    
+                    if (!$task) continue;
+
+                    // Get task-specific adiutor if different
+                    $taskAssignment = $task->assignments()->where('status', 'active')->first();
+                    $taskAdiutorId = $taskAssignment ? $taskAssignment->adiutor_id : $adiutorId;
+
+                    $revisionNumber = RevisionRequest::where('task_id', $taskId)->count() + 1;
+
+                    $revisionRequest = RevisionRequest::create([
+                        'document_id' => null,
+                        'requested_by' => $user->id,
+                        'reason' => $validated['reason'],
+                        'requested_due_date' => $validated['requested_due_date'] ?? null,
+                        'revision_number' => $revisionNumber,
+                        'status' => 'pending',
+                        'task_id' => $taskId,
+                        'project_id' => $projectId,
+                        'service_request_id' => $project->service_request_id,
+                        'source_type' => 'task',
+                        'assigned_adiutor_id' => $taskAdiutorId,
+                        'priority' => $validated['priority'] ?? 'normal'
+                    ]);
+
+                    $revisionRequests[] = $revisionRequest;
+                    $revisionsCreated++;
+                }
+
+                $revisionRequest = $revisionRequests[0] ?? null; // Use first for notifications
+                $message = "Revision request(s) created for {$revisionsCreated} task(s).";
+            }
+
+            if (!$revisionRequest) {
+                throw new \Exception('Failed to create revision request');
+            }
+
+            // Notify admins
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new RevisionRequestedNotification($revisionRequest));
+            }
+
+            // Notify assigned adiutor(s)
+            if ($validated['revision_scope'] === 'project' && $adiutorId) {
+                $adiutor = User::find($adiutorId);
+                if ($adiutor) {
+                    $adiutor->notify(new RevisionRequestedNotification($revisionRequest));
+                }
+            } elseif ($validated['revision_scope'] === 'task') {
+                $notifiedAdiutors = [];
+                foreach ($revisionRequests as $req) {
+                    if ($req->assigned_adiutor_id && !in_array($req->assigned_adiutor_id, $notifiedAdiutors)) {
+                        $adiutor = User::find($req->assigned_adiutor_id);
+                        if ($adiutor) {
+                            $adiutor->notify(new RevisionRequestedNotification($req));
+                            $notifiedAdiutors[] = $req->assigned_adiutor_id;
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+            Log::info('Project revision request created', [
+                'project_id' => $projectId,
+                'client_id' => $user->id,
+                'scope' => $validated['revision_scope'],
+                'priority' => $validated['priority'] ?? 'normal'
+            ]);
+
+            return redirect()->route('client.projects.show', $projectId)
+                ->with('success', $message . ' An admin will review it shortly.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Failed to create project revision request', [
+                'project_id' => $projectId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to submit revision request. Please try again.');
+        }
     }
 
     /**

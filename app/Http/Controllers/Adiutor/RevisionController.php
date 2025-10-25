@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Adiutor;
 use App\Http\Controllers\Controller;
 use App\Models\RevisionRequest;
 use App\Models\Document;
+use App\Models\Project;
+use App\Notifications\RevisionCompletedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -79,7 +81,7 @@ class RevisionController extends Controller
     {
         $adiutor = Auth::user();
         
-        $revision = RevisionRequest::with(['document', 'task'])
+        $revision = RevisionRequest::with(['document', 'task', 'project', 'requestedBy'])
             ->where('assigned_adiutor_id', $adiutor->id)
             ->where('status', 'approved')
             ->findOrFail($id);
@@ -99,19 +101,47 @@ class RevisionController extends Controller
                 'admin_notes' => ($revision->admin_notes ?? '') . "\n\nCompletion Notes: " . ($validated['completion_notes'] ?? 'No notes provided.')
             ]);
 
-            // If task-based, mark task as completed again
-            if ($revision->isTaskBased() && $revision->task) {
+            // Handle task or project completion based on source type
+            if ($revision->source_type === 'task' && $revision->task) {
                 $revision->task->update([
                     'status' => 'completed',
                     'completedAt' => now()
                 ]);
+                
+                Log::info('Task marked as completed after revision', [
+                    'task_id' => $revision->task->taskID,
+                    'revision_id' => $revision->id
+                ]);
+            } elseif ($revision->source_type === 'project' && $revision->project) {
+                // Check if all tasks in the project are completed
+                $allTasksCompleted = $revision->project->tasks()
+                    ->where('status', '!=', 'completed')
+                    ->count() === 0;
+
+                if ($allTasksCompleted) {
+                    $revision->project->update([
+                        'status' => 'review', // Set to review so client can check
+                        'updated_at' => now()
+                    ]);
+                    
+                    Log::info('Project set to review after revision completion', [
+                        'project_id' => $revision->project->id,
+                        'revision_id' => $revision->id
+                    ]);
+                } else {
+                    Log::info('Project still has incomplete tasks after revision', [
+                        'project_id' => $revision->project->id,
+                        'revision_id' => $revision->id
+                    ]);
+                }
             }
 
-            // Notify client
+            // Notify client that revision is completed
             $client = $revision->requestedBy;
             if ($client) {
-                // You can create a RevisionCompletedNotification if needed
-                Log::info('Revision completed, client should be notified', [
+                $client->notify(new RevisionCompletedNotification($revision));
+                
+                Log::info('Client notified of revision completion', [
                     'revision_id' => $revision->id,
                     'client_id' => $client->id
                 ]);
@@ -121,18 +151,20 @@ class RevisionController extends Controller
 
             Log::info('Revision marked as completed', [
                 'revision_id' => $revision->id,
-                'adiutor_id' => $adiutor->id
+                'adiutor_id' => $adiutor->id,
+                'source_type' => $revision->source_type
             ]);
 
             return redirect()->route('adiutor.revisions.show', $revision->id)
-                ->with('success', 'Revision marked as completed successfully.');
+                ->with('success', 'Revision marked as completed successfully. Client has been notified.');
 
         } catch (\Exception $e) {
             DB::rollBack();
             
             Log::error('Failed to complete revision', [
                 'revision_id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return redirect()->back()

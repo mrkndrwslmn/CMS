@@ -156,67 +156,135 @@
                                         </span>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Timeline</h3>
-                            <div class="space-y-3">
-                                <div class="flex">
-                                    <div class="w-32 text-neutral-500">Created:</div>
-                                    <div class="flex-1 text-neutral-800">
-                                        {{ $task->created_at->format('M d, Y') }}
-                                    </div>
-                                </div>
                                 
+                                @if($task->phase_id && $task->phase)
                                 <div class="flex">
-                                    <div class="w-32 text-neutral-500">Deadline:</div>
-                                    <div class="flex-1 text-neutral-800">
-                                        @if(isset($task['deadline']) && $task['deadline'])
-                                            @php 
-                                                $deadline = new DateTime($task['deadline']);
-                                                $now = new DateTime();
-                                                $isPast = $deadline < $now && $task['status'] !== 'completed';
-                                                $isClose = !$isPast && $now->diff($deadline)->days <= 3;
-                                            @endphp
-                                            
-                                            <span class="{{ $isPast ? 'text-error-600' : ($isClose ? 'text-warning-600' : 'text-neutral-600') }}">
-                                                {{ date('M d, Y', strtotime($task['deadline'])) }}
-                                                @if($isPast)
-                                                    <span class="block text-xs mt-1">
-                                                        <i class="fas fa-exclamation-circle"></i> 
-                                                        Overdue
-                                                    </span>
-                                                @elseif($isClose)
-                                                    <span class="block text-xs mt-1">
-                                                        <i class="fas fa-clock"></i> 
-                                                        Due soon
-                                                    </span>
-                                                @endif
-                                            </span>
-                                        @else
-                                            <span class="text-neutral-400">Not set</span>
-                                        @endif
-                                    </div>
-                                </div>
-                                
-                                <div class="flex">
-                                    <div class="w-32 text-neutral-500">Assigned:</div>
-                                    <div class="flex-1 text-neutral-800">
-                                        {{ isset($task['dateAssigned']) && $task['dateAssigned'] ? date('M d, Y', strtotime($task['dateAssigned'])) : 'Not assigned' }}
-                                    </div>
-                                </div>
-                                
-                                @if(isset($task['completedAt']) && $task['completedAt'])
-                                <div class="flex">
-                                    <div class="w-32 text-neutral-500">Completed:</div>
-                                    <div class="flex-1 text-neutral-800">
-                                        {{ date('M d, Y', strtotime($task['completedAt'])) }}
+                                    <div class="w-32 text-neutral-500">Phase:</div>
+                                    <div class="flex-1">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700">
+                                            <i class="fas fa-layer-group mr-1"></i>
+                                            {{ $task->phase->phase_name }}
+                                        </span>
                                     </div>
                                 </div>
                                 @endif
                             </div>
                         </div>
+                        
+                        <div>
+                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Budget & Progress</h3>
+                            <div class="space-y-3">
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Allocated:</div>
+                                    <div class="flex-1 text-neutral-800 font-semibold">
+                                        {{ $task->allocated_budget ? '₱' . number_format($task->allocated_budget, 2) : 'Not set' }}
+                                    </div>
+                                </div>
+                                
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Actual Cost:</div>
+                                    <div class="flex-1 text-neutral-800">
+                                        {{ $task->actual_cost ? '₱' . number_format($task->actual_cost, 2) : '₱0.00' }}
+                                    </div>
+                                </div>
+                                
+                                @if($task->allocated_budget)
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Remaining:</div>
+                                    <div class="flex-1">
+                                        @php
+                                            $remaining = $task->allocated_budget - ($task->actual_cost ?? 0);
+                                            $isOver = $remaining < 0;
+                                        @endphp
+                                        <span class="{{ $isOver ? 'text-error-600 font-semibold' : 'text-success-600' }}">
+                                            {{ $isOver ? '-' : '' }}₱{{ number_format(abs($remaining), 2) }}
+                                            @if($isOver)
+                                                <span class="text-xs ml-1">(Over Budget)</span>
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                                @endif
+                                
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Progress:</div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center">
+                                            <div class="flex-1 bg-neutral-200 rounded-full h-2 mr-3">
+                                                <div class="bg-primary-500 h-2 rounded-full" style="width: {{ $task->progress_percentage ?? 0 }}%"></div>
+                                            </div>
+                                            <span class="text-sm font-medium text-neutral-700">{{ $task->progress_percentage ?? 0 }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Completion Notes (if completed) -->
+                    @if($task->status === 'completed' && $task->completion_notes)
+                    <div class="mt-6 pt-6 border-t border-neutral-200">
+                        <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Completion Notes</h3>
+                        <div class="bg-success-50 border border-success-200 rounded-lg p-4">
+                            <p class="text-neutral-700 whitespace-pre-wrap">{{ $task->completion_notes }}</p>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            
+            <!-- Timeline Section (NEW) -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+                <div class="px-6 py-4 border-b border-neutral-200">
+                    <h2 class="text-lg font-semibold text-primary-500">Timeline</h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-plus text-neutral-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-neutral-900">Task Created</p>
+                                <p class="text-xs text-neutral-500">{{ $task->created_at->format('M d, Y h:i A') }}</p>
+                            </div>
+                        </div>
+                        
+                        @if($task->dateAssigned)
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-user-check text-blue-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-neutral-900">Task Assigned</p>
+                                <p class="text-xs text-neutral-500">{{ \Carbon\Carbon::parse($task->dateAssigned)->format('M d, Y h:i A') }}</p>
+                            </div>
+                        </div>
+                        @endif
+                        
+                        @if($task->deadline)
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-10 h-10 bg-warning-100 rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-calendar-alt text-warning-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-neutral-900">Deadline</p>
+                                <p class="text-xs text-neutral-500">{{ \Carbon\Carbon::parse($task->deadline)->format('M d, Y') }}</p>
+                            </div>
+                        </div>
+                        @endif
+                        
+                        @if($task->completedAt)
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-10 h-10 bg-success-100 rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-check-circle text-success-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-neutral-900">Task Completed</p>
+                                <p class="text-xs text-neutral-500">{{ \Carbon\Carbon::parse($task->completedAt)->format('M d, Y h:i A') }}</p>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

@@ -33,7 +33,7 @@ class MayaPaymentController extends Controller
         $serviceRequest = \App\Models\ServiceRequest::with('project.milestones')
             ->where('id', $serviceRequestId)
             ->where('client_id', $user->id)
-            ->whereIn('status', ['pending_payment', 'approved'])
+            ->whereIn('status', ['pending_payment', 'approved', 'in_progress', 'paid'])
             ->first();
 
         if (!$serviceRequest) {

@@ -57,7 +57,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
                 
             $table->foreign('project_id')
-                ->references('projectID')
+                ->references('id')
                 ->on('projects')
                 ->cascadeOnDelete();
                 

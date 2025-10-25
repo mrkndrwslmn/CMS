@@ -16,6 +16,7 @@ class RevisionRequest extends Model
         'requested_due_date',
         'revision_number',
         'status',
+        'priority',
         'reviewed_by',
         'admin_notes',
         'reviewed_at',

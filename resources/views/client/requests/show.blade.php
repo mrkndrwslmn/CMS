@@ -128,7 +128,7 @@
             <p class="text-lg font-bold {{ $priorityConfig['text'] }}">{{ ucfirst($request->priority) }}</p>
         </div>
 
-        <!-- Budget -->
+        <!-- Budget / Payment Status -->
         @if($request->approved_budget ?? $request->estimated_budget)
             <div class="glass-card p-5 text-center">
                 <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 mb-2">
@@ -136,10 +136,30 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                     </svg>
                 </div>
-                @if(($request->status === 'pending_payment' || $request->status === 'approved') && $request->payment_type)
-                    <p class="text-xs text-neutral-500 font-medium mb-1">Amount Due</p>
-                    <p class="text-lg font-bold text-error-600">₱{{ number_format($request->getCurrentPaymentAmountDue(), 0) }}</p>
-                    <p class="text-xs text-neutral-500 mt-1">{{ $request->getCurrentPaymentDescription() }}</p>
+                @if($request->approved_budget && $request->payment_type)
+                    @php
+                        $totalPaid = $request->getTotalPaid();
+                        $remainingBalance = $request->getRemainingPaymentBalance();
+                        $currentDue = $request->getCurrentPaymentAmountDue();
+                    @endphp
+                    @if($totalPaid > 0)
+                        <!-- Show total paid -->
+                        <p class="text-xs text-neutral-500 font-medium mb-1">Total Paid</p>
+                        <p class="text-lg font-bold text-success-600">₱{{ number_format($totalPaid, 0) }}</p>
+                        @if($remainingBalance > 0)
+                            <p class="text-xs text-error-600 font-medium mt-1">₱{{ number_format($remainingBalance, 0) }} remaining</p>
+                        @else
+                            <p class="text-xs text-success-600 font-medium mt-1">✓ Fully Paid</p>
+                        @endif
+                    @elseif($currentDue > 0)
+                        <!-- Show current amount due if nothing paid yet -->
+                        <p class="text-xs text-neutral-500 font-medium mb-1">Amount Due</p>
+                        <p class="text-lg font-bold text-error-600">₱{{ number_format($currentDue, 0) }}</p>
+                        <p class="text-xs text-neutral-500 mt-1">{{ $request->getCurrentPaymentDescription() }}</p>
+                    @else
+                        <p class="text-xs text-neutral-500 font-medium mb-1">Approved Budget</p>
+                        <p class="text-lg font-bold text-primary-600">₱{{ number_format($request->approved_budget, 0) }}</p>
+                    @endif
                 @else
                     <p class="text-xs text-neutral-500 font-medium mb-1">{{ $request->approved_budget ? 'Approved' : 'Estimated' }} Budget</p>
                     <p class="text-lg font-bold text-primary-600">₱{{ number_format($request->approved_budget ?? $request->estimated_budget, 0) }}</p>
@@ -381,11 +401,123 @@
             @endif
 
             <!-- Payment Action Card (if applicable) -->
-            @if($request->status === 'pending_payment' || $request->status === 'approved')
+            @if($request->approved_budget && $request->payment_type)
                 @php
-                    $paymentAmountDue = $request->getCurrentPaymentAmountDue();
+                    $totalPaid = $request->getTotalPaid();
+                    $totalBudget = $request->approved_budget;
+                    $remainingBalance = $request->getRemainingPaymentBalance();
+                    $currentPaymentDue = $request->getCurrentPaymentAmountDue();
                     $paymentDescription = $request->getCurrentPaymentDescription();
+                    $paymentProgress = $request->getPaymentProgress();
                 @endphp
+                
+                <!-- Payment Summary Card (Always shown when payment system is active) -->
+                <div class="glass-card overflow-hidden border-2 {{ $remainingBalance > 0 ? 'border-secondary-300' : 'border-success-300' }} shadow-lg">
+                    <div class="bg-gradient-to-br {{ $remainingBalance > 0 ? 'from-secondary-500 to-primary-600' : 'from-success-500 to-success-600' }} p-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 shadow-lg">
+                            <svg class="w-8 h-8 {{ $remainingBalance > 0 ? 'text-secondary-600' : 'text-success-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                @if($remainingBalance > 0)
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                @else
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                @endif
+                            </svg>
+                        </div>
+                        
+                        <h3 class="text-xl font-bold text-white mb-4 text-center">
+                            {{ $remainingBalance > 0 ? 'Payment Status' : 'Fully Paid!' }}
+                        </h3>
+                        
+                        <!-- Payment Progress Bar -->
+                        <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-white/90">Progress</span>
+                                <span class="text-xs font-bold text-white">{{ number_format($paymentProgress, 1) }}%</span>
+                            </div>
+                            <div class="w-full bg-white/30 rounded-full h-3 overflow-hidden">
+                                <div class="bg-white h-3 rounded-full transition-all duration-500" style="width: {{ $paymentProgress }}%"></div>
+                            </div>
+                            <div class="flex justify-between items-center mt-2 text-xs text-white/80">
+                                <span>₱{{ number_format($totalPaid, 0) }} paid</span>
+                                <span>₱{{ number_format($totalBudget, 0) }} total</span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Breakdown -->
+                        <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-4 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-white/90">Total Budget:</span>
+                                <span class="text-sm font-bold text-white">₱{{ number_format($totalBudget, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-white/90">Amount Paid:</span>
+                                <span class="text-sm font-bold text-success-200">₱{{ number_format($totalPaid, 2) }}</span>
+                            </div>
+                            <div class="h-px bg-white/30"></div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-bold text-white/90">Remaining Balance:</span>
+                                <span class="text-lg font-bold {{ $remainingBalance > 0 ? 'text-warning-200' : 'text-success-200' }}">
+                                    ₱{{ number_format($remainingBalance, 2) }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Type Info -->
+                        <div class="bg-white/20 backdrop-blur-sm rounded-lg p-3 mb-4 text-left">
+                            <p class="text-xs font-semibold text-white/90 uppercase tracking-wide mb-2">Payment Type</p>
+                            <p class="text-sm font-bold text-white">{{ $request->getPaymentTypeLabel() }}</p>
+                            
+                            @if($request->isMilestonePayment() && $request->project)
+                                @php
+                                    $totalMilestones = $request->project->milestones()->count();
+                                    $paidMilestones = $request->project->milestones()->where('is_paid', true)->count();
+                                @endphp
+                                <p class="text-xs text-white/80 mt-1">{{ $paidMilestones }} of {{ $totalMilestones }} phases paid</p>
+                            @elseif($request->isDownpayment())
+                                @if(!$request->downpayment_paid)
+                                    <p class="text-xs text-white/80 mt-1">{{ number_format($request->downpayment_percentage, 0) }}% downpayment required</p>
+                                @elseif(!$request->remaining_balance_paid)
+                                    <p class="text-xs text-white/80 mt-1">Downpayment received • Final payment pending</p>
+                                @else
+                                    <p class="text-xs text-white/80 mt-1">All payments completed</p>
+                                @endif
+                            @endif
+                        </div>
+
+                        <!-- Pay Now Button (only if there's a balance due) -->
+                        @if($currentPaymentDue > 0 && ($request->status === 'pending_payment' || $request->status === 'approved' || $request->status === 'in_progress'))
+                            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-3 mb-4">
+                                <p class="text-xs font-semibold text-white/90 uppercase tracking-wide mb-1">Next Payment</p>
+                                <p class="text-sm text-white/80">{{ $paymentDescription }}</p>
+                                <p class="text-2xl font-bold text-white mt-2">₱{{ number_format($currentPaymentDue, 2) }}</p>
+                            </div>
+                            
+                            <a href="{{ route('client.maya.checkout', $request->id) }}" 
+                               class="inline-flex items-center justify-center px-6 py-3 bg-white text-secondary-600 font-bold rounded-lg hover:bg-secondary-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 w-full">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                Pay Now
+                            </a>
+                            
+                            @if($request->payment_due_date)
+                                <p class="text-xs text-white/80 mt-3 text-center">
+                                    Due: {{ \Carbon\Carbon::parse($request->payment_due_date)->format('M j, Y') }}
+                                </p>
+                            @endif
+                        @else
+                            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4 text-center">
+                                <svg class="w-12 h-12 text-white mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <p class="text-sm font-bold text-white">All Payments Complete!</p>
+                                <p class="text-xs text-white/80 mt-1">Thank you for your payment</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @elseif($request->status === 'pending_payment' || $request->status === 'approved')
+                <!-- Fallback for requests without payment type set -->
                 <div class="glass-card overflow-hidden border-2 border-secondary-300 shadow-lg">
                     <div class="bg-gradient-to-br from-secondary-500 to-primary-600 p-6 text-center">
                         <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 shadow-lg">
@@ -394,42 +526,15 @@
                             </svg>
                         </div>
                         <h3 class="text-xl font-bold text-white mb-2">Payment Required</h3>
-                        <p class="text-white/90 text-sm mb-2">{{ $paymentDescription }}</p>
-                        <p class="text-3xl font-bold text-white mb-4">₱{{ number_format($paymentAmountDue, 2) }}</p>
-                        
-                        @if($request->payment_type)
-                            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-3 mb-4 text-left">
-                                <p class="text-xs font-semibold text-white/90 uppercase tracking-wide mb-2">Payment Type</p>
-                                <p class="text-sm font-bold text-white">{{ $request->getPaymentTypeLabel() }}</p>
-                                
-                                @if($request->isMilestonePayment() && $request->project)
-                                    @php
-                                        $totalMilestones = $request->project->milestones()->count();
-                                        $paidMilestones = $request->project->milestones()->where('is_paid', true)->count();
-                                    @endphp
-                                    <p class="text-xs text-white/80 mt-1">Phase {{ $paidMilestones + 1 }} of {{ $totalMilestones }}</p>
-                                @elseif($request->isDownpayment())
-                                    @if(!$request->downpayment_paid)
-                                        <p class="text-xs text-white/80 mt-1">{{ number_format($request->downpayment_percentage, 0) }}% of total budget</p>
-                                    @else
-                                        <p class="text-xs text-white/80 mt-1">Final payment</p>
-                                    @endif
-                                @endif
-                            </div>
-                        @endif
+                        <p class="text-3xl font-bold text-white mb-4">₱{{ number_format($request->approved_budget, 2) }}</p>
                         
                         <a href="{{ route('client.maya.checkout', $request->id) }}" 
                            class="inline-flex items-center justify-center px-6 py-3 bg-white text-secondary-600 font-bold rounded-lg hover:bg-secondary-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 w-full">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
-                            Pay Now with Maya
+                            Pay Now
                         </a>
-                        @if($request->payment_due_date)
-                            <p class="text-xs text-white/80 mt-3">
-                                Due: {{ \Carbon\Carbon::parse($request->payment_due_date)->format('M j, Y') }}
-                            </p>
-                        @endif
                     </div>
                 </div>
             @endif
@@ -505,10 +610,36 @@
                     @endif
 
                     @if($request->approved_budget)
-                        <div>
+                        <div class="pb-4 border-b border-neutral-200">
                             <dt class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Approved Budget</dt>
                             <dd class="text-lg font-bold text-success-600">₱{{ number_format($request->approved_budget, 2) }}</dd>
+                            
+                            @if($request->payment_type)
+                                @php
+                                    $totalPaid = $request->getTotalPaid();
+                                    $remainingBalance = $request->getRemainingPaymentBalance();
+                                @endphp
+                                @if($totalPaid > 0)
+                                    <dd class="text-xs text-neutral-600 mt-2">
+                                        <span class="font-medium">Paid:</span> 
+                                        <span class="text-success-600 font-bold">₱{{ number_format($totalPaid, 2) }}</span>
+                                    </dd>
+                                    @if($remainingBalance > 0)
+                                        <dd class="text-xs text-neutral-600 mt-1">
+                                            <span class="font-medium">Balance:</span> 
+                                            <span class="text-error-600 font-bold">₱{{ number_format($remainingBalance, 2) }}</span>
+                                        </dd>
+                                    @endif
+                                @endif
+                            @endif
                         </div>
+                    @else
+                        @if($request->estimated_budget)
+                            <div>
+                                <dt class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Estimated Budget</dt>
+                                <dd class="text-lg font-bold text-primary-600">₱{{ number_format($request->estimated_budget, 2) }}</dd>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>

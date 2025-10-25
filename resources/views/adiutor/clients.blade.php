@@ -178,7 +178,7 @@
 
                         <!-- Action Buttons -->
                         <div class="flex space-x-2">
-                            <a href="{{ route('adiutor.tasks') }}?client={{ $client->id }}" 
+                            <a href="{{ route('adiutor.tasks.index') }}?client={{ $client->id }}" 
                                class="flex-1 px-4 py-2 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors text-center">
                                 <i class="fas fa-tasks mr-1"></i>
                                 View Tasks

@@ -9,20 +9,18 @@ return new class extends Migration
     /**
      * Run the migrations.
      * 
-     * Add phase tracking to tasks for milestone-based projects
+     * Add foreign key constraint for phase_id after project_milestones table is created
      */
     public function up(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
-            // Link task to a specific milestone phase
-            // Nullable because tasks in full_payment/downpayment projects don't have phases
-            $table->foreignId('phase_id')
-                  ->nullable()
-                  ->after('project_id')
-                  ->constrained('project_milestones')
+            // Add foreign key constraint to phase_id
+            $table->foreign('phase_id')
+                  ->references('id')
+                  ->on('project_milestones')
                   ->onDelete('set null');
             
-            // Add index for efficient phase-based queries
+            // Add indexes for performance
             $table->index(['project_id', 'phase_id']);
             $table->index(['phase_id', 'status']);
         });
@@ -34,10 +32,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
+            $table->dropForeign(['phase_id']);
             $table->dropIndex(['project_id', 'phase_id']);
             $table->dropIndex(['phase_id', 'status']);
-            $table->dropForeign(['phase_id']);
-            $table->dropColumn('phase_id');
         });
     }
 };

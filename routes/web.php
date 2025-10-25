@@ -229,6 +229,7 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::post('/projects/{project}/assign-adiutor', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'assignAdiutor'])->name('projects.assign-adiutor');
     Route::delete('/projects/{project}/adiutors/{adiutor}', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'removeAdiutor'])->name('projects.remove-adiutor');
     Route::get('/projects/{project}/team-members', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'getTeamMembers'])->name('projects.team-members');
+    Route::get('/projects/{project}/phases', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'getProjectPhases'])->name('projects.phases');
     
     // Reporting and Analytics
     Route::prefix('reports')->name('reports.')->group(function () {
@@ -293,6 +294,7 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
     // Project routes
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('/{id}', [ClientController::class, 'showProject'])->name('show');
+        Route::get('/{projectId}/documents/{documentId}/download', [ClientController::class, 'downloadDocument'])->name('documents.download');
     });
     
     // Feedback routes
@@ -305,8 +307,15 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
     Route::prefix('revisions')->name('revisions.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Client\RevisionRequestController::class, 'index'])->name('index');
         Route::get('/{revision}', [\App\Http\Controllers\Client\RevisionRequestController::class, 'show'])->name('show');
+        
+        // Project-level revisions
+        Route::get('/projects/{project}/create', [\App\Http\Controllers\Client\RevisionRequestController::class, 'createForProject'])->name('project.create');
+        Route::post('/projects/{project}', [\App\Http\Controllers\Client\RevisionRequestController::class, 'storeForProject'])->name('project.store');
+        
+        // Document-level revisions
         Route::get('/documents/{document}/create', [\App\Http\Controllers\Client\RevisionRequestController::class, 'create'])->name('create');
         Route::post('/documents/{document}', [\App\Http\Controllers\Client\RevisionRequestController::class, 'store'])->name('store');
+        
         Route::post('/{revision}/cancel', [\App\Http\Controllers\Client\RevisionRequestController::class, 'cancel'])->name('cancel');
     });
     
@@ -320,7 +329,6 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
 // Adiutor routes
 Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')->group(function () {
     Route::get('/dashboard', [AdiutorController::class, 'dashboard'])->name('dashboard');
-    Route::get('/tasks', [AdiutorController::class, 'tasks'])->name('tasks');
     Route::get('/clients', [AdiutorController::class, 'clients'])->name('clients');
     Route::get('/documents', [AdiutorController::class, 'documents'])->name('documents');
     Route::get('/feedback', [AdiutorController::class, 'feedback'])->name('feedback');
@@ -328,17 +336,27 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
     // Notifications
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     
-    // Task/Project management routes
+    // Projects Routes (Separate from Tasks)
+    Route::prefix('projects')->name('projects.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Adiutor\ProjectController::class, 'index'])->name('index');
+        Route::get('/{project}', [\App\Http\Controllers\Adiutor\ProjectController::class, 'show'])->name('show');
+        Route::post('/{assignment}/accept', [\App\Http\Controllers\Adiutor\ProjectController::class, 'accept'])->name('accept');
+        Route::post('/{assignment}/decline', [\App\Http\Controllers\Adiutor\ProjectController::class, 'decline'])->name('decline');
+        Route::post('/{assignment}/update-progress', [\App\Http\Controllers\Adiutor\ProjectController::class, 'updateProgress'])->name('update-progress');
+        Route::post('/{project}/create-task', [\App\Http\Controllers\Adiutor\ProjectController::class, 'createTask'])->name('create-task');
+    });
+    
+    // Tasks Routes (Individual tasks within projects)
     Route::prefix('tasks')->name('tasks.')->group(function () {
-        Route::get('/{assignment}', [\App\Http\Controllers\Adiutor\TaskController::class, 'show'])->name('show');
-        Route::post('/{assignment}/accept', [\App\Http\Controllers\Adiutor\TaskController::class, 'accept'])->name('accept');
-        Route::post('/{assignment}/decline', [\App\Http\Controllers\Adiutor\TaskController::class, 'decline'])->name('decline');
-        Route::post('/{assignment}/update-progress', [\App\Http\Controllers\Adiutor\TaskController::class, 'updateProgress'])->name('update-progress');
-        
-        // New routes for task management
-        Route::post('/create', [\App\Http\Controllers\Adiutor\TaskController::class, 'store'])->name('store');
+        Route::get('/', [\App\Http\Controllers\Adiutor\TaskController::class, 'index'])->name('index');
+        Route::get('/{task}', [\App\Http\Controllers\Adiutor\TaskController::class, 'show'])->name('show');
+        Route::post('/{task}/update-status', [\App\Http\Controllers\Adiutor\TaskController::class, 'updateStatus'])->name('update-status');
         Route::post('/{task}/complete', [\App\Http\Controllers\Adiutor\TaskController::class, 'markCompleted'])->name('complete');
-        Route::post('/{task}/budget-request', [\App\Http\Controllers\Adiutor\TaskController::class, 'requestBudgetChange'])->name('budget-request');
+        Route::post('/{task}/add-note', [\App\Http\Controllers\Adiutor\TaskController::class, 'addNote'])->name('add-note');
+        Route::post('/{task}/upload-file', [\App\Http\Controllers\Adiutor\TaskController::class, 'uploadFile'])->name('upload-file');
+        Route::get('/download-file/{fileId}', [\App\Http\Controllers\Adiutor\TaskController::class, 'downloadFile'])->name('download-file');
+        Route::delete('/delete-file/{fileId}', [\App\Http\Controllers\Adiutor\TaskController::class, 'deleteFile'])->name('delete-file');
+        Route::post('/{task}/request-budget-change', [\App\Http\Controllers\Adiutor\TaskController::class, 'requestBudgetChange'])->name('request-budget-change');
     });
     
     // Profile management routes

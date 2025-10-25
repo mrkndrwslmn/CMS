@@ -347,6 +347,45 @@ class ProjectManagementController extends Controller
     }
 
     /**
+     * Get project phases/milestones (for AJAX)
+     */
+    public function getProjectPhases($projectId)
+    {
+        $project = Project::with('serviceRequest')->findOrFail($projectId);
+        
+        // Check if project has milestone payment type
+        $hasMilestonePayment = $project->serviceRequest && 
+                              $project->serviceRequest->payment_type === 'milestone_payment';
+        
+        if (!$hasMilestonePayment) {
+            return response()->json([
+                'hasMilestones' => false,
+                'phases' => []
+            ]);
+        }
+        
+        // Get milestones ordered by phase_order
+        $phases = DB::table('project_milestones')
+            ->where('project_id', $projectId)
+            ->orderBy('phase_order', 'asc')
+            ->select('id', 'phase_name', 'phase_order', 'status', 'is_paid')
+            ->get();
+        
+        // Get current active phase (first unpaid or in_progress)
+        $currentPhaseId = DB::table('project_milestones')
+            ->where('project_id', $projectId)
+            ->where('is_paid', false)
+            ->orderBy('phase_order', 'asc')
+            ->value('id');
+        
+        return response()->json([
+            'hasMilestones' => true,
+            'phases' => $phases,
+            'currentPhaseId' => $currentPhaseId
+        ]);
+    }
+
+    /**
      * Handle bulk actions on projects
      */
     public function bulkAction(Request $request)

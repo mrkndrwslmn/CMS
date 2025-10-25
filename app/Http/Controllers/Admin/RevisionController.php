@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RevisionRequest;
+use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\RevisionApprovedNotification;
@@ -86,7 +87,10 @@ class RevisionController extends Controller
             'completedBy'
         ])->findOrFail($id);
 
-        return view('admin.revisions.show', compact('revision'));
+        // Get all adiutors for the assignment dropdown
+        $adiutors = \App\Models\User::where('role', 'adiutor')->get();
+
+        return view('admin.revisions.show', compact('revision', 'adiutors'));
     }
 
     /**
@@ -99,6 +103,7 @@ class RevisionController extends Controller
         $revision = RevisionRequest::with([
             'document',
             'task',
+            'project',
             'assignedAdiutor',
             'requestedBy'
         ])->findOrFail($id);
@@ -130,9 +135,11 @@ class RevisionController extends Controller
                 'assigned_adiutor_id' => $adiutorId
             ]);
 
-            // If it's a task-based revision, reopen the task
-            if ($revision->isTaskBased() && $revision->task) {
+            // Reopen task or project based on source type
+            if ($revision->source_type === 'task' && $revision->task) {
                 $this->reopenTask($revision->task);
+            } elseif ($revision->source_type === 'project' && $revision->project) {
+                $this->reopenProject($revision->project);
             }
 
             // Notify the adiutor
@@ -166,7 +173,9 @@ class RevisionController extends Controller
                 'revision_id' => $revision->id,
                 'admin_id' => $admin->id,
                 'adiutor_id' => $adiutorId,
-                'task_reopened' => $revision->isTaskBased()
+                'source_type' => $revision->source_type,
+                'task_reopened' => $revision->source_type === 'task',
+                'project_reopened' => $revision->source_type === 'project'
             ]);
 
             return redirect()->route('admin.revisions.show', $revision->id)
@@ -272,6 +281,40 @@ class RevisionController extends Controller
             Log::info('Task reopened for revision', [
                 'task_id' => $task->taskID,
                 'previous_status' => 'completed'
+            ]);
+        }
+    }
+
+    /**
+     * Reopen a project when revision is approved
+     */
+    protected function reopenProject(Project $project)
+    {
+        // Reopen if project is completed or in review
+        if (in_array($project->status, ['completed', 'review'])) {
+            $previousStatus = $project->status;
+            
+            $project->update([
+                'status' => 'in_progress',
+                'updated_at' => now()
+            ]);
+
+            // Also reopen all completed tasks in the project
+            $completedTasks = Task::where('projectID', $project->id)
+                ->where('status', 'completed')
+                ->get();
+
+            foreach ($completedTasks as $task) {
+                $task->update([
+                    'status' => 'in_progress',
+                    'updated_at' => now()
+                ]);
+            }
+
+            Log::info('Project and tasks reopened for revision', [
+                'project_id' => $project->id,
+                'previous_status' => $previousStatus,
+                'tasks_reopened' => $completedTasks->count()
             ]);
         }
     }

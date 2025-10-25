@@ -86,7 +86,7 @@
         <div class="glass-card p-6">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-neutral-900">Recent Projects</h2>
-                <a href="{{ route('adiutor.tasks') }}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                <a href="{{ route('adiutor.tasks.index') }}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">
                     View all →
                 </a>
             </div>
@@ -178,7 +178,7 @@
                     <span class="text-primary-700 font-medium group-hover:text-primary-800">Update Profile</span>
                 </a>
                 
-                <a href="{{ route('adiutor.tasks') }}" 
+                <a href="{{ route('adiutor.tasks.index') }}" 
                    class="flex items-center justify-center p-4 bg-accent-50 rounded-lg hover:bg-accent-100 transition-colors group">
                     <svg class="w-6 h-6 text-accent-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>

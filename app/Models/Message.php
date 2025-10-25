@@ -37,7 +37,8 @@ class Message extends Model
         'deleted_at' => 'datetime',
     ];
 
-    protected $appends = ['is_sender', 'formatted_time'];
+    // Remove appends to prevent n+1 queries and memory issues
+    // protected $appends = ['is_sender', 'formatted_time'];
 
     /**
      * Get the sender of the message

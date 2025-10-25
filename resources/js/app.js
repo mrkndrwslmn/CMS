@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Update unread count
         await messagingService.updateUnreadCount();
         
-        console.log('Messaging service initialized successfully');
     } catch (error) {
         console.error('Error initializing messaging service:', error);
     }

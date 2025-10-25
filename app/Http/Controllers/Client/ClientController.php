@@ -16,6 +16,9 @@ class ClientController extends Controller
      */
     public function dashboard()
     {
+        // Increase memory limit for this operation
+        ini_set('memory_limit', '256M');
+        
         $user = Auth::user();
         
         // Get dashboard statistics
@@ -93,33 +96,39 @@ class ClientController extends Controller
             });
 
         // Get recent notifications/messages
-        $recentMessages = DB::table('notifications')
-            ->where('notifications.notifiable_id', $user->id)
-            ->where('notifications.notifiable_type', 'App\\Models\\User')
-            ->whereNull('notifications.read_at')
-            ->select(
-                'notifications.id',
-                'notifications.type',
-                'notifications.data',
-                'notifications.created_at'
-            )
-            ->orderBy('notifications.created_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function ($notification) {
-                // Convert date string to Carbon instance
-                $notification->created_at = Carbon::parse($notification->created_at);
-                
-                // Parse JSON data and extract message
-                $data = json_decode($notification->data, true);
-                $notification->message = $data['message'] ?? $data['title'] ?? 'New notification';
-                
-                // Create a mock sender object structure that the view expects
-                $notification->sender = (object) [
-                    'fullName' => $data['sender_name'] ?? 'System'
-                ];
-                return $notification;
-            });
+        try {
+            $recentMessages = DB::table('notifications')
+                ->where('notifications.notifiable_id', $user->id)
+                ->where('notifications.notifiable_type', 'App\\Models\\User')
+                ->whereNull('notifications.read_at')
+                ->select(
+                    'notifications.id',
+                    'notifications.type',
+                    'notifications.data',
+                    'notifications.created_at'
+                )
+                ->orderBy('notifications.created_at', 'desc')
+                ->limit(5)
+                ->get()
+                ->map(function ($notification) {
+                    // Convert date string to Carbon instance
+                    $notification->created_at = Carbon::parse($notification->created_at);
+                    
+                    // Parse JSON data and extract message safely
+                    $data = is_string($notification->data) ? json_decode($notification->data, true) : (array)$notification->data;
+                    $notification->message = $data['message'] ?? $data['title'] ?? 'New notification';
+                    
+                    // Create a mock sender object structure that the view expects
+                    $notification->sender = (object) [
+                        'fullName' => $data['sender_name'] ?? 'System'
+                    ];
+                    return $notification;
+                });
+        } catch (\Exception $e) {
+            // If notifications fail, use empty collection
+            $recentMessages = collect([]);
+            \Log::error('Failed to load notifications: ' . $e->getMessage());
+        }
 
         // Get upcoming deadlines
         $upcomingDeadlines = DB::table('projects')
@@ -343,6 +352,124 @@ class ClientController extends Controller
             )
             ->first();
 
-        return view('client.projects.show', compact('user', 'project', 'assignments', 'tasks', 'feedback'));
+        // Load service request for payment info
+        $serviceRequest = null;
+        if ($project->service_request_id) {
+            $serviceRequest = \App\Models\ServiceRequest::with(['payments', 'project.milestones'])->find($project->service_request_id);
+        }
+
+        // Get project documents/attachments with access control
+        $documents = DB::table('documents')
+            ->leftJoin('tasks', 'documents.taskID', '=', 'tasks.taskID')
+            ->leftJoin('project_milestones', 'tasks.phase_id', '=', 'project_milestones.id')
+            ->leftJoin('users', 'documents.uploaded_by', '=', 'users.id')
+            ->where(function($query) use ($id) {
+                // Documents directly attached to project
+                $query->where('documents.project_id', $id)
+                    // Or documents attached to tasks in this project
+                    ->orWhere('tasks.project_id', $id);
+            })
+            ->where('documents.is_archived', false)
+            ->select(
+                'documents.*',
+                'tasks.taskTitle as task_name',
+                'tasks.taskID as task_id',
+                'tasks.phase_id',
+                'project_milestones.phase_name',
+                'project_milestones.is_paid as phase_is_paid',
+                'project_milestones.paid_at as phase_paid_at',
+                'users.fullName as uploaded_by_name'
+            )
+            ->orderBy('documents.created_at', 'desc')
+            ->get()
+            ->map(function($doc) use ($serviceRequest) {
+                // Determine if document is locked based on payment status
+                $isLocked = false;
+                
+                // If document is from a task with a phase/milestone
+                if ($doc->phase_id) {
+                    // Check if the service request uses milestone payments
+                    if ($serviceRequest && $serviceRequest->payment_type === 'milestone_payment') {
+                        // Lock if milestone/phase not paid yet
+                        // phase_is_paid should be 1/true for paid, 0/false for unpaid
+                        $isLocked = ($doc->phase_is_paid == 0 || $doc->phase_is_paid === false || $doc->phase_is_paid === null);
+                    }
+                }
+                
+                $doc->is_locked = $isLocked;
+                return $doc;
+            });
+
+        return view('client.projects.show', compact('user', 'project', 'assignments', 'tasks', 'feedback', 'serviceRequest', 'documents'));
+    }
+
+    /**
+     * Download project document (with payment verification)
+     */
+    public function downloadDocument($projectId, $documentId)
+    {
+        $user = Auth::user();
+        
+        // Verify project belongs to client
+        $project = DB::table('projects')
+            ->where('id', $projectId)
+            ->where('client_id', $user->id)
+            ->first();
+            
+        if (!$project) {
+            abort(404, 'Project not found.');
+        }
+        
+        // Get service request for payment type check
+        $serviceRequest = null;
+        if ($project->service_request_id) {
+            $serviceRequest = \App\Models\ServiceRequest::find($project->service_request_id);
+        }
+        
+        // Get document with payment info
+        $document = DB::table('documents')
+            ->leftJoin('tasks', 'documents.taskID', '=', 'tasks.taskID')
+            ->leftJoin('project_milestones', 'tasks.phase_id', '=', 'project_milestones.id')
+            ->leftJoin('milestone_payments', 'project_milestones.id', '=', 'milestone_payments.milestone_id')
+            ->where('documents.documentID', $documentId)
+            ->where(function($query) use ($projectId) {
+                $query->where('documents.project_id', $projectId)
+                      ->orWhere('tasks.project_id', $projectId);
+            })
+            ->where('documents.is_archived', false)
+            ->select(
+                'documents.*',
+                'tasks.phase_id',
+                'milestone_payments.status as milestone_status',
+                'milestone_payments.paid_at'
+            )
+            ->first();
+            
+        if (!$document) {
+            abort(404, 'Document not found.');
+        }
+        
+        // Check if document is locked
+        $isLocked = false;
+        if ($document->phase_id && $document->milestone_status) {
+            $isLocked = $document->milestone_status !== 'paid' || !$document->paid_at;
+        }
+        if ($serviceRequest && $serviceRequest->payment_type === 'milestone_payment' && $document->phase_id && !$document->milestone_status) {
+            $isLocked = true;
+        }
+        
+        if ($isLocked) {
+            return redirect()->back()
+                ->withErrors(['error' => 'This document is locked. Please complete the required milestone payment to access it.']);
+        }
+        
+        // Download file
+        $filePath = storage_path('app/public/' . $document->filePath);
+        
+        if (!file_exists($filePath)) {
+            abort(404, 'File not found on server.');
+        }
+        
+        return response()->download($filePath, $document->fileName);
     }
 }

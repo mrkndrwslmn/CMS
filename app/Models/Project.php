@@ -66,6 +66,14 @@ class Project extends Model
     }
 
     /**
+     * Get project assignments
+     */
+    public function assignments()
+    {
+        return $this->hasMany(ProjectAssignment::class, 'project_id');
+    }
+
+    /**
      * Get TASKS related to this project (CORRECT: Only projects have tasks!)
      */
     public function tasks()
