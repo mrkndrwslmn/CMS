@@ -34,6 +34,10 @@ class MessagingService {
             // Listen for foreground messages
             this.setupForegroundMessageListener();
 
+<<<<<<< HEAD
+=======
+            console.log('Firebase Messaging initialized successfully');
+>>>>>>> 7c71488 (Initial commit from Princess)
         } catch (error) {
             console.error('Failed to initialize Firebase:', error);
         }
@@ -53,7 +57,14 @@ class MessagingService {
 
                 if (token) {
                     await this.updateFcmToken(token);
+<<<<<<< HEAD
                 }
+=======
+                    console.log('FCM token obtained:', token);
+                }
+            } else {
+                console.log('Notification permission denied');
+>>>>>>> 7c71488 (Initial commit from Princess)
             }
         } catch (error) {
             console.error('Error getting FCM token:', error);
@@ -87,6 +98,11 @@ class MessagingService {
      */
     setupForegroundMessageListener() {
         onMessage(this.messaging, (payload) => {
+<<<<<<< HEAD
+=======
+            console.log('Foreground message received:', payload);
+            
+>>>>>>> 7c71488 (Initial commit from Princess)
             const { notification, data } = payload;
             
             // Show browser notification

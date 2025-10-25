@@ -101,6 +101,7 @@
                     <i class="fas fa-tasks w-5 mr-3"></i>
                     <span>Tasks</span>
                 </a>
+<<<<<<< HEAD
                 <a href="{{ route('admin.budget-requests.index') }}" class="flex items-center py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-lg mb-1 {{ request()->routeIs('admin.budget-requests*') ? 'bg-white/10 text-white' : '' }}">
                     <i class="fas fa-money-bill-wave w-5 mr-3"></i>
                     <span>Budget Requests</span>
@@ -109,6 +110,8 @@
                     <i class="fas fa-redo w-5 mr-3"></i>
                     <span>Revision Requests</span>
                 </a>
+=======
+>>>>>>> 7c71488 (Initial commit from Princess)
                 
                 <div class="border-t border-white/20 my-4"></div>
                 

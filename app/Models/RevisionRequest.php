@@ -16,7 +16,10 @@ class RevisionRequest extends Model
         'requested_due_date',
         'revision_number',
         'status',
+<<<<<<< HEAD
         'priority',
+=======
+>>>>>>> 7c71488 (Initial commit from Princess)
         'reviewed_by',
         'admin_notes',
         'reviewed_at',

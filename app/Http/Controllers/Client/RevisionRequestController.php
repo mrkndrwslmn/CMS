@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+<<<<<<< HEAD
 use App\Models\Project;
 use App\Models\Task;
+=======
+>>>>>>> 7c71488 (Initial commit from Princess)
 use App\Models\RevisionRequest;
 use App\Models\User;
 use App\Notifications\RevisionRequestedNotification;
@@ -242,6 +245,7 @@ class RevisionRequestController extends Controller
     }
 
     /**
+<<<<<<< HEAD
      * Store a project-level revision request
      */
     public function storeForProject(Request $request, $projectId)
@@ -412,6 +416,8 @@ class RevisionRequestController extends Controller
     }
 
     /**
+=======
+>>>>>>> 7c71488 (Initial commit from Princess)
      * Cancel a revision request (only if pending)
      */
     public function cancel($revisionId)

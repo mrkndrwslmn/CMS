@@ -90,6 +90,7 @@ class RequestManagementController extends Controller
         return view('admin.requests.show', ['request' => $serviceRequest]);
     }
     
+<<<<<<< HEAD
     public function approve(Request $request, $id)
     {
         $serviceRequest = ServiceRequest::findOrFail($id);
@@ -238,6 +239,43 @@ class RequestManagementController extends Controller
         
         return redirect()->route('admin.requests.show', $serviceRequest->id)
                         ->with('success', 'Request approved successfully with ' . ucfirst(str_replace('_', ' ', $request->payment_type)) . '. Client has been notified via email.');
+=======
+    public function approve(Request $httpRequest, $id)
+    {
+        $serviceRequest = ServiceRequest::findOrFail($id);
+        
+        $updateData = [
+            'status' => 'approved',
+            'approved_at' => now(),
+            'approved_by' => Auth::id(),
+            'approved_budget' => $httpRequest->approved_budget,
+        ];
+
+        $serviceRequest->update($updateData);
+        
+        // Check if project already exists
+        $project = Project::where('service_request_id', $serviceRequest->id)->first();
+        
+        if (!$project) {
+            // Only create if it doesn't exist
+            $project = new Project();
+            $project->service_request_id = $serviceRequest->id;
+            $project->client_id = $serviceRequest->client_id;
+            $project->title = $serviceRequest->project_name;
+            $project->description = $serviceRequest->request_description;
+            $project->budget = $httpRequest->approved_budget;
+            $project->deadline = $serviceRequest->deadline;
+            $project->status = 'active';
+            $project->priority = $serviceRequest->priority ?? 'medium';
+            $project->save();
+        }
+
+        // Dispatch event
+        \App\Events\ServiceRequestApproved::dispatch($serviceRequest, Auth::user());
+        
+        return redirect()->route('admin.requests.show', $serviceRequest->id)
+                        ->with('success', 'Request approved successfully!');
+>>>>>>> 7c71488 (Initial commit from Princess)
     }
     
     public function requestPayment($id)

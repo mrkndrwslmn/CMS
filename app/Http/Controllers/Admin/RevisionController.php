@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RevisionRequest;
+<<<<<<< HEAD
 use App\Models\Project;
+=======
+>>>>>>> 7c71488 (Initial commit from Princess)
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\RevisionApprovedNotification;
@@ -87,10 +90,14 @@ class RevisionController extends Controller
             'completedBy'
         ])->findOrFail($id);
 
+<<<<<<< HEAD
         // Get all adiutors for the assignment dropdown
         $adiutors = \App\Models\User::where('role', 'adiutor')->get();
 
         return view('admin.revisions.show', compact('revision', 'adiutors'));
+=======
+        return view('admin.revisions.show', compact('revision'));
+>>>>>>> 7c71488 (Initial commit from Princess)
     }
 
     /**
@@ -103,7 +110,10 @@ class RevisionController extends Controller
         $revision = RevisionRequest::with([
             'document',
             'task',
+<<<<<<< HEAD
             'project',
+=======
+>>>>>>> 7c71488 (Initial commit from Princess)
             'assignedAdiutor',
             'requestedBy'
         ])->findOrFail($id);
@@ -135,11 +145,17 @@ class RevisionController extends Controller
                 'assigned_adiutor_id' => $adiutorId
             ]);
 
+<<<<<<< HEAD
             // Reopen task or project based on source type
             if ($revision->source_type === 'task' && $revision->task) {
                 $this->reopenTask($revision->task);
             } elseif ($revision->source_type === 'project' && $revision->project) {
                 $this->reopenProject($revision->project);
+=======
+            // If it's a task-based revision, reopen the task
+            if ($revision->isTaskBased() && $revision->task) {
+                $this->reopenTask($revision->task);
+>>>>>>> 7c71488 (Initial commit from Princess)
             }
 
             // Notify the adiutor
@@ -173,9 +189,13 @@ class RevisionController extends Controller
                 'revision_id' => $revision->id,
                 'admin_id' => $admin->id,
                 'adiutor_id' => $adiutorId,
+<<<<<<< HEAD
                 'source_type' => $revision->source_type,
                 'task_reopened' => $revision->source_type === 'task',
                 'project_reopened' => $revision->source_type === 'project'
+=======
+                'task_reopened' => $revision->isTaskBased()
+>>>>>>> 7c71488 (Initial commit from Princess)
             ]);
 
             return redirect()->route('admin.revisions.show', $revision->id)
@@ -286,6 +306,7 @@ class RevisionController extends Controller
     }
 
     /**
+<<<<<<< HEAD
      * Reopen a project when revision is approved
      */
     protected function reopenProject(Project $project)
@@ -320,6 +341,8 @@ class RevisionController extends Controller
     }
 
     /**
+=======
+>>>>>>> 7c71488 (Initial commit from Princess)
      * Reassign revision to different adiutor
      */
     public function reassign(Request $request, $id)

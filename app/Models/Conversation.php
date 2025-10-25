@@ -10,6 +10,10 @@ class Conversation extends Model
 {
     protected $fillable = [
         'conversation_id',
+<<<<<<< HEAD
+=======
+        'service_request_id',
+>>>>>>> 7c71488 (Initial commit from Princess)
         'project_id',
         'client_id',
         'last_message_id',
@@ -21,9 +25,15 @@ class Conversation extends Model
 
     protected $casts = [
         'last_message_at' => 'datetime',
+<<<<<<< HEAD
         'unread_count_client' => 'integer',
         'unread_count_admin' => 'integer',
         'is_archived' => 'boolean',
+=======
+        'is_archived' => 'boolean',
+        'unread_count_client' => 'integer',
+        'unread_count_admin' => 'integer',
+>>>>>>> 7c71488 (Initial commit from Princess)
     ];
 
     /**
@@ -47,8 +57,12 @@ class Conversation extends Model
      */
     public function lastMessage(): BelongsTo
     {
+<<<<<<< HEAD
         // Prevent circular reference by not loading conversation on lastMessage
         return $this->belongsTo(Message::class, 'last_message_id')->withoutGlobalScopes();
+=======
+        return $this->belongsTo(Message::class, 'last_message_id');
+>>>>>>> 7c71488 (Initial commit from Princess)
     }
 
     /**
@@ -56,8 +70,12 @@ class Conversation extends Model
      */
     public function messages(): HasMany
     {
+<<<<<<< HEAD
         return $this->hasMany(Message::class, 'conversation_id', 'conversation_id')
                     ->orderBy('created_at', 'asc');
+=======
+        return $this->hasMany(Message::class, 'conversation_id', 'conversation_id');
+>>>>>>> 7c71488 (Initial commit from Princess)
     }
 
     /**

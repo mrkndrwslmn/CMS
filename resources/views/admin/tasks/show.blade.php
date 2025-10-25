@@ -156,6 +156,7 @@
                                         </span>
                                     </div>
                                 </div>
+<<<<<<< HEAD
                                 
                                 @if($task->phase_id && $task->phase)
                                 <div class="flex">
@@ -168,10 +169,13 @@
                                     </div>
                                 </div>
                                 @endif
+=======
+>>>>>>> 7c71488 (Initial commit from Princess)
                             </div>
                         </div>
                         
                         <div>
+<<<<<<< HEAD
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Budget & Progress</h3>
                             <div class="space-y-3">
                                 <div class="flex">
@@ -286,6 +290,66 @@
                         </div>
                         @endif
                     </div>
+=======
+                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Timeline</h3>
+                            <div class="space-y-3">
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Created:</div>
+                                    <div class="flex-1 text-neutral-800">
+                                        {{ $task->created_at->format('M d, Y') }}
+                                    </div>
+                                </div>
+                                
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Deadline:</div>
+                                    <div class="flex-1 text-neutral-800">
+                                        @if(isset($task['deadline']) && $task['deadline'])
+                                            @php 
+                                                $deadline = new DateTime($task['deadline']);
+                                                $now = new DateTime();
+                                                $isPast = $deadline < $now && $task['status'] !== 'completed';
+                                                $isClose = !$isPast && $now->diff($deadline)->days <= 3;
+                                            @endphp
+                                            
+                                            <span class="{{ $isPast ? 'text-error-600' : ($isClose ? 'text-warning-600' : 'text-neutral-600') }}">
+                                                {{ date('M d, Y', strtotime($task['deadline'])) }}
+                                                @if($isPast)
+                                                    <span class="block text-xs mt-1">
+                                                        <i class="fas fa-exclamation-circle"></i> 
+                                                        Overdue
+                                                    </span>
+                                                @elseif($isClose)
+                                                    <span class="block text-xs mt-1">
+                                                        <i class="fas fa-clock"></i> 
+                                                        Due soon
+                                                    </span>
+                                                @endif
+                                            </span>
+                                        @else
+                                            <span class="text-neutral-400">Not set</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Assigned:</div>
+                                    <div class="flex-1 text-neutral-800">
+                                        {{ isset($task['dateAssigned']) && $task['dateAssigned'] ? date('M d, Y', strtotime($task['dateAssigned'])) : 'Not assigned' }}
+                                    </div>
+                                </div>
+                                
+                                @if(isset($task['completedAt']) && $task['completedAt'])
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Completed:</div>
+                                    <div class="flex-1 text-neutral-800">
+                                        {{ date('M d, Y', strtotime($task['completedAt'])) }}
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+>>>>>>> 7c71488 (Initial commit from Princess)
                 </div>
             </div>
             

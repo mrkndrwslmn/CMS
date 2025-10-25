@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Update unread count
         await messagingService.updateUnreadCount();
         
+<<<<<<< HEAD
+=======
+        console.log('Messaging service initialized successfully');
+>>>>>>> 7c71488 (Initial commit from Princess)
     } catch (error) {
         console.error('Error initializing messaging service:', error);
     }
