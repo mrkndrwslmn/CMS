@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Home') - @yield('site_name', 'Treis Adiutor')</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="@yield('description', 'We are TREIS ADIUTOR, your trusted programming buddy who can give you premium, professional, and on-time services for both rush and non-rush academic and programming projects.')">
+    <meta name="keywords" content="@yield('keywords', 'Treis Adiutor, virtual assistant, written works, programming service, web development, treisadiutor, Philippines')">
+    <meta name="robots" content="@yield('robots', 'index, follow')">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="@yield('favicon', 'https://qzdtlrbpjudrvffrnory.supabase.co/storage/v1/object/public/Treis%20Adiutor//favico.ico')" type="image/x-icon">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    
+    <!-- Tailwind CSS (Local Build) -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <script src="https://unpkg.com/gsap@3.12.0/dist/gsap.min.js"></script>
+    
+    <!-- Analytics -->
+    @stack('analytics')
+    
+    @stack('styles')
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white shadow-md fixed w-full z-50">
+    <div class="container mx-auto px-4 py-4 max-w-7xl">
+        <div class="flex justify-between items-center">
+            <a href="/" class="text-2xl font-branding gradient-text tracking-tight smooth-transition group-hover:opacity-80" style="letter-spacing: 0.05em;">
+                TREIS <span class="text-accent">ADIUTOR</span>
+            </a>
+            
+            <!-- Mobile menu button -->
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-700 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:block">
+                <ul class="flex space-x-8">
+                    @auth
+                        <li><a href="{{ route('client.dashboard') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Dashboard</a></li>
+                        <li><a href="{{ route('client.profile') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Profile</a></li>
+                        <li><a href="{{ route('logout') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Logout</a></li>
+                    @else
+                        <li><a href="{{ route('services') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Services</a></li>
+                        <li><a href="{{ route('about') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">About</a></li>
+                        <li><a href="{{ route('client-testimonials') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Testimonials</a></li>
+                        <li><a href="{{ route('login') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Login</a></li>
+                    @endauth
+                </ul>
+            </nav>
+        </div>
+        
+        <!-- Mobile Navigation -->
+        <div id="mobile-menu" class="md:hidden hidden">
+            <ul class="flex flex-col space-y-4 pb-4">
+                @auth
+                    <li><a href="{{ route('client.dashboard') }}" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Dashboard</a></li>
+                    <li><a href="{{ route('client.profile') }}" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Profile</a></li>
+                    <li><a href="{{ route('logout') }}" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Logout</a></li>
+                @else
+                    <li><a href="{{ route('home') }}" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Home</a></li>
+                    <li><a href="{{ route('home') }}#services" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Services</a></li>
+                    <li><a href="{{ route('about') }}" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">About</a></li>
+                    <li><a href="{{ route('home') }}#testimonials" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Testimonials</a></li>
+                    <li><a href="{{ route('login') }}" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Login</a></li>
+                @endauth
+            </ul>
+        </div>
+    </div>
+</header>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        @yield('content')
+    </main>
+
+    <!-- Footer -->
+  <footer class="py-16 relative overflow-hidden bg-neutral-50">
+    <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent"></div>
+    <div class="max-w-7xl mx-auto px-6 relative">
+      <div class="flex flex-wrap -mx-4 mb-16">
+        <div class="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-4/12 xl:w-3/12 mb-10 lg:mb-0">
+          <a href="/" class="inline-block mb-6">
+            <span class="text-2xl font-bold font-branding gradient-text tracking-tight" style="letter-spacing: 0.08em;">TREIS ADIUTOR</span>
+          </a>
+          <p class="text-neutral-600 mb-6">Your trusted technology partner for innovative startups and forward-thinking businesses.</p>
+          <div class="flex space-x-5 items-center">
+            <a href="https://www.facebook.com/treisadiutor" class="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-neutral-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-300 text-neutral-600 hover:text-primary-600 shadow-sm"><i class="fa-brands fa-facebook"></i></a>
+            <a href="https://www.twitter.com/treisadiutor" class="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-neutral-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-300 text-neutral-600 hover:text-primary-600 shadow-sm"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://www.instagram.com/treisadiutor" class="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-neutral-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-300 text-neutral-600 hover:text-primary-600 shadow-sm"><i class="fa-brands fa-instagram"></i></a>
+          </div>
+        </div>
+        <div class="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-4/12 xl:w-2/12 mb-10 lg:mb-0">
+          <h4 class="text-neutral-800 font-semibold heading-serif mb-6 text-lg">Our Firm</h4>
+          <ul class="space-y-3 text-sm">
+            <li><a href="/services" class="text-neutral-600 hover:text-primary-600 transition-colors">Services</a></li>
+            <li><a href="/about-us" class="text-neutral-600 hover:text-primary-600 transition-colors">About Us</a></li>
+            <li><a href="/contact" class="text-neutral-600 hover:text-primary-600 transition-colors">Contact Us</a></li>
+          </ul>
+        </div>
+        <div class="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-4/12 xl:w-2/12 mb-10 lg:mb-0">
+          <h4 class="text-neutral-800 font-semibold heading-serif mb-6 text-lg">Resources</h4>
+          <ul class="space-y-3 text-sm">
+            <li><a href="/featured-projects" class="text-neutral-600 hover:text-primary-600 transition-colors">Projects</a></li>
+            <li><a href="/client-testimonials" class="text-neutral-600 hover:text-primary-600 transition-colors">Testimonials</a></li>
+            <li><a href="/faq" class="text-neutral-600 hover:text-primary-600 transition-colors">FAQs</a></li>
+          </ul>
+        </div>
+        <div class="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-4/12 xl:w-2/12 mb-10 lg:mb-0">
+          <h4 class="text-neutral-800 font-semibold heading-serif mb-6 text-lg">Legal</h4>
+          <ul class="space-y-3 text-sm">
+            <li><a href="/privacy-policy" class="text-neutral-600 hover:text-primary-600 transition-colors">Privacy Policy</a></li>
+            <li><a href="/terms-and-conditions" class="text-neutral-600 hover:text-primary-600 transition-colors">Terms & Conditions</a></li>
+          </ul>
+        </div>
+        <div class="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-4/12 xl:w-3/12">
+          <h4 class="text-neutral-800 font-semibold heading-serif mb-6 text-lg">Get in touch</h4>
+          <p class="text-neutral-600 mb-6">Need help with your project? Just drop us a message!</p>
+          <a href="/contact" class="px-5 py-2.5 rounded-full glass-button border border-primary-200 hover:border-primary-300 text-primary-600 hover:bg-primary-50 transition-all duration-300 inline-flex items-center text-sm shadow-sm">
+            Contact Us
+            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="border-t border-neutral-200 pt-8">
+        <p class="text-center text-sm text-neutral-500">&copy; {{ date('Y') }} Treis Adiutor. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+    <!-- External Scripts -->
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    
+    <!-- Mobile Menu Toggle -->
+    <script>
+        document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
+    
+    <!-- Chatbot Widget -->
+    <script src="{{ asset('js/chatbot.js') }}"></script>
+    
+    @stack('scripts')
+</body>
+</html>
