@@ -391,11 +391,7 @@
     <div id="completeModal" class="modal-overlay fixed inset-0 z-50 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <!-- Background overlay -->
-<<<<<<< HEAD
             <div onclick="hideCompleteModal()" class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity z-40"></div>
-=======
-            <div onclick="hideCompleteModal()" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-40"></div>
->>>>>>> 7c71488 (Initial commit from Princess)
 
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 
@@ -453,11 +449,7 @@
     <div id="assignModal" class="modal-overlay fixed inset-0 z-50 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <!-- Background overlay -->
-<<<<<<< HEAD
             <div onclick="hideAssignModal()" class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity z-40"></div>
-=======
-            <div onclick="hideAssignModal()" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-40"></div>
->>>>>>> 7c71488 (Initial commit from Princess)
 
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 

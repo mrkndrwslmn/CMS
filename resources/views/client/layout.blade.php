@@ -7,12 +7,9 @@
     
     <title>{{ config('app.name', 'CMS') }} - @yield('title', 'Client Dashboard')</title>
     
-<<<<<<< HEAD
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
     
-=======
->>>>>>> 7c71488 (Initial commit from Princess)
     <!-- Firebase Configuration -->
     <script>
         window.firebaseConfig = {
@@ -32,18 +29,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <style>
-<<<<<<< HEAD
-=======
-        /* Notification Panel Styles */
-        .notification-panel {
-            transform: translateX(100%);
-            transition: transform 0.3s ease-in-out;
-        }
-        .notification-panel.show {
-            transform: translateX(0);
-        }
-        
->>>>>>> 7c71488 (Initial commit from Princess)
         /* Mobile Menu Styles */
         #mobile-menu {
             max-height: 0;
@@ -53,22 +38,6 @@
         #mobile-menu.active {
             max-height: 500px;
         }
-<<<<<<< HEAD
-=======
-        
-        /* Dropdown Menu Styles */
-        .dropdown-menu {
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.2s ease-in-out;
-        }
-        .dropdown-menu.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
->>>>>>> 7c71488 (Initial commit from Princess)
     </style>
 </head>
 <body class="bg-neutral-50 antialiased min-h-screen flex flex-col">
@@ -96,24 +65,8 @@
                         New Request
                     </a>
                     
-<<<<<<< HEAD
                     <!-- Notifications Bell Component -->
                     @include('components.notification-bell')
-=======
-                    <!-- Notifications Button -->
-                    <button onclick="toggleNotifications()" 
-                            class="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                        </svg>
-                        @if(auth()->user()->unreadNotifications()->count() > 0)
-                            <span class="absolute top-1 right-1 flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                            </span>
-                        @endif
-                    </button>
->>>>>>> 7c71488 (Initial commit from Princess)
                     
                     <!-- Profile Menu Dropdown -->
                     <div class="relative" x-data="{ open: false }">
@@ -223,20 +176,9 @@
 
                 <!-- Mobile menu button -->
                 <div class="md:hidden flex items-center gap-2">
-<<<<<<< HEAD
                     <!-- Notifications Bell Component (Mobile) -->
                     @include('components.notification-bell')
                     
-=======
-                    <button onclick="toggleNotifications()" class="relative p-2 text-gray-600 hover:text-primary-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                        </svg>
-                        @if(auth()->user()->unreadNotifications()->count() > 0)
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                        @endif
-                    </button>
->>>>>>> 7c71488 (Initial commit from Princess)
                     <button type="button" onclick="toggleMobileMenu()" class="p-2 text-gray-600 hover:text-primary-600">
                         <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -345,95 +287,6 @@
         </div>
     </nav>
     
-<<<<<<< HEAD
-=======
-    <!-- Notifications Side Panel -->
-    <div id="notification-panel" class="notification-panel fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl z-50 overflow-hidden">
-        <div class="flex flex-col h-full">
-            <!-- Panel Header -->
-            <div class="bg-gradient-to-r from-primary-600 to-accent-600 px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                    </svg>
-                    <h2 class="text-lg font-bold text-white">Notifications</h2>
-                </div>
-                <button onclick="toggleNotifications()" class="text-white hover:text-gray-200 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <!-- Panel Body -->
-            <div id="notifications-container" class="flex-1 overflow-y-auto p-4">
-                <div class="flex items-center justify-center h-full">
-                    <div class="text-center">
-                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                        </svg>
-                        <p class="text-gray-500 text-sm">Loading notifications...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Panel Footer -->
-            <div class="border-t border-gray-200 p-4">
-                <a href="{{ route('client.notifications.index') }}" class="block text-center text-sm text-primary-600 hover:text-primary-700 font-medium">
-                    View All Notifications
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Notification Panel Backdrop -->
-    <div id="notification-backdrop" onclick="toggleNotifications()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
-
-    <!-- Main Content --> 
-    
-    <!-- Notifications Side Panel -->
-    <div id="notification-panel" class="notification-panel fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl z-50 overflow-hidden">
-        <div class="flex flex-col h-full">
-            <!-- Panel Header -->
-            <div class="bg-gradient-to-r from-primary-600 to-accent-600 px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                    </svg>
-                    <h2 class="text-lg font-bold text-white">Notifications</h2>
-                </div>
-                <button onclick="toggleNotifications()" class="text-white hover:text-gray-200 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <!-- Panel Body -->
-            <div id="notifications-container" class="flex-1 overflow-y-auto p-4">
-                <div class="flex items-center justify-center h-full">
-                    <div class="text-center">
-                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                        </svg>
-                        <p class="text-gray-500 text-sm">Loading notifications...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Panel Footer -->
-            <div class="border-t border-gray-200 p-4">
-                <a href="{{ route('client.notifications.index') }}" class="block text-center text-sm text-primary-600 hover:text-primary-700 font-medium">
-                    View All Notifications
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Notification Panel Backdrop -->
-    <div id="notification-backdrop" onclick="toggleNotifications()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
-
->>>>>>> 7c71488 (Initial commit from Princess)
     <!-- Main Content -->
     <main class="pt-16 min-h-screen">
         <!-- Flash Messages -->

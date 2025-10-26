@@ -449,7 +449,6 @@ class ServiceRequest extends Model
 
         return 'Payment';
     }
-<<<<<<< HEAD
 
     /**
      * Get total amount paid so far
@@ -509,6 +508,4 @@ class ServiceRequest extends Model
     {
         return $this->getRemainingPaymentBalance() <= 0 && $this->approved_budget > 0;
     }
-=======
->>>>>>> 7c71488 (Initial commit from Princess)
 }

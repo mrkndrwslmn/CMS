@@ -16,12 +16,9 @@ class ClientController extends Controller
      */
     public function dashboard()
     {
-<<<<<<< HEAD
         // Increase memory limit for this operation
         ini_set('memory_limit', '256M');
         
-=======
->>>>>>> 7c71488 (Initial commit from Princess)
         $user = Auth::user();
         
         // Get dashboard statistics
@@ -99,7 +96,6 @@ class ClientController extends Controller
             });
 
         // Get recent notifications/messages
-<<<<<<< HEAD
         try {
             $recentMessages = DB::table('notifications')
                 ->where('notifications.notifiable_id', $user->id)
@@ -133,35 +129,6 @@ class ClientController extends Controller
             $recentMessages = collect([]);
             \Log::error('Failed to load notifications: ' . $e->getMessage());
         }
-=======
-        $recentMessages = DB::table('notifications')
-            ->where('notifications.notifiable_id', $user->id)
-            ->where('notifications.notifiable_type', 'App\\Models\\User')
-            ->whereNull('notifications.read_at')
-            ->select(
-                'notifications.id',
-                'notifications.type',
-                'notifications.data',
-                'notifications.created_at'
-            )
-            ->orderBy('notifications.created_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function ($notification) {
-                // Convert date string to Carbon instance
-                $notification->created_at = Carbon::parse($notification->created_at);
-                
-                // Parse JSON data and extract message
-                $data = json_decode($notification->data, true);
-                $notification->message = $data['message'] ?? $data['title'] ?? 'New notification';
-                
-                // Create a mock sender object structure that the view expects
-                $notification->sender = (object) [
-                    'fullName' => $data['sender_name'] ?? 'System'
-                ];
-                return $notification;
-            });
->>>>>>> 7c71488 (Initial commit from Princess)
 
         // Get upcoming deadlines
         $upcomingDeadlines = DB::table('projects')
@@ -385,7 +352,6 @@ class ClientController extends Controller
             )
             ->first();
 
-<<<<<<< HEAD
         // Load service request for payment info
         $serviceRequest = null;
         if ($project->service_request_id) {
@@ -505,8 +471,5 @@ class ClientController extends Controller
         }
         
         return response()->download($filePath, $document->fileName);
-=======
-        return view('client.projects.show', compact('user', 'project', 'assignments', 'tasks', 'feedback'));
->>>>>>> 7c71488 (Initial commit from Princess)
     }
 }

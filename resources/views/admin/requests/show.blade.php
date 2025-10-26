@@ -662,11 +662,7 @@
      style="display: none;">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <!-- Background overlay -->
-<<<<<<< HEAD
         <div x-show="showApproveModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showApproveModal = false" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" aria-hidden="true"></div>
-=======
-        <div x-show="showApproveModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showApproveModal = false" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-50 z-40" aria-hidden="true"></div>
->>>>>>> 7c71488 (Initial commit from Princess)
         
         <!-- Center modal -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -983,13 +979,8 @@
                             <select id="adiutor_id" name="adiutor_id" 
                                     class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
                                 <option value="">Select an Adiutor</option>
-<<<<<<< HEAD
                                 @foreach(\App\Models\User::where('role', 'adiutor')->orderBy('fullName')->get() as $adiutor)
                                     <option value="{{ $adiutor->id }}">{{ $adiutor->fullName }}</option>
-=======
-                                @foreach(\App\Models\User::where('role', 'adiutor')->orderBy('full_name')->get() as $adiutor)
-                                    <option value="{{ $adiutor->id }}">{{ $adiutor->full_name }}</option>
->>>>>>> 7c71488 (Initial commit from Princess)
                                 @endforeach
                             </select>
                         </div>
@@ -1016,11 +1007,7 @@
      style="display: none;">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <!-- Background overlay -->
-<<<<<<< HEAD
         <div x-show="showRejectModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showRejectModal = false" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" aria-hidden="true"></div>
-=======
-        <div x-show="showRejectModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showRejectModal = false" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 z-40" aria-hidden="true"></div>
->>>>>>> 7c71488 (Initial commit from Princess)
         
         <!-- Center modal -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -1070,11 +1057,7 @@
      style="display: none;">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <!-- Background overlay -->
-<<<<<<< HEAD
         <div x-show="showCreateTaskModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showCreateTaskModal = false" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" aria-hidden="true"></div>
-=======
-        <div x-show="showCreateTaskModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="showCreateTaskModal = false" class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 z-40" aria-hidden="true"></div>
->>>>>>> 7c71488 (Initial commit from Princess)
         
         <!-- Center modal -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -1130,13 +1113,8 @@
                         <select id="new_adiutor_id" name="adiutor_id" 
                                 class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
                             <option value="">Select an Adiutor</option>
-<<<<<<< HEAD
                             @foreach(\App\Models\User::where('role', 'adiutor')->orderBy('fullName')->get() as $adiutor)
                                 <option value="{{ $adiutor->id }}">{{ $adiutor->fullName }}</option>
-=======
-                            @foreach(\App\Models\User::where('role', 'adiutor')->orderBy('full_name')->get() as $adiutor)
-                                <option value="{{ $adiutor->id }}">{{ $adiutor->full_name }}</option>
->>>>>>> 7c71488 (Initial commit from Princess)
                             @endforeach
                         </select>
                     </div>

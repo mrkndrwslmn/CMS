@@ -347,7 +347,6 @@ class ProjectManagementController extends Controller
     }
 
     /**
-<<<<<<< HEAD
      * Get project phases/milestones (for AJAX)
      */
     public function getProjectPhases($projectId)
@@ -387,8 +386,6 @@ class ProjectManagementController extends Controller
     }
 
     /**
-=======
->>>>>>> 7c71488 (Initial commit from Princess)
      * Handle bulk actions on projects
      */
     public function bulkAction(Request $request)

@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\DB;
 class TaskController extends Controller
 {
     /**
-<<<<<<< HEAD
      * Display a listing of all tasks assigned to adiutor
      */
     public function index(Request $request)
@@ -125,41 +124,6 @@ class TaskController extends Controller
             ->first();
         
         return view('adiutor.tasks.show', compact('user', 'task', 'assignment', 'taskFiles', 'pendingBudgetRequest'));
-=======
-     * Show task/project details
-     */
-    public function show($assignmentId)
-    {
-        $user = Auth::user();
-        
-        // Get assignment with project and client details
-        $assignment = DB::table('project_assignments')
-            ->join('projects', 'project_assignments.project_id', '=', 'projects.id')
-            ->join('users', 'projects.client_id', '=', 'users.id')
-            ->where('project_assignments.id', $assignmentId)
-            ->where('project_assignments.adiutor_id', $user->id)
-            ->select(
-                'projects.*',
-                'project_assignments.id as assignment_id',
-                'project_assignments.status as assignment_status',
-                'project_assignments.agreed_rate',
-                'project_assignments.start_date',
-                'project_assignments.expected_completion',
-                'project_assignments.progress_percentage',
-                'project_assignments.notes as assignment_notes',
-                'project_assignments.created_at as assigned_at',
-                'users.fullName as client_name',
-                'users.email as client_email',
-                'users.phoneNumber as client_phone'
-            )
-            ->first();
-        
-        if (!$assignment) {
-            abort(404, 'Assignment not found');
-        }
-        
-        return view('adiutor.tasks.show', compact('user', 'assignment'));
->>>>>>> 7c71488 (Initial commit from Princess)
     }
 
     /**
@@ -448,7 +412,6 @@ class TaskController extends Controller
         return redirect()->back()
             ->with('success', 'Budget change request submitted. Awaiting admin approval.');
     }
-<<<<<<< HEAD
 
     /**
      * Upload file for task
@@ -564,7 +527,3 @@ class TaskController extends Controller
             ->with('success', 'File deleted successfully.');
     }
 }
-=======
-}
-
->>>>>>> 7c71488 (Initial commit from Princess)

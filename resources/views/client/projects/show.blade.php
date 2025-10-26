@@ -14,7 +14,6 @@
         </a>
     </div>
 
-<<<<<<< HEAD
     <!-- Success/Error Messages -->
     @if(session('success'))
         <div class="mb-6 bg-success-50 border-l-4 border-success-500 p-4 rounded-lg">
@@ -38,8 +37,6 @@
         </div>
     @endif
 
-=======
->>>>>>> 7c71488 (Initial commit from Princess)
     <!-- Project Header Card -->
     <div class="glass-card p-8 mb-6 border-l-4 {{ match($project->status) {
         'active' => 'border-primary-500',
@@ -121,7 +118,6 @@
                     </a>
                 @endif
                 
-<<<<<<< HEAD
                 {{-- Request Revision Button for Completed/Review Projects --}}
                 @if(in_array($project->status, ['completed', 'review']))
                     <button onclick="openRevisionModal()" 
@@ -133,8 +129,6 @@
                     </button>
                 @endif
                 
-=======
->>>>>>> 7c71488 (Initial commit from Princess)
                 @if($feedback)
                     <a href="{{ route('client.feedback') }}" 
                        class="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-success-500 text-success-600 font-semibold rounded-lg hover:bg-success-50 transition-all duration-200 shadow-sm hover:shadow-md">
@@ -297,7 +291,6 @@
 
         <!-- Sidebar -->
         <div class="space-y-6">
-<<<<<<< HEAD
             <!-- Payment Status Card (if service request has payments) -->
             @if($serviceRequest && $serviceRequest->approved_budget && $serviceRequest->payment_type)
                 @php
@@ -414,8 +407,6 @@
                 </div>
             @endif
 
-=======
->>>>>>> 7c71488 (Initial commit from Princess)
             <!-- Project Details Card -->
             <div class="glass-card overflow-hidden">
                 <div class="bg-gradient-to-r from-neutral-700 to-neutral-800 p-4">
@@ -466,7 +457,6 @@
                     @endif
                 </div>
             </div>
-<<<<<<< HEAD
 
             <!-- Project Attachments Card -->
             <div class="glass-card overflow-hidden">
@@ -800,9 +790,4 @@ function toggleTaskSelection(show) {
 @endif
 </script>
 
-=======
-        </div>
-    </div>
-</div>
->>>>>>> 7c71488 (Initial commit from Princess)
 @endsection

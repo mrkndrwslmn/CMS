@@ -5,11 +5,8 @@ namespace App\Http\Controllers\Adiutor;
 use App\Http\Controllers\Controller;
 use App\Models\RevisionRequest;
 use App\Models\Document;
-<<<<<<< HEAD
 use App\Models\Project;
 use App\Notifications\RevisionCompletedNotification;
-=======
->>>>>>> 7c71488 (Initial commit from Princess)
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -84,11 +81,7 @@ class RevisionController extends Controller
     {
         $adiutor = Auth::user();
         
-<<<<<<< HEAD
         $revision = RevisionRequest::with(['document', 'task', 'project', 'requestedBy'])
-=======
-        $revision = RevisionRequest::with(['document', 'task'])
->>>>>>> 7c71488 (Initial commit from Princess)
             ->where('assigned_adiutor_id', $adiutor->id)
             ->where('status', 'approved')
             ->findOrFail($id);
@@ -108,18 +101,12 @@ class RevisionController extends Controller
                 'admin_notes' => ($revision->admin_notes ?? '') . "\n\nCompletion Notes: " . ($validated['completion_notes'] ?? 'No notes provided.')
             ]);
 
-<<<<<<< HEAD
             // Handle task or project completion based on source type
             if ($revision->source_type === 'task' && $revision->task) {
-=======
-            // If task-based, mark task as completed again
-            if ($revision->isTaskBased() && $revision->task) {
->>>>>>> 7c71488 (Initial commit from Princess)
                 $revision->task->update([
                     'status' => 'completed',
                     'completedAt' => now()
                 ]);
-<<<<<<< HEAD
                 
                 Log::info('Task marked as completed after revision', [
                     'task_id' => $revision->task->taskID,
@@ -155,15 +142,6 @@ class RevisionController extends Controller
                 $client->notify(new RevisionCompletedNotification($revision));
                 
                 Log::info('Client notified of revision completion', [
-=======
-            }
-
-            // Notify client
-            $client = $revision->requestedBy;
-            if ($client) {
-                // You can create a RevisionCompletedNotification if needed
-                Log::info('Revision completed, client should be notified', [
->>>>>>> 7c71488 (Initial commit from Princess)
                     'revision_id' => $revision->id,
                     'client_id' => $client->id
                 ]);
@@ -173,32 +151,20 @@ class RevisionController extends Controller
 
             Log::info('Revision marked as completed', [
                 'revision_id' => $revision->id,
-<<<<<<< HEAD
                 'adiutor_id' => $adiutor->id,
                 'source_type' => $revision->source_type
             ]);
 
             return redirect()->route('adiutor.revisions.show', $revision->id)
                 ->with('success', 'Revision marked as completed successfully. Client has been notified.');
-=======
-                'adiutor_id' => $adiutor->id
-            ]);
-
-            return redirect()->route('adiutor.revisions.show', $revision->id)
-                ->with('success', 'Revision marked as completed successfully.');
->>>>>>> 7c71488 (Initial commit from Princess)
 
         } catch (\Exception $e) {
             DB::rollBack();
             
             Log::error('Failed to complete revision', [
                 'revision_id' => $id,
-<<<<<<< HEAD
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
-=======
-                'error' => $e->getMessage()
->>>>>>> 7c71488 (Initial commit from Princess)
             ]);
 
             return redirect()->back()

@@ -53,18 +53,11 @@ class AdiutorController extends Controller
             ->limit(5)
             ->get();
 
-<<<<<<< HEAD
         // Get recent notifications (using Laravel's polymorphic notifications)
         $notifications = DB::table('notifications')
             ->where('notifiable_type', 'App\\Models\\User')
             ->where('notifiable_id', $user->id)
             ->whereNull('read_at')
-=======
-        // Get recent notifications
-        $notifications = DB::table('notifications')
-            ->where('user_id', $user->id)
-            ->where('is_read', false)
->>>>>>> 7c71488 (Initial commit from Princess)
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();

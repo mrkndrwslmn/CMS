@@ -66,7 +66,6 @@ class Project extends Model
     }
 
     /**
-<<<<<<< HEAD
      * Get project assignments
      */
     public function assignments()
@@ -75,8 +74,6 @@ class Project extends Model
     }
 
     /**
-=======
->>>>>>> 7c71488 (Initial commit from Princess)
      * Get TASKS related to this project (CORRECT: Only projects have tasks!)
      */
     public function tasks()

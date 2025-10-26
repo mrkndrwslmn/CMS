@@ -57,11 +57,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
                 
             $table->foreign('project_id')
-<<<<<<< HEAD
                 ->references('id')
-=======
-                ->references('projectID')
->>>>>>> 7c71488 (Initial commit from Princess)
                 ->on('projects')
                 ->cascadeOnDelete();
                 

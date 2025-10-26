@@ -21,12 +21,9 @@ return new class extends Migration
             // CORRECT RELATIONSHIP: Tasks belong to PROJECTS, not service requests directly
             $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
             
-<<<<<<< HEAD
             // Phase reference for milestone payment projects (nullable - will be constrained in later migration)
             $table->unsignedBigInteger('phase_id')->nullable();
             
-=======
->>>>>>> 7c71488 (Initial commit from Princess)
             // Task assignment
             $table->foreignId('assignedTo')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('createdBy')->constrained('users')->onDelete('cascade');
@@ -35,11 +32,7 @@ return new class extends Migration
             // Task details
             $table->string('taskTitle');
             $table->text('taskDescription');
-<<<<<<< HEAD
             $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled', 'pending_approval'])->default('pending');
-=======
-            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
->>>>>>> 7c71488 (Initial commit from Princess)
             $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
             
             // Timeline
