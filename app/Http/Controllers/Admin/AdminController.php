@@ -82,12 +82,12 @@ class AdminController extends Controller
             'completed_tasks' => Task::where('status', 'completed')->count(),
             'pending_budget_requests' => \App\Models\BudgetChangeRequest::where('status', 'pending')->count(),
             'recent_users' => User::orderBy('created_at', 'desc')->limit(5)->get(),
-            'recent_requests' => ServiceRequest::with('user')->orderBy('submission_date', 'desc')->limit(5)->get(),
+            'recent_requests' => ServiceRequest::with('user')->orderBy('created_at', 'desc')->limit(5)->get(),
         ];
 
         // Get monthly user registrations for chart
-        $monthlyUsers = User::selectRaw('strftime("%m", created_at) as month, COUNT(*) as count')
-            ->whereRaw('strftime("%Y", created_at) = ?', [date('Y')])
+        $monthlyUsers = User::selectRaw('DATE_FORMAT(created_at, "%m") as month, COUNT(*) as count')
+            ->whereRaw('YEAR(created_at) = ?', [date('Y')])
             ->groupBy('month')
             ->orderBy('month')
             ->get();
