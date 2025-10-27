@@ -260,16 +260,21 @@ class MessagingService {
      * Update unread count in UI
      */
     async updateUnreadCount() {
-        const count = await this.getUnreadCount();
-        const badge = document.querySelector('.unread-messages-badge');
-        
-        if (badge) {
-            if (count > 0) {
-                badge.textContent = count > 99 ? '99+' : count;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
+        try {
+            const count = await this.getUnreadCount();
+            const badge = document.querySelector('.unread-messages-badge');
+            
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
             }
+        } catch (error) {
+            console.error('Error updating unread count:', error);
+            // Silently fail - don't disrupt user experience
         }
     }
 
@@ -436,14 +441,3 @@ export const messagingService = new MessagingService();
 
 // Make it globally available
 window.messagingService = messagingService;
-
-// Initialize on DOM ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        messagingService.initialize();
-        messagingService.updateUnreadCount();
-    });
-} else {
-    messagingService.initialize();
-    messagingService.updateUnreadCount();
-}

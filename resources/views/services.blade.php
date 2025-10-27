@@ -623,8 +623,7 @@
                             services: allServices
                         })
                     });
-                    console.log(response);
-
+                    
                     if (!response.ok) {
                         const errorText = await response.text();
                         throw new Error(`HTTP error! status: ${response.status}, message:${errorText}`);
