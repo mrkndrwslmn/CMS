@@ -130,6 +130,13 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     // Notifications
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     
+    // Announcements
+    Route::get('/announcements', [\App\Http\Controllers\Admin\AnnouncementController::class, 'index'])->name('announcements.index');
+    Route::post('/announcements', [\App\Http\Controllers\Admin\AnnouncementController::class, 'store'])->name('announcements.store');
+    Route::put('/announcements/{announcement}', [\App\Http\Controllers\Admin\AnnouncementController::class, 'update'])->name('announcements.update');
+    Route::delete('/announcements/{announcement}', [\App\Http\Controllers\Admin\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+    Route::get('/api/announcements/active', [\App\Http\Controllers\Admin\AnnouncementController::class, 'getActive'])->name('announcements.active');
+    
     // Budget Change Requests
     Route::prefix('budget-requests')->name('budget-requests.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\BudgetChangeRequestController::class, 'index'])->name('index');
