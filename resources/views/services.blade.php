@@ -3,11 +3,6 @@
 @section('title', 'Our Services - Academic and Programming Solutions')
 @section('site_name', 'Treis Adiutor')
 
-@push('analytics')
-    <script defer src="https://cdn.vercel-insights.com/v1/script.js?projectId=prj_8NsY544ll3Q74OVb6njoN8QFj0kl"></script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1864950796514595" crossorigin="anonymous"></script>
-@endpush
-
 @section('content')
 
   <!-- Hero Section -->
@@ -181,6 +176,9 @@
     </div>
   </section>  
   
+  @endsection
+
+  @push('scripts')
   <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
   <script>
     AOS.init({
@@ -767,3 +765,4 @@
   }
 })();
 </script>
+@endpush

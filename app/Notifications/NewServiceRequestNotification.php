@@ -2,28 +2,19 @@
 
 namespace App\Notifications;
 
+use App\Mail\NewServiceRequest;
+use App\Models\ServiceRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
 
 class NewServiceRequestNotification extends Notification
 {
     use Queueable;
 
-    protected $serviceRequestId;
-    protected $projectName;
-    protected $userName;
-    protected $isNewUser;
-
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct(int $serviceRequestId, string $projectName, string $userName, bool $isNewUser = false)
-    {
-        $this->serviceRequestId = $serviceRequestId;
-        $this->projectName = $projectName;
-        $this->userName = $userName;
-        $this->isNewUser = $isNewUser;
+    public function __construct(
+        protected ServiceRequest $serviceRequest,
+        protected bool $isNewUser = false
+    ) {
     }
 
     /**
@@ -37,18 +28,10 @@ class NewServiceRequestNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail($notifiable): MailMessage
+    public function toMail($notifiable): NewServiceRequest
     {
-        $newUserTag = $this->isNewUser ? ' (New User)' : '';
-        
-        return (new MailMessage)
-            ->subject('New Service Request Submitted')
-            ->greeting('Hello Admin!')
-            ->line("A new service request has been submitted by **{$this->userName}**{$newUserTag}")
-            ->line("**Project Name:** {$this->projectName}")
-            ->line('Please review the request and take appropriate action.')
-            ->action('View Request', route('admin.requests.show', $this->serviceRequestId))
-            ->line('Thank you for your attention to this matter!');
+        return (new NewServiceRequest($this->serviceRequest, $notifiable, $this->isNewUser))
+            ->onQueue('emails');
     }
 
     /**
@@ -61,11 +44,11 @@ class NewServiceRequestNotification extends Notification
         return [
             'type' => 'new_service_request',
             'title' => 'New Service Request',
-            'message' => "New service request '{$this->projectName}' submitted by {$this->userName}{$newUserTag}",
-            'action_url' => route('admin.requests.show', $this->serviceRequestId),
-            'service_request_id' => $this->serviceRequestId,
-            'project_name' => $this->projectName,
-            'user_name' => $this->userName,
+            'message' => "New service request '{$this->serviceRequest->project_name}' submitted by {$this->serviceRequest->user->fullName}{$newUserTag}",
+            'action_url' => route('admin.requests.show', $this->serviceRequest->id),
+            'service_request_id' => $this->serviceRequest->id,
+            'project_name' => $this->serviceRequest->project_name,
+            'user_name' => $this->serviceRequest->user->fullName,
             'is_new_user' => $this->isNewUser,
         ];
     }

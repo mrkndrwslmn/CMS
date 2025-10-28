@@ -2,28 +2,20 @@
 
 namespace App\Notifications;
 
+use App\Mail\BudgetChangeReviewed;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
 
 class BudgetChangeReviewedNotification extends Notification
 {
     use Queueable;
 
-    protected $task;
-    protected $status;
-    protected $newBudget;
-    protected $reason;
-
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct($task, $status, $newBudget = null, $reason = null)
-    {
-        $this->task = $task;
-        $this->status = $status;
-        $this->newBudget = $newBudget;
-        $this->reason = $reason;
+    public function __construct(
+        protected $task,
+        protected $status,
+        protected $newBudget = null,
+        protected $reason = null
+    ) {
     }
 
     /**
@@ -37,28 +29,10 @@ class BudgetChangeReviewedNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail($notifiable): MailMessage
+    public function toMail($notifiable): BudgetChangeReviewed
     {
-        $statusText = $this->status === 'approved' ? 'Approved' : 'Rejected';
-        
-        $message = (new MailMessage)
-            ->subject("Budget Change Request {$statusText}")
-            ->greeting('Hello ' . $notifiable->fullName . '!')
-            ->line("Your budget change request for task **{$this->task->taskTitle}** has been **{$statusText}**.");
-        
-        if ($this->status === 'approved') {
-            $message->line('**New Budget:** ₱' . number_format($this->newBudget, 2))
-                ->line('The new budget has been applied to your task.')
-                ->action('View Task', route('adiutor.tasks.show', $this->task->taskID));
-        } else {
-            if ($this->reason) {
-                $message->line('**Reason:** ' . $this->reason);
-            }
-            $message->line('Please contact your project manager if you have any questions.')
-                ->action('View Task', route('adiutor.tasks.show', $this->task->taskID));
-        }
-        
-        return $message;
+        return (new BudgetChangeReviewed($this->task, $this->status, $this->newBudget, $this->reason, $notifiable))
+            ->onQueue('emails');
     }
 
     /**

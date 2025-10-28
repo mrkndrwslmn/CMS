@@ -14,158 +14,143 @@
     </noscript>
     <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background: linear-gradient(135deg, {{ $revisionRequest->status === 'approved' ? '#ECFDF5 0%, #D1FAE5 50%, #A7F3D0 100%' : '#FEF2F2 0%, #FECACA 50%, #F87171 100%' }}); font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #334155;">
+<body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #334155;">
     
     <!-- Email Container -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, {{ $revisionRequest->status === 'approved' ? '#ECFDF5 0%, #D1FAE5 50%, #A7F3D0 100%' : '#FEF2F2 0%, #FECACA 50%, #F87171 100%' }}); min-height: 100vh;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #F8FAFC;">
         <tr>
             <td align="center" style="padding: 40px 20px;">
                 
                 <!-- Main Content Card -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; box-shadow: 0 20px 40px rgba({{ $revisionRequest->status === 'approved' ? '16, 185, 129' : '239, 68, 68' }}, 0.08), 0 8px 32px rgba(0, 0, 0, 0.03); border: 1px solid rgba(241, 245, 249, 0.9); overflow: hidden;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); border: none; overflow: hidden;">
                     
-                    <!-- Header with Dynamic Gradient -->
+                    <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, {{ $revisionRequest->status === 'approved' ? '#10B981, #059669' : $revisionRequest->status === 'rejected' ? '#EF4444, #DC2626' : '#F59E0B, #D97706' }}); padding: 40px 40px 60px; text-align: center; position: relative;">
-                            <!-- Decorative Elements -->
-                            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(40px);"></div>
-                            <div style="position: absolute; bottom: -30px; left: -30px; width: 60px; height: 60px; background: rgba({{ $revisionRequest->status === 'approved' ? '16, 185, 129' : $revisionRequest->status === 'rejected' ? '239, 68, 68' : '245, 158, 11' }}, 0.3); border-radius: 50%; filter: blur(30px);"></div>
-                            
-                            <!-- Status Icon -->
-                            <div style="display: inline-block; width: 80px; height: 80px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; margin-bottom: 24px; line-height: 80px; font-size: 40px;">
+                        <td style="background-color: #3B82F6; padding: 48px 40px 40px; text-align: center;">
+                            <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.02em;">
+                                Revision Request 
                                 @if($revisionRequest->status === 'approved')
-                                    ✅
+                                    Approved
                                 @elseif($revisionRequest->status === 'rejected')
-                                    ❌
+                                    Declined
                                 @elseif($revisionRequest->status === 'in_progress')
-                                    🔄
+                                    In Progress
+                                @elseif($revisionRequest->status === 'completed')
+                                    Completed
                                 @else
-                                    📋
+                                    Updated
                                 @endif
-                            </div>
-                            
-                            <!-- Logo/Brand -->
-                            <h1 style="margin: 0 0 8px; font-family: 'Playfair Display', Georgia, serif; font-size: 32px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.02em; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                                TREIS ADIUTOR
                             </h1>
-                            <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 16px; font-weight: 500;">Projects Department</p>
+                            <p style="margin: 8px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px; font-weight: 500;">
+                                Status Update
+                            </p>
                         </td>
                     </tr>
                     
-                    <!-- Status Update Message -->
+                    <!-- Message -->
                     <tr>
-                        <td style="padding: 0 40px 32px; text-align: center;">
-                            <div style="margin-top: -30px; background: #FFFFFF; border-radius: 16px; padding: 32px; box-shadow: 0 8px 25px rgba({{ $revisionRequest->status === 'approved' ? '16, 185, 129' : $revisionRequest->status === 'rejected' ? '239, 68, 68' : '245, 158, 11' }}, 0.08); border: 1px solid #F1F5F9;">
-                                <h2 style="margin: 0 0 16px; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; color: #1E293B; letter-spacing: -0.02em;">
-                                    Revision Request 
-                                    @if($revisionRequest->status === 'approved')
-                                        Approved!
-                                    @elseif($revisionRequest->status === 'rejected')
-                                        Declined
-                                    @elseif($revisionRequest->status === 'in_progress')
-                                        In Progress
-                                    @elseif($revisionRequest->status === 'completed')
-                                        Completed!
-                                    @else
-                                        Updated
-                                    @endif
-                                </h2>
-                                <p style="margin: 0; font-size: 16px; color: #64748B; line-height: 1.6;">
-                                    Your revision request for <strong style="color: #1E293B;">"{{ $revisionRequest->project->title ?? $revisionRequest->project->serviceRequest->project_name }}"</strong> has been 
-                                    @if($revisionRequest->status === 'approved')
-                                        <strong style="color: #059669;">approved</strong> and work will begin shortly.
-                                    @elseif($revisionRequest->status === 'rejected')
-                                        <strong style="color: #DC2626;">declined</strong>. Please see the details below.
-                                    @elseif($revisionRequest->status === 'in_progress')
-                                        <strong style="color: #D97706;">started</strong> and our team is actively working on it.
-                                    @elseif($revisionRequest->status === 'completed')
-                                        <strong style="color: #059669;">completed</strong> and is ready for your review.
-                                    @else
-                                        <strong style="color: #7C3AED;">updated</strong> with new information.
-                                    @endif
-                                </p>
-                            </div>
+                        <td style="padding: 32px 40px;">
+                            <h2 style="margin: 0 0 12px; font-size: 18px; font-weight: 600; color: #0F172A;">
+                                Your revision request has been reviewed
+                            </h2>
+                            <p style="margin: 0; font-size: 14px; color: #64748B; line-height: 1.6;">
+                                Your revision request for <strong style="color: #0F172A;">"{{ $revisionRequest->project->title ?? $revisionRequest->project->serviceRequest->project_name }}"</strong> 
+                                @if($revisionRequest->status === 'approved')
+                                    has been <strong>approved</strong> and work will begin shortly.
+                                @elseif($revisionRequest->status === 'rejected')
+                                    has been <strong>declined</strong>. Please see the details below for more information.
+                                @elseif($revisionRequest->status === 'in_progress')
+                                    is <strong>in progress</strong> and our team is actively working on it.
+                                @elseif($revisionRequest->status === 'completed')
+                                    is <strong>completed</strong> and is ready for your review.
+                                @else
+                                    has been <strong>updated</strong> with new information.
+                                @endif
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <div style="height: 1px; background-color: #E2E8F0;"></div>
                         </td>
                     </tr>
                     
                     <!-- Revision Update Details Section -->
                     <tr>
-                        <td style="padding: 0 40px 32px;">
-                            <div style="background: linear-gradient(135deg, {{ $revisionRequest->status === 'approved' ? '#ECFDF5 0%, #D1FAE5 100%' : $revisionRequest->status === 'rejected' ? '#FEF2F2 0%, #FECACA 100%' : '#FFFBEB 0%, #FEF3C7 100%' }}); border-radius: 16px; padding: 32px; border: 1px solid {{ $revisionRequest->status === 'approved' ? '#BBF7D0' : $revisionRequest->status === 'rejected' ? '#FECACA' : '#FDE68A' }}; position: relative; overflow: hidden;">
-                                <!-- Decorative accent -->
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, {{ $revisionRequest->status === 'approved' ? '#10B981, #059669' : $revisionRequest->status === 'rejected' ? '#EF4444, #DC2626' : '#F59E0B, #D97706' }});"></div>
-                                
-                                <h3 style="margin: 0 0 24px; font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 600; color: #1E293B; display: flex; align-items: center;">
-                                    <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, {{ $revisionRequest->status === 'approved' ? '#10B981, #059669' : $revisionRequest->status === 'rejected' ? '#EF4444, #DC2626' : '#F59E0B, #D97706' }}); border-radius: 8px; margin-right: 12px; position: relative;">
-                                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #FFFFFF; font-size: 16px;">📝</span>
-                                    </span>
-                                    Revision Status Update
-                                </h3>
-                                
-                                <div style="background: #FFFFFF; border-radius: 12px; padding: 24px; border: 1px solid #E2E8F0; margin-bottom: 20px;">
-                                    <div style="display: table; width: 100%;">
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Project</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="font-size: 18px; font-weight: 700; color: #1E293B;">{{ $revisionRequest->project->title ?? $revisionRequest->project->serviceRequest->project_name }}</span>
+                        <td style="padding: 32px 40px;">
+                            <h3 style="margin: 0 0 20px; font-size: 14px; font-weight: 600; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Revision Status Update
+                            </h3>
+                            
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px;">
+                                <tr>
+                                    <td style="padding: 20px 24px;">
+                                        <div style="margin-bottom: 16px;">
+                                            <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                Project
+                                            </label>
+                                            <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
+                                                {{ $revisionRequest->project->title ?? $revisionRequest->project->serviceRequest->project_name }}
                                             </div>
                                         </div>
                                         
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Current Status</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
+                                        <div style="margin-bottom: 16px;">
+                                            <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                Current Status
+                                            </label>
+                                            <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
                                                 @if($revisionRequest->status === 'approved')
-                                                    <span style="background: linear-gradient(135deg, #DCFCE7, #BBF7D0); color: #047857; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; border: 1px solid #BBF7D0;">✅ Approved</span>
+                                                    Approved
                                                 @elseif($revisionRequest->status === 'rejected')
-                                                    <span style="background: linear-gradient(135deg, #FEE2E2, #FECACA); color: #B91C1C; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; border: 1px solid #FECACA;">❌ Declined</span>
+                                                    Declined
                                                 @elseif($revisionRequest->status === 'in_progress')
-                                                    <span style="background: linear-gradient(135deg, #FEF3C7, #FDE68A); color: #92400E; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; border: 1px solid #FDE68A;">🔄 In Progress</span>
+                                                    In Progress
                                                 @elseif($revisionRequest->status === 'completed')
-                                                    <span style="background: linear-gradient(135deg, #DCFCE7, #BBF7D0); color: #047857; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; border: 1px solid #BBF7D0;">🎉 Completed</span>
+                                                    Completed
                                                 @else
-                                                    <span style="background: linear-gradient(135deg, #E0E7FF, #C7D2FE); color: #3730A3; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; border: 1px solid #C7D2FE;">📋 Under Review</span>
+                                                    Under Review
                                                 @endif
                                             </div>
                                         </div>
                                         
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Reviewed By</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="font-size: 16px; color: #1E293B; font-weight: 500;">{{ $reviewedBy->name }}</span>
+                                        <div style="margin-bottom: 16px;">
+                                            <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                Reviewed By
+                                            </label>
+                                            <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
+                                                {{ $reviewedBy->name }}
                                             </div>
                                         </div>
                                         
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Update Date</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="font-size: 16px; color: #1E293B; font-weight: 500;">{{ $revisionRequest->updated_at->format('M d, Y H:i') }}</span>
+                                        <div style="margin-bottom: 16px;">
+                                            <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                Update Date
+                                            </label>
+                                            <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
+                                                {{ $revisionRequest->updated_at->format('M d, Y H:i') }}
                                             </div>
                                         </div>
                                         
                                         @if($revisionRequest->estimated_completion)
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">{{ $revisionRequest->status === 'completed' ? 'Completed On' : 'Est. Completion' }}</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="font-size: 16px; color: #1E293B; font-weight: 500;">{{ $revisionRequest->estimated_completion->format('M d, Y') }}</span>
+                                        <div>
+                                            <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                {{ $revisionRequest->status === 'completed' ? 'Completed On' : 'Est. Completion' }}
+                                            </label>
+                                            <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
+                                                {{ $revisionRequest->estimated_completion->format('M d, Y') }}
                                             </div>
                                         </div>
                                         @endif
-                                    </div>
-                                </div>
-                                
-                                @if($revisionRequest->review_notes)
-                                <div style="background: #FFFFFF; border-radius: 12px; padding: 20px; border: 1px solid #E2E8F0; margin-bottom: 16px;">
-                                    <h4 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: #1E293B;">
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            @if($revisionRequest->review_notes)
+                            <div style="margin-top: 16px; padding: 12px 16px; background-color: #EEF2FF; border-left: 3px solid #3B82F6; border-radius: 4px;">
+                                <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.5;">
+                                    <strong>
                                         @if($revisionRequest->status === 'approved')
                                             Approval Notes:
                                         @elseif($revisionRequest->status === 'rejected')
@@ -175,205 +160,174 @@
                                         @else
                                             Review Notes:
                                         @endif
-                                    </h4>
-                                    <p style="margin: 0; font-size: 14px; color: #475569; line-height: 1.6; white-space: pre-line;">{{ $revisionRequest->review_notes }}</p>
-                                </div>
-                                @endif
-                                
-                                <div style="background: {{ $revisionRequest->status === 'approved' ? '#DCFCE7' : $revisionRequest->status === 'rejected' ? '#FEE2E2' : '#FEF3C7' }}; border: 1px solid {{ $revisionRequest->status === 'approved' ? '#BBF7D0' : $revisionRequest->status === 'rejected' ? '#FECACA' : '#FDE68A' }}; border-radius: 8px; padding: 16px;">
-                                    <p style="margin: 0; font-size: 14px; color: {{ $revisionRequest->status === 'approved' ? '#065F46' : $revisionRequest->status === 'rejected' ? '#B91C1C' : '#92400E' }}; display: flex; align-items: flex-start;">
-                                        <span style="display: inline-block; margin-right: 8px; margin-top: 2px;">
-                                            @if($revisionRequest->status === 'approved')
-                                                🎉
-                                            @elseif($revisionRequest->status === 'rejected')
-                                                💬
-                                            @elseif($revisionRequest->status === 'completed')
-                                                ✨
-                                            @else
-                                                🔔
-                                            @endif
-                                        </span>
-                                        <span>
-                                            <strong>
-                                                @if($revisionRequest->status === 'approved')
-                                                    Great News!
-                                                @elseif($revisionRequest->status === 'rejected')
-                                                    Let's Discuss!
-                                                @elseif($revisionRequest->status === 'completed')
-                                                    Ready for Review!
-                                                @else
-                                                    Stay Updated!
-                                                @endif
-                                            </strong> 
-                                            @if($revisionRequest->status === 'approved')
-                                                Your revision request has been approved and our team will begin working on it according to the estimated timeline.
-                                            @elseif($revisionRequest->status === 'rejected')
-                                                Please review the decline reason above. We're happy to discuss alternative solutions that meet your needs.
-                                            @elseif($revisionRequest->status === 'completed')
-                                                Your revision is complete and ready for your review. Please check the updated deliverables.
-                                            @else
-                                                Your revision request status has been updated. Check your dashboard for the latest information.
-                                            @endif
-                                        </span>
-                                    </p>
-                                </div>
+                                    </strong><br>
+                                    {{ $revisionRequest->review_notes }}
+                                </p>
                             </div>
+                            @endif
+                        </td>
+                    </tr>
+                    
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <div style="height: 1px; background-color: #E2E8F0;"></div>
                         </td>
                     </tr>
                     
                     <!-- CTA Button -->
                     <tr>
-                        <td style="padding: 0 40px 32px; text-align: center;">
+                        <td style="padding: 32px 40px; text-align: center;">
                             @if($revisionRequest->status === 'completed')
-                                <a href="{{ route('client.revisions.show', $revisionRequest->id) }}" style="display: inline-block; background: linear-gradient(135deg, #10B981, #059669); color: #FFFFFF; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; letter-spacing: 0.01em; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25), 0 4px 8px rgba(16, 185, 129, 0.1); transition: all 0.3s ease; border: none; cursor: pointer;">
-                                    <span style="display: inline-block; margin-right: 8px;">📋</span>
+                                <a href="{{ route('client.revisions.show', $revisionRequest->id) }}" style="display: inline-block; background-color: #3B82F6; color: #FFFFFF; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 500; font-size: 14px; letter-spacing: 0.01em;">
                                     Review Completed Work
                                 </a>
                             @elseif($revisionRequest->status === 'rejected')
-                                <a href="{{ route('client.contact') }}" style="display: inline-block; background: linear-gradient(135deg, #3B82F6, #2563EB); color: #FFFFFF; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; letter-spacing: 0.01em; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25), 0 4px 8px rgba(59, 130, 246, 0.1); transition: all 0.3s ease; border: none; cursor: pointer;">
-                                    <span style="display: inline-block; margin-right: 8px;">💬</span>
+                                <a href="{{ route('client.contact') }}" style="display: inline-block; background-color: #3B82F6; color: #FFFFFF; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 500; font-size: 14px; letter-spacing: 0.01em;">
                                     Discuss Alternatives
                                 </a>
                             @else
-                                <a href="{{ route('client.revisions.show', $revisionRequest->id) }}" style="display: inline-block; background: linear-gradient(135deg, #F59E0B, #D97706); color: #FFFFFF; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; letter-spacing: 0.01em; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25), 0 4px 8px rgba(245, 158, 11, 0.1); transition: all 0.3s ease; border: none; cursor: pointer;">
-                                    <span style="display: inline-block; margin-right: 8px;">📊</span>
+                                <a href="{{ route('client.revisions.show', $revisionRequest->id) }}" style="display: inline-block; background-color: #3B82F6; color: #FFFFFF; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 500; font-size: 14px; letter-spacing: 0.01em;">
                                     Track Progress
                                 </a>
                             @endif
                         </td>
                     </tr>
                     
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <div style="height: 1px; background-color: #E2E8F0;"></div>
+                        </td>
+                    </tr>
+                    
                     <!-- Next Steps Section -->
                     <tr>
-                        <td style="padding: 0 40px 40px;">
-                            <div style="background: #FFFFFF; border-radius: 16px; padding: 32px; border: 1px solid #E2E8F0;">
-                                <h3 style="margin: 0 0 24px; font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-weight: 600; color: #1E293B; text-align: center;">
-                                    @if($revisionRequest->status === 'completed')
-                                        What's Next?
-                                    @elseif($revisionRequest->status === 'rejected')
-                                        Alternative Options
-                                    @else
-                                        Keep an Eye On
-                                    @endif
-                                </h3>
-                                
-                                <div style="display: table; width: 100%;">
-                                    @if($revisionRequest->status === 'completed')
-                                    <div style="display: table-row;">
-                                        <div style="display: table-cell; padding: 16px 0; vertical-align: top; width: 40px;">
-                                            <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #3B82F6, #2563EB); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">👀</span>
+                        <td style="padding: 32px 40px;">
+                            <h3 style="margin: 0 0 20px; font-size: 14px; font-weight: 600; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em;">
+                                @if($revisionRequest->status === 'completed')
+                                    What's Next
+                                @elseif($revisionRequest->status === 'rejected')
+                                    Alternative Options
+                                @else
+                                    Keep an Eye On
+                                @endif
+                            </h3>
+                            
+                            <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 24px;">
+                                @if($revisionRequest->status === 'completed')
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: flex-start;">
+                                        <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background-color: #EEF2FF; border-radius: 50%; margin-right: 16px; flex-shrink: 0;">
+                                            <span style="font-size: 14px; font-weight: 600; color: #3B82F6;">1</span>
                                         </div>
-                                        <div style="display: table-cell; padding: 16px 0 16px 16px; vertical-align: top;">
-                                            <strong style="color: #1E293B; font-weight: 600;">Review Changes</strong>
-                                            <br><span style="color: #64748B; font-size: 14px;">Carefully review all completed revisions and changes made to your project</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="display: table-row;">
-                                        <div style="display: table-cell; padding: 16px 0; vertical-align: top; width: 40px;">
-                                            <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">💬</span>
-                                        </div>
-                                        <div style="display: table-cell; padding: 16px 0 16px 16px; vertical-align: top;">
-                                            <strong style="color: #1E293B; font-weight: 600;">Provide Feedback</strong>
-                                            <br><span style="color: #64748B; font-size: 14px;">Share your feedback on the completed revisions - we value your input!</span>
+                                        <div>
+                                            <div style="font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 4px;">Review Changes</div>
+                                            <div style="font-size: 13px; color: #64748B; line-height: 1.5;">
+                                                Carefully review all completed revisions and changes made to your project
+                                            </div>
                                         </div>
                                     </div>
-                                    @elseif($revisionRequest->status === 'rejected')
-                                    <div style="display: table-row;">
-                                        <div style="display: table-cell; padding: 16px 0; vertical-align: top; width: 40px;">
-                                            <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #3B82F6, #2563EB); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">💬</span>
-                                        </div>
-                                        <div style="display: table-cell; padding: 16px 0 16px 16px; vertical-align: top;">
-                                            <strong style="color: #1E293B; font-weight: 600;">Schedule a Discussion</strong>
-                                            <br><span style="color: #64748B; font-size: 14px;">Let's talk about alternative approaches that can achieve your goals</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="display: table-row;">
-                                        <div style="display: table-cell; padding: 16px 0; vertical-align: top; width: 40px;">
-                                            <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">🔄</span>
-                                        </div>
-                                        <div style="display: table-cell; padding: 16px 0 16px 16px; vertical-align: top;">
-                                            <strong style="color: #1E293B; font-weight: 600;">Explore Alternatives</strong>
-                                            <br><span style="color: #64748B; font-size: 14px;">Consider alternative solutions that fit within project constraints</span>
-                                        </div>
-                                    </div>
-                                    @else
-                                    <div style="display: table-row;">
-                                        <div style="display: table-cell; padding: 16px 0; vertical-align: top; width: 40px;">
-                                            <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #3B82F6, #2563EB); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">📊</span>
-                                        </div>
-                                        <div style="display: table-cell; padding: 16px 0 16px 16px; vertical-align: top;">
-                                            <strong style="color: #1E293B; font-weight: 600;">Progress Updates</strong>
-                                            <br><span style="color: #64748B; font-size: 14px;">Monitor progress through your dashboard or wait for our regular updates</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="display: table-row;">
-                                        <div style="display: table-cell; padding: 16px 0; vertical-align: top; width: 40px;">
-                                            <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">💬</span>
-                                        </div>
-                                        <div style="display: table-cell; padding: 16px 0 16px 16px; vertical-align: top;">
-                                            <strong style="color: #1E293B; font-weight: 600;">Stay in Touch</strong>
-                                            <br><span style="color: #64748B; font-size: 14px;">Feel free to reach out if you have any questions or concerns</span>
-                                        </div>
-                                    </div>
-                                    @endif
                                 </div>
                                 
-                                <div style="background: {{ $revisionRequest->status === 'completed' ? '#EFF6FF' : $revisionRequest->status === 'rejected' ? '#FEF2F2' : '#FFFBEB' }}; border: 1px solid {{ $revisionRequest->status === 'completed' ? '#BFDBFE' : $revisionRequest->status === 'rejected' ? '#FECACA' : '#FDE68A' }}; border-radius: 8px; padding: 16px; margin-top: 24px;">
-                                    <p style="margin: 0; font-size: 14px; color: {{ $revisionRequest->status === 'completed' ? '#1D4ED8' : $revisionRequest->status === 'rejected' ? '#B91C1C' : '#92400E' }}; display: flex; align-items: flex-start;">
-                                        <span style="display: inline-block; margin-right: 8px; margin-top: 2px;">
-                                            @if($revisionRequest->status === 'completed')
-                                                🌟
-                                            @elseif($revisionRequest->status === 'rejected')
-                                                🤝
-                                            @else
-                                                📞
-                                            @endif
-                                        </span>
-                                        <span>
-                                            <strong>
-                                                @if($revisionRequest->status === 'completed')
-                                                    Quality Delivered!
-                                                @elseif($revisionRequest->status === 'rejected')
-                                                    Let's Collaborate!
-                                                @else
-                                                    We're Here to Help!
-                                                @endif
-                                            </strong> 
-                                            @if($revisionRequest->status === 'completed')
-                                                We're committed to ensuring every revision meets your exact expectations and enhances your project.
-                                            @elseif($revisionRequest->status === 'rejected')
-                                                Our team is always ready to find creative solutions that work within your project's scope and timeline.
-                                            @else
-                                                If you have any questions about the revision process or timeline, don't hesitate to reach out to our team.
-                                            @endif
-                                        </span>
-                                    </p>
+                                <div>
+                                    <div style="display: flex; align-items: flex-start;">
+                                        <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background-color: #EEF2FF; border-radius: 50%; margin-right: 16px; flex-shrink: 0;">
+                                            <span style="font-size: 14px; font-weight: 600; color: #3B82F6;">2</span>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 4px;">Provide Feedback</div>
+                                            <div style="font-size: 13px; color: #64748B; line-height: 1.5;">
+                                                Share your feedback on the completed revisions - we value your input
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                                @elseif($revisionRequest->status === 'rejected')
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: flex-start;">
+                                        <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background-color: #EEF2FF; border-radius: 50%; margin-right: 16px; flex-shrink: 0;">
+                                            <span style="font-size: 14px; font-weight: 600; color: #3B82F6;">1</span>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 4px;">Schedule a Discussion</div>
+                                            <div style="font-size: 13px; color: #64748B; line-height: 1.5;">
+                                                Let's talk about alternative approaches that can achieve your goals
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div style="display: flex; align-items: flex-start;">
+                                        <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background-color: #EEF2FF; border-radius: 50%; margin-right: 16px; flex-shrink: 0;">
+                                            <span style="font-size: 14px; font-weight: 600; color: #3B82F6;">2</span>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 4px;">Explore Alternatives</div>
+                                            <div style="font-size: 13px; color: #64748B; line-height: 1.5;">
+                                                Consider alternative solutions that fit within project constraints
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @else
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: flex-start;">
+                                        <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background-color: #EEF2FF; border-radius: 50%; margin-right: 16px; flex-shrink: 0;">
+                                            <span style="font-size: 14px; font-weight: 600; color: #3B82F6;">1</span>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 4px;">Progress Updates</div>
+                                            <div style="font-size: 13px; color: #64748B; line-height: 1.5;">
+                                                Monitor progress through your dashboard or wait for our regular updates
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div style="display: flex; align-items: flex-start;">
+                                        <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background-color: #EEF2FF; border-radius: 50%; margin-right: 16px; flex-shrink: 0;">
+                                            <span style="font-size: 14px; font-weight: 600; color: #3B82F6;">2</span>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 4px;">Stay in Touch</div>
+                                            <div style="font-size: 13px; color: #64748B; line-height: 1.5;">
+                                                Feel free to reach out if you have any questions or concerns
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
                             </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <div style="height: 1px; background-color: #E2E8F0;"></div>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); padding: 32px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
-                            <p style="margin: 0 0 16px; font-size: 16px; color: #475569;">
-                                <strong>
-                                    @if($revisionRequest->status === 'completed')
-                                        Proud of our work together,
-                                    @elseif($revisionRequest->status === 'rejected')
-                                        Ready to find solutions,
-                                    @else
-                                        Keeping you informed,
-                                    @endif
-                                </strong><br>
-                                <span style="background: linear-gradient(135deg, {{ $revisionRequest->status === 'approved' ? '#10B981, #059669' : $revisionRequest->status === 'rejected' ? '#EF4444, #DC2626' : '#F59E0B, #D97706' }}); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 600;">{{ config('app.name') }} Projects Team</span>
+                        <td style="background-color: #F8FAFC; padding: 32px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
+                            <p style="margin: 0 0 16px; font-size: 14px; font-weight: 500; color: #0F172A;">
+                                @if($revisionRequest->status === 'completed')
+                                    Proud of our work together,
+                                @elseif($revisionRequest->status === 'rejected')
+                                    Ready to find solutions,
+                                @else
+                                    Keeping you informed,
+                                @endif
+                                <br>
+                                <span style="color: #3B82F6;">{{ config('app.name') }} Team</span>
                             </p>
                             
                             <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #E2E8F0;">
-                                <p style="margin: 0; font-size: 12px; color: #94A3B8; line-height: 1.5;">
+                                <p style="margin: 0; font-size: 12px; color: #94A3B8; line-height: 1.6;">
                                     Revision status update for "{{ $revisionRequest->project->title ?? $revisionRequest->project->serviceRequest->project_name }}". 
                                     <br>
                                     @if($revisionRequest->status === 'completed')
@@ -383,8 +337,6 @@
                                     @else
                                         We're committed to keeping you updated throughout the revision process.
                                     @endif
-                                    <br><br>
-                                    <span style="color: #64748B;">Digital Innovation • Intelligence • Excellence</span>
                                 </p>
                             </div>
                         </td>

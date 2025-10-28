@@ -13,8 +13,7 @@
 @endpush
 
 @section('content')
-
-    <div class="max-w-8xl mx-auto pt-32 pb-32">
+    <div class="max-w-7xl mx-auto pt-32 pb-32">
         <!-- Header -->
         <div class="text-center mb-12">
             <h1 class="text-4xl font-bold text-neutral-900 mb-4">Get Started with Your Project</h1>
@@ -25,7 +24,7 @@
         </div>
 
         <!-- Service Pre-selected Notice -->
-        <div id="service-preselected-notice" class="hidden mb-8 max-w-4xl mx-auto">
+        <div id="service-preselected-notice" class="hidden mb-8 max-w-7xl mx-auto">
             <div class="bg-primary-50 border-l-4 border-primary-500 p-6 rounded-lg">
                 <div class="flex">
                     <svg class="w-6 h-6 text-primary-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -405,6 +404,10 @@
         </form>
     </div>
 
+    @endsection
+
+    @push('scripts')
+
     <script>
     document.addEventListener('DOMContentLoaded', async function() {
         // Populate service categories from API
@@ -661,5 +664,5 @@
         fileInput.dispatchEvent(new Event('change'));
     }
     </script>
-</body>
-</html>
+    
+    @endpush

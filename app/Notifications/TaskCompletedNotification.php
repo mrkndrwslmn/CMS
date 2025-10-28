@@ -2,24 +2,18 @@
 
 namespace App\Notifications;
 
+use App\Mail\TaskCompleted;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
 
 class TaskCompletedNotification extends Notification
 {
     use Queueable;
 
-    protected $task;
-    protected $completedBy;
-
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct($task, $completedBy)
-    {
-        $this->task = $task;
-        $this->completedBy = $completedBy;
+    public function __construct(
+        protected $task,
+        protected $completedBy
+    ) {
     }
 
     /**
@@ -33,16 +27,10 @@ class TaskCompletedNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail($notifiable): MailMessage
+    public function toMail($notifiable): TaskCompleted
     {
-        return (new MailMessage)
-            ->subject('Task Completed')
-            ->greeting('Hello ' . $notifiable->fullName . '!')
-            ->line("**{$this->completedBy->fullName}** has marked a task as completed.")
-            ->line("**Task:** {$this->task->taskTitle}")
-            ->line('Please review the completed task and take any necessary action.')
-            ->action('View Task', route('admin.tasks.show', $this->task->taskID))
-            ->line('Thank you for managing this project!');
+        return (new TaskCompleted($this->task, $this->completedBy, $notifiable))
+            ->onQueue('emails');
     }
 
     /**

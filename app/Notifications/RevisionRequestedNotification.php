@@ -2,23 +2,18 @@
 
 namespace App\Notifications;
 
+use App\Mail\RevisionRequestSubmitted;
 use App\Models\RevisionRequest;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class RevisionRequestedNotification extends Notification
 {
     use Queueable;
 
-    protected $revisionRequest;
-
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct(RevisionRequest $revisionRequest)
-    {
-        $this->revisionRequest = $revisionRequest;
+    public function __construct(
+        protected RevisionRequest $revisionRequest
+    ) {
     }
 
     /**
@@ -34,26 +29,10 @@ class RevisionRequestedNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): MailMessage
+    public function toMail(object $notifiable): RevisionRequestSubmitted
     {
-        $document = $this->revisionRequest->document;
-        $client = $this->revisionRequest->requestedBy;
-        
-        $sourceDescription = $this->revisionRequest->getSourceDescription();
-
-        return (new MailMessage)
-            ->subject('New Revision Request Submitted')
-            ->greeting('Hello ' . $notifiable->fullName . '!')
-            ->line('A client has requested a revision for a document.')
-            ->line('**Client:** ' . $client->fullName)
-            ->line('**Document:** ' . $document->fileName)
-            ->line('**Source:** ' . $sourceDescription)
-            ->line('**Reason:** ' . $this->revisionRequest->reason)
-            ->when($this->revisionRequest->requested_due_date, function($mail) {
-                return $mail->line('**Requested Due Date:** ' . $this->revisionRequest->requested_due_date->format('M d, Y'));
-            })
-            ->action('Review Revision Request', route('admin.revisions.show', $this->revisionRequest->id))
-            ->line('Please review and take appropriate action.');
+        return (new RevisionRequestSubmitted($this->revisionRequest, $notifiable))
+            ->onQueue('emails');
     }
 
     /**

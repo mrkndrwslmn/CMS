@@ -600,8 +600,14 @@
         Chart.defaults.font.size = 12;
         Chart.defaults.color = '#64748B';
         
-        // Get data from data attributes
-        const container = document.querySelector('.container-fluid');
+        // Get data from data attributes - with proper null check
+        const container = document.querySelector('[data-monthly-users]');
+        
+        if (!container) {
+            console.warn('Dashboard data container not found');
+            return;
+        }
+        
         const monthlyUsersData = JSON.parse(container.dataset.monthlyUsers || '[]');
         const taskStatsData = JSON.parse(container.dataset.taskStats || '[]');
         

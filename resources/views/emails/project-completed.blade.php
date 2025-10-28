@@ -14,238 +14,158 @@
     </noscript>
     <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 50%, #BFDBFE 100%); font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #334155;">
+
+<body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #334155;">
     
     <!-- Email Container -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 50%, #BFDBFE 100%); min-height: 100vh;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #F8FAFC;">
         <tr>
             <td align="center" style="padding: 40px 20px;">
                 
                 <!-- Main Content Card -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; box-shadow: 0 20px 40px rgba(59, 130, 246, 0.08), 0 8px 32px rgba(0, 0, 0, 0.03); border: 1px solid rgba(241, 245, 249, 0.9); overflow: hidden;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); overflow: hidden;">
                     
-                    <!-- Header with Completion Gradient -->
+                    <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 40px 40px 60px; text-align: center; position: relative;">
-                            <!-- Decorative Elements -->
-                            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(40px);"></div>
-                            <div style="position: absolute; bottom: -30px; left: -30px; width: 60px; height: 60px; background: rgba(6, 182, 212, 0.3); border-radius: 50%; filter: blur(30px);"></div>
-                            
-                            <!-- Completion Icon -->
-                            <div style="display: inline-block; width: 80px; height: 80px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; margin-bottom: 24px; line-height: 80px; font-size: 40px;">🎯</div>
-                            
-                            <!-- Logo/Brand -->
-                            <h1 style="margin: 0 0 8px; font-family: 'Playfair Display', Georgia, serif; font-size: 32px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.02em; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                        <td style="background-color: #3B82F6; padding: 48px 40px; text-align: center;">
+                            <h1 style="margin: 0 0 8px; font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em;">
                                 TREIS ADIUTOR
                             </h1>
-                            <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 16px; font-weight: 500;">Projects Department</p>
+                            <p style="margin: 0; font-size: 13px; color: rgba(255, 255, 255, 0.9); letter-spacing: 0.05em;">
+                                DIGITAL INNOVATION • INTELLIGENCE • EXCELLENCE
+                            </p>
                         </td>
                     </tr>
                     
-                    <!-- Completion Message -->
+                    <!-- Main Message -->
                     <tr>
-                        <td style="padding: 0 40px 32px; text-align: center;">
-                            <div style="margin-top: -30px; background: #FFFFFF; border-radius: 16px; padding: 32px; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.08); border: 1px solid #F1F5F9;">
-                                <h2 style="margin: 0 0 16px; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; color: #1E293B; letter-spacing: -0.02em;">
-                                    Project Completed Successfully!
-                                </h2>
-                                <p style="margin: 0; font-size: 16px; color: #64748B; line-height: 1.6;">
-                                    Dear {{ $project->client->fullName ?? $project->client->full_name ?? 'Valued Client' }}, we're excited to announce that your project <strong style="color: #1E293B;">"{{ $project->project_name }}"</strong> has been completed successfully!
-                                </p>
-                            </div>
+                        <td style="padding: 40px 40px 32px;">
+                            <h2 style="margin: 0 0 12px; font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 600; color: #0F172A; letter-spacing: -0.01em;">
+                                Project Completed Successfully
+                            </h2>
+                            <p style="margin: 0; font-size: 15px; color: #64748B; line-height: 1.6;">
+                                Your project has been completed and is ready for delivery. All deliverables are now available in your dashboard.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <div style="height: 1px; background-color: #E2E8F0;"></div>
                         </td>
                     </tr>
                     
                     <!-- Project Summary Section -->
                     <tr>
-                        <td style="padding: 0 40px 32px;">
-                            <div style="background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); border-radius: 16px; padding: 32px; border: 1px solid #E2E8F0; position: relative; overflow: hidden;">
-                                <!-- Decorative accent -->
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10B981, #059669);"></div>
-                                
-                                <h3 style="margin: 0 0 24px; font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 600; color: #1E293B; display: flex; align-items: center;">
-                                    <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 8px; margin-right: 12px; position: relative;">
-                                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #FFFFFF; font-size: 16px;">📊</span>
-                                    </span>
-                                    Project Summary
-                                </h3>
-                                
-                                <div style="background: #FFFFFF; border-radius: 12px; padding: 24px; border: 1px solid #E2E8F0; margin-bottom: 20px;">
-                                    <div style="display: table; width: 100%;">
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Project Name</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="font-size: 16px; font-weight: 600; color: #1E293B;">{{ $project->project_name }}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Service Type</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="background: linear-gradient(135deg, #DCFCE7, #BBF7D0); color: #047857; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; border: 1px solid #BBF7D0;">{{ $project->service_type }}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Completed Date</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="font-size: 16px; color: #1E293B; font-weight: 500;">{{ $project->completed_at->format('M d, Y') }}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Duration</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="font-size: 16px; color: #1E293B; font-weight: 500;">{{ $project->created_at->diffInDays($project->completed_at) }} days</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div style="background: #DCFCE7; border: 1px solid #BBF7D0; border-radius: 8px; padding: 16px;">
-                                    <p style="margin: 0; font-size: 14px; color: #065F46; display: flex; align-items: flex-start;">
-                                        <span style="display: inline-block; margin-right: 8px; margin-top: 2px;">🏆</span>
-                                        <span><strong>Success!</strong> Your project has been delivered on time and meets all specified requirements.</span>
-                                    </p>
-                                </div>
-                            </div>
+                        <td style="padding: 32px 40px;">
+                            <h3 style="margin: 0 0 20px; font-size: 14px; font-weight: 600; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Project Summary
+                            </h3>
+                            
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td style="padding: 12px 0; vertical-align: top; width: 140px;">
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;">Project Name</label>
+                                    </td>
+                                    <td style="padding: 12px 0; vertical-align: top;">
+                                        <span style="font-size: 15px; color: #1E293B; font-weight: 500;">{{ $project->project_name }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px 0; vertical-align: top;">
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;">Service Type</label>
+                                    </td>
+                                    <td style="padding: 12px 0; vertical-align: top;">
+                                        <span style="font-size: 15px; color: #1E293B; font-weight: 500;">{{ $project->service_type ?? 'N/A' }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px 0; vertical-align: top;">
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;">Completed Date</label>
+                                    </td>
+                                    <td style="padding: 12px 0; vertical-align: top;">
+                                        <span style="font-size: 15px; color: #1E293B; font-weight: 500;">{{ $project->completed_at ? $project->completed_at->format('M d, Y') : 'N/A' }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px 0; vertical-align: top;">
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;">Duration</label>
+                                    </td>
+                                    <td style="padding: 12px 0; vertical-align: top;">
+                                        <span style="font-size: 15px; color: #1E293B; font-weight: 500;">{{ $project->completed_at ? $project->created_at->diffInDays($project->completed_at) : 'N/A' }} days</span>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                     
-                    <!-- Deliverables Section -->
+                    <!-- Divider -->
                     <tr>
-                        <td style="padding: 0 40px 32px;">
-                            <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-radius: 16px; padding: 32px; border: 1px solid #BFDBFE; position: relative; overflow: hidden;">
-                                <!-- Decorative accent -->
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #3B82F6, #06B6D4);"></div>
-                                
-                                <h3 style="margin: 0 0 20px; font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 600; color: #1E293B; display: flex; align-items: center;">
-                                    <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #3B82F6, #2563EB); border-radius: 8px; margin-right: 12px; position: relative;">
-                                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #FFFFFF; font-size: 16px;">📦</span>
-                                    </span>
-                                    Your Deliverables
-                                </h3>
-                                
-                                <p style="margin: 0 0 24px; font-size: 16px; color: #475569; line-height: 1.6;">
-                                    All project deliverables are now available in your client dashboard. You can download files, review documentation, and access all project materials.
-                                </p>
-                                
-                                <div style="background: rgba(255, 255, 255, 0.8); border-radius: 12px; padding: 20px;">
-                                    <div style="display: table; width: 100%;">
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 40px;">
-                                                <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">📄</span>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0 12px 16px; vertical-align: top;">
-                                                <strong style="color: #1E293B; font-weight: 600;">Final Documentation</strong>
-                                                <br><span style="color: #64748B; font-size: 14px;">Complete project documentation and user guides</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 40px;">
-                                                <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #06B6D4, #22D3EE); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">💾</span>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0 12px 16px; vertical-align: top;">
-                                                <strong style="color: #1E293B; font-weight: 600;">Source Files & Assets</strong>
-                                                <br><span style="color: #64748B; font-size: 14px;">All project files and digital assets</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 40px;">
-                                                <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #8B5CF6, #7C3AED); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">🔧</span>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0 12px 16px; vertical-align: top;">
-                                                <strong style="color: #1E293B; font-weight: 600;">Support Resources</strong>
-                                                <br><span style="color: #64748B; font-size: 14px;">Maintenance guides and support documentation</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <td style="padding: 0 40px;">
+                            <div style="height: 1px; background-color: #E2E8F0;"></div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Deliverables -->
+                    <tr>
+                        <td style="padding: 32px 40px;">
+                            <h3 style="margin: 0 0 20px; font-size: 14px; font-weight: 600; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Your Deliverables
+                            </h3>
+                            
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td style="padding: 12px 0; vertical-align: top; width: 24px;">
+                                        <div style="font-size: 14px; font-weight: 600; color: #3B82F6;">1</div>
+                                    </td>
+                                    <td style="padding: 12px 0 12px 16px; vertical-align: top;">
+                                        <div style="font-size: 14px; font-weight: 500; color: #0F172A; margin-bottom: 2px;">Final Documentation</div>
+                                        <div style="font-size: 13px; color: #64748B;">Complete project documentation and user guides</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px 0; vertical-align: top; width: 24px;">
+                                        <div style="font-size: 14px; font-weight: 600; color: #3B82F6;">2</div>
+                                    </td>
+                                    <td style="padding: 12px 0 12px 16px; vertical-align: top;">
+                                        <div style="font-size: 14px; font-weight: 500; color: #0F172A; margin-bottom: 2px;">Source Files & Assets</div>
+                                        <div style="font-size: 13px; color: #64748B;">All project files and digital assets</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px 0; vertical-align: top; width: 24px;">
+                                        <div style="font-size: 14px; font-weight: 600; color: #3B82F6;">3</div>
+                                    </td>
+                                    <td style="padding: 12px 0; vertical-align: top;">
+                                        <div style="font-size: 14px; font-weight: 500; color: #0F172A; margin-bottom: 2px;">Support & Maintenance</div>
+                                        <div style="font-size: 13px; color: #64748B;">30-day free support and maintenance included</div>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                     
                     <!-- CTA Button -->
                     <tr>
-                        <td style="padding: 0 40px 32px; text-align: center;">
-                            <a href="{{ route('client.dashboard') }}" style="display: inline-block; background: linear-gradient(135deg, #3B82F6, #2563EB); color: #FFFFFF; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; letter-spacing: 0.01em; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25), 0 4px 8px rgba(59, 130, 246, 0.1); transition: all 0.3s ease; border: none; cursor: pointer;">
-                                <span style="display: inline-block; margin-right: 8px;">📁</span>
+                        <td style="padding: 32px 40px 0; text-align: center;">
+                            <a href="{{ url('/dashboard') }}" style="display: inline-block; background-color: #3B82F6; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 500; font-size: 14px; letter-spacing: 0.01em;">
                                 Access Your Deliverables
                             </a>
                         </td>
                     </tr>
                     
-                    <!-- Support & Next Steps -->
-                    <tr>
-                        <td style="padding: 0 40px 40px;">
-                            <div style="background: #FFFFFF; border-radius: 16px; padding: 32px; border: 1px solid #E2E8F0;">
-                                <h3 style="margin: 0 0 24px; font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-weight: 600; color: #1E293B; text-align: center;">
-                                    Thank You & Next Steps
-                                </h3>
-                                
-                                <p style="margin: 0 0 24px; font-size: 16px; color: #64748B; line-height: 1.6; text-align: center;">
-                                    Thank you for choosing TREIS ADIUTOR. We're proud to have delivered your project successfully and hope it exceeds your expectations.
-                                </p>
-                                
-                                <div style="display: table; width: 100%;">
-                                    <div style="display: table-row;">
-                                        <div style="display: table-cell; padding: 16px 0; vertical-align: top; width: 40px;">
-                                            <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #F59E0B, #D97706); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">⭐</span>
-                                        </div>
-                                        <div style="display: table-cell; padding: 16px 0 16px 16px; vertical-align: top;">
-                                            <strong style="color: #1E293B; font-weight: 600;">Share Your Feedback</strong>
-                                            <br><span style="color: #64748B; font-size: 14px;">We'd love to hear about your experience</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="display: table-row;">
-                                        <div style="display: table-cell; padding: 16px 0; vertical-align: top; width: 40px;">
-                                            <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #8B5CF6, #7C3AED); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">🛡️</span>
-                                        </div>
-                                        <div style="display: table-cell; padding: 16px 0 16px 16px; vertical-align: top;">
-                                            <strong style="color: #1E293B; font-weight: 600;">30-Day Support Included</strong>
-                                            <br><span style="color: #64748B; font-size: 14px;">Free support and maintenance for 30 days</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="display: table-row;">
-                                        <div style="display: table-cell; padding: 16px 0; vertical-align: top; width: 40px;">
-                                            <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #06B6D4, #22D3EE); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">🚀</span>
-                                        </div>
-                                        <div style="display: table-cell; padding: 16px 0 16px 16px; vertical-align: top;">
-                                            <strong style="color: #1E293B; font-weight: 600;">Future Projects</strong>
-                                            <br><span style="color: #64748B; font-size: 14px;">Ready for your next innovation? Let's discuss!</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    
                     <!-- Footer -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); padding: 32px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
-                            <p style="margin: 0 0 16px; font-size: 16px; color: #475569;">
-                                <strong>Congratulations from,</strong><br>
-                                <span style="background: linear-gradient(135deg, #10B981, #059669); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 600;">{{ config('app.name') }} Projects Team</span>
+                        <td style="background-color: #F8FAFC; padding: 32px 40px; text-align: center; border-top: 1px solid #E2E8F0; margin-top: 32px;">
+                            <p style="margin: 0; font-size: 12px; color: #94A3B8; line-height: 1.6;">
+                                Thank you for working with us. We appreciate your business.<br>
+                                For any questions, contact us at <a href="mailto:support@treisadiutor.com" style="color: #3B82F6; text-decoration: none;">support@treisadiutor.com</a>
                             </p>
                             
-                            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #E2E8F0;">
-                                <p style="margin: 0; font-size: 12px; color: #94A3B8; line-height: 1.5;">
-                                    Project completion notification for {{ $project->client->fullName ?? $project->client->full_name ?? 'Valued Client' }}. 
-                                    <br>Your satisfaction is our priority. Contact us anytime for support.
-                                    <br><br>
-                                    <span style="color: #64748B;">Digital Innovation • Intelligence • Excellence</span>
+                            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #E2E8F0;">
+                                <p style="margin: 0; font-size: 11px; color: #CBD5E1; letter-spacing: 0.05em;">
+                                    © 2025 TREIS ADIUTOR. All rights reserved.
                                 </p>
                             </div>
                         </td>

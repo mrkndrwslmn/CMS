@@ -2,24 +2,18 @@
 
 namespace App\Notifications;
 
+use App\Mail\ProjectCompleted;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
 
 class ProjectCompletedNotification extends Notification
 {
     use Queueable;
 
-    protected $projectId;
-    protected $projectTitle;
-
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct(int $projectId, string $projectTitle)
-    {
-        $this->projectId = $projectId;
-        $this->projectTitle = $projectTitle;
+    public function __construct(
+        protected int $projectId,
+        protected string $projectTitle
+    ) {
     }
 
     /**
@@ -33,16 +27,10 @@ class ProjectCompletedNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail($notifiable): MailMessage
+    public function toMail($notifiable): ProjectCompleted
     {
-        return (new MailMessage)
-            ->subject('Your Project Has Been Completed!')
-            ->greeting('Hello ' . $notifiable->fullName . '!')
-            ->line("Great news! Your project **{$this->projectTitle}** has been completed.")
-            ->line('Our team has finished working on your project and it is now ready for your review.')
-            ->action('View Project', route('client.projects.show', $this->projectId))
-            ->line('If you have any questions or feedback, please don\'t hesitate to contact us.')
-            ->line('Thank you for choosing our services!');
+        return (new ProjectCompleted($this->projectId, $this->projectTitle, $notifiable))
+            ->onQueue('emails');
     }
 
     /**

@@ -154,13 +154,11 @@ class ServiceRequestController extends Controller
         }
 
         // Create notification for admins using Laravel's notification structure
-        $userFullName = $isNewUser ? $request->full_name : (Auth::user()->fullName ?? 'Unknown');
+        $serviceRequest = \App\Models\ServiceRequest::find($serviceRequestId);
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new NewServiceRequestNotification(
-                $serviceRequestId,
-                $request->project_name,
-                $userFullName,
+                $serviceRequest,
                 $isNewUser
             ));
         }

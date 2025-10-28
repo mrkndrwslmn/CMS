@@ -14,161 +14,161 @@
     </noscript>
     <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 50%, #BFDBFE 100%); font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #334155;">
+<body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #334155;">
     
     <!-- Email Container -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 50%, #BFDBFE 100%); min-height: 100vh;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #F8FAFC;">
         <tr>
             <td align="center" style="padding: 40px 20px;">
                 
                 <!-- Main Content Card -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; box-shadow: 0 20px 40px rgba(59, 130, 246, 0.08), 0 8px 32px rgba(0, 0, 0, 0.03); border: 1px solid rgba(241, 245, 249, 0.9); overflow: hidden;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); overflow: hidden;">
                     
-                    <!-- Header with Success Gradient -->
+                    <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 40px 40px 60px; text-align: center; position: relative;">
-                            <!-- Decorative Elements -->
-                            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(40px);"></div>
-                            <div style="position: absolute; bottom: -30px; left: -30px; width: 60px; height: 60px; background: rgba(6, 182, 212, 0.3); border-radius: 50%; filter: blur(30px);"></div>
-                            
-                            <!-- Approval Icon -->
-                            <div style="display: inline-block; width: 80px; height: 80px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; margin-bottom: 24px; line-height: 80px; font-size: 40px;">✅</div>
-                            
-                            <!-- Logo/Brand -->
-                            <h1 style="margin: 0 0 8px; font-family: 'Playfair Display', Georgia, serif; font-size: 32px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.02em; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                        <td style="background-color: #3B82F6; padding: 48px 40px; text-align: center;">
+                            <h1 style="margin: 0 0 8px; font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em;">
                                 TREIS ADIUTOR
                             </h1>
-                            <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 16px; font-weight: 500;">Projects Department</p>
+                            <p style="margin: 0; font-size: 13px; color: #FFFFFF; letter-spacing: 0.05em;">
+                                DIGITAL INNOVATION • INTELLIGENCE • EXCELLENCE
+                            </p>
                         </td>
                     </tr>
                     
-                    <!-- Approval Message -->
+                    <!-- Message -->
                     <tr>
-                        <td style="padding: 0 40px 32px; text-align: center;">
-                            <div style="margin-top: -30px; background: #FFFFFF; border-radius: 16px; padding: 32px; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.08); border: 1px solid #F1F5F9;">
-                                <h2 style="margin: 0 0 16px; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; color: #1E293B; letter-spacing: -0.02em;">
-                                    Revision Approved!
-                                </h2>
-                                <p style="margin: 0; font-size: 16px; color: #64748B; line-height: 1.6;">
-                                    Dear {{ $revision->project->client->fullName ?? $revision->project->client->full_name ?? 'Valued Client' }}, great news! Your revision request for <strong style="color: #1E293B;">"{{ $revision->project->project_name }}"</strong> has been approved.
-                                </p>
-                            </div>
+                        <td style="padding: 40px 40px 32px;">
+                            <h2 style="margin: 0 0 12px; font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 600; color: #0F172A; letter-spacing: -0.01em;">
+                                Revision Approved
+                            </h2>
+                            <p style="margin: 0; font-size: 15px; color: #64748B; line-height: 1.6;">
+                                Your revision request for <strong style="color: #0F172A;">"{{ $revision->project->project_name }}"</strong> has been approved.
+                            </p>
                         </td>
                     </tr>
                     
-                    <!-- Revision Details Section -->
+                    <!-- Divider -->
                     <tr>
-                        <td style="padding: 0 40px 32px;">
-                            <div style="background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); border-radius: 16px; padding: 32px; border: 1px solid #E2E8F0; position: relative; overflow: hidden;">
-                                <!-- Decorative accent -->
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10B981, #059669);"></div>
-                                
-                                <h3 style="margin: 0 0 24px; font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 600; color: #1E293B; display: flex; align-items: center;">
-                                    <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 8px; margin-right: 12px; position: relative;">
-                                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #FFFFFF; font-size: 16px;">📝</span>
-                                    </span>
-                                    Revision Details
-                                </h3>
-                                
-                                <div style="background: #FFFFFF; border-radius: 12px; padding: 24px; border: 1px solid #E2E8F0; margin-bottom: 20px;">
-                                    <div style="display: table; width: 100%;">
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Project</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="font-size: 16px; font-weight: 600; color: #1E293B;">{{ $revision->project->project_name }}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Revision Type</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="background: linear-gradient(135deg, #DCFCE7, #BBF7D0); color: #047857; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; border: 1px solid #BBF7D0;">{{ $revision->revision_type ?? 'Standard Revision' }}</span>
+                        <td style="padding: 0 40px;">
+                            <div style="height: 1px; background-color: #E2E8F0;"></div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Revision Details -->
+                    <tr>
+                        <td style="padding: 32px 40px;">
+                            <h3 style="margin: 0 0 20px; font-size: 14px; font-weight: 600; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Revision Details
+                            </h3>
+                            
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px;">
+                                <tr>
+                                    <td style="padding: 20px 24px;">
+                                        <div style="margin-bottom: 16px;">
+                                            <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                Project
+                                            </label>
+                                            <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
+                                                {{ $revision->project->project_name }}
                                             </div>
                                         </div>
                                         
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Approved Date</label>
+                                        <div style="margin-bottom: 16px;">
+                                            <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                Revision Type
+                                            </label>
+                                            <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
+                                                {{ $revision->revision_type ?? 'Standard Revision' }}
                                             </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="font-size: 16px; color: #1E293B; font-weight: 500;">{{ $revision->approved_at->format('M d, Y') }}</span>
+                                        </div>
+                                        
+                                        <div style="margin-bottom: 16px;">
+                                            <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                Approved Date
+                                            </label>
+                                            <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
+                                                {{ $revision->approved_at->format('M d, Y') }}
                                             </div>
                                         </div>
                                         
                                         @if($revision->estimated_completion)
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 140px;">
-                                                <label style="font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Expected Completion</label>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top;">
-                                                <span style="font-size: 16px; color: #059669; font-weight: 600;">{{ \Carbon\Carbon::parse($revision->estimated_completion)->format('M d, Y') }}</span>
+                                        <div>
+                                            <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                                Expected Completion
+                                            </label>
+                                            <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
+                                                {{ \Carbon\Carbon::parse($revision->estimated_completion)->format('M d, Y') }}
                                             </div>
                                         </div>
                                         @endif
-                                    </div>
-                                </div>
-                                
-                                @if($revision->description)
-                                <div style="background: #FFFFFF; border-radius: 12px; padding: 20px; border: 1px solid #E2E8F0;">
-                                    <h4 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: #1E293B;">Revision Description:</h4>
-                                    <p style="margin: 0; font-size: 14px; color: #475569; line-height: 1.6;">{{ $revision->description }}</p>
-                                </div>
-                                @endif
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            @if($revision->description)
+                            <!-- Description -->
+                            <div style="margin-top: 16px; padding: 12px 16px; background-color: #EEF2FF; border-left: 3px solid #3B82F6; border-radius: 4px;">
+                                <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.5;">
+                                    {{ $revision->description }}
+                                </p>
                             </div>
+                            @endif
+                        </td>
+                    </tr>
+                    
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <div style="height: 1px; background-color: #E2E8F0;"></div>
                         </td>
                     </tr>
                     
                     <!-- Next Steps Section -->
                     <tr>
-                        <td style="padding: 0 40px 32px;">
-                            <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-radius: 16px; padding: 32px; border: 1px solid #BFDBFE; position: relative; overflow: hidden;">
-                                <!-- Decorative accent -->
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #3B82F6, #06B6D4);"></div>
-                                
-                                <h3 style="margin: 0 0 20px; font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 600; color: #1E293B; display: flex; align-items: center;">
-                                    <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #3B82F6, #2563EB); border-radius: 8px; margin-right: 12px; position: relative;">
-                                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #FFFFFF; font-size: 16px;">🚀</span>
-                                    </span>
-                                    What Happens Next?
-                                </h3>
-                                
-                                <p style="margin: 0 0 24px; font-size: 16px; color: #475569; line-height: 1.6;">
-                                    Our team will now begin implementing the approved revisions. You can track the progress in your client dashboard and we'll notify you upon completion.
-                                </p>
-                                
-                                <div style="background: rgba(255, 255, 255, 0.8); border-radius: 12px; padding: 20px;">
-                                    <div style="display: table; width: 100%;">
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 40px;">
-                                                <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #3B82F6, #2563EB); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">1️⃣</span>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0 12px 16px; vertical-align: top;">
-                                                <strong style="color: #1E293B; font-weight: 600;">Revision Implementation</strong>
-                                                <br><span style="color: #64748B; font-size: 14px;">Our team begins work on your approved changes</span>
+                        <td style="padding: 32px 40px;">
+                            <h3 style="margin: 0 0 20px; font-size: 14px; font-weight: 600; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em;">
+                                What Happens Next
+                            </h3>
+                            
+                            <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 24px;">
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: flex-start; margin-bottom: 16px;">
+                                        <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background-color: #EEF2FF; border-radius: 50%; margin-right: 16px; flex-shrink: 0;">
+                                            <span style="font-size: 14px; font-weight: 600; color: #3B82F6;">1</span>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 4px;">Revision Implementation</div>
+                                            <div style="font-size: 13px; color: #64748B; line-height: 1.5;">
+                                                Our team will now begin implementing the approved changes.
                                             </div>
                                         </div>
-                                        
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 40px;">
-                                                <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">2️⃣</span>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0 12px 16px; vertical-align: top;">
-                                                <strong style="color: #1E293B; font-weight: 600;">Progress Updates</strong>
-                                                <br><span style="color: #64748B; font-size: 14px;">Regular updates on implementation progress</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: flex-start; margin-bottom: 16px;">
+                                        <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background-color: #EEF2FF; border-radius: 50%; margin-right: 16px; flex-shrink: 0;">
+                                            <span style="font-size: 14px; font-weight: 600; color: #3B82F6;">2</span>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 4px;">Progress Updates</div>
+                                            <div style="font-size: 13px; color: #64748B; line-height: 1.5;">
+                                                You'll receive regular updates on implementation progress through your dashboard.
                                             </div>
                                         </div>
-                                        
-                                        <div style="display: table-row;">
-                                            <div style="display: table-cell; padding: 12px 0; vertical-align: top; width: 40px;">
-                                                <span style="display: inline-block; width: 32px; height: 32px; background: linear-gradient(135deg, #8B5CF6, #7C3AED); border-radius: 8px; text-align: center; line-height: 32px; color: #FFFFFF; font-size: 16px;">3️⃣</span>
-                                            </div>
-                                            <div style="display: table-cell; padding: 12px 0 12px 16px; vertical-align: top;">
-                                                <strong style="color: #1E293B; font-weight: 600;">Revision Delivery</strong>
-                                                <br><span style="color: #64748B; font-size: 14px;">Completed revisions delivered for your review</span>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div style="display: flex; align-items: flex-start;">
+                                        <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background-color: #EEF2FF; border-radius: 50%; margin-right: 16px; flex-shrink: 0;">
+                                            <span style="font-size: 14px; font-weight: 600; color: #3B82F6;">3</span>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 4px;">Completion & Delivery</div>
+                                            <div style="font-size: 13px; color: #64748B; line-height: 1.5;">
+                                                We'll notify you when your revisions are ready for review.
                                             </div>
                                         </div>
                                     </div>
@@ -177,51 +177,53 @@
                         </td>
                     </tr>
                     
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <div style="height: 1px; background-color: #E2E8F0;"></div>
+                        </td>
+                    </tr>
+                    
                     <!-- CTA Button -->
                     <tr>
-                        <td style="padding: 0 40px 32px; text-align: center;">
-                            <a href="{{ route('client.dashboard') }}" style="display: inline-block; background: linear-gradient(135deg, #3B82F6, #2563EB); color: #FFFFFF; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; letter-spacing: 0.01em; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25), 0 4px 8px rgba(59, 130, 246, 0.1); transition: all 0.3s ease; border: none; cursor: pointer;">
-                                <span style="display: inline-block; margin-right: 8px;">📊</span>
-                                Track Progress
+                        <td style="padding: 32px 40px; text-align: center;">
+                            <a href="{{ route('client.dashboard') }}" style="display: inline-block; background-color: #3B82F6; color: #FFFFFF; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 500; font-size: 14px; letter-spacing: 0.01em;">
+                                Track Progress in Dashboard
                             </a>
                         </td>
                     </tr>
                     
                     <!-- Support Section -->
                     <tr>
-                        <td style="padding: 0 40px 40px;">
-                            <div style="background: #FFFFFF; border-radius: 16px; padding: 32px; border: 1px solid #E2E8F0; text-align: center;">
-                                <h3 style="margin: 0 0 16px; font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-weight: 600; color: #1E293B;">
-                                    Questions About Your Revision?
-                                </h3>
-                                <p style="margin: 0 0 20px; font-size: 16px; color: #64748B; line-height: 1.6;">
-                                    Our team is here to ensure your revision meets your exact requirements. Don't hesitate to reach out with any questions.
-                                </p>
-                                
-                                <div style="background: #DCFCE7; border: 1px solid #BBF7D0; border-radius: 8px; padding: 16px;">
-                                    <p style="margin: 0; font-size: 14px; color: #065F46; display: flex; align-items: flex-start;">
-                                        <span style="display: inline-block; margin-right: 8px; margin-top: 2px;">💬</span>
-                                        <span><strong>Direct Communication:</strong> Use the project dashboard to communicate directly with your assigned team.</span>
-                                    </p>
-                                </div>
-                            </div>
+                        <td style="padding: 32px 40px;">
+                            <h3 style="margin: 0 0 16px; font-size: 14px; font-weight: 600; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Questions or Concerns?
+                            </h3>
+                            <p style="margin: 0; font-size: 14px; color: #64748B; line-height: 1.6;">
+                                Our team is here to help. You can communicate directly with your assigned team through your project dashboard, or reply to this email with any questions.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <div style="height: 1px; background-color: #E2E8F0;"></div>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); padding: 32px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
-                            <p style="margin: 0 0 16px; font-size: 16px; color: #475569;">
-                                <strong>Thanks,</strong><br>
-                                <span style="background: linear-gradient(135deg, #10B981, #059669); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 600;">{{ config('app.name') }} Projects Team</span>
+                        <td style="background-color: #F8FAFC; padding: 32px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
+                            <p style="margin: 0 0 16px; font-size: 14px; font-weight: 500; color: #0F172A;">
+                                Best regards,<br>
+                                <span style="color: #3B82F6;">{{ config('app.name') }} Team</span>
                             </p>
                             
                             <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #E2E8F0;">
-                                <p style="margin: 0; font-size: 12px; color: #94A3B8; line-height: 1.5;">
-                                    Revision approval notification for {{ $revision->project->client->fullName ?? $revision->project->client->full_name ?? 'Valued Client' }}. 
-                                    <br>We're committed to delivering exactly what you envision.
-                                    <br><br>
-                                    <span style="color: #64748B;">Digital Innovation • Intelligence • Excellence</span>
+                                <p style="margin: 0; font-size: 12px; color: #94A3B8; line-height: 1.6;">
+                                    Revision approved notification for {{ $revision->project->client->fullName ?? $revision->project->client->full_name ?? 'Client' }}. 
+                                    <br>Thank you for your continued trust in our services.
                                 </p>
                             </div>
                         </td>

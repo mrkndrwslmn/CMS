@@ -49,6 +49,16 @@
         [x-cloak] {
             display: none !important;
         }
+
+        /* Hide scrollbar while keeping scroll functionality */
+        nav.overflow-y-auto {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;      /* Firefox */
+        }
+
+        nav.overflow-y-auto::-webkit-scrollbar {
+            display: none;              /* Chrome, Safari and Opera */
+        }
     </style>
     @stack('styles')
 </head>
