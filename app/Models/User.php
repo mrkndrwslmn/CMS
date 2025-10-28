@@ -26,6 +26,10 @@ class User extends Authenticatable
         'phoneNumber',
         'profilePic',
         'status',
+        'auth0_id',
+        'auth_provider',
+        'auth0_profile',
+        'last_auth0_sync',
     ];
 
     /**
@@ -48,6 +52,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'auth0_profile' => 'array',
+            'last_auth0_sync' => 'datetime',
         ];
     }
 
@@ -102,6 +108,113 @@ class User extends Authenticatable
             'adiutor' => 'adiutor.dashboard',
             default => 'login'
         };
+    }
+
+    /**
+     * Auth0 Integration Methods
+     */
+
+    /**
+     * Check if user is authenticated via Auth0
+     */
+    public function isAuth0User(): bool
+    {
+        return $this->auth_provider === 'auth0' && !empty($this->auth0_id);
+    }
+
+    /**
+     * Check if user is authenticated via traditional login
+     */
+    public function isLocalUser(): bool
+    {
+        return $this->auth_provider === 'local';
+    }
+
+    /**
+     * Check if user can link their account to Auth0
+     */
+    public function canLinkAuth0(): bool
+    {
+        return empty($this->auth0_id) && $this->isLocalUser();
+    }
+
+    /**
+     * Check if user can unlink their Auth0 account
+     */
+    public function canUnlinkAuth0(): bool
+    {
+        return $this->isAuth0User() && !empty($this->password);
+    }
+
+    /**
+     * Link user account to Auth0
+     */
+    public function linkAuth0Profile(array $auth0Profile): void
+    {
+        $this->update([
+            'auth0_id' => $auth0Profile['sub'],
+            'auth_provider' => 'auth0',
+            'auth0_profile' => $auth0Profile,
+            'last_auth0_sync' => now(),
+            'email_verified_at' => $auth0Profile['email_verified'] ?? false ? now() : null,
+        ]);
+    }
+
+    /**
+     * Unlink user account from Auth0
+     */
+    public function unlinkAuth0(): void
+    {
+        $this->update([
+            'auth0_id' => null,
+            'auth_provider' => 'local',
+            'auth0_profile' => null,
+            'last_auth0_sync' => null,
+        ]);
+    }
+
+    /**
+     * Sync user profile with Auth0 data
+     */
+    public function syncAuth0Profile(array $auth0Profile): void
+    {
+        $updates = [
+            'auth0_profile' => $auth0Profile,
+            'last_auth0_sync' => now(),
+        ];
+
+        // Optionally sync email if it changed in Auth0
+        if (isset($auth0Profile['email']) && $auth0Profile['email'] !== $this->email) {
+            $updates['email'] = $auth0Profile['email'];
+        }
+
+        // Optionally sync name if it changed in Auth0
+        if (isset($auth0Profile['name']) && $auth0Profile['name'] !== $this->fullName) {
+            $updates['fullName'] = $auth0Profile['name'];
+        }
+
+        // Update email verification status
+        if (isset($auth0Profile['email_verified'])) {
+            $updates['email_verified_at'] = $auth0Profile['email_verified'] ? now() : null;
+        }
+
+        $this->update($updates);
+    }
+
+    /**
+     * Get Auth0 profile picture URL
+     */
+    public function getAuth0ProfilePicture(): ?string
+    {
+        return $this->auth0_profile['picture'] ?? null;
+    }
+
+    /**
+     * Get the best available profile picture (Auth0 or local)
+     */
+    public function getBestProfilePicture(): ?string
+    {
+        return $this->getAuth0ProfilePicture() ?: $this->profilePic;
     }
 
     /**

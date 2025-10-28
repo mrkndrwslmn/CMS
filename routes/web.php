@@ -101,6 +101,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+    
+    // Social Login Routes
+    Route::get('/auth/social', [\App\Http\Controllers\Auth\SocialLoginController::class, 'redirectToProvider'])->name('social.login');
+    Route::get('/auth0/callback', [\App\Http\Controllers\Auth\SocialLoginController::class, 'handleCallback'])->name('social.callback');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
