@@ -5,6 +5,8 @@ namespace App\Mail;
 use App\Models\ServiceRequest;
 use App\Services\EmailSenderService;
 use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Address;
 
 class PaymentConfirmed extends BaseMailable
 {
@@ -23,6 +25,29 @@ class PaymentConfirmed extends BaseMailable
         $this->serviceRequest = $serviceRequest;
         
         parent::__construct();
+    }
+
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
+    {
+        $sender = $this->senderService->getSender($this->senderType);
+        $client = $this->serviceRequest->client;
+        
+        $envelope = new Envelope(
+            from: new Address($sender['address'], $sender['name']),
+            subject: $this->getSubject(),
+        );
+
+        // Set the recipient email if available
+        if ($client && $client->email) {
+            $envelope->to(
+                new Address($client->email, $client->name ?? '')
+            );
+        }
+
+        return $envelope;
     }
 
     /**

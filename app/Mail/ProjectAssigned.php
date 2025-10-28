@@ -5,6 +5,8 @@ namespace App\Mail;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Address;
 
 class ProjectAssigned extends BaseMailable
 {
@@ -14,6 +16,28 @@ class ProjectAssigned extends BaseMailable
         public User $assignedBy
     ) {
         parent::__construct();
+    }
+
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
+    {
+        $sender = $this->senderService->getSender($this->senderType);
+        
+        $envelope = new Envelope(
+            from: new Address($sender['address'], $sender['name']),
+            subject: $this->getSubject(),
+        );
+
+        // Set the recipient email if available
+        if ($this->adiutor && $this->adiutor->email) {
+            $envelope->to(
+                new Address($this->adiutor->email, $this->adiutor->name ?? '')
+            );
+        }
+
+        return $envelope;
     }
 
     protected function getSubject(): string

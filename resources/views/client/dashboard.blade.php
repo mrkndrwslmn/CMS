@@ -95,49 +95,51 @@
                 @if($recentProjects->count() > 0)
                     <div class="space-y-4">
                         @foreach($recentProjects as $project)
-                            <div class="border border-neutral-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                                <div class="flex items-start justify-between mb-3">
-                                    <div class="flex-1">
-                                        <h3 class="font-semibold text-neutral-900 mb-1">{{ $project->title }}</h3>
-                                        <p class="text-sm text-neutral-600">{{ Str::limit($project->description, 100) }}</p>
+                            <a href="{{ route('client.projects.show', $project->id) }}" class="block">
+                                <div class="border border-neutral-200 rounded-lg p-4 hover:shadow-md hover:border-primary-300 transition-all duration-300 cursor-pointer">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-neutral-900 mb-1 group-hover:text-primary-600 transition-colors">{{ $project->title }}</h3>
+                                            <p class="text-sm text-neutral-600">{{ Str::limit($project->description, 100) }}</p>
+                                        </div>
+                                        @php
+                                            $statusConfig = match($project->status) {
+                                                'completed' => ['class' => 'bg-success-100 text-success-700', 'label' => 'Completed'],
+                                                'in_progress' => ['class' => 'bg-primary-100 text-primary-700', 'label' => 'In Progress'],
+                                                default => ['class' => 'bg-neutral-100 text-neutral-700', 'label' => ucfirst(str_replace('_', ' ', $project->status))]
+                                            };
+                                        @endphp
+                                        <span class="ml-4 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap {{ $statusConfig['class'] }}">
+                                            {{ $statusConfig['label'] }}
+                                        </span>
                                     </div>
-                                    @php
-                                        $statusConfig = match($project->status) {
-                                            'completed' => ['class' => 'bg-success-100 text-success-700', 'label' => 'Completed'],
-                                            'in_progress' => ['class' => 'bg-primary-100 text-primary-700', 'label' => 'In Progress'],
-                                            default => ['class' => 'bg-neutral-100 text-neutral-700', 'label' => ucfirst(str_replace('_', ' ', $project->status))]
-                                        };
-                                    @endphp
-                                    <span class="ml-4 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap {{ $statusConfig['class'] }}">
-                                        {{ $statusConfig['label'] }}
-                                    </span>
-                                </div>
-                                
-                                <div class="flex flex-wrap items-center gap-4 text-xs text-neutral-500">
-                                    <div class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                        </svg>
-                                        <span>{{ $project->created_at->format('M j, Y') }}</span>
-                                    </div>
-                                    @if($project->assignedAdiutor)
+                                    
+                                    <div class="flex flex-wrap items-center gap-4 text-xs text-neutral-500">
                                         <div class="flex items-center gap-1">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                             </svg>
-                                            <span>{{ $project->assignedAdiutor->user->fullName }}</span>
+                                            <span>{{ $project->created_at->format('M j, Y') }}</span>
                                         </div>
-                                    @endif
-                                    @if($project->progress_percentage)
-                                        <div class="flex items-center gap-2 ml-auto">
-                                            <div class="w-20 bg-neutral-200 rounded-full h-1.5">
-                                                <div class="bg-primary-500 h-1.5 rounded-full transition-all" style="width: {{ $project->progress_percentage }}%"></div>
+                                        @if($project->assignedAdiutor)
+                                            <div class="flex items-center gap-1">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                </svg>
+                                                <span>{{ $project->assignedAdiutor->user->fullName }}</span>
                                             </div>
-                                            <span class="text-xs font-medium text-neutral-700">{{ $project->progress_percentage }}%</span>
-                                        </div>
-                                    @endif
+                                        @endif
+                                        @if($project->progress_percentage)
+                                            <div class="flex items-center gap-2 ml-auto">
+                                                <div class="w-20 bg-neutral-200 rounded-full h-1.5">
+                                                    <div class="bg-primary-500 h-1.5 rounded-full transition-all" style="width: {{ $project->progress_percentage }}%"></div>
+                                                </div>
+                                                <span class="text-xs font-medium text-neutral-700">{{ $project->progress_percentage }}%</span>
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
-                            </div>
+                            </a>
                         @endforeach
                     </div>
                 @else
@@ -176,7 +178,7 @@
                         </div>
                     </a>
 
-                    <a href="{{ route('client.tasks') }}" 
+                    <a href="{{ route('client.projects.index') }}" 
                        class="flex items-center p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 transition-colors group">
                         <div class="w-10 h-10 bg-accent-100 rounded-lg flex items-center justify-center group-hover:bg-accent-200 transition-colors">
                             <svg class="w-5 h-5 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

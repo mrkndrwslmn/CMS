@@ -228,6 +228,54 @@ class MeetingController extends Controller
     }
 
     /**
+     * Client rejects rescheduled meeting
+     */
+    public function rejectReschedule(Request $request, $id)
+    {
+        $meeting = Meeting::findOrFail($id);
+
+        // Ensure user is the client
+        if ($meeting->client_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        if (!$meeting->isRescheduled()) {
+            return response()->json(['error' => 'Meeting is not rescheduled'], 400);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        // Reset to pending status and clear rescheduled dates
+        $meeting->status = Meeting::STATUS_PENDING;
+        $meeting->rescheduled_date = null;
+        $meeting->rescheduled_time = null;
+        
+        // Add client's rejection reason to admin notes
+        $rejectionNote = 'Client rejected rescheduled time.';
+        if (!empty($validated['reason'])) {
+            $rejectionNote .= ' Reason: ' . $validated['reason'];
+        }
+        
+        if ($meeting->admin_notes) {
+            $meeting->admin_notes .= "\n\n" . $rejectionNote;
+        } else {
+            $meeting->admin_notes = $rejectionNote;
+        }
+
+        $meeting->save();
+
+        // TODO: Send notification to admin
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Meeting time declined. Admin will propose a new time.',
+            'meeting' => $meeting->load(['client', 'admin', 'project']),
+        ]);
+    }
+
+    /**
      * Reject a meeting (Admin)
      */
     public function reject(Request $request, $id)

@@ -132,7 +132,7 @@
                                     Messages
                                 </a>
                                 
-                                <a href="{{ route('client.payments.index') }}" 
+                                <a href="{{ route('client.payments.history') }}" 
                                    class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.payments.*') ? 'bg-primary-50 text-primary-700' : '' }}">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
@@ -238,7 +238,7 @@
                     Messages
                 </a>
                 
-                <a href="{{ route('client.payments.index') }}" 
+                <a href="{{ route('client.payments.history') }}" 
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.payments.*') ? 'bg-primary-50 text-primary-700' : '' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>

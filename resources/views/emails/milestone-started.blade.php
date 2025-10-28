@@ -30,9 +30,6 @@
                             <h1 style="margin: 0 0 8px; font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em;">
                                 TREIS ADIUTOR
                             </h1>
-                            <p style="margin: 0; font-size: 13px; color: #FFFFFF; letter-spacing: 0.05em;">
-                                DIGITAL INNOVATION • INTELLIGENCE • EXCELLENCE
-                            </p>
                         </td>
                     </tr>
                     

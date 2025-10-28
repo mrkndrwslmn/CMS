@@ -10,12 +10,6 @@
             <h1 class="heading-serif text-4xl text-neutral-900">My Projects</h1>
             <p class="text-neutral-600 mt-2 text-lg">Track your active and completed projects</p>
         </div>
-        <a href="{{ route('client.requests.create') }}" class="btn-primary inline-flex items-center justify-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            New Request
-        </a>
     </div>
 
     <!-- Filter Tabs -->

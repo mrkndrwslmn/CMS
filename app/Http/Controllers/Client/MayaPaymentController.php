@@ -299,12 +299,7 @@ class MayaPaymentController extends Controller
                     // Notify admins using Laravel's notification structure
                     $admins = User::where('role', 'admin')->get();
                     foreach ($admins as $admin) {
-                        $admin->notify(new PaymentConfirmedNotification(
-                            $payment->service_request_id,
-                            $projectId,
-                            $payment->id,
-                            $serviceRequest->project_name
-                        ));
+                        $admin->notify(new PaymentConfirmedNotification($serviceRequest));
                     }
 
                     Log::info('Payment confirmed successfully', [

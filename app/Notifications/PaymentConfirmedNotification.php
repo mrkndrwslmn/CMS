@@ -38,11 +38,16 @@ class PaymentConfirmedNotification extends Notification
      */
     public function toArray($notifiable): array
     {
+        $actionUrl = '';
+        if ($this->serviceRequest->project_id) {
+            $actionUrl = route('admin.projects.show', $this->serviceRequest->project_id);
+        }
+
         return [
             'type' => 'payment_confirmed',
             'title' => 'Payment Confirmed',
             'message' => "Payment confirmed for '{$this->serviceRequest->project_name}'. Project created.",
-            'action_url' => route('admin.projects.show', $this->serviceRequest->project_id ?? ''),
+            'action_url' => $actionUrl,
             'service_request_id' => $this->serviceRequest->id,
             'project_name' => $this->serviceRequest->project_name,
         ];

@@ -336,18 +336,27 @@
         
         // Filter for upcoming approved/rescheduled meetings
         const upcomingMeetings = meetings.filter(meeting => {
-                        
             if (meeting.status !== 'approved' && meeting.status !== 'rescheduled') {
                 return false;
             }
             
-            if (!meeting.scheduled_date || !meeting.scheduled_time) {
+            // For rescheduled meetings, use rescheduled_date/time; for approved, use scheduled_date/time
+            let meetingDate, meetingTime;
+            if (meeting.status === 'rescheduled') {
+                meetingDate = meeting.rescheduled_date;
+                meetingTime = meeting.rescheduled_time;
+            } else {
+                meetingDate = meeting.scheduled_date;
+                meetingTime = meeting.scheduled_time;
+            }
+            
+            if (!meetingDate || !meetingTime) {
                 return false;
             }
             
             // Extract date part from ISO string (YYYY-MM-DD)
-            const datePart = meeting.scheduled_date.split('T')[0];
-            const dateTimeString = `${datePart} ${meeting.scheduled_time}`;
+            const datePart = meetingDate.split('T')[0];
+            const dateTimeString = `${datePart} ${meetingTime}`;
             const meetingDateTime = new Date(dateTimeString);
             
             return meetingDateTime > new Date();
@@ -358,27 +367,57 @@
             return;
         }
         
-        // Sort by scheduled datetime
+        // Sort by scheduled/rescheduled datetime
         upcomingMeetings.sort((a, b) => {
-            const dateA = new Date(a.scheduled_date.split('T')[0] + ' ' + a.scheduled_time);
-            const dateB = new Date(b.scheduled_date.split('T')[0] + ' ' + b.scheduled_time);
-            return dateA - dateB;
+            const getDateTime = (meeting) => {
+                let meetingDate, meetingTime;
+                if (meeting.status === 'rescheduled') {
+                    meetingDate = meeting.rescheduled_date;
+                    meetingTime = meeting.rescheduled_time;
+                } else {
+                    meetingDate = meeting.scheduled_date;
+                    meetingTime = meeting.scheduled_time;
+                }
+                return new Date(meetingDate.split('T')[0] + ' ' + meetingTime);
+            };
+            
+            return getDateTime(a) - getDateTime(b);
         });
         
         // Render the next upcoming meeting
         const meeting = upcomingMeetings[0];
-        const datePart = meeting.scheduled_date.split('T')[0];
-        const scheduledDateTime = new Date(datePart + ' ' + meeting.scheduled_time);
+        
+        // Get the appropriate date and time based on status
+        let displayDate, displayTime;
+        if (meeting.status === 'rescheduled') {
+            displayDate = meeting.rescheduled_date;
+            displayTime = meeting.rescheduled_time;
+        } else {
+            displayDate = meeting.scheduled_date;
+            displayTime = meeting.scheduled_time;
+        }
+        
+        const datePart = displayDate.split('T')[0];
+        const scheduledDateTime = new Date(datePart + ' ' + displayTime);
+        
+        // Different rendering based on status
+        const isRescheduled = meeting.status === 'rescheduled';
+        const headerText = isRescheduled ? 'Rescheduled Meeting - Pending Your Approval' : 'Upcoming Meeting';
+        const headerClass = isRescheduled ? 'text-amber-700' : 'text-primary-700';
+        const bgClass = isRescheduled ? 'from-amber-50 to-orange-50 border-amber-200' : 'from-primary-50 to-accent-50 border-primary-200';
         
         container.innerHTML = `
-            <div class="bg-gradient-to-r from-primary-50 to-accent-50 border-2 border-primary-200 rounded-xl p-6 shadow-lg mb-6">
+            <div class="bg-gradient-to-r ${bgClass} border-2 rounded-xl p-6 shadow-lg mb-6">
                 <div class="flex items-start justify-between gap-4">
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-2">
-                            <svg class="w-5 h-5 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                            <svg class="w-5 h-5 ${isRescheduled ? 'text-amber-600' : 'text-primary-600'}" fill="currentColor" viewBox="0 0 20 20">
+                                ${isRescheduled ? 
+                                    '<path d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"></path>' :
+                                    '<path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>'
+                                }
                             </svg>
-                            <span class="text-xs font-semibold text-primary-700 uppercase tracking-wide">Upcoming Meeting</span>
+                            <span class="text-xs font-semibold ${headerClass} uppercase tracking-wide">${headerText}</span>
                         </div>
                         <h4 class="text-lg font-bold text-gray-900 mb-2">${escapeHtml(meeting.title)}</h4>
                         <div class="flex flex-col gap-2 text-sm text-gray-700">
@@ -392,31 +431,50 @@
                                 <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <span id="meeting-countdown-${meeting.id}" class="text-accent-600 font-semibold"></span>
+                                <span id="meeting-countdown-${meeting.id}" class="${isRescheduled ? 'text-amber-600' : 'text-accent-600'} font-semibold"></span>
                             </div>
                         </div>
                         ${meeting.description ? `<p class="mt-3 text-sm text-gray-600 line-clamp-2">${escapeHtml(meeting.description)}</p>` : ''}
                     </div>
                     <div class="flex flex-col gap-2">
-                        <a href="${meeting.zoom_join_url}" 
-                           target="_blank"
-                           class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
-                            </svg>
-                            Join Meeting
-                        </a>
-                        ${meeting.zoom_password ? `
-                            <div class="text-xs text-center">
-                                <span class="text-gray-600">Password:</span>
-                                <code class="ml-1 px-2 py-1 bg-white rounded font-mono">${meeting.zoom_password}</code>
+                        ${isRescheduled ? `
+                            <div class="flex flex-col gap-2">
+                                <button onclick="approveReschedule(${meeting.id})" 
+                                        class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all text-sm">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Approve Time
+                                </button>
+                                <button onclick="rejectReschedule(${meeting.id})" 
+                                        class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    Decline
+                                </button>
                             </div>
-                        ` : ''}
+                        ` : `
+                            <a href="${meeting.zoom_join_url}" 
+                               target="_blank"
+                               class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                                </svg>
+                                Join Meeting
+                            </a>
+                            ${meeting.zoom_password ? `
+                                <div class="text-xs text-center">
+                                    <span class="text-gray-600">Password:</span>
+                                    <code class="ml-1 px-2 py-1 bg-white rounded font-mono">${meeting.zoom_password}</code>
+                                </div>
+                            ` : ''}
+                        `}
                     </div>
                 </div>
-                ${meeting.status === 'rescheduled' && meeting.admin_notes ? `
-                    <div class="mt-4 p-3 bg-white/60 rounded-lg border border-primary-200">
-                        <p class="text-xs font-semibold text-gray-700 mb-1">Admin Note:</p>
+                ${meeting.admin_notes ? `
+                    <div class="mt-4 p-3 bg-white/60 rounded-lg border ${isRescheduled ? 'border-amber-200' : 'border-primary-200'}">
+                        <p class="text-xs font-semibold text-gray-700 mb-1">${isRescheduled ? 'Reschedule Reason:' : 'Admin Note:'}</p>
                         <p class="text-sm text-gray-600">${escapeHtml(meeting.admin_notes)}</p>
                     </div>
                 ` : ''}
@@ -743,6 +801,69 @@ document.addEventListener('DOMContentLoaded', function() {
             messageForm.dispatchEvent(new Event('submit'));
         }
     });
+
+    // Approve rescheduled meeting
+    async function approveReschedule(meetingId) {
+        try {
+            const response = await fetch(`/api/meetings/${meetingId}/approve-reschedule`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Show success message
+                alert('Meeting time approved! A Zoom link has been created.');
+                // Reload meetings to update the display
+                loadMeetings();
+            } else {
+                alert('Failed to approve meeting time. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error approving reschedule:', error);
+            alert('Failed to approve meeting time. Please try again.');
+        }
+    }
+
+    // Reject rescheduled meeting
+    async function rejectReschedule(meetingId) {
+        const reason = prompt('Please provide a reason for rejecting this time (optional):');
+        if (reason === null) return; // User cancelled
+        
+        try {
+            const response = await fetch(`/api/meetings/${meetingId}/reject-reschedule`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                },
+                body: JSON.stringify({
+                    reason: reason || 'Time not suitable'
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Meeting time declined. The admin will be notified to propose a new time.');
+                // Reload meetings to update the display
+                loadMeetings();
+            } else {
+                alert('Failed to decline meeting time. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error rejecting reschedule:', error);
+            alert('Failed to decline meeting time. Please try again.');
+        }
+    }
+
+    // Make functions globally available
+    window.approveReschedule = approveReschedule;
+    window.rejectReschedule = rejectReschedule;
 
     // Start polling for new messages every 5 seconds
     setInterval(loadMessages, 5000);

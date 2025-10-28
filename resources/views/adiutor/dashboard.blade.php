@@ -138,6 +138,11 @@
             @if($notifications->count() > 0)
                 <div class="space-y-4">
                     @foreach($notifications as $notification)
+                        @php
+                            $data = is_string($notification->data) ? json_decode($notification->data, true) : $notification->data;
+                            $title = $data['title'] ?? 'Notification';
+                            $message = $data['message'] ?? 'You have a new notification';
+                        @endphp
                         <div class="flex items-start space-x-3 p-3 bg-neutral-50 rounded-lg">
                             <div class="flex-shrink-0">
                                 <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
@@ -147,8 +152,8 @@
                                 </div>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-neutral-900">{{ $notification->title }}</p>
-                                <p class="text-sm text-neutral-600">{{ $notification->message }}</p>
+                                <p class="text-sm font-medium text-neutral-900">{{ $title }}</p>
+                                <p class="text-sm text-neutral-600">{{ $message }}</p>
                                 <p class="text-xs text-neutral-500 mt-1">{{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}</p>
                             </div>
                         </div>

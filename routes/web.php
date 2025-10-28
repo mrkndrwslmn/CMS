@@ -117,6 +117,7 @@ Route::prefix('api')->group(function () {
             Route::put('/{meeting}/reschedule', [\App\Http\Controllers\Api\MeetingController::class, 'reschedule'])->name('reschedule');
             Route::put('/{meeting}/reject', [\App\Http\Controllers\Api\MeetingController::class, 'reject'])->name('reject');
             Route::put('/{meeting}/approve-reschedule', [\App\Http\Controllers\Api\MeetingController::class, 'approveReschedule'])->name('approve-reschedule');
+            Route::put('/{meeting}/reject-reschedule', [\App\Http\Controllers\Api\MeetingController::class, 'rejectReschedule'])->name('reject-reschedule');
             Route::delete('/{meeting}', [\App\Http\Controllers\Api\MeetingController::class, 'destroy'])->name('destroy');
         });
     });
@@ -346,6 +347,7 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
 // Client routes
 Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->group(function () {
     Route::get('/dashboard', [ClientController::class, 'dashboard'])->name('dashboard');
+    Route::get('/projects', [ClientController::class, 'index'])->name('projects.index');
     Route::get('/tasks', [ClientController::class, 'tasks'])->name('tasks');
     Route::get('/requests', [ClientController::class, 'requests'])->name('requests');
     Route::get('/feedback', [ClientController::class, 'feedback'])->name('feedback');
@@ -375,7 +377,7 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
     
     // Payment History routes
     Route::prefix('payments')->name('payments.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Client\PaymentHistoryController::class, 'index'])->name('index');
+        Route::get('/', [\App\Http\Controllers\Client\PaymentHistoryController::class, 'index'])->name('history');
         Route::get('/{id}', [\App\Http\Controllers\Client\PaymentHistoryController::class, 'show'])->name('show');
         Route::get('/{id}/receipt', [\App\Http\Controllers\Client\PaymentHistoryController::class, 'receipt'])->name('receipt');
     });

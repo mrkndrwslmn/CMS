@@ -49,9 +49,6 @@
                             <h1 class="heading-serif">
                                 TREIS ADIUTOR
                             </h1>
-                            <p style="margin: 8px 0 0; font-size: 13px; color: #FFFFFF; letter-spacing: 0.05em;">
-                                DIGITAL INNOVATION • INTELLIGENCE • EXCELLENCE
-                            </p>
                         </td>
                     </tr>
                     

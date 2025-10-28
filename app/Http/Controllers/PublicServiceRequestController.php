@@ -162,12 +162,11 @@ class PublicServiceRequestController extends Controller
         }
 
         // Create notifications for admins
+        $serviceRequest = \App\Models\ServiceRequest::find($serviceRequestId);
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new NewServiceRequestNotification(
-                $serviceRequestId,
-                $request->project_name,
-                $request->full_name ?? 'Unknown',
+                $serviceRequest,
                 $isNewUser ?? false
             ));
         }

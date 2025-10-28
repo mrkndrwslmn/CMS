@@ -155,6 +155,15 @@ class ClientController extends Controller
     }
 
     /**
+     * Show client projects (index method)
+     */
+    public function index()
+    {
+        // Redirect to tasks for now since they serve the same purpose
+        return $this->tasks();
+    }
+
+    /**
      * Show client tasks/projects
      */
     public function tasks()
@@ -254,8 +263,36 @@ class ClientController extends Controller
     {
         $user = Auth::user();
         
+        // Calculate feedback statistics
+        $stats = [
+            'completedProjects' => DB::table('projects')
+                ->join('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
+                ->where('projects.client_id', $user->id)
+                ->where('project_assignments.status', 'completed')
+                ->count(),
+            'reviewsGiven' => DB::table('project_feedback')
+                ->where('client_id', $user->id)
+                ->count(),
+            'pendingReviews' => DB::table('projects')
+                ->join('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
+                ->leftJoin('project_feedback', function($join) use ($user) {
+                    $join->on('projects.id', '=', 'project_feedback.project_id')
+                         ->where('project_feedback.client_id', '=', $user->id);
+                })
+                ->where('projects.client_id', $user->id)
+                ->where('project_assignments.status', 'completed')
+                ->whereNull('project_feedback.id')
+                ->count(),
+            'averageRating' => DB::table('project_feedback')
+                ->where('client_id', $user->id)
+                ->avg('rating') ?? 0
+        ];
+        
+        // Format average rating to 1 decimal place
+        $stats['averageRating'] = round($stats['averageRating'], 1);
+        
         // Get feedback given by this client
-        $givenFeedback = DB::table('project_feedback')
+        $completedFeedback = DB::table('project_feedback')
             ->join('projects', 'project_feedback.project_id', '=', 'projects.id')
             ->join('users', 'project_feedback.adiutor_id', '=', 'users.id')
             ->where('project_feedback.client_id', $user->id)
@@ -288,7 +325,63 @@ class ClientController extends Controller
             )
             ->get();
         
-        return view('client.feedback', compact('user', 'givenFeedback', 'pendingFeedback'));
+        return view('client.feedback', compact('user', 'stats', 'completedFeedback', 'pendingFeedback'));
+    }
+
+    /**
+     * Show client profile
+     */
+    public function profile()
+    {
+        $user = Auth::user();
+        
+        // Get client profile if it exists
+        $profile = DB::table('client_profiles')
+            ->where('user_id', $user->id)
+            ->first();
+            
+        return view('client.profile', compact('user', 'profile'));
+    }
+
+    /**
+     * Update client profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        
+        $request->validate([
+            'company_name' => 'nullable|string|max:255',
+            'industry' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'bio' => 'nullable|string|max:1000',
+            'website' => 'nullable|url|max:255',
+            'linkedin' => 'nullable|url|max:255',
+            'twitter' => 'nullable|url|max:255',
+        ]);
+
+        // Update user basic info
+        $user->update([
+            'fullName' => $request->input('fullName', $user->fullName),
+            'email' => $request->input('email', $user->email),
+        ]);
+
+        // Update or create client profile
+        DB::table('client_profiles')->updateOrInsert(
+            ['user_id' => $user->id],
+            [
+                'company_name' => $request->input('company_name'),
+                'industry' => $request->input('industry'),
+                'contact_phone' => $request->input('phone'), // Use contact_phone instead of phone
+                'address' => $request->input('address'),
+                'website' => $request->input('website'),
+                // Note: bio, linkedin, twitter will be added after migration
+                'updated_at' => now(),
+            ]
+        );
+
+        return redirect()->route('client.profile')->with('success', 'Profile updated successfully!');
     }
 
     /**
