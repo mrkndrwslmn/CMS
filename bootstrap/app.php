@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
         
+        // Add global middleware to update announcement statuses
+        $middleware->append(\App\Http\Middleware\UpdateAnnouncementStatuses::class);
+        
         // Exclude API routes from CSRF verification
         $middleware->validateCsrfTokens(except: [
             'api/*',
