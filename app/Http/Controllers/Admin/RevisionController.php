@@ -11,6 +11,8 @@ use App\Notifications\RevisionApprovedNotification;
 use App\Notifications\RevisionRejectedNotification;
 use App\Mail\RevisionApproved;
 use App\Mail\RevisionRejected;
+use App\Mail\RevisionRequestSubmitted;
+use App\Mail\RevisionRequestReviewed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -165,6 +167,17 @@ class RevisionController extends Controller
             $client = $revision->requestedBy;
             if ($client) {
                 $client->notify(new RevisionApprovedNotification($revision));
+                
+                // Send revision request reviewed email
+                try {
+                    Mail::to($client->email)->send(new RevisionRequestReviewed($revision));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send revision request reviewed email to client', [
+                        'client_id' => $client->id,
+                        'revision_id' => $revision->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
 
             DB::commit();
@@ -232,12 +245,23 @@ class RevisionController extends Controller
             if ($client) {
                 $client->notify(new RevisionRejectedNotification($revision));
                 
-                // Send email
+                // Send revision rejection email
                 try {
                     Mail::to($client->email)->send(new RevisionRejected($revision));
                 } catch (\Exception $e) {
                     Log::error('Failed to send revision rejection email', [
                         'client_id' => $client->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+                
+                // Send revision request reviewed email
+                try {
+                    Mail::to($client->email)->send(new RevisionRequestReviewed($revision));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send revision request reviewed email to client', [
+                        'client_id' => $client->id,
+                        'revision_id' => $revision->id,
                         'error' => $e->getMessage()
                     ]);
                 }

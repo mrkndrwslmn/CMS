@@ -3,18 +3,17 @@
 namespace App\Mail;
 
 use App\Models\ServiceRequest;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
+use App\Services\EmailSenderService;
 use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class PaymentConfirmed extends Mailable
+class PaymentConfirmed extends BaseMailable
 {
-    use Queueable, SerializesModels;
-
     public $serviceRequest;
+
+    /**
+     * Specify the sender type for this email
+     */
+    protected string $senderType = EmailSenderService::SENDER_BILLING;
 
     /**
      * Create a new message instance.
@@ -22,16 +21,16 @@ class PaymentConfirmed extends Mailable
     public function __construct(ServiceRequest $serviceRequest)
     {
         $this->serviceRequest = $serviceRequest;
+        
+        parent::__construct();
     }
 
     /**
-     * Get the message envelope.
+     * Get the subject line for the email
      */
-    public function envelope(): Envelope
+    protected function getSubject(): string
     {
-        return new Envelope(
-            subject: 'Payment Confirmed - Project Starting',
-        );
+        return 'Payment Confirmed - Project Starting';
     }
 
     /**
@@ -40,17 +39,10 @@ class PaymentConfirmed extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.payment-confirmed',
+            view: 'emails.payment-confirmed',
+            with: [
+                'serviceRequest' => $this->serviceRequest,
+            ]
         );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
     }
 }

@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Project;
+use App\Mail\TaskAssigned;
+use App\Mail\TaskCompleted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class TaskManagementController extends Controller
 {
@@ -175,6 +178,18 @@ class TaskManagementController extends Controller
             'dateAssigned' => $request->assignedTo ? now() : null,
         ]);
         
+        // Send email notification if task is assigned to someone
+        if ($request->assignedTo) {
+            try {
+                $assignee = User::findOrFail($request->assignedTo);
+                $assignedBy = Auth::user();
+                Mail::to($assignee->email)->send(new TaskAssigned($task, $assignee, $assignedBy));
+            } catch (\Exception $e) {
+                // Log the error but don't fail the task creation
+                \Log::error('Failed to send task assignment email: ' . $e->getMessage());
+            }
+        }
+        
         return redirect()->route('admin.tasks.index')
                         ->with('success', 'Task created successfully.');
     }
@@ -302,6 +317,26 @@ class TaskManagementController extends Controller
         
         $task->update($updateData);
         
+        // Send email notifications for status/assignment changes
+        try {
+            // Send task assignment email if assignee changed
+            if ($request->assignedTo && $request->assignedTo != $task->assignedTo) {
+                $assignee = User::findOrFail($request->assignedTo);
+                $assignedBy = Auth::user();
+                $task->refresh(); // Get updated task data
+                Mail::to($assignee->email)->send(new TaskAssigned($task, $assignee, $assignedBy));
+            }
+            
+            // Send task completion email if status changed to completed
+            if ($request->status === 'completed' && $task->status !== 'completed' && $task->assignedUser) {
+                $task->refresh(); // Get updated task data
+                Mail::to($task->client->email)->send(new TaskCompleted($task, $task->assignedUser));
+            }
+        } catch (\Exception $e) {
+            // Log the error but don't fail the update
+            \Log::error('Failed to send task update email: ' . $e->getMessage());
+        }
+        
         return redirect()->route('admin.tasks.show', $task->taskID)
                         ->with('success', 'Task updated successfully.');
     }
@@ -321,12 +356,23 @@ class TaskManagementController extends Controller
             'assignedTo' => 'required|exists:users,id',
         ]);
         
-        $task = Task::findOrFail($id);
+        $task = Task::with(['project', 'client'])->findOrFail($id);
+        $assignee = User::findOrFail($request->assignedTo);
+        $assignedBy = Auth::user();
+        
         $task->update([
             'assignedTo' => $request->assignedTo,
             'status' => 'in_progress',
             'dateAssigned' => now(),
         ]);
+        
+        // Send email notification to assigned adiutor
+        try {
+            Mail::to($assignee->email)->send(new TaskAssigned($task, $assignee, $assignedBy));
+        } catch (\Exception $e) {
+            // Log the error but don't fail the assignment
+            \Log::error('Failed to send task assignment email: ' . $e->getMessage());
+        }
         
         return redirect()->back()->with('success', 'Task assigned successfully.');
     }
@@ -337,13 +383,23 @@ class TaskManagementController extends Controller
             'status' => 'required|in:pending,in_progress,completed,cancelled',
         ]);
         
-        $task = Task::findOrFail($id);
+        $task = Task::with(['project', 'client', 'assignedUser'])->findOrFail($id);
         $oldStatus = $task->status;
         
         $task->update([
             'status' => $request->status,
             'completedAt' => $request->status === 'completed' ? now() : null,
         ]);
+        
+        // Send email notification when task is marked as completed
+        if ($request->status === 'completed' && $oldStatus !== 'completed' && $task->assignedUser) {
+            try {
+                Mail::to($task->client->email)->send(new TaskCompleted($task, $task->assignedUser));
+            } catch (\Exception $e) {
+                // Log the error but don't fail the status update
+                \Log::error('Failed to send task completion email: ' . $e->getMessage());
+            }
+        }
         
         return redirect()->back()->with('success', 'Task status updated successfully.');
     }

@@ -2,33 +2,37 @@
 
 namespace App\Mail;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
+use App\Services\EmailSenderService;
 use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class ProjectCompleted extends Mailable
+class ProjectCompleted extends BaseMailable
 {
-    use Queueable, SerializesModels;
+    public $project;
+    public $client;
+
+    /**
+     * Specify the sender type for this email
+     */
+    protected string $senderType = EmailSenderService::SENDER_PROJECTS;
 
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($project = null, $client = null)
     {
-        //
+        $this->project = $project;
+        $this->client = $client;
+        
+        parent::__construct();
     }
 
     /**
-     * Get the message envelope.
+     * Get the subject line for the email
      */
-    public function envelope(): Envelope
+    protected function getSubject(): string
     {
-        return new Envelope(
-            subject: 'Project Completed',
-        );
+        $projectName = $this->project ? $this->project->name : 'Your Project';
+        return "Project Completed - {$projectName}";
     }
 
     /**
@@ -37,17 +41,11 @@ class ProjectCompleted extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'emails.project-completed',
+            with: [
+                'project' => $this->project,
+                'client' => $this->client,
+            ]
         );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
     }
 }

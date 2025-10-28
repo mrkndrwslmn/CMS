@@ -6,14 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\BudgetChangeRequest;
 use App\Notifications\TaskCompletedNotification;
 use App\Notifications\BudgetChangeRequestNotification;
 use App\Notifications\ProjectAcceptedNotification;
 use App\Notifications\ProjectDeclinedNotification;
 use App\Notifications\ProjectProgressUpdateNotification;
+use App\Mail\BudgetChangeRequested;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class TaskController extends Controller
 {
@@ -387,20 +390,22 @@ class TaskController extends Controller
         }
         
         // Create budget change request
-        DB::table('budget_change_requests')->insert([
+        $budgetRequest = BudgetChangeRequest::create([
             'task_id' => $taskId,
             'adiutor_id' => Auth::id(),
             'current_budget' => $task->allocated_budget ?? 0,
             'requested_budget' => $request->requested_budget,
             'reason' => $request->reason,
             'status' => 'pending',
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
         
-        // Create notification for all admins
+        // Send email notifications to all admins
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
+            // Send new Mail class email
+            Mail::to($admin->email)->send(new BudgetChangeRequested($budgetRequest));
+            
+            // Also send notification for dashboard
             $admin->notify(new BudgetChangeRequestNotification(
                 $task,
                 Auth::user(),

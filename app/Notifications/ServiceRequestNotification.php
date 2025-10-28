@@ -4,9 +4,8 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class ServiceRequestNotification extends Notification implements ShouldQueue
+class ServiceRequestNotification extends Notification
 {
     use Queueable;
 

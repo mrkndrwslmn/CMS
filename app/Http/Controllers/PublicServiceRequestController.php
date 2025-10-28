@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Notifications\NewServiceRequestNotification;
+use App\Rules\RecaptchaValidation;
 
 class PublicServiceRequestController extends Controller
 {
@@ -51,6 +52,11 @@ class PublicServiceRequestController extends Controller
             'expectations' => 'nullable|string|max:1000',
             'additional_notes' => 'nullable|string|max:1000',
             'file_upload.*' => 'nullable|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,gif,zip,rar',
+            
+            // reCAPTCHA validation
+            'g-recaptcha-response' => ['required', new RecaptchaValidation()],
+        ], [
+            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
         ]);
 
         if ($validator->fails()) {

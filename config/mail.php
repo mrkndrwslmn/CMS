@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', 'smtp'),
 
     /*
     |--------------------------------------------------------------------------
@@ -113,6 +113,44 @@ return [
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Professional Email Senders
+    |--------------------------------------------------------------------------
+    |
+    | Configure different senders for different types of emails to maintain
+    | professionalism and better organization. Each sender type has its own
+    | address and display name.
+    |
+    */
+
+    'senders' => [
+        'auth' => [
+            'address' => env('MAIL_AUTH_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+            'name' => env('MAIL_AUTH_NAME', env('MAIL_FROM_NAME', 'Example')),
+        ],
+        'projects' => [
+            'address' => env('MAIL_PROJECTS_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+            'name' => env('MAIL_PROJECTS_NAME', env('MAIL_FROM_NAME', 'Example')),
+        ],
+        'support' => [
+            'address' => env('MAIL_SUPPORT_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+            'name' => env('MAIL_SUPPORT_NAME', env('MAIL_FROM_NAME', 'Example')),
+        ],
+        'notifications' => [
+            'address' => env('MAIL_NOTIFICATIONS_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+            'name' => env('MAIL_NOTIFICATIONS_NAME', env('MAIL_FROM_NAME', 'Example')),
+        ],
+        'billing' => [
+            'address' => env('MAIL_BILLING_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+            'name' => env('MAIL_BILLING_NAME', env('MAIL_FROM_NAME', 'Example')),
+        ],
+        'default' => [
+            'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+            'name' => env('MAIL_FROM_NAME', 'Example'),
+        ],
     ],
 
 ];

@@ -7,7 +7,10 @@ use App\Models\ProjectMilestone;
 use App\Models\ServiceRequest;
 use App\Models\MilestonePayment;
 use App\Models\Payment;
+use App\Mail\MilestoneStarted;
+use App\Mail\MilestoneCompleted;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Exception;
 
 class MilestoneService
@@ -107,6 +110,19 @@ class MilestoneService
             // If this is the first milestone, activate it
             if ($milestone->phase_order === 1) {
                 $milestone->update(['status' => 'in_progress']);
+                
+                // Send milestone started email
+                try {
+                    $client = $milestone->project->client;
+                    if ($client && $client->email) {
+                        Mail::to($client->email)->send(new MilestoneStarted($milestone));
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send milestone started email', [
+                        'milestone_id' => $milestone->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
 
             // Check if this was the last unpaid milestone
@@ -243,9 +259,38 @@ class MilestoneService
 
         // If marking as completed, check if next milestone should be activated
         if ($status === 'completed') {
+            // Update completion timestamp
+            $milestone->update(['completed_at' => now()]);
+            
+            // Send milestone completed email
+            try {
+                $client = $milestone->project->client;
+                if ($client && $client->email) {
+                    Mail::to($client->email)->send(new MilestoneCompleted($milestone));
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send milestone completed email', [
+                    'milestone_id' => $milestone->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
             $nextMilestone = $milestone->nextMilestone();
             if ($nextMilestone && $nextMilestone->isPaid()) {
                 $nextMilestone->update(['status' => 'in_progress']);
+                
+                // Send next milestone started email
+                try {
+                    $client = $nextMilestone->project->client;
+                    if ($client && $client->email) {
+                        Mail::to($client->email)->send(new MilestoneStarted($nextMilestone));
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send next milestone started email', [
+                        'milestone_id' => $nextMilestone->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
         }
 

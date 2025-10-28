@@ -9,10 +9,12 @@ use App\Models\Task;
 use App\Models\RevisionRequest;
 use App\Models\User;
 use App\Notifications\RevisionRequestedNotification;
+use App\Mail\RevisionRequestSubmitted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class RevisionRequestController extends Controller
 {
@@ -161,6 +163,17 @@ class RevisionRequestController extends Controller
             $admins = User::where('role', 'admin')->get();
             foreach ($admins as $admin) {
                 $admin->notify(new RevisionRequestedNotification($revisionRequest));
+                
+                // Send revision request submitted email to admin
+                try {
+                    Mail::to($admin->email)->send(new RevisionRequestSubmitted($revisionRequest));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send revision request submitted email to admin', [
+                        'admin_id' => $admin->id,
+                        'revision_request_id' => $revisionRequest->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
 
             // Also notify the adiutor if assigned
@@ -363,6 +376,17 @@ class RevisionRequestController extends Controller
             $admins = User::where('role', 'admin')->get();
             foreach ($admins as $admin) {
                 $admin->notify(new RevisionRequestedNotification($revisionRequest));
+                
+                // Send revision request submitted email to admin
+                try {
+                    Mail::to($admin->email)->send(new RevisionRequestSubmitted($revisionRequest));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send project revision request submitted email to admin', [
+                        'admin_id' => $admin->id,
+                        'revision_request_id' => $revisionRequest->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
 
             // Notify assigned adiutor(s)

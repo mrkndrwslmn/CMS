@@ -3,18 +3,17 @@
 namespace App\Mail;
 
 use App\Models\RevisionRequest;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
+use App\Services\EmailSenderService;
 use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class RevisionApproved extends Mailable implements ShouldQueue
+class RevisionApproved extends BaseMailable
 {
-    use Queueable, SerializesModels;
-
     public $revisionRequest;
+
+    /**
+     * Specify the sender type for this email
+     */
+    protected string $senderType = EmailSenderService::SENDER_PROJECTS;
 
     /**
      * Create a new message instance.
@@ -22,16 +21,16 @@ class RevisionApproved extends Mailable implements ShouldQueue
     public function __construct(RevisionRequest $revisionRequest)
     {
         $this->revisionRequest = $revisionRequest;
+        
+        parent::__construct();
     }
 
     /**
-     * Get the message envelope.
+     * Get the subject line for the email
      */
-    public function envelope(): Envelope
+    protected function getSubject(): string
     {
-        return new Envelope(
-            subject: 'Revision Request Approved - Action Required',
-        );
+        return 'Revision Request Approved - Action Required';
     }
 
     /**
@@ -50,15 +49,5 @@ class RevisionApproved extends Mailable implements ShouldQueue
                 'project' => $this->revisionRequest->project,
             ]
         );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
     }
 }

@@ -7,9 +7,11 @@ use App\Models\Project;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Models\Task;
+use App\Mail\ProjectAssigned;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use App\Notifications\ProjectCompletedNotification;
 
@@ -310,6 +312,22 @@ class ProjectManagementController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        // Send project assignment email
+        try {
+            $adiutor = User::find($request->adiutor_id);
+            $assignedBy = Auth::user();
+            
+            if ($adiutor && $adiutor->email) {
+                Mail::to($adiutor->email)->send(new ProjectAssigned($project, $adiutor, $assignedBy));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send project assignment email', [
+                'project_id' => $id,
+                'adiutor_id' => $request->adiutor_id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Adiutor assigned to project successfully.');
     }

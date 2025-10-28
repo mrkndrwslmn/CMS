@@ -10,6 +10,84 @@ use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\AiSearchController;
 use App\Http\Controllers\PublicServiceRequestController;
 
+// Email Template Preview Routes (for development)
+if (app()->environment(['local', 'development', 'staging'])) {
+    Route::get('/preview-email/{template}', function ($template) {
+        // Mock data for email templates
+        $mockUser = (object) [
+            'fullName' => 'John Doe',
+            'firstName' => 'John',
+            'email' => 'john.doe@example.com'
+        ];
+        
+        $mockServiceRequest = (object) [
+            'project_name' => 'Modern Website Redesign',
+            'service_type' => 'Web Development',
+            'approved_budget' => 5000,
+            'payment_due_date' => now()->addDays(14),
+            'payment_reference' => 'REF-' . str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT),
+            'payment_confirmed_at' => now(),
+            'payment_instructions' => 'Please pay via bank transfer to the account details provided.',
+            'client' => $mockUser
+        ];
+        
+        $mockProject = (object) [
+            'project_name' => 'E-commerce Platform Development',
+            'service_type' => 'Full Stack Development',
+            'completed_at' => now(),
+            'created_at' => now()->subDays(30),
+            'client' => $mockUser
+        ];
+        
+        $mockRevision = (object) [
+            'revision_type' => 'Design Update',
+            'approved_at' => now(),
+            'rejected_at' => now(),
+            'rejection_reason' => 'The color scheme needs to be adjusted to better match the brand guidelines. Please use more blue tones and reduce the intensity of the orange accents.',
+            'description' => 'Update the header design with new branding elements and improve mobile responsiveness.',
+            'estimated_completion' => now()->addDays(7),
+            'project' => $mockProject
+        ];
+        
+        switch ($template) {
+            case 'new-user-credentials':
+                return view('emails.new-user-credentials', [
+                    'fullName' => $mockUser->fullName,
+                    'email' => $mockUser->email,
+                    'password' => 'TempPass123!'
+                ]);
+                
+            case 'payment-confirmed':
+                return view('emails.payment-confirmed', [
+                    'serviceRequest' => $mockServiceRequest
+                ]);
+                
+            case 'request-approved':
+                return view('emails.request-approved', [
+                    'serviceRequest' => $mockServiceRequest
+                ]);
+                
+            case 'project-completed':
+                return view('emails.project-completed', [
+                    'project' => $mockProject
+                ]);
+                
+            case 'revision-approved':
+                return view('emails.revision-approved', [
+                    'revision' => $mockRevision
+                ]);
+                
+            case 'revision-rejected':
+                return view('emails.revision-rejected', [
+                    'revision' => $mockRevision
+                ]);
+                
+            default:
+                abort(404, 'Email template not found');
+        }
+    })->name('email.preview');
+}
+
 // API routes
 Route::prefix('api')->group(function () {
     Route::get('/services', [ServiceController::class, 'index']);

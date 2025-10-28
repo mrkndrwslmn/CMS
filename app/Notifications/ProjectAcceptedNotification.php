@@ -3,11 +3,10 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use App\Models\User;
 
-class ProjectAcceptedNotification extends Notification implements ShouldQueue
+class ProjectAcceptedNotification extends Notification
 {
     use Queueable;
 

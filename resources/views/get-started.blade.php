@@ -6,6 +6,10 @@
 @push('analytics')
     <script defer src="https://cdn.vercel-insights.com/v1/script.js?projectId=prj_8NsY544ll3Q74OVb6njoN8QFj0kl"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1864950796514595" crossorigin="anonymous"></script>
+    
+    @if(app(\App\Services\RecaptchaService::class)->isEnabled())
+        <script src="{{ app(\App\Services\RecaptchaService::class)->getScriptUrl() }}" async defer></script>
+    @endif
 @endpush
 
 @section('content')
@@ -362,6 +366,32 @@
                     <div id="files" class="space-y-2"></div>
                 </div>
             </div>
+
+            <!-- reCAPTCHA -->
+            @if(app(\App\Services\RecaptchaService::class)->isEnabled())
+            <div class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-neutral-200">
+                <h2 class="text-xl font-semibold text-neutral-900 mb-6 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.586-3.414A2 2 0 0118 4.586V2a1 1 0 011-1h2a1 1 0 011 1v2.586A2 2 0 0120.414 6L18 8.414a2 2 0 01-2.828 0L13.586 6A2 2 0 0112 4.586V2a1 1 0 011-1h2a1 1 0 011 1v2.586z"/>
+                    </svg>
+                    Security Verification
+                </h2>
+                
+                <div class="space-y-4">
+                    <p class="text-sm text-neutral-600">
+                        Please complete the security verification below to protect against spam and automated submissions.
+                    </p>
+                    
+                    <div class="flex justify-center">
+                        {!! app(\App\Services\RecaptchaService::class)->getHtml() !!}
+                    </div>
+                    
+                    @error('g-recaptcha-response')
+                        <p class="mt-1 text-sm text-red-600 text-center">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+            @endif
 
             <!-- Submit Button -->
             <div class="flex items-center justify-center pt-4">

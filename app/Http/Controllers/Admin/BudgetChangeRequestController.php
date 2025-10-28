@@ -7,9 +7,11 @@ use App\Models\BudgetChangeRequest;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\BudgetChangeReviewedNotification;
+use App\Mail\BudgetChangeReviewed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class BudgetChangeRequestController extends Controller
 {
@@ -101,6 +103,14 @@ class BudgetChangeRequestController extends Controller
 
             // Create notification for adiutor
             $adiutor = User::find($budgetRequest->adiutor_id);
+            
+            // Reload budget request to get updated data
+            $budgetRequest->refresh();
+            
+            // Send new Mail class email
+            Mail::to($adiutor->email)->send(new BudgetChangeReviewed($budgetRequest));
+            
+            // Also send notification for dashboard
             $adiutor->notify(new BudgetChangeReviewedNotification(
                 $task,
                 'approved',
@@ -148,6 +158,14 @@ class BudgetChangeRequestController extends Controller
             // Create notification for adiutor
             $task = Task::find($budgetRequest->task_id);
             $adiutor = User::find($budgetRequest->adiutor_id);
+            
+            // Reload budget request to get updated data
+            $budgetRequest->refresh();
+            
+            // Send new Mail class email
+            Mail::to($adiutor->email)->send(new BudgetChangeReviewed($budgetRequest));
+            
+            // Also send notification for dashboard
             $adiutor->notify(new BudgetChangeReviewedNotification(
                 $task,
                 'rejected',

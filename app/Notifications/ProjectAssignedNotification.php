@@ -4,9 +4,8 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class ProjectAssignedNotification extends Notification implements ShouldQueue
+class ProjectAssignedNotification extends Notification
 {
     use Queueable;
 

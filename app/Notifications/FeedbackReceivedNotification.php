@@ -3,10 +3,9 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class FeedbackReceivedNotification extends Notification implements ShouldQueue
+class FeedbackReceivedNotification extends Notification
 {
     use Queueable;
 
