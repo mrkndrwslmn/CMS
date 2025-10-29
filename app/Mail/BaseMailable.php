@@ -85,7 +85,9 @@ abstract class BaseMailable extends Mailable
     public function build()
     {
         try {
-            $result = parent::build();
+            // For modern Laravel mailables that use content() method, we don't call parent::build()
+            // Instead, we return $this to allow the Laravel framework to handle the build process
+            $result = $this;
             
             Log::info('Mail built successfully', [
                 'mail_class' => static::class,

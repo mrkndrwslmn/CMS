@@ -26,8 +26,8 @@ class Skill extends Model
      */
     public function adiutors(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'adiutor_skills', 'skill_id', 'user_id')
-                    ->withPivot('proficiency', 'years_experience')
+        return $this->belongsToMany(User::class, 'adiutor_skills', 'skill_id', 'adiutor_id')
+                    ->withPivot('proficiency_level', 'years_experience')
                     ->withTimestamps();
     }
 

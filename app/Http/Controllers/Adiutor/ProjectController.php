@@ -7,6 +7,7 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProjectController extends Controller
 {
@@ -84,7 +85,7 @@ class ProjectController extends Controller
         if ($project->payment_type === 'milestone_payment') {
             $milestones = DB::table('project_milestones')
                 ->where('project_id', $id)
-                ->orderBy('milestone_number')
+                ->orderBy('phase_order')
                 ->get();
         }
         

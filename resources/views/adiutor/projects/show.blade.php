@@ -148,7 +148,7 @@
                             <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
                                 <div class="shrink-0">
                                     <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                        <span class="text-primary-600 font-bold">{{ $milestone->milestone_number }}</span>
+                                        <span class="text-primary-600 font-bold">{{ $milestone->phase_order }}</span>
                                     </div>
                                 </div>
                                 <div class="flex-1">

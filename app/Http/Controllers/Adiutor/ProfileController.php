@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
@@ -20,16 +21,19 @@ class ProfileController extends Controller
         // Get or create adiutor profile
         $profile = DB::table('adiutor_profiles')->where('user_id', $user->id)->first();
         
-        // Get user skills
-        $skills = DB::table('adiutor_skills')
-            ->join('skills', 'adiutor_skills.skill_id', '=', 'skills.id')
-            ->where('adiutor_skills.user_id', $user->id)
-            ->select(
-                'skills.*',
-                'adiutor_skills.proficiency',
-                'adiutor_skills.years_experience'
-            )
-            ->get();
+        // Get user skills via adiutor profile
+        $skills = collect();
+        if ($profile) {
+            $skills = DB::table('adiutor_skills')
+                ->join('skills', 'adiutor_skills.skill_id', '=', 'skills.id')
+                ->where('adiutor_skills.adiutor_id', $profile->id)
+                ->select(
+                    'skills.*',
+                    'adiutor_skills.proficiency_level as proficiency',
+                    'adiutor_skills.years_experience'
+                )
+                ->get();
+        }
         
         // Get all available skills for selection
         $availableSkills = DB::table('skills')->where('is_active', true)->get();
@@ -47,16 +51,19 @@ class ProfileController extends Controller
         // Get or create adiutor profile
         $profile = DB::table('adiutor_profiles')->where('user_id', $user->id)->first();
         
-        // Get user skills
-        $skills = DB::table('adiutor_skills')
-            ->join('skills', 'adiutor_skills.skill_id', '=', 'skills.id')
-            ->where('adiutor_skills.user_id', $user->id)
-            ->select(
-                'skills.*',
-                'adiutor_skills.proficiency',
-                'adiutor_skills.years_experience'
-            )
-            ->get();
+        // Get user skills via adiutor profile
+        $skills = collect();
+        if ($profile) {
+            $skills = DB::table('adiutor_skills')
+                ->join('skills', 'adiutor_skills.skill_id', '=', 'skills.id')
+                ->where('adiutor_skills.adiutor_id', $profile->id)
+                ->select(
+                    'skills.*',
+                    'adiutor_skills.proficiency_level as proficiency',
+                    'adiutor_skills.years_experience'
+                )
+                ->get();
+        }
         
         // Get all available skills for selection
         $availableSkills = DB::table('skills')->where('is_active', true)->get()->groupBy('category');
@@ -137,15 +144,15 @@ class ProfileController extends Controller
         }
 
         // Remove existing skills
-        DB::table('adiutor_skills')->where('user_id', $user->id)->delete();
+        DB::table('adiutor_skills')->where('adiutor_id', $user->id)->delete();
 
         // Add new skills
         if ($request->skills) {
             foreach ($request->skills as $skill) {
                 DB::table('adiutor_skills')->insert([
-                    'user_id' => $user->id,
+                    'adiutor_id' => $user->id,
                     'skill_id' => $skill['skill_id'],
-                    'proficiency' => $skill['proficiency'],
+                    'proficiency_level' => $skill['proficiency'],
                     'years_experience' => $skill['years_experience'] ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
