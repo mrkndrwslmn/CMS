@@ -151,11 +151,27 @@ class SocialLoginController extends Controller
         } catch (\Exception $e) {
             Log::error('Social login callback failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'request_data' => [
+                    'state' => $request->get('state'),
+                    'code' => $request->has('code') ? 'present' : 'missing',
+                    'error' => $request->get('error'),
+                    'error_description' => $request->get('error_description')
+                ]
             ]);
 
-            return redirect()->route('login')
-                ->with('error', 'Social login failed. Please try again or use email/password login.');
+            // Provide more specific error messages for common issues
+            $errorMessage = 'Social login failed. Please try again or use email/password login.';
+            
+            if (str_contains($e->getMessage(), 'No email provided by social provider')) {
+                $errorMessage = 'The social provider didn\'t provide your email address. Please try signing in with email/password instead, or contact support for assistance.';
+            } elseif (str_contains($e->getMessage(), 'already exists but is linked')) {
+                $errorMessage = 'An account with this email is already linked to a different social provider. Please try signing in with your email/password or the original social provider.';
+            } elseif (str_contains($e->getMessage(), 'Apple ID already exists but with different credentials')) {
+                $errorMessage = 'There appears to be an issue with your Apple ID authentication. Please contact support for assistance.';
+            }
+
+            return redirect()->route('login')->with('error', $errorMessage);
         }
     }
 
@@ -167,8 +183,22 @@ class SocialLoginController extends Controller
         $email = $auth0User['email'] ?? null;
         $auth0Id = $auth0User['sub'] ?? null;
 
-        if (!$email || !$auth0Id) {
-            throw new \Exception('Missing required user information from social provider');
+        // Log the received data for debugging
+        Log::info('Social login attempt with data', [
+            'auth0_id' => $auth0Id,
+            'email' => $email,
+            'has_name' => !empty($auth0User['name']),
+            'has_given_name' => !empty($auth0User['given_name']),
+            'has_family_name' => !empty($auth0User['family_name']),
+            'has_nickname' => !empty($auth0User['nickname']),
+            'email_verified' => $auth0User['email_verified'] ?? false,
+            'provider' => $this->extractProvider($auth0User),
+            'available_fields' => array_keys($auth0User)
+        ]);
+
+        // Auth0 ID is essential for all social logins
+        if (!$auth0Id) {
+            throw new \Exception('Missing Auth0 ID from social provider');
         }
 
         // First, try to find user by Auth0 ID (already linked)
@@ -177,10 +207,30 @@ class SocialLoginController extends Controller
         if ($user) {
             // Update the user's Auth0 profile data
             $user->syncAuth0Profile($auth0User);
+            
+            Log::info('Found existing user by Auth0 ID', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'provider' => $this->extractProvider($auth0User)
+            ]);
+            
             return $user;
         }
 
-        // Try to find existing user by email
+        // For new users, we need at least an email to create an account
+        // However, Apple Sign-In has special handling
+        if (!$email) {
+            $provider = $this->extractProvider($auth0User);
+            
+            if ($provider === 'apple') {
+                // For Apple, try to create a user with a generated email if we have sufficient info
+                return $this->createAppleUserWithoutEmail($auth0User);
+            } else {
+                throw new \Exception('No email provided by social provider for new user registration.');
+            }
+        }
+
+        // Try to find existing user by email for account linking
         $user = User::where('email', $email)->first();
         
         if ($user) {
@@ -240,6 +290,60 @@ class SocialLoginController extends Controller
     }
 
     /**
+     * Create a new Apple user when email is not provided
+     * This handles Apple's "Hide My Email" feature
+     */
+    private function createAppleUserWithoutEmail(array $auth0User): User
+    {
+        // Generate a unique email based on the Apple ID
+        // Apple IDs look like: apple|001112.9efac3ba28ff49a7ad352a1055f81950.0015
+        $appleId = str_replace(['apple|', '.'], ['', '_'], $auth0User['sub']);
+        $generatedEmail = "apple_{$appleId}@app.private";
+        
+        // Ensure email is not too long (database constraint might be 255 chars)
+        if (strlen($generatedEmail) > 190) {
+            // Use hash if too long
+            $appleIdHash = substr(md5($auth0User['sub']), 0, 20);
+            $generatedEmail = "apple_{$appleIdHash}@app.private";
+        }
+        
+        // Check if this generated email already exists (shouldn't happen, but just in case)
+        $existingUser = User::where('email', $generatedEmail)->first();
+        if ($existingUser) {
+            throw new \Exception('A user with this Apple ID already exists but with different credentials. Please contact support.');
+        }
+
+        $userData = [
+            'fullName' => $this->extractName($auth0User) ?: 'Apple User',
+            'email' => $generatedEmail,
+            'password' => bcrypt(\Illuminate\Support\Str::random(32)), // Random password
+            'role' => 'client', // Default role for social signups
+            'status' => 'active',
+            'auth0_id' => $auth0User['sub'],
+            'auth_provider' => 'auth0',
+            'auth0_profile' => $auth0User,
+            'last_auth0_sync' => now(),
+            'email_verified_at' => now(), // Consider Apple-verified
+        ];
+
+        // Extract phone number if available
+        if (!empty($auth0User['phone_number'])) {
+            $userData['phoneNumber'] = $auth0User['phone_number'];
+        }
+
+        $user = User::create($userData);
+
+        Log::info('Created new Apple user without email', [
+            'user_id' => $user->id,
+            'generated_email' => $generatedEmail,
+            'auth0_id' => $auth0User['sub'],
+            'available_fields' => array_keys($auth0User)
+        ]);
+
+        return $user;
+    }
+
+    /**
      * Extract user's full name from social profile
      */
     private function extractName(array $auth0User): string
@@ -258,6 +362,12 @@ class SocialLoginController extends Controller
 
         if (!empty($auth0User['email'])) {
             return explode('@', $auth0User['email'])[0];
+        }
+
+        // For Apple users without any name info, generate a friendly name
+        $provider = $this->extractProvider($auth0User);
+        if ($provider === 'apple') {
+            return 'Apple User';
         }
 
         return 'Social User';
@@ -392,10 +502,29 @@ class SocialLoginController extends Controller
                 ->get("https://{$domain}/userinfo");
 
             if (!$userResponse->successful()) {
+                Log::error('Failed to get user info from Auth0', [
+                    'status' => $userResponse->status(),
+                    'response' => $userResponse->body()
+                ]);
                 throw new \Exception('Failed to get user info: ' . $userResponse->body());
             }
 
-            return $userResponse->json();
+            $userData = $userResponse->json();
+            
+            // Log what data we received for debugging purposes
+            Log::info('Received user data from Auth0', [
+                'auth0_id' => $userData['sub'] ?? 'missing',
+                'email' => $userData['email'] ?? 'missing',
+                'email_verified' => $userData['email_verified'] ?? 'unknown',
+                'name' => $userData['name'] ?? 'missing',
+                'given_name' => $userData['given_name'] ?? 'missing',
+                'family_name' => $userData['family_name'] ?? 'missing',
+                'nickname' => $userData['nickname'] ?? 'missing',
+                'picture' => isset($userData['picture']) ? 'present' : 'missing',
+                'all_fields' => array_keys($userData)
+            ]);
+
+            return $userData;
 
         } catch (\Exception $e) {
             Log::error('Failed to get Auth0 user from code', [

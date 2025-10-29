@@ -40,7 +40,7 @@
                                 New Project Assignment
                             </h2>
                             <p style="margin: 0; font-size: 15px; color: #64748B; line-height: 1.6;">
-                                You've been assigned to work on <strong style="color: #0F172A;">"{{ $assignment->project->title ?? $assignment->project->serviceRequest->project_name }}"</strong>.
+                                You've been assigned to work on <strong style="color: #0F172A;">"{{ $project->title ?? $project->serviceRequest->project_name }}"</strong>.
                             </p>
                         </td>
                     </tr>
@@ -67,7 +67,7 @@
                                                 Project Title
                                             </label>
                                             <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
-                                                {{ $assignment->project->title ?? $assignment->project->serviceRequest->project_name }}
+                                                {{ $project->title ?? $project->serviceRequest->project_name }}
                                             </div>
                                         </div>
                                         
@@ -76,7 +76,7 @@
                                                 Client
                                             </label>
                                             <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
-                                                {{ $assignment->project->client->name ?? $assignment->project->serviceRequest->client->name }}
+                                                {{ $project->client->name ?? $project->serviceRequest->client->name }}
                                             </div>
                                         </div>
                                         
@@ -85,7 +85,7 @@
                                                 Your Role
                                             </label>
                                             <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
-                                                {{ $assignment->role ?? 'Team Member' }}
+                                                Team Member
                                             </div>
                                         </div>
                                         
@@ -94,28 +94,28 @@
                                                 Assignment Date
                                             </label>
                                             <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
-                                                {{ $assignment->assigned_at->format('M d, Y') }}
+                                                {{ $assignment ? $assignment->created_at->format('M d, Y') : now()->format('M d, Y') }}
                                             </div>
                                         </div>
                                         
-                                        @if($assignment->project->timeline_start)
+                                        @if($project->started_at)
                                         <div style="margin-bottom: 16px;">
                                             <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
                                                 Start Date
                                             </label>
                                             <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
-                                                {{ $assignment->project->timeline_start->format('M d, Y') }}
+                                                {{ $project->started_at->format('M d, Y') }}
                                             </div>
                                         </div>
                                         @endif
                                         
-                                        @if($assignment->project->timeline_end)
+                                        @if($project->deadline)
                                         <div style="margin-bottom: 16px;">
                                             <label style="display: block; font-size: 12px; font-weight: 500; color: #64748B; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
                                                 Target Completion
                                             </label>
                                             <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
-                                                {{ $assignment->project->timeline_end->format('M d, Y') }}
+                                                {{ $project->deadline->format('M d, Y') }}
                                             </div>
                                         </div>
                                         @endif
@@ -125,28 +125,28 @@
                                                 Project Manager
                                             </label>
                                             <div style="font-size: 15px; color: #0F172A; font-weight: 600;">
-                                                {{ $assignment->assignedBy->name }}
+                                                {{ $assignedBy->name }}
                                             </div>
                                         </div>
                                     </td>
                                 </tr>
                             </table>
                             
-                            @if($assignment->project->description || $assignment->project->serviceRequest->project_description)
+                            @if($project->description || $project->serviceRequest->project_description)
                             <!-- Project Description -->
                             <div style="margin-top: 16px; padding: 12px 16px; background-color: #EEF2FF; border-left: 3px solid #3B82F6; border-radius: 4px;">
                                 <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.5; white-space: pre-line;">
-                                    {{ $assignment->project->description ?? $assignment->project->serviceRequest->project_description }}
+                                    {{ $project->description ?? $project->serviceRequest->project_description }}
                                 </p>
                             </div>
                             @endif
                             
-                            @if($assignment->responsibilities)
+                            @if($assignment && $assignment->notes)
                             <!-- Responsibilities -->
                             <div style="margin-top: 16px; padding: 12px 16px; background-color: #F0FDF4; border-left: 3px solid #16A34A; border-radius: 4px;">
-                                <p style="margin: 0; font-size: 13px; font-weight: 500; color: #0F172A; margin-bottom: 8px;">Your Responsibilities:</p>
+                                <p style="margin: 0; font-size: 13px; font-weight: 500; color: #0F172A; margin-bottom: 8px;">Assignment Notes:</p>
                                 <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.5; white-space: pre-line;">
-                                    {{ $assignment->responsibilities }}
+                                    {{ $assignment->notes }}
                                 </p>
                             </div>
                             @endif
@@ -163,7 +163,7 @@
                     <!-- CTA Button -->
                     <tr>
                         <td style="padding: 0 40px 32px; text-align: center;">
-                            <a href="{{ route('adiutor.projects.show', $assignment->project->id) }}" style="display: inline-block; background-color: #3B82F6; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 500; font-size: 14px; letter-spacing: 0.01em; transition: background-color 0.2s;">
+                            <a href="{{ route('adiutor.projects.show', $project->id) }}" style="display: inline-block; background-color: #3B82F6; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 500; font-size: 14px; letter-spacing: 0.01em; transition: background-color 0.2s;">
                                 Access Project Workspace
                             </a>
                         </td>

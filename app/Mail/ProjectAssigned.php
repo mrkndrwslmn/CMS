@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Project;
+use App\Models\ProjectAssignment;
 use App\Models\User;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -47,12 +48,20 @@ class ProjectAssigned extends BaseMailable
 
     public function content(): Content
     {
+        // Get the assignment for this project and adiutor
+        $assignment = $this->project->assignments()
+            ->where('adiutor_id', $this->adiutor->id)
+            ->where('status', 'assigned')
+            ->latest()
+            ->first();
+
         return new Content(
             view: 'emails.project-assigned',
             with: [
                 'project' => $this->project,
                 'adiutor' => $this->adiutor,
                 'assignedBy' => $this->assignedBy,
+                'assignment' => $assignment,
             ]
         );
     }

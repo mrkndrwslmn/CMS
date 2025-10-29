@@ -74,7 +74,7 @@
                                 
                                 <div style="margin-bottom: 20px;">
                                     <div style="font-size: 13px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Submitted Date</div>
-                                    <div style="font-size: 14px; color: #0F172A;">{{ $serviceRequest->submission_date->format('M d, Y \a\t g:i A') }}</div>
+                                    <div style="font-size: 14px; color: #0F172A;">{{ $serviceRequest->created_at->format('M d, Y \a\t g:i A') }}</div>
                                 </div>
                                 
                                 <div>
