@@ -164,16 +164,7 @@ class RevisionRequestController extends Controller
             foreach ($admins as $admin) {
                 $admin->notify(new RevisionRequestedNotification($revisionRequest));
                 
-                // Send revision request submitted email to admin
-                try {
-                    Mail::to($admin->email)->send(new RevisionRequestSubmitted($revisionRequest));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send revision request submitted email to admin', [
-                        'admin_id' => $admin->id,
-                        'revision_request_id' => $revisionRequest->id,
-                        'error' => $e->getMessage()
-                    ]);
-                }
+                // Email is now sent via the notification system, no need for direct Mail::to()->send()
             }
 
             // Also notify the adiutor if assigned
@@ -377,16 +368,7 @@ class RevisionRequestController extends Controller
             foreach ($admins as $admin) {
                 $admin->notify(new RevisionRequestedNotification($revisionRequest));
                 
-                // Send revision request submitted email to admin
-                try {
-                    Mail::to($admin->email)->send(new RevisionRequestSubmitted($revisionRequest));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send project revision request submitted email to admin', [
-                        'admin_id' => $admin->id,
-                        'revision_request_id' => $revisionRequest->id,
-                        'error' => $e->getMessage()
-                    ]);
-                }
+                // Email is now sent via the notification system, no need for direct Mail::to()->send()
             }
 
             // Notify assigned adiutor(s)

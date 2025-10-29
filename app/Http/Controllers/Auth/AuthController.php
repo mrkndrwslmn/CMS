@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Notifications\UserCreatedNotification;
+use App\Mail\WelcomeNewUserMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
-use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -95,6 +98,22 @@ class AuthController extends Controller
             'role' => $request->role,
             'status' => 'active',
         ]);
+
+        // 🔔 Notify all admins about new user registration
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new UserCreatedNotification($user, 'Self-Registration', false));
+        }
+
+        // 📧 Send welcome email to new user
+        try {
+            Mail::to($user->email)->send(new WelcomeNewUserMail($user));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send welcome email to new registered user', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         Auth::login($user);
 

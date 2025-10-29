@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Mail\PaymentConfirmed;
+use App\Models\Payment;
 use App\Models\ServiceRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
@@ -12,7 +13,7 @@ class PaymentConfirmedNotification extends Notification
     use Queueable;
 
     public function __construct(
-        protected ServiceRequest $serviceRequest
+        protected Payment $payment
     ) {
     }
 
@@ -29,7 +30,7 @@ class PaymentConfirmedNotification extends Notification
      */
     public function toMail($notifiable): PaymentConfirmed
     {
-        return (new PaymentConfirmed($this->serviceRequest))
+        return (new PaymentConfirmed($this->payment))
             ->onQueue('emails');
     }
 
@@ -38,18 +39,22 @@ class PaymentConfirmedNotification extends Notification
      */
     public function toArray($notifiable): array
     {
+        $serviceRequest = $this->payment->serviceRequest;
         $actionUrl = '';
-        if ($this->serviceRequest->project_id) {
-            $actionUrl = route('admin.projects.show', $this->serviceRequest->project_id);
+        if ($serviceRequest->project_id) {
+            $actionUrl = route('admin.projects.show', $serviceRequest->project_id);
         }
 
         return [
             'type' => 'payment_confirmed',
             'title' => 'Payment Confirmed',
-            'message' => "Payment confirmed for '{$this->serviceRequest->project_name}'. Project created.",
+            'message' => "Payment of ₱" . number_format($this->payment->amount, 2) . " confirmed for '{$serviceRequest->project_name}'.",
             'action_url' => $actionUrl,
-            'service_request_id' => $this->serviceRequest->id,
-            'project_name' => $this->serviceRequest->project_name,
+            'payment_id' => $this->payment->id,
+            'service_request_id' => $serviceRequest->id,
+            'amount' => $this->payment->amount,
+            'payment_type' => $this->payment->getPaymentTypeLabel(),
+            'project_name' => $serviceRequest->project_name,
         ];
     }
 }

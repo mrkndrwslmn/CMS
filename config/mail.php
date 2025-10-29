@@ -111,7 +111,7 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        'address' => env('MAIL_FROM_ADDRESS', 'hello@treisadiutor.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
@@ -128,28 +128,28 @@ return [
 
     'senders' => [
         'auth' => [
-            'address' => env('MAIL_AUTH_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
-            'name' => env('MAIL_AUTH_NAME', env('MAIL_FROM_NAME', 'Example')),
+            'address' => env('MAIL_AUTH_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@treisadiutor.com')),
+            'name' => env('MAIL_AUTH_NAME', env('MAIL_FROM_NAME', 'Treis Adiutor Auth')),
         ],
         'projects' => [
-            'address' => env('MAIL_PROJECTS_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
-            'name' => env('MAIL_PROJECTS_NAME', env('MAIL_FROM_NAME', 'Example')),
+            'address' => env('MAIL_PROJECTS_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@treisadiutor.com')),
+            'name' => env('MAIL_PROJECTS_NAME', env('MAIL_FROM_NAME', 'Treis Adiutor Projects')),
         ],
         'support' => [
-            'address' => env('MAIL_SUPPORT_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
-            'name' => env('MAIL_SUPPORT_NAME', env('MAIL_FROM_NAME', 'Example')),
+            'address' => env('MAIL_SUPPORT_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@treisadiutor.com')),
+            'name' => env('MAIL_SUPPORT_NAME', env('MAIL_FROM_NAME', 'Treis Adiutor Support')),
         ],
         'notifications' => [
-            'address' => env('MAIL_NOTIFICATIONS_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
-            'name' => env('MAIL_NOTIFICATIONS_NAME', env('MAIL_FROM_NAME', 'Example')),
+            'address' => env('MAIL_NOTIFICATIONS_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@treisadiutor.com')),
+            'name' => env('MAIL_NOTIFICATIONS_NAME', env('MAIL_FROM_NAME', 'Treis Adiutor Notifications')),
         ],
         'billing' => [
-            'address' => env('MAIL_BILLING_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
-            'name' => env('MAIL_BILLING_NAME', env('MAIL_FROM_NAME', 'Example')),
+            'address' => env('MAIL_BILLING_ADDRESS', env('MAIL_FROM_ADDRESS', 'hello@treisadiutor.com')),
+            'name' => env('MAIL_BILLING_NAME', env('MAIL_FROM_NAME', 'Treis Adiutor Billing')),
         ],
         'default' => [
-            'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-            'name' => env('MAIL_FROM_NAME', 'Example'),
+            'address' => env('MAIL_FROM_ADDRESS', 'hello@treisadiutor.com'),
+            'name' => env('MAIL_FROM_NAME', 'Treis Adiutor'),
         ],
     ],
 

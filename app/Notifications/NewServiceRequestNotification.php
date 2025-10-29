@@ -30,7 +30,11 @@ class NewServiceRequestNotification extends Notification
      */
     public function toMail($notifiable): NewServiceRequest
     {
-        return (new NewServiceRequest($this->serviceRequest, $notifiable, $this->isNewUser))
+        $mailable = new NewServiceRequest($this->serviceRequest, $notifiable, $this->isNewUser);
+        
+        // Ensure the recipient is set
+        return $mailable
+            ->to($notifiable->email, $notifiable->fullName)
             ->onQueue('emails');
     }
 

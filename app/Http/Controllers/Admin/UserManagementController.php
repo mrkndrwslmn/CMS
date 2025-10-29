@@ -4,9 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\UserCreatedNotification;
+use App\Notifications\UserStatusChangedNotification;
+use App\Notifications\UserDeletedNotification;
+use App\Mail\AccountDeactivatedMail;
+use App\Mail\AccountReactivatedMail;
+use App\Mail\WelcomeNewUserMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class UserManagementController extends Controller
@@ -84,6 +91,22 @@ class UserManagementController extends Controller
             'status' => $request->status,
         ]);
 
+        // Notify all admins about new user creation
+        $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new UserCreatedNotification($user, Auth::user()->fullName, true));
+        }
+
+        // 📧 Send welcome email to new user
+        try {
+            Mail::to($user->email)->send(new WelcomeNewUserMail($user));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send welcome email to new user', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
         return redirect()->route('admin.users.index')
             ->with('success', 'User created successfully.');
     }
@@ -130,6 +153,23 @@ class UserManagementController extends Controller
             'status' => 'required|in:active,inactive',
         ]);
 
+        // Track changes for notifications
+        $changes = [];
+        $oldStatus = $user->status;
+        
+        if ($user->fullName !== $request->fullName) {
+            $changes['fullName'] = ['old' => $user->fullName, 'new' => $request->fullName];
+        }
+        if ($user->email !== $request->email) {
+            $changes['email'] = ['old' => $user->email, 'new' => $request->email];
+        }
+        if ($user->role !== $request->role) {
+            $changes['role'] = ['old' => $user->role, 'new' => $request->role];
+        }
+        if ($user->status !== $request->status) {
+            $changes['status'] = ['old' => $user->status, 'new' => $request->status];
+        }
+
         $userData = [
             'fullName' => $request->fullName,
             'email' => $request->email,
@@ -140,9 +180,36 @@ class UserManagementController extends Controller
 
         if ($request->filled('password')) {
             $userData['password'] = Hash::make($request->password);
+            $changes['password'] = 'Password updated';
         }
 
         $user->update($userData);
+
+        // 🔔 Notify admins about user updates if there were changes
+        if (!empty($changes)) {
+            $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
+            foreach ($admins as $admin) {
+                // Create a custom notification for user updates
+                $admin->notify(new \App\Notifications\UserUpdatedNotification($user, $changes, Auth::user()->fullName));
+            }
+        }
+
+        // 📧 Send email for status changes
+        if (isset($changes['status'])) {
+            try {
+                if ($request->status === 'inactive' && $oldStatus === 'active') {
+                    Mail::to($user->email)->send(new AccountDeactivatedMail($user));
+                } elseif ($request->status === 'active' && $oldStatus === 'inactive') {
+                    Mail::to($user->email)->send(new AccountReactivatedMail($user));
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send status change email', [
+                    'user_id' => $user->id,
+                    'status_change' => $changes['status'],
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User updated successfully.');
@@ -166,7 +233,28 @@ class UserManagementController extends Controller
                 ->with('error', 'Cannot delete user with active tasks or assignments.');
         }
 
+        // 🔔 Notify admins before deletion
+        $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new UserDeletedNotification($user, Auth::user()->fullName));
+        }
+
+        // Store user data for potential email notification
+        $userEmail = $user->email;
+        $userName = $user->fullName;
+
         $user->delete();
+
+        // 📧 Optional: Send deletion notification email to user (if they had important data)
+        // This is typically not recommended for security reasons, but can be enabled if needed
+        // try {
+        //     Mail::to($userEmail)->send(new AccountDeletedMail($userName));
+        // } catch (\Exception $e) {
+        //     \Log::error('Failed to send account deletion email', [
+        //         'user_email' => $userEmail,
+        //         'error' => $e->getMessage()
+        //     ]);
+        // }
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User deleted successfully.');
@@ -185,7 +273,30 @@ class UserManagementController extends Controller
                 ->with('error', 'You cannot deactivate your own account.');
         }
 
+        $oldStatus = $user->status;
         $user->update(['status' => $newStatus]);
+
+        // 🔔 Notify admins about status change
+        $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new UserStatusChangedNotification($user, $newStatus, Auth::user()->fullName));
+        }
+
+        // 📧 Send email notification to user about status change
+        try {
+            if ($newStatus === 'inactive') {
+                Mail::to($user->email)->send(new AccountDeactivatedMail($user));
+            } elseif ($newStatus === 'active') {
+                Mail::to($user->email)->send(new AccountReactivatedMail($user));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send status change email', [
+                'user_id' => $user->id,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', "User {$newStatus} successfully.");

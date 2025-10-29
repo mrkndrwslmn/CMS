@@ -107,10 +107,7 @@ class BudgetChangeRequestController extends Controller
             // Reload budget request to get updated data
             $budgetRequest->refresh();
             
-            // Send new Mail class email
-            Mail::to($adiutor->email)->send(new BudgetChangeReviewed($budgetRequest));
-            
-            // Also send notification for dashboard
+            // Send notification for dashboard and email
             $adiutor->notify(new BudgetChangeReviewedNotification(
                 $task,
                 'approved',
@@ -162,10 +159,7 @@ class BudgetChangeRequestController extends Controller
             // Reload budget request to get updated data
             $budgetRequest->refresh();
             
-            // Send new Mail class email
-            Mail::to($adiutor->email)->send(new BudgetChangeReviewed($budgetRequest));
-            
-            // Also send notification for dashboard
+            // Send notification for dashboard and email
             $adiutor->notify(new BudgetChangeReviewedNotification(
                 $task,
                 'rejected',

@@ -8,6 +8,11 @@ use App\Models\User;
 use App\Models\Project;
 use App\Mail\TaskAssigned;
 use App\Mail\TaskCompleted;
+use App\Mail\TaskDeadlineChangedMail;
+use App\Mail\TaskPriorityUrgentMail;
+use App\Notifications\TaskCreatedNotification;
+use App\Notifications\TaskUpdatedNotification;
+use App\Notifications\TaskDeletedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -178,6 +183,18 @@ class TaskManagementController extends Controller
             'dateAssigned' => $request->assignedTo ? now() : null,
         ]);
         
+        // 🔔 Notify all admins about new task creation
+        $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new TaskCreatedNotification($task, Auth::user()->fullName));
+        }
+
+        // 🔔 Notify client about new task
+        $client = User::find($project->client_id);
+        if ($client) {
+            $client->notify(new TaskCreatedNotification($task, 'Admin'));
+        }
+        
         // Send email notification if task is assigned to someone
         if ($request->assignedTo) {
             try {
@@ -232,53 +249,33 @@ class TaskManagementController extends Controller
             'progress_percentage' => 'nullable|integer|min:0|max:100',
             'completedAt' => 'nullable|date',
         ]);
+
+        // Track changes for notifications
+        $changes = [];
+        $oldDeadline = $task->deadline;
+        $oldPriority = $task->priority;
+        $oldAssignedTo = $task->assignedTo;
+        $oldStatus = $task->status;
+        
+        if ($task->taskTitle !== $request->taskTitle) {
+            $changes['title'] = ['old' => $task->taskTitle, 'new' => $request->taskTitle];
+        }
+        if ($task->priority !== $request->priority) {
+            $changes['priority'] = ['old' => $task->priority, 'new' => $request->priority];
+        }
+        if ($task->deadline != $request->deadline) {
+            $changes['deadline'] = ['old' => $task->deadline, 'new' => $request->deadline];
+        }
+        if ($task->assignedTo != $request->assignedTo) {
+            $changes['assigned_to'] = ['old' => $task->assignedUser->fullName ?? 'Unassigned', 'new' => $request->assignedTo ? User::find($request->assignedTo)->fullName : 'Unassigned'];
+        }
+        if ($task->status !== $request->status) {
+            $changes['status'] = ['old' => $task->status, 'new' => $request->status];
+        }
         
         // Get project info for validation
         $project = Project::with('serviceRequest')->findOrFail($request->project_id);
         
-        // Validate phase_id if project has milestone payment
-        if ($project->serviceRequest && $project->serviceRequest->payment_type === 'milestone_payment') {
-            if (!$request->phase_id) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['phase_id' => 'Phase selection is required for milestone payment projects.']);
-            }
-            
-            // Validate that the phase belongs to this project
-            $phaseExists = DB::table('project_milestones')
-                ->where('id', $request->phase_id)
-                ->where('project_id', $project->id)
-                ->exists();
-            
-            if (!$phaseExists) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['phase_id' => 'The selected phase does not belong to this project.']);
-            }
-        }
-        
-        // ⚠️ Validate that assigned adiutor is a team member (if changing assignment)
-        if ($request->assignedTo && $request->assignedTo != $task->assignedTo) {
-            if (!$this->isProjectTeamMember($request->project_id, $request->assignedTo)) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['assignedTo' => 'The selected adiutor is not a team member of this project. Please assign them to the project first.']);
-            }
-        }
-        
-        // Check budget allocation if changed
-        if ($request->allocated_budget && $request->allocated_budget != $task->allocated_budget) {
-            $totalAllocated = Task::where('project_id', $request->project_id)
-                                 ->where('taskID', '!=', $task->taskID)
-                                 ->sum('allocated_budget') ?? 0;
-            $newTotal = $totalAllocated + $request->allocated_budget;
-            
-            if ($project->budget && $newTotal > $project->budget) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['allocated_budget' => 'Total allocated budget would exceed project budget.']);
-            }
-        }
         
         $updateData = [
             'project_id' => $request->project_id,
@@ -316,19 +313,58 @@ class TaskManagementController extends Controller
         }
         
         $task->update($updateData);
+
+        // 🔔 Notify stakeholders about task updates if there were changes
+        if (!empty($changes)) {
+            // Notify admins
+            $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new TaskUpdatedNotification($task, $changes, Auth::user()->fullName));
+            }
+
+            // Notify client
+            $client = User::find($task->client_id);
+            if ($client) {
+                $client->notify(new TaskUpdatedNotification($task, $changes, Auth::user()->fullName));
+            }
+
+            // Notify assignee if different from current user
+            if ($task->assignedTo && $task->assignedTo != Auth::id()) {
+                $assignee = User::find($task->assignedTo);
+                if ($assignee) {
+                    $assignee->notify(new TaskUpdatedNotification($task, $changes, Auth::user()->fullName));
+                }
+            }
+        }
         
-        // Send email notifications for status/assignment changes
+        // Send email notifications for important changes
         try {
             // Send task assignment email if assignee changed
-            if ($request->assignedTo && $request->assignedTo != $task->assignedTo) {
+            if ($request->assignedTo && $request->assignedTo != $oldAssignedTo) {
                 $assignee = User::findOrFail($request->assignedTo);
                 $assignedBy = Auth::user();
                 $task->refresh(); // Get updated task data
                 Mail::to($assignee->email)->send(new TaskAssigned($task, $assignee, $assignedBy));
             }
+
+            // Send deadline change email if deadline changed significantly
+            if ($request->deadline && $oldDeadline && $request->deadline != $oldDeadline && $task->assignedTo) {
+                $assignee = User::find($task->assignedTo);
+                if ($assignee) {
+                    Mail::to($assignee->email)->send(new TaskDeadlineChangedMail($task, $oldDeadline, $request->deadline));
+                }
+            }
+
+            // Send urgent priority email if priority changed to urgent
+            if ($request->priority === 'urgent' && $oldPriority !== 'urgent' && $task->assignedTo) {
+                $assignee = User::find($task->assignedTo);
+                if ($assignee) {
+                    Mail::to($assignee->email)->send(new TaskPriorityUrgentMail($task));
+                }
+            }
             
             // Send task completion email if status changed to completed
-            if ($request->status === 'completed' && $task->status !== 'completed' && $task->assignedUser) {
+            if ($request->status === 'completed' && $oldStatus !== 'completed' && $task->assignedUser) {
                 $task->refresh(); // Get updated task data
                 Mail::to($task->client->email)->send(new TaskCompleted($task, $task->assignedUser));
             }
@@ -343,7 +379,28 @@ class TaskManagementController extends Controller
     
     public function destroy($id)
     {
-        $task = Task::findOrFail($id);
+        $task = Task::with(['assignedUser', 'project'])->findOrFail($id);
+        
+        // 🔔 Notify stakeholders before deletion
+        $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new TaskDeletedNotification($task, Auth::user()->fullName));
+        }
+
+        // Notify client
+        $client = User::find($task->client_id);
+        if ($client) {
+            $client->notify(new TaskDeletedNotification($task, Auth::user()->fullName));
+        }
+
+        // Notify assignee if active
+        if ($task->assignedTo && $task->status === 'in_progress') {
+            $assignee = User::find($task->assignedTo);
+            if ($assignee) {
+                $assignee->notify(new TaskDeletedNotification($task, Auth::user()->fullName));
+            }
+        }
+
         $task->delete();
         
         return redirect()->route('admin.tasks.index')

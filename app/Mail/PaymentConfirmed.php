@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Services\EmailSenderService;
 use Illuminate\Mail\Mailables\Content;
@@ -10,6 +11,7 @@ use Illuminate\Mail\Mailables\Address;
 
 class PaymentConfirmed extends BaseMailable
 {
+    public $payment;
     public $serviceRequest;
 
     /**
@@ -20,9 +22,10 @@ class PaymentConfirmed extends BaseMailable
     /**
      * Create a new message instance.
      */
-    public function __construct(ServiceRequest $serviceRequest)
+    public function __construct(Payment $payment)
     {
-        $this->serviceRequest = $serviceRequest;
+        $this->payment = $payment;
+        $this->serviceRequest = $payment->serviceRequest;
         
         parent::__construct();
     }
@@ -55,7 +58,8 @@ class PaymentConfirmed extends BaseMailable
      */
     protected function getSubject(): string
     {
-        return 'Payment Confirmed - Project Starting';
+        $paymentType = $this->payment->getPaymentTypeLabel();
+        return "Payment Confirmed - {$paymentType}";
     }
 
     /**
@@ -66,6 +70,7 @@ class PaymentConfirmed extends BaseMailable
         return new Content(
             view: 'emails.payment-confirmed',
             with: [
+                'payment' => $this->payment,
                 'serviceRequest' => $this->serviceRequest,
             ]
         );

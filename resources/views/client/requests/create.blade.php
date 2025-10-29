@@ -416,6 +416,9 @@
         </form>
     </div>
 
+    @endsection
+
+    @push('scripts')
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Auto-populate form from URL parameters
@@ -600,5 +603,5 @@
         fileInput.dispatchEvent(new Event('change'));
     }
     </script>
-</body>
-</html>
+    
+    @endpush

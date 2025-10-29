@@ -278,28 +278,16 @@ class MayaPaymentController extends Controller
                         ]);
                     }
 
-                    // Send payment confirmation email using Eloquent model
-                    try {
-                        $serviceRequestModel = \App\Models\ServiceRequest::find($payment->service_request_id);
-                        $clientUser = \App\Models\User::find($payment->client_id);
-                        
-                        if ($serviceRequestModel && $clientUser) {
-                            Mail::to($clientUser->email)->send(new PaymentConfirmed($serviceRequestModel));
-                            Log::info('Payment confirmation email sent', [
-                                'client_email' => $clientUser->email,
-                                'service_request_id' => $payment->service_request_id
-                            ]);
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Failed to send payment confirmation email', [
-                            'error' => $e->getMessage()
-                        ]);
+                    // Notify client about payment confirmation
+                    $clientUser = \App\Models\User::find($payment->client_id);
+                    if ($clientUser) {
+                        $clientUser->notify(new PaymentConfirmedNotification($payment));
                     }
 
                     // Notify admins using Laravel's notification structure
                     $admins = User::where('role', 'admin')->get();
                     foreach ($admins as $admin) {
-                        $admin->notify(new PaymentConfirmedNotification($serviceRequest));
+                        $admin->notify(new PaymentConfirmedNotification($payment));
                     }
 
                     Log::info('Payment confirmed successfully', [

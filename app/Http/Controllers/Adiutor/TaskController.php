@@ -13,6 +13,8 @@ use App\Notifications\BudgetChangeRequestNotification;
 use App\Notifications\ProjectAcceptedNotification;
 use App\Notifications\ProjectDeclinedNotification;
 use App\Notifications\ProjectProgressUpdateNotification;
+use App\Notifications\TaskCreatedNotification;
+use App\Notifications\FileUploadedNotification;
 use App\Mail\BudgetChangeRequested;
 use App\Services\CloudflareR2Service;
 use Illuminate\Http\Request;
@@ -324,6 +326,18 @@ class TaskController extends Controller
             'dateAssigned' => now(),
         ]);
         
+        // 🔔 Notify admins about self-assigned task creation
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new TaskCreatedNotification($task, Auth::user()->fullName . ' (Self-assigned)'));
+        }
+
+        // 🔔 Notify client about new task
+        $client = User::find($project->client_id);
+        if ($client) {
+            $client->notify(new TaskCreatedNotification($task, Auth::user()->fullName));
+        }
+        
         return redirect()->route('adiutor.tasks.show', $task->taskID)
             ->with('success', 'Task created successfully.');
     }
@@ -404,10 +418,7 @@ class TaskController extends Controller
         // Send email notifications to all admins
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
-            // Send new Mail class email
-            Mail::to($admin->email)->send(new BudgetChangeRequested($budgetRequest));
-            
-            // Also send notification for dashboard
+            // Send notification for dashboard and email
             $admin->notify(new BudgetChangeRequestNotification(
                 $task,
                 Auth::user(),
@@ -472,6 +483,44 @@ class TaskController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            // 🔔 Notify client about file upload (especially for deliverables)
+            $task = DB::table('tasks')
+                ->join('projects', 'tasks.project_id', '=', 'projects.id')
+                ->where('tasks.taskID', $taskId)
+                ->select('tasks.*', 'projects.client_id', 'projects.title as project_title')
+                ->first();
+
+            if ($task) {
+                $client = User::find($task->client_id);
+                if ($client) {
+                    // Determine if this is likely a deliverable based on description or file type
+                    $isDeliverable = $request->description && 
+                        (str_contains(strtolower($request->description), 'deliverable') ||
+                         str_contains(strtolower($request->description), 'final') ||
+                         str_contains(strtolower($request->description), 'completed'));
+
+                    $client->notify(new FileUploadedNotification(
+                        $uploadResult['original_name'],
+                        $task->taskTitle,
+                        $taskId,
+                        Auth::user()->fullName,
+                        $isDeliverable
+                    ));
+                }
+
+                // Also notify admins
+                $admins = User::where('role', 'admin')->get();
+                foreach ($admins as $admin) {
+                    $admin->notify(new FileUploadedNotification(
+                        $uploadResult['original_name'],
+                        $task->taskTitle,
+                        $taskId,
+                        Auth::user()->fullName,
+                        false
+                    ));
+                }
+            }
             
             return redirect()->back()->with('success', 'File uploaded successfully to cloud storage.');
         } else {

@@ -8,12 +8,17 @@ use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Models\Task;
 use App\Mail\ProjectAssigned;
+use App\Mail\ProjectCancelledMail;
+use App\Mail\AdiutorRemovedFromProjectMail;
+use App\Notifications\ProjectCompletedNotification;
+use App\Notifications\ProjectCreatedNotification;
+use App\Notifications\ProjectStatusChangedNotification;
+use App\Notifications\AdiutorRemovedFromProjectNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
-use App\Notifications\ProjectCompletedNotification;
 
 class ProjectManagementController extends Controller
 {
@@ -157,6 +162,18 @@ class ProjectManagementController extends Controller
             'started_at' => now(),
         ]);
 
+        // 🔔 Notify all admins about new project creation
+        $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new ProjectCreatedNotification($project, Auth::user()->fullName));
+        }
+
+        // 🔔 Notify client about project creation
+        $client = User::find($project->client_id);
+        if ($client) {
+            $client->notify(new ProjectCreatedNotification($project, 'Admin'));
+        }
+
         return redirect()->route('admin.projects.show', $project->id)
                         ->with('success', 'Project created successfully.');
     }
@@ -261,7 +278,8 @@ class ProjectManagementController extends Controller
             'status' => 'required|in:active,in_progress,review,completed,cancelled',
         ]);
 
-        $project = Project::findOrFail($id);
+        $project = Project::with(['client', 'adiutors'])->findOrFail($id);
+        $oldStatus = $project->status;
         
         $updateData = ['status' => $request->status];
         
@@ -273,6 +291,38 @@ class ProjectManagementController extends Controller
         }
         
         $project->update($updateData);
+
+        // 🔔 Notify client about status change
+        if ($project->client) {
+            $project->client->notify(new ProjectStatusChangedNotification($project, $oldStatus, Auth::user()->fullName));
+        }
+
+        // 🔔 Notify assigned adiutors about status change
+        foreach ($project->adiutors as $adiutor) {
+            $adiutor->notify(new ProjectStatusChangedNotification($project, $oldStatus, Auth::user()->fullName));
+        }
+
+        // 📧 Send email for important status changes
+        try {
+            if ($request->status === 'cancelled') {
+                // Notify client
+                if ($project->client) {
+                    Mail::to($project->client->email)->send(new ProjectCancelledMail($project, 'Project cancelled by admin'));
+                }
+                
+                // Notify all assigned adiutors
+                foreach ($project->adiutors as $adiutor) {
+                    Mail::to($adiutor->email)->send(new ProjectCancelledMail($project, 'Project cancelled by admin'));
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send project status change email', [
+                'project_id' => $id,
+                'old_status' => $oldStatus,
+                'new_status' => $request->status,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Project status updated successfully.');
     }
@@ -337,6 +387,9 @@ class ProjectManagementController extends Controller
      */
     public function removeAdiutor($projectId, $adiutorId)
     {
+        $project = Project::findOrFail($projectId);
+        $adiutor = User::findOrFail($adiutorId);
+
         DB::table('project_assignments')
             ->where('project_id', $projectId)
             ->where('adiutor_id', $adiutorId)
@@ -344,6 +397,29 @@ class ProjectManagementController extends Controller
                 'status' => 'removed',
                 'updated_at' => now(),
             ]);
+
+        // 🔔 Notify the removed adiutor
+        $adiutor->notify(new AdiutorRemovedFromProjectNotification(
+            $project->title,
+            $project->id,
+            $project->client->fullName ?? 'Unknown Client',
+            Auth::user()->fullName
+        ));
+
+        // 📧 Send email notification to removed adiutor
+        try {
+            Mail::to($adiutor->email)->send(new AdiutorRemovedFromProjectMail(
+                $project->title,
+                $project->client->fullName ?? 'Unknown Client',
+                'Removed by project administrator'
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send adiutor removal email', [
+                'project_id' => $projectId,
+                'adiutor_id' => $adiutorId,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Adiutor removed from project successfully.');
     }
