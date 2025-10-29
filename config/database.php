@@ -93,6 +93,21 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
+            // Azure MySQL Performance Optimizations
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_STRINGIFY_FETCHES => false,
+                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET sql_mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'",
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+            ]) : [],
+            // Connection pool settings for Azure
+            'pool' => [
+                'size' => 10,
+                'max_connections' => 20,
+                'idle_timeout' => 300,
+            ],
             'engine' => null,
             'options' => [],
             'dump' => [

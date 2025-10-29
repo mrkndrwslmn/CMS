@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use App\Traits\Auditable;
 
 class Task extends Model
 {
-    use HasFactory;
+    use HasFactory, Auditable;
 
     protected $table = 'tasks';
     protected $primaryKey = 'taskID';

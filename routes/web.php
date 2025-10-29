@@ -4,8 +4,11 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminTemplateController;
+use App\Http\Controllers\Admin\AdminAuditController;
 use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Adiutor\AdiutorController;
+use App\Http\Controllers\Adiutor\TimeTrackingController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\AiSearchController;
 use App\Http\Controllers\PublicServiceRequestController;
@@ -209,6 +212,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 // Admin routes
 Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard/refresh', [AdminController::class, 'refreshDashboard'])->name('dashboard.refresh');
+    Route::get('/dashboard/download-report', [AdminController::class, 'downloadReport'])->name('dashboard.download');
     
     // Notifications
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
@@ -235,6 +240,29 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::get('/export', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'export'])->name('export');
         Route::get('/{id}', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'show'])->name('show');
         Route::patch('/{id}/status', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'updateStatus'])->name('update-status');
+    });
+    
+    // Project Template Management
+    Route::prefix('templates')->name('templates.')->group(function () {
+        Route::get('/', [AdminTemplateController::class, 'index'])->name('index');
+        Route::get('/create', [AdminTemplateController::class, 'create'])->name('create');
+        Route::post('/', [AdminTemplateController::class, 'store'])->name('store');
+        Route::get('/{template}', [AdminTemplateController::class, 'show'])->name('show');
+        Route::get('/{template}/edit', [AdminTemplateController::class, 'edit'])->name('edit');
+        Route::put('/{template}', [AdminTemplateController::class, 'update'])->name('update');
+        Route::delete('/{template}', [AdminTemplateController::class, 'destroy'])->name('destroy');
+        Route::post('/{template}/toggle', [AdminTemplateController::class, 'toggle'])->name('toggle');
+        Route::post('/{template}/duplicate', [AdminTemplateController::class, 'duplicate'])->name('duplicate');
+    });
+    
+    // Audit Log Management
+    Route::prefix('audit')->name('audit.')->group(function () {
+        Route::get('/', [AdminAuditController::class, 'index'])->name('index');
+        Route::get('/{auditLog}', [AdminAuditController::class, 'show'])->name('show');
+        Route::get('/api/logs', [AdminAuditController::class, 'logs'])->name('logs');
+        Route::get('/api/statistics', [AdminAuditController::class, 'statistics'])->name('statistics');
+        Route::get('/export/csv', [AdminAuditController::class, 'export'])->name('export');
+        Route::post('/cleanup', [AdminAuditController::class, 'cleanup'])->name('cleanup');
     });
     
     // User Management
@@ -332,6 +360,13 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::get('/documents', [\App\Http\Controllers\Admin\ReportingController::class, 'documents'])->name('documents');
         Route::get('/export', [\App\Http\Controllers\Admin\ReportingController::class, 'export'])->name('export');
         Route::get('/custom', [\App\Http\Controllers\Admin\ReportingController::class, 'customReport'])->name('custom');
+        
+        // Custom Reports API endpoints
+        Route::post('/custom/generate', [\App\Http\Controllers\Admin\ReportingController::class, 'generateCustomReport'])->name('custom.generate');
+        Route::post('/custom/preview', [\App\Http\Controllers\Admin\ReportingController::class, 'previewCustomReport'])->name('custom.preview');
+        Route::post('/custom/templates', [\App\Http\Controllers\Admin\ReportingController::class, 'saveCustomTemplate'])->name('custom.template.save');
+        Route::get('/custom/templates', [\App\Http\Controllers\Admin\ReportingController::class, 'getCustomTemplates'])->name('custom.templates');
+        Route::get('/custom/filters/{type}', [\App\Http\Controllers\Admin\ReportingController::class, 'getFilterOptions'])->name('custom.filters');
     });
     
     // Messaging routes
@@ -448,6 +483,18 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
         Route::get('/download-file/{fileId}', [\App\Http\Controllers\Adiutor\TaskController::class, 'downloadFile'])->name('download-file');
         Route::delete('/delete-file/{fileId}', [\App\Http\Controllers\Adiutor\TaskController::class, 'deleteFile'])->name('delete-file');
         Route::post('/{task}/request-budget-change', [\App\Http\Controllers\Adiutor\TaskController::class, 'requestBudgetChange'])->name('request-budget-change');
+        Route::post('/{task}/update-progress', [\App\Http\Controllers\Adiutor\TaskController::class, 'updateTaskProgress'])->name('update-progress');
+    });
+    
+    // Time Tracking Routes
+    Route::prefix('time-tracking')->name('time-tracking.')->group(function () {
+        Route::get('/', [TimeTrackingController::class, 'index'])->name('index');
+        Route::get('/status', [TimeTrackingController::class, 'status'])->name('status');
+        Route::get('/entries', [TimeTrackingController::class, 'entries'])->name('entries');
+        Route::post('/start', [TimeTrackingController::class, 'start'])->name('start');
+        Route::post('/stop', [TimeTrackingController::class, 'stop'])->name('stop');
+        Route::put('/entries/{timeEntry}', [TimeTrackingController::class, 'update'])->name('entries.update');
+        Route::delete('/entries/{timeEntry}', [TimeTrackingController::class, 'delete'])->name('entries.delete');
     });
     
     // Profile management routes

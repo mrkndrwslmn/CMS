@@ -33,6 +33,7 @@
                         Dashboard Overview
                     </h1>
                     <p class="text-neutral-500">Welcome back, <span class="font-medium text-accent-500">{{ Auth::user()->fullName }}</span>! Here's what's happening today.</p>
+                    <p class="text-xs text-neutral-400 mt-1" data-timestamp>Last updated: {{ now()->format('F d, Y \a\t g:i A') }}</p>
                 </div>
                 <div class="mt-4 md:mt-0">
                     <div class="flex items-center space-x-3">
@@ -60,7 +61,7 @@
                             <div>
                                 <div class="text-xs uppercase font-bold text-neutral-500 mb-1">Total Users</div>
                                 <div class="flex items-baseline">
-                                    <div class="text-2xl font-bold text-primary-500">{{ number_format($stats['total_users']) }}</div>
+                                    <div class="text-2xl font-bold text-primary-500" data-stat="total-users">{{ number_format($stats['total_users']) }}</div>
                                     <div class="ml-2 px-2 py-0.5 bg-success-50 text-success-500 text-xs font-medium rounded-full flex items-center">
                                         <i class="fas fa-arrow-up mr-1"></i>12%
                                     </div>
@@ -88,7 +89,7 @@
                             <div>
                                 <div class="text-xs uppercase font-bold text-neutral-500 mb-1">Active Tasks</div>
                                 <div class="flex items-baseline">
-                                    <div class="text-2xl font-bold text-primary-500">{{ number_format($stats['active_tasks']) }}</div>
+                                    <div class="text-2xl font-bold text-primary-500" data-stat="active-tasks">{{ number_format($stats['active_tasks']) }}</div>
                                     <div class="ml-2 px-2 py-0.5 bg-accent-50 text-accent-500 text-xs font-medium rounded-full flex items-center">
                                         <i class="fas fa-clock mr-1"></i>In progress
                                     </div>
@@ -116,7 +117,7 @@
                             <div>
                                 <div class="text-xs uppercase font-bold text-neutral-500 mb-1">Pending Requests</div>
                                 <div class="flex items-baseline">
-                                    <div class="text-2xl font-bold text-primary-500">{{ number_format($stats['pending_requests']) }}</div>
+                                    <div class="text-2xl font-bold text-primary-500" data-stat="pending-requests">{{ number_format($stats['pending_requests']) }}</div>
                                     <div class="ml-2 px-2 py-0.5 bg-warning-50 text-warning-500 text-xs font-medium rounded-full flex items-center">
                                         <i class="fas fa-exclamation-triangle mr-1"></i>Attention
                                     </div>
@@ -144,7 +145,7 @@
                             <div>
                                 <div class="text-xs uppercase font-bold text-neutral-500 mb-1">Completed Tasks</div>
                                 <div class="flex items-baseline">
-                                    <div class="text-2xl font-bold text-primary-500">{{ number_format($stats['completed_tasks']) }}</div>
+                                    <div class="text-2xl font-bold text-primary-500" data-stat="completed-tasks">{{ number_format($stats['completed_tasks']) }}</div>
                                     <div class="ml-2 px-2 py-0.5 bg-success-50 text-success-500 text-xs font-medium rounded-full flex items-center">
                                         <i class="fas fa-check-circle mr-1"></i>All time
                                     </div>
@@ -542,39 +543,171 @@
     
     // Function to download report
     function downloadReport() {
-        // Placeholder function for download report functionality
-        console.log('Downloading report for: ' + Alpine.store('timeFilter'));
-        // Implementation would go here
-        alert('Report download started for ' + Alpine.store('timeFilter'));
+        const timeFilter = Alpine.store('timeFilter');
+        console.log('Downloading report for: ' + timeFilter);
+        
+        // Show loading state
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+        button.disabled = true;
+        
+        // Create download URL with filter parameter
+        const downloadUrl = `{{ route('admin.dashboard.download') }}?filter=${encodeURIComponent(timeFilter)}`;
+        
+        // Create temporary link for download
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `dashboard_report_${timeFilter.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Reset button state
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+            
+            // Show success notification
+            showToast('success', 'Report downloaded successfully');
+        }, 1500);
     }
     
     // Function to refresh dashboard data
     function refreshDashboard() {
         console.log('Refreshing dashboard data...');
-        // In a real implementation, this would fetch fresh data from the server
-        // For now, we'll just display a message
         
-        // You could implement a fetch call here to refresh the data
-        // fetch('/admin/dashboard/refresh')
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         // Update the charts and stats
-        //         updateCharts(data);
-        //     });
+        // Show loading toast
+        showToast('info', 'Refreshing dashboard data...', 2000);
         
-        // Show toast notification
+        // Fetch fresh data from server
+        fetch('{{ route('admin.dashboard.refresh') }}', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                // Update stats cards
+                updateStatsCards(data.data.stats);
+                
+                // Update charts
+                updateCharts(data.data.monthlyUsers, data.data.taskStats);
+                
+                // Update timestamp
+                updateLastRefreshed(data.data.timestamp);
+                
+                // Show success notification
+                showToast('success', 'Dashboard data refreshed successfully');
+            } else {
+                throw new Error(data.message || 'Failed to refresh data');
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing dashboard:', error);
+            showToast('error', 'Failed to refresh dashboard data');
+        });
+    }
+    
+    // Helper function to show toast notifications
+    function showToast(type, message, duration = 3000) {
         const toastEl = document.createElement('div');
-        toastEl.className = 'fixed bottom-4 right-4 bg-success-50 text-success-500 px-4 py-2 rounded-lg shadow-lg z-50 flex items-center';
-        toastEl.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Dashboard data refreshed';
+        
+        // Define toast styles based on type
+        const typeStyles = {
+            success: 'bg-success-50 text-success-500 border-success-200',
+            error: 'bg-red-50 text-red-500 border-red-200',
+            info: 'bg-blue-50 text-blue-500 border-blue-200',
+            warning: 'bg-yellow-50 text-yellow-500 border-yellow-200'
+        };
+        
+        const typeIcons = {
+            success: 'fas fa-check-circle',
+            error: 'fas fa-exclamation-circle',
+            info: 'fas fa-info-circle',
+            warning: 'fas fa-exclamation-triangle'
+        };
+        
+        toastEl.className = `fixed bottom-4 right-4 ${typeStyles[type]} border px-4 py-3 rounded-lg shadow-lg z-50 flex items-center transition-all transform translate-x-full opacity-0`;
+        toastEl.innerHTML = `<i class="${typeIcons[type]} mr-2"></i> ${message}`;
         document.body.appendChild(toastEl);
         
-        // Remove toast after 3 seconds
+        // Animate in
         setTimeout(() => {
-            toastEl.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+            toastEl.classList.remove('translate-x-full', 'opacity-0');
+        }, 100);
+        
+        // Remove toast after duration
+        setTimeout(() => {
+            toastEl.classList.add('opacity-0', 'translate-x-full');
             setTimeout(() => {
-                document.body.removeChild(toastEl);
-            }, 500);
-        }, 3000);
+                if (document.body.contains(toastEl)) {
+                    document.body.removeChild(toastEl);
+                }
+            }, 300);
+        }, duration);
+    }
+    
+    // Function to update stats cards
+    function updateStatsCards(stats) {
+        // Update total users
+        const totalUsersElement = document.querySelector('[data-stat="total-users"]');
+        if (totalUsersElement) {
+            totalUsersElement.textContent = stats.total_users.toLocaleString();
+        }
+        
+        // Update active tasks
+        const activeTasksElement = document.querySelector('[data-stat="active-tasks"]');
+        if (activeTasksElement) {
+            activeTasksElement.textContent = stats.active_tasks.toLocaleString();
+        }
+        
+        // Update pending requests
+        const pendingRequestsElement = document.querySelector('[data-stat="pending-requests"]');
+        if (pendingRequestsElement) {
+            pendingRequestsElement.textContent = stats.pending_requests.toLocaleString();
+        }
+        
+        // Update completed tasks
+        const completedTasksElement = document.querySelector('[data-stat="completed-tasks"]');
+        if (completedTasksElement) {
+            completedTasksElement.textContent = stats.completed_tasks.toLocaleString();
+        }
+    }
+    
+    // Function to update charts with new data
+    function updateCharts(monthlyUsers, taskStats) {
+        // Update user growth chart
+        if (window.userGrowthChart && monthlyUsers) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            window.userGrowthChart.data.labels = monthlyUsers.map(item => months[item.month - 1]);
+            window.userGrowthChart.data.datasets[0].data = monthlyUsers.map(item => item.count);
+            window.userGrowthChart.update('active');
+        }
+        
+        // Update task status chart
+        if (window.taskStatusChart && taskStats) {
+            window.taskStatusChart.data.labels = taskStats.map(item => item.status.charAt(0).toUpperCase() + item.status.slice(1));
+            window.taskStatusChart.data.datasets[0].data = taskStats.map(item => item.count);
+            window.taskStatusChart.update('active');
+        }
+    }
+    
+    // Function to update last refreshed timestamp
+    function updateLastRefreshed(timestamp) {
+        const timestampElement = document.querySelector('[data-timestamp]');
+        if (timestampElement) {
+            timestampElement.textContent = `Last updated: ${timestamp}`;
+        }
     }
     
     document.addEventListener('DOMContentLoaded', function() {
@@ -643,7 +776,8 @@
             
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             
-            const userGrowthChart = new Chart(userGrowthCtx, {
+            // Store chart reference globally for updates
+            window.userGrowthChart = new Chart(userGrowthCtx, {
                 type: 'line',
                 data: {
                     labels: demoMonthlyUsers.map(item => months[item.month - 1]),
@@ -749,8 +883,8 @@
             });
             
             // Add animation to the chart on load
-            const originalDraw = userGrowthChart.draw;
-            userGrowthChart.draw = function() {
+            const originalDraw = window.userGrowthChart.draw;
+            window.userGrowthChart.draw = function() {
                 originalDraw.apply(this, arguments);
                 
                 if (this.animating !== true) {
@@ -789,7 +923,8 @@
                 brandColors.secondary   // Additional status if needed
             ];
             
-            const taskStatusChart = new Chart(taskStatusCtx, {
+            // Store chart reference globally for updates
+            window.taskStatusChart = new Chart(taskStatusCtx, {
                 type: 'doughnut',
                 data: {
                     labels: demoTaskStats.map(item => item.status.charAt(0).toUpperCase() + item.status.slice(1)),
@@ -849,8 +984,8 @@
             });
             
             // Add animation to the chart on load
-            const originalDraw = taskStatusChart.draw;
-            taskStatusChart.draw = function() {
+            const originalDraw = window.taskStatusChart.draw;
+            window.taskStatusChart.draw = function() {
                 originalDraw.apply(this, arguments);
                 
                 if (this.animating !== true) {

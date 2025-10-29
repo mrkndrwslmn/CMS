@@ -108,6 +108,194 @@ class AdminController extends Controller
     }
 
     /**
+     * Refresh dashboard data via AJAX
+     */
+    public function refreshDashboard()
+    {
+        // Get fresh dashboard statistics
+        $stats = [
+            'total_users' => User::count(),
+            'total_clients' => User::where('role', 'client')->count(),
+            'total_adiutors' => User::where('role', 'adiutor')->count(),
+            'pending_requests' => ServiceRequest::where('status', 'pending')->count(),
+            'active_tasks' => Task::whereIn('status', ['pending', 'in_progress'])->count(),
+            'completed_tasks' => Task::where('status', 'completed')->count(),
+            'pending_budget_requests' => \App\Models\BudgetChangeRequest::where('status', 'pending')->count(),
+            'recent_users' => User::orderBy('created_at', 'desc')->limit(5)->get(),
+            'recent_requests' => ServiceRequest::with('user')->orderBy('created_at', 'desc')->limit(5)->get(),
+        ];
+
+        // Get monthly user registrations for chart
+        $monthlyUsers = User::selectRaw('DATE_FORMAT(created_at, "%m") as month, COUNT(*) as count')
+            ->whereRaw('YEAR(created_at) = ?', [date('Y')])
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        // Get task completion stats for chart
+        $taskStats = Task::selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Dashboard data refreshed successfully',
+            'data' => [
+                'stats' => $stats,
+                'monthlyUsers' => $monthlyUsers,
+                'taskStats' => $taskStats,
+                'timestamp' => now()->format('F d, Y \a\t g:i A')
+            ]
+        ]);
+    }
+
+    /**
+     * Download dashboard report
+     */
+    public function downloadReport(Request $request)
+    {
+        $timeFilter = $request->get('filter', 'This Year');
+        
+        // Generate report data based on time filter
+        $reportData = $this->generateReportData($timeFilter);
+        
+        // Create CSV content
+        $csvContent = $this->generateCSVContent($reportData, $timeFilter);
+        
+        $filename = 'dashboard_report_' . strtolower(str_replace(' ', '_', $timeFilter)) . '_' . date('Y-m-d') . '.csv';
+        
+        return response($csvContent)
+            ->header('Content-Type', 'text/csv')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+    }
+
+    /**
+     * Generate report data based on time filter
+     */
+    private function generateReportData($timeFilter)
+    {
+        $data = [];
+        
+        switch ($timeFilter) {
+            case 'This Month':
+                $startDate = now()->startOfMonth();
+                $endDate = now()->endOfMonth();
+                break;
+            case 'Last Month':
+                $startDate = now()->subMonth()->startOfMonth();
+                $endDate = now()->subMonth()->endOfMonth();
+                break;
+            case 'Last 3 Months':
+                $startDate = now()->subMonths(3)->startOfMonth();
+                $endDate = now()->endOfMonth();
+                break;
+            case 'This Year':
+            default:
+                $startDate = now()->startOfYear();
+                $endDate = now()->endOfYear();
+                break;
+        }
+        
+        // Generate comprehensive statistics
+        $data['summary'] = [
+            'total_users' => User::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'total_clients' => User::where('role', 'client')->whereBetween('created_at', [$startDate, $endDate])->count(),
+            'total_adiutors' => User::where('role', 'adiutor')->whereBetween('created_at', [$startDate, $endDate])->count(),
+            'pending_requests' => ServiceRequest::where('status', 'pending')->whereBetween('created_at', [$startDate, $endDate])->count(),
+            'active_tasks' => Task::whereIn('status', ['pending', 'in_progress'])->whereBetween('created_at', [$startDate, $endDate])->count(),
+            'completed_tasks' => Task::where('status', 'completed')->whereBetween('updated_at', [$startDate, $endDate])->count(),
+        ];
+        
+        // Monthly breakdown
+        $data['monthly_users'] = User::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+            
+        $data['monthly_requests'] = ServiceRequest::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+            
+        $data['task_status_breakdown'] = Task::selectRaw('status, COUNT(*) as count')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('status')
+            ->get();
+        
+        $data['period'] = [
+            'start' => $startDate->format('Y-m-d'),
+            'end' => $endDate->format('Y-m-d'),
+            'filter' => $timeFilter
+        ];
+        
+        return $data;
+    }
+
+    /**
+     * Generate CSV content from report data
+     */
+    private function generateCSVContent($data, $timeFilter)
+    {
+        $csv = [];
+        
+        // Header
+        $csv[] = ['Dashboard Report - ' . $timeFilter];
+        $csv[] = ['Generated on: ' . now()->format('F d, Y \a\t g:i A')];
+        $csv[] = ['Period: ' . $data['period']['start'] . ' to ' . $data['period']['end']];
+        $csv[] = [''];
+        
+        // Summary Statistics
+        $csv[] = ['SUMMARY STATISTICS'];
+        $csv[] = ['Metric', 'Count'];
+        $csv[] = ['Total Users', $data['summary']['total_users']];
+        $csv[] = ['Total Clients', $data['summary']['total_clients']];
+        $csv[] = ['Total Adiutors', $data['summary']['total_adiutors']];
+        $csv[] = ['Pending Requests', $data['summary']['pending_requests']];
+        $csv[] = ['Active Tasks', $data['summary']['active_tasks']];
+        $csv[] = ['Completed Tasks', $data['summary']['completed_tasks']];
+        $csv[] = [''];
+        
+        // Monthly User Registrations
+        $csv[] = ['MONTHLY USER REGISTRATIONS'];
+        $csv[] = ['Month', 'Count'];
+        foreach ($data['monthly_users'] as $monthData) {
+            $csv[] = [$monthData->month, $monthData->count];
+        }
+        $csv[] = [''];
+        
+        // Monthly Service Requests
+        $csv[] = ['MONTHLY SERVICE REQUESTS'];
+        $csv[] = ['Month', 'Count'];
+        foreach ($data['monthly_requests'] as $requestData) {
+            $csv[] = [$requestData->month, $requestData->count];
+        }
+        $csv[] = [''];
+        
+        // Task Status Breakdown
+        $csv[] = ['TASK STATUS BREAKDOWN'];
+        $csv[] = ['Status', 'Count'];
+        foreach ($data['task_status_breakdown'] as $taskData) {
+            $csv[] = [ucfirst($taskData->status), $taskData->count];
+        }
+        
+        // Convert to CSV string
+        $output = fopen('php://temp', 'r+');
+        foreach ($csv as $row) {
+            fputcsv($output, $row);
+        }
+        rewind($output);
+        $csvContent = stream_get_contents($output);
+        fclose($output);
+        
+        return $csvContent;
+    }
+
+    /**
      * Show user management
      */
     public function users()

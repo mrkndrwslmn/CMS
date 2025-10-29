@@ -34,20 +34,104 @@ class AdiutorController extends Controller
                 ->where('adiutor_id', $user->id)
                 ->where('status', 'completed')
                 ->sum('agreed_rate') ?? 0,
+            'total_tasks' => DB::table('tasks')
+                ->join('project_assignments', 'tasks.project_id', '=', 'project_assignments.project_id')
+                ->where('project_assignments.adiutor_id', $user->id)
+                ->where('tasks.assignedTo', $user->id)
+                ->count(),
+            'completed_tasks' => DB::table('tasks')
+                ->join('project_assignments', 'tasks.project_id', '=', 'project_assignments.project_id')
+                ->where('project_assignments.adiutor_id', $user->id)
+                ->where('tasks.assignedTo', $user->id)
+                ->where('tasks.status', 'completed')
+                ->count(),
+            'pending_tasks' => DB::table('tasks')
+                ->join('project_assignments', 'tasks.project_id', '=', 'project_assignments.project_id')
+                ->where('project_assignments.adiutor_id', $user->id)
+                ->where('tasks.assignedTo', $user->id)
+                ->whereIn('tasks.status', ['pending', 'in_progress'])
+                ->count(),
         ];
 
-        // Get recent projects
+        // Get urgent tasks (due within 3 days or overdue)
+        $urgentTasks = DB::table('tasks')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->join('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
+            ->join('users as clients', 'projects.client_id', '=', 'clients.id')
+            ->where('project_assignments.adiutor_id', $user->id)
+            ->where('tasks.assignedTo', $user->id)
+            ->whereNotIn('tasks.status', ['completed'])
+            ->where(function($query) {
+                $query->where('tasks.deadline', '<=', now()->addDays(3))
+                      ->orWhere('tasks.deadline', '<=', now());
+            })
+            ->select(
+                'tasks.*',
+                'projects.title as project_title',
+                'clients.fullName as client_name',
+                DB::raw('CASE WHEN tasks.deadline <= NOW() THEN "overdue" ELSE "due_soon" END as urgency')
+            )
+            ->orderBy('tasks.deadline', 'asc')
+            ->limit(5)
+            ->get();
+
+        // Get pending budget requests
+        $pendingBudgetRequests = DB::table('budget_change_requests')
+            ->join('tasks', 'budget_change_requests.task_id', '=', 'tasks.taskID')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->where('budget_change_requests.adiutor_id', $user->id)
+            ->where('budget_change_requests.status', 'pending')
+            ->select(
+                'budget_change_requests.*',
+                'tasks.taskTitle',
+                'projects.title as project_title'
+            )
+            ->orderBy('budget_change_requests.created_at', 'desc')
+            ->limit(3)
+            ->get();
+
+        // Get recent revisions
+        $recentRevisions = DB::table('revision_requests')
+            ->join('tasks', 'revision_requests.task_id', '=', 'tasks.taskID')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->where('revision_requests.assigned_adiutor_id', $user->id)
+            ->whereIn('revision_requests.status', ['approved', 'pending'])
+            ->select(
+                'revision_requests.*',
+                'tasks.taskTitle',
+                'projects.title as project_title'
+            )
+            ->orderBy('revision_requests.created_at', 'desc')
+            ->limit(3)
+            ->get();
+
+        // Calculate completion rate for progress insights
+        $completionRate = $stats['total_tasks'] > 0 ? 
+            round(($stats['completed_tasks'] / $stats['total_tasks']) * 100, 1) : 0;
+
+        // Get this month's earnings
+        $thisMonthEarnings = DB::table('project_assignments')
+            ->where('adiutor_id', $user->id)
+            ->where('status', 'completed')
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year)
+            ->sum('agreed_rate') ?? 0;
+
+        // Get recent projects with enhanced details
         $recentProjects = DB::table('project_assignments')
             ->join('projects', 'project_assignments.project_id', '=', 'projects.id')
             ->join('users', 'projects.client_id', '=', 'users.id')
             ->where('project_assignments.adiutor_id', $user->id)
             ->select(
+                'projects.id as project_id',
                 'projects.title',
                 'projects.status as project_status',
+                'projects.deadline as project_deadline',
                 'project_assignments.status as assignment_status',
                 'project_assignments.progress_percentage',
                 'users.fullName as client_name',
-                'project_assignments.created_at'
+                'project_assignments.created_at',
+                'project_assignments.agreed_rate'
             )
             ->orderBy('project_assignments.created_at', 'desc')
             ->limit(5)
@@ -62,37 +146,17 @@ class AdiutorController extends Controller
             ->limit(5)
             ->get();
         
-        return view('adiutor.dashboard', compact('user', 'stats', 'recentProjects', 'notifications'));
-    }
-
-    /**
-     * Show assigned tasks/projects
-     */
-    public function tasks()
-    {
-        $user = Auth::user();
-        
-        // Get all assigned projects with details
-        $projects = DB::table('project_assignments')
-            ->join('projects', 'project_assignments.project_id', '=', 'projects.id')
-            ->join('users', 'projects.client_id', '=', 'users.id')
-            ->where('project_assignments.adiutor_id', $user->id)
-            ->select(
-                'projects.*',
-                'project_assignments.id as assignment_id',
-                'project_assignments.status as assignment_status',
-                'project_assignments.agreed_rate',
-                'project_assignments.start_date',
-                'project_assignments.expected_completion',
-                'project_assignments.progress_percentage',
-                'project_assignments.notes',
-                'users.fullName as client_name',
-                'users.email as client_email'
-            )
-            ->orderBy('project_assignments.created_at', 'desc')
-            ->get();
-        
-        return view('adiutor.tasks.index', compact('user', 'projects'));
+        return view('adiutor.dashboard', compact(
+            'user', 
+            'stats', 
+            'recentProjects', 
+            'notifications',
+            'urgentTasks',
+            'pendingBudgetRequests',
+            'recentRevisions',
+            'completionRate',
+            'thisMonthEarnings'
+        ));
     }
 
     /**
@@ -120,7 +184,7 @@ class AdiutorController extends Controller
             ->orderBy('last_project_date', 'desc')
             ->get();
         
-        return view('adiutor.clients', compact('user', 'clients'));
+        return view('adiutor.clients.index', compact('user', 'clients'));
     }
 
     /**
@@ -130,20 +194,38 @@ class AdiutorController extends Controller
     {
         $user = Auth::user();
         
-        // Get project files and documents
-        $documents = DB::table('project_assignments')
+        // Get all documents from projects and tasks assigned to this adiutor
+        $documents = DB::table('documents')
+            ->leftJoin('tasks', 'documents.taskID', '=', 'tasks.taskID')
+            ->leftJoin('projects', function($join) {
+                $join->on('tasks.project_id', '=', 'projects.id')
+                     ->orWhere('documents.project_id', '=', 'projects.id');
+            })
+            ->leftJoin('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
+            ->leftJoin('users', 'documents.uploaded_by', '=', 'users.id')
+            ->where(function($query) use ($user) {
+                $query->where('project_assignments.adiutor_id', $user->id)
+                      ->orWhere('documents.uploaded_by', $user->id);
+            })
+            ->where('documents.is_archived', false)
+            ->select(
+                'documents.*',
+                'projects.title as project_title',
+                'tasks.taskTitle as task_title',
+                'users.fullName as uploaded_by_name'
+            )
+            ->orderBy('documents.created_at', 'desc')
+            ->paginate(12);
+        
+        // Get projects for filter dropdown
+        $projects = DB::table('project_assignments')
             ->join('projects', 'project_assignments.project_id', '=', 'projects.id')
             ->where('project_assignments.adiutor_id', $user->id)
-            ->whereNotNull('projects.attachments')
-            ->select(
-                'projects.id',
-                'projects.title',
-                'projects.attachments',
-                'project_assignments.status'
-            )
+            ->select('projects.id', 'projects.title')
+            ->distinct()
             ->get();
         
-        return view('adiutor.documents', compact('user', 'documents'));
+        return view('adiutor.documents.index', compact('user', 'documents', 'projects'));
     }
 
     /**
@@ -153,10 +235,33 @@ class AdiutorController extends Controller
     {
         $user = Auth::user();
         
-        // This would typically come from a reviews/feedback table
-        // For now, we'll create a placeholder structure
-        $feedback = collect(); // Placeholder for feedback data
+        // Get feedback from clients about this adiutor's work
+        $feedback = DB::table('feedbacks')
+            ->join('users as clients', 'feedbacks.client_id', '=', 'clients.id')
+            ->leftJoin('projects', 'feedbacks.project_id', '=', 'projects.id')
+            ->leftJoin('tasks', 'feedbacks.task_id', '=', 'tasks.taskID')
+            ->where('feedbacks.adiutor_id', $user->id)
+            ->select(
+                'feedbacks.*',
+                'clients.fullName as client_name',
+                'clients.profilePic as client_photo',
+                'projects.title as project_title',
+                'tasks.taskTitle as task_title'
+            )
+            ->orderBy('feedbacks.created_at', 'desc')
+            ->get();
+
+        // Get feedback statistics
+        $feedbackStats = [
+            'total_feedback' => $feedback->count(),
+            'average_rating' => $feedback->where('rating', '>', 0)->avg('rating') ?? 0,
+            'five_star' => $feedback->where('rating', 5)->count(),
+            'four_star' => $feedback->where('rating', 4)->count(),
+            'three_star' => $feedback->where('rating', 3)->count(),
+            'two_star' => $feedback->where('rating', 2)->count(),
+            'one_star' => $feedback->where('rating', 1)->count(),
+        ];
         
-        return view('adiutor.feedback', compact('user', 'feedback'));
+        return view('adiutor.feedback.index', compact('user', 'feedback', 'feedbackStats'));
     }
 }

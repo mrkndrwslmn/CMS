@@ -243,7 +243,7 @@ class User extends Authenticatable
      */
     public function adiutorProfile()
     {
-        return $this->hasOne(AdiutorProfile::class);
+        return $this->hasOne(AdiutorProfile::class, 'user_id');
     }
     
     /**
@@ -251,7 +251,7 @@ class User extends Authenticatable
      */
     public function clientProfile()
     {
-        return $this->hasOne(ClientProfile::class);
+        return $this->hasOne(ClientProfile::class, 'user_id');
     }
 
     /**
@@ -341,11 +341,10 @@ class User extends Authenticatable
     }
 
     /**
-     * Get feedback given by this user
+     * Get feedback given by this user (as client)
      */
     public function feedbacks()
     {
-        // This relationship uses either client_id (if available) or falls back to giver_id
         return $this->hasMany(Feedback::class, 'client_id');
     }
 
@@ -354,7 +353,7 @@ class User extends Authenticatable
      */
     public function receivedFeedback()
     {
-        return $this->hasMany(Feedback::class, 'receiver_id');
+        return $this->hasMany(Feedback::class, 'adiutor_id');
     }
 
     /**
@@ -414,5 +413,13 @@ class User extends Authenticatable
             'fcm_token' => $token,
             'fcm_token_updated_at' => $token ? now() : null,
         ]);
+    }
+
+    /**
+     * Get audit logs for this user
+     */
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class, 'user_id');
     }
 }

@@ -163,6 +163,13 @@ class TaskController extends Controller
                 'updated_at' => now()
             ]);
         
+        // Log sensitive action
+        \App\Models\AuditLog::logSensitiveAction('project_assignment_accepted', [
+            'assignment_id' => $assignmentId,
+            'adiutor_id' => $user->id,
+            'adiutor_name' => $user->fullName,
+        ]);
+        
         // Create notification for all admins
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
@@ -414,6 +421,15 @@ class TaskController extends Controller
             'reason' => $request->reason,
             'status' => 'pending',
         ]);
+
+        // Log sensitive action
+        \App\Models\AuditLog::logSensitiveAction('budget_change_requested', [
+            'task_id' => $taskId,
+            'current_budget' => $task->allocated_budget ?? 0,
+            'requested_budget' => $request->requested_budget,
+            'difference' => $request->requested_budget - ($task->allocated_budget ?? 0),
+            'reason' => $request->reason,
+        ]);
         
         // Send email notifications to all admins
         $admins = User::where('role', 'admin')->get();
@@ -599,5 +615,80 @@ class TaskController extends Controller
         
         return redirect()->back()
             ->with('success', 'File deleted successfully.');
+    }
+
+    /**
+     * Update task progress percentage
+     */
+    public function updateTaskProgress(Request $request, $taskId)
+    {
+        $user = Auth::user();
+        
+        $request->validate([
+            'progress_percentage' => 'required|integer|min:0|max:100'
+        ]);
+
+        // Get task and verify ownership
+        $task = DB::table('tasks')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->join('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
+            ->where('tasks.taskID', $taskId)
+            ->where('tasks.assignedTo', $user->id)
+            ->where('project_assignments.adiutor_id', $user->id)
+            ->select('tasks.*', 'projects.client_id')
+            ->first();
+
+        if (!$task) {
+            return response()->json(['error' => 'Task not found or you do not have permission to update it.'], 404);
+        }
+
+        $progressPercentage = $request->input('progress_percentage');
+
+        // Update task progress
+        DB::table('tasks')
+            ->where('taskID', $taskId)
+            ->update([
+                'progress_percentage' => $progressPercentage,
+                'updated_at' => now()
+            ]);
+
+        // If progress is 100%, update status to completed
+        if ($progressPercentage == 100) {
+            DB::table('tasks')
+                ->where('taskID', $taskId)
+                ->update([
+                    'status' => 'completed',
+                    'completedAt' => now()
+                ]);
+        } elseif ($progressPercentage > 0 && $task->status === 'pending') {
+            // If task was pending and now has progress, mark as in_progress
+            DB::table('tasks')
+                ->where('taskID', $taskId)
+                ->update(['status' => 'in_progress']);
+        }
+
+        // Create audit log entry using direct database insert
+        try {
+            DB::table('audit_logs')->insert([
+                'user_id' => $user->id,
+                'action' => 'task_progress_updated',
+                'auditable_type' => 'App\Models\Task',
+                'auditable_id' => $taskId,
+                'old_values' => json_encode(['progress_percentage' => $task->progress_percentage]),
+                'new_values' => json_encode(['progress_percentage' => $progressPercentage]),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'created_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            // Log the error but don't fail the request
+            \Log::error('Failed to create audit log: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Task progress updated successfully',
+            'progress_percentage' => $progressPercentage
+        ]);
     }
 }

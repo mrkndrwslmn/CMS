@@ -1,0 +1,391 @@
+@extends('adiutor.layouts.app')
+
+@section('title', 'Time Tracking')
+
+@section('content')
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="timeTracker()">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-neutral-900">Time Tracking</h1>
+        <p class="text-neutral-600 mt-2">Track your time spent on project tasks and manage your work hours.</p>
+    </div>
+
+    <!-- Active Timer Card -->
+    <div class="glass-card p-6 mb-8" x-show="activeTimer.active">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-play text-white"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-neutral-900" x-text="activeTimer.timer ? activeTimer.timer.task_name : 'No active timer'"></h3>
+                    <p class="text-neutral-600" x-text="activeTimer.timer ? activeTimer.timer.project_name : ''"></p>
+                    <p class="text-sm text-neutral-500" x-text="activeTimer.timer ? activeTimer.timer.description : ''"></p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl font-bold text-primary-600" x-text="formatTime(activeTimer.elapsed)">00:00:00</div>
+                <p class="text-sm text-neutral-500">Running time</p>
+                <button @click="stopTimer()" 
+                        class="mt-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
+                    <i class="fas fa-stop mr-2"></i>Stop Timer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Timer Card -->
+    <div class="glass-card p-6 mb-8" x-show="!activeTimer.active">
+        <h3 class="text-lg font-semibold text-neutral-900 mb-4">Start New Timer</h3>
+        
+        <form @submit.prevent="startTimer()" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="task_id" class="block text-sm font-medium text-neutral-700 mb-1">Select Task <span class="text-red-500">*</span></label>
+                    <select id="task_id" x-model="newTimer.task_id" required
+                            class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                            @change="console.log('Task selected:', newTimer.task_id)">
+                        <option value="">Choose a task...</option>
+                        @foreach($availableTasks as $task)
+                            <option value="{{ $task->taskID }}">{{ $task->project->title }} - {{ $task->taskTitle }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Available tasks: {{ count($availableTasks) }}</p>
+                </div>
+                
+                <div>
+                    <label for="description" class="block text-sm font-medium text-neutral-700 mb-1">Description (Optional)</label>
+                    <input type="text" id="description" x-model="newTimer.description" 
+                           placeholder="What are you working on?"
+                           class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+            </div>
+            
+            <button type="submit" :disabled="!newTimer.task_id || loading" 
+                    class="flex items-center px-6 py-2 bg-green-500 hover:bg-green-600 disabled:bg-neutral-300 text-white rounded-lg transition-colors">
+                <i class="fas fa-play mr-2"></i>
+                <span x-text="loading ? 'Starting...' : 'Start Timer'"></span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Today's Hours -->
+        <div class="glass-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-neutral-500 text-sm font-medium">Today's Hours</p>
+                    <p class="text-2xl font-bold text-neutral-900">{{ number_format($todayHours, 1) }}h</p>
+                </div>
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-calendar-day text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- This Week -->
+        <div class="glass-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-neutral-500 text-sm font-medium">This Week</p>
+                    <p class="text-2xl font-bold text-neutral-900">{{ number_format($weekHours, 1) }}h</p>
+                </div>
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-calendar-week text-green-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- This Month -->
+        <div class="glass-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-neutral-500 text-sm font-medium">This Month</p>
+                    <p class="text-2xl font-bold text-neutral-900">{{ number_format($monthHours, 1) }}h</p>
+                </div>
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-calendar-alt text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Time Entries -->
+    <div class="glass-card">
+        <div class="p-6 border-b border-neutral-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-neutral-900">Recent Time Entries</h3>
+                <div class="flex items-center space-x-2">
+                    <button @click="loadEntries()" class="px-3 py-1 text-sm bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
+                        <i class="fas fa-refresh mr-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-neutral-200">
+                <thead class="bg-neutral-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Task & Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Duration</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-neutral-200">
+                    @forelse($currentWeekEntries as $entry)
+                        <tr class="hover:bg-neutral-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div>
+                                    <div class="text-sm font-medium text-neutral-900">{{ $entry->task->taskTitle }}</div>
+                                    <div class="text-sm text-neutral-500">{{ $entry->task->project->title }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-neutral-900">
+                                    {{ $entry->description ?: 'No description' }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-neutral-900">
+                                    @if($entry->duration_minutes)
+                                        {{ floor($entry->duration_minutes / 60) }}h {{ $entry->duration_minutes % 60 }}m
+                                    @else
+                                        <span class="text-orange-500">Running...</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
+                                {{ $entry->start_time->format('M j, g:i A') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if($entry->is_approved)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <span class="w-1.5 h-1.5 mr-1.5 bg-green-400 rounded-full"></span>
+                                        Approved
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        <span class="w-1.5 h-1.5 mr-1.5 bg-yellow-400 rounded-full"></span>
+                                        Pending
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                @if(!$entry->is_approved && $entry->end_time)
+                                    <div class="flex items-center space-x-2">
+                                        <button @click="editEntry({{ $entry->id }})" 
+                                                class="text-indigo-600 hover:text-indigo-900 transition-colors" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button @click="deleteEntry({{ $entry->id }})" 
+                                                class="text-red-600 hover:text-red-900 transition-colors" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                @else
+                                    <span class="text-neutral-400">-</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <div class="text-neutral-500">
+                                    <i class="fas fa-clock text-2xl mb-2"></i>
+                                    <p>No time entries for this week yet.</p>
+                                    <p class="text-sm">Start a timer to begin tracking your work!</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div x-show="message.show" x-transition 
+         :class="message.type === 'success' ? 'bg-green-500' : 'bg-red-500'"
+         class="fixed top-4 right-4 z-50 text-white px-6 py-3 rounded-lg shadow-lg">
+        <div class="flex items-center">
+            <i :class="message.type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'" class="mr-2"></i>
+            <span x-text="message.text"></span>
+            <button @click="message.show = false" class="ml-4 text-white/80 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@push('scripts')
+<script>
+function timeTracker() {
+    return {
+        loading: false,
+        activeTimer: {
+            active: {{ $activeTimer ? 'true' : 'false' }},
+            @if($activeTimer)
+            timer: {
+                id: {{ $activeTimer->id }},
+                task_name: '{{ $activeTimer->task->taskTitle }}',
+                project_name: '{{ $activeTimer->task->project->title }}',
+                description: '{{ $activeTimer->description }}',
+                start_time: '{{ $activeTimer->start_time->toISOString() }}'
+            },
+            @else
+            timer: null,
+            @endif
+            elapsed: 0
+        },
+        newTimer: {
+            task_id: '',
+            description: ''
+        },
+        message: {
+            show: false,
+            type: 'success',
+            text: ''
+        },
+        
+        init() {
+            console.log('Time tracker initialized');
+            console.log('Active timer:', this.activeTimer);
+            console.log('Available tasks count: {{ count($availableTasks) }}');
+            
+            if (this.activeTimer.active) {
+                this.updateElapsedTime();
+                setInterval(() => this.updateElapsedTime(), 1000);
+            }
+        },
+        
+        updateElapsedTime() {
+            if (this.activeTimer.timer) {
+                const start = new Date(this.activeTimer.timer.start_time);
+                const now = new Date();
+                this.activeTimer.elapsed = Math.floor((now - start) / 1000);
+            }
+        },
+        
+        formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        },
+        
+        async startTimer() {
+            if (!this.newTimer.task_id) {
+                this.showMessage('Please select a task', 'error');
+                return;
+            }
+            
+            this.loading = true;
+            
+            try {
+                console.log('Starting timer with data:', this.newTimer);
+                
+                const response = await fetch('/adiutor/time-tracking/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(this.newTimer)
+                });
+                
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    this.activeTimer = {
+                        active: true,
+                        timer: data.timer,
+                        elapsed: 0
+                    };
+                    this.newTimer = { task_id: '', description: '' };
+                    this.showMessage('Timer started successfully!', 'success');
+                    this.updateElapsedTime();
+                    setInterval(() => this.updateElapsedTime(), 1000);
+                } else {
+                    this.showMessage(data.message || 'Error starting timer', 'error');
+                }
+            } catch (error) {
+                console.error('Start timer error:', error);
+                this.showMessage('Error starting timer: ' + error.message, 'error');
+            }
+            
+            this.loading = false;
+        },
+        
+        async stopTimer() {
+            this.loading = true;
+            
+            try {
+                const response = await fetch('/adiutor/time-tracking/stop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.activeTimer = { active: false, timer: null, elapsed: 0 };
+                    this.showMessage(`Timer stopped! Duration: ${data.duration.formatted}`, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    this.showMessage(data.message, 'error');
+                }
+            } catch (error) {
+                this.showMessage('Error stopping timer', 'error');
+            }
+            
+            this.loading = false;
+        },
+        
+        async deleteEntry(entryId) {
+            if (!confirm('Are you sure you want to delete this time entry?')) return;
+            
+            try {
+                const response = await fetch(`/adiutor/time-tracking/entries/${entryId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.showMessage('Time entry deleted successfully', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    this.showMessage(data.message, 'error');
+                }
+            } catch (error) {
+                this.showMessage('Error deleting entry', 'error');
+            }
+        },
+        
+        showMessage(text, type = 'success') {
+            this.message = { show: true, text, type };
+            setTimeout(() => this.message.show = false, 5000);
+        },
+        
+        loadEntries() {
+            location.reload();
+        }
+    }
+}
+</script>
+@endpush

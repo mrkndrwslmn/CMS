@@ -271,20 +271,20 @@ class ClientController extends Controller
                 ->where('projects.client_id', $user->id)
                 ->where('project_assignments.status', 'completed')
                 ->count(),
-            'reviewsGiven' => DB::table('project_feedback')
+            'reviewsGiven' => DB::table('feedbacks')
                 ->where('client_id', $user->id)
                 ->count(),
             'pendingReviews' => DB::table('projects')
                 ->join('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
-                ->leftJoin('project_feedback', function($join) use ($user) {
-                    $join->on('projects.id', '=', 'project_feedback.project_id')
-                         ->where('project_feedback.client_id', '=', $user->id);
+                ->leftJoin('feedbacks', function($join) use ($user) {
+                    $join->on('projects.id', '=', 'feedbacks.project_id')
+                         ->where('feedbacks.client_id', '=', $user->id);
                 })
                 ->where('projects.client_id', $user->id)
                 ->where('project_assignments.status', 'completed')
-                ->whereNull('project_feedback.id')
+                ->whereNull('feedbacks.id')
                 ->count(),
-            'averageRating' => DB::table('project_feedback')
+            'averageRating' => DB::table('feedbacks')
                 ->where('client_id', $user->id)
                 ->avg('rating') ?? 0
         ];
@@ -293,29 +293,29 @@ class ClientController extends Controller
         $stats['averageRating'] = round($stats['averageRating'], 1);
         
         // Get feedback given by this client
-        $completedFeedback = DB::table('project_feedback')
-            ->join('projects', 'project_feedback.project_id', '=', 'projects.id')
-            ->join('users', 'project_feedback.adiutor_id', '=', 'users.id')
-            ->where('project_feedback.client_id', $user->id)
+        $completedFeedback = DB::table('feedbacks')
+            ->join('projects', 'feedbacks.project_id', '=', 'projects.id')
+            ->join('users', 'feedbacks.adiutor_id', '=', 'users.id')
+            ->where('feedbacks.client_id', $user->id)
             ->select(
-                'project_feedback.*',
+                'feedbacks.*',
                 'projects.title as project_title',
                 'users.fullName as adiutor_name'
             )
-            ->orderBy('project_feedback.created_at', 'desc')
+            ->orderBy('feedbacks.created_at', 'desc')
             ->get();
 
         // Get projects that need feedback
         $pendingFeedback = DB::table('projects')
             ->join('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
             ->join('users', 'project_assignments.adiutor_id', '=', 'users.id')
-            ->leftJoin('project_feedback', function($join) use ($user) {
-                $join->on('projects.id', '=', 'project_feedback.project_id')
-                     ->where('project_feedback.client_id', '=', $user->id);
+            ->leftJoin('feedbacks', function($join) use ($user) {
+                $join->on('projects.id', '=', 'feedbacks.project_id')
+                     ->where('feedbacks.client_id', '=', $user->id);
             })
             ->where('projects.client_id', $user->id)
             ->where('project_assignments.status', 'completed')
-            ->whereNull('project_feedback.id')
+            ->whereNull('feedbacks.id')
             ->select(
                 'projects.id',
                 'projects.title',
@@ -436,12 +436,12 @@ class ClientController extends Controller
             ->get();
 
         // Get project feedback
-        $feedback = DB::table('project_feedback')
-            ->join('users', 'project_feedback.adiutor_id', '=', 'users.id')
-            ->where('project_feedback.project_id', $id)
-            ->where('project_feedback.client_id', $user->id)
+        $feedback = DB::table('feedbacks')
+            ->join('users', 'feedbacks.adiutor_id', '=', 'users.id')
+            ->where('feedbacks.project_id', $id)
+            ->where('feedbacks.client_id', $user->id)
             ->select(
-                'project_feedback.*',
+                'feedbacks.*',
                 'users.fullName as adiutor_name'
             )
             ->first();

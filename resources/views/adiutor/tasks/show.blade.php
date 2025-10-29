@@ -667,6 +667,10 @@
         </div>
 </div>
 
+@endsection
+
+@push('scripts')
+    
 <script>
 function openUploadModal() {
     const modal = document.getElementById('uploadFileModal');
@@ -695,5 +699,144 @@ function closeBudgetModal() {
 // Close modal when clicking outside
 document.getElementById('uploadFileModal')?.addEventListener('click', closeUploadModal);
 document.getElementById('budgetChangeModal')?.addEventListener('click', closeBudgetModal);
+
+// Update Progress Function
+function updateProgress() {
+    // Create and show progress modal
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-gray-900">Update Task Progress</h3>
+                    <button type="button" onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <form id="progressForm" class="p-6">
+                <div class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                    <p class="text-sm text-blue-800">
+                        <strong>Current Progress:</strong> {{ $task->progress_percentage ?? 0 }}%
+                    </p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Progress Percentage *</label>
+                    <input type="number" name="progress_percentage" id="progress_percentage" min="0" max="100" step="1" required 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
+                           placeholder="Enter progress percentage (0-100)"
+                           value="{{ $task->progress_percentage ?? 0 }}">
+                    <div class="mt-2">
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div id="progress-preview" class="bg-primary-600 h-3 rounded-full transition-all duration-300" style="width: {{ $task->progress_percentage ?? 0 }}%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="button" onclick="this.closest('.fixed').remove()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
+                        <i class="fas fa-save mr-2"></i>
+                        Update Progress
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add progress preview functionality
+    const progressInput = modal.querySelector('#progress_percentage');
+    const progressPreview = modal.querySelector('#progress-preview');
+    
+    progressInput.addEventListener('input', function() {
+        const value = Math.min(100, Math.max(0, parseInt(this.value) || 0));
+        progressPreview.style.width = value + '%';
+    });
+    
+    // Handle form submission
+    modal.querySelector('#progressForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        const progressValue = parseInt(progressInput.value) || 0;
+        formData.append('progress_percentage', progressValue);
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+        submitButton.disabled = true;
+        
+        try {
+            const response = await fetch('{{ route("adiutor.tasks.update-progress", $task->taskID) }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update progress display in page
+                const progressCard = document.querySelector('.text-2xl.font-bold.text-primary-600');
+                if (progressCard) {
+                    progressCard.textContent = progressValue + '%';
+                }
+                
+                const progressBar = document.querySelector('.bg-linear-to-r.from-primary-500.to-primary-600');
+                if (progressBar) {
+                    progressBar.style.width = progressValue + '%';
+                }
+                
+                // Show success message
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                alertDiv.innerHTML = '<i class="fas fa-check mr-2"></i>Progress updated successfully!';
+                document.body.appendChild(alertDiv);
+                
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 3000);
+                
+                // Close modal
+                modal.remove();
+                
+                // If progress is 100%, reload page to show completed status
+                if (progressValue === 100) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                }
+            } else {
+                throw new Error(data.message || 'Failed to update progress');
+            }
+        } catch (error) {
+            console.error('Error updating progress:', error);
+            
+            // Show error message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            alertDiv.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Failed to update progress. Please try again.';
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        } finally {
+            submitButton.innerHTML = originalText;
+            submitButton.disabled = false;
+        }
+    });
+}
 </script>
-@endsection
+
+@endpush
