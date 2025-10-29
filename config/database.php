@@ -63,6 +63,45 @@ return [
             ]) : [],
         ],
 
+        'local_mysql' => [
+            'driver' => 'mysql',
+            'host' => 'mysql',
+            'port' => '3306',
+            'database' => 'cms',
+            'username' => 'root',
+            'password' => 'secret',
+            'unix_socket' => '',
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => [],
+        ],
+
+        'azure_mysql' => [
+            'driver' => 'mysql',
+            'host' => env('AZURE_DB_HOST'),
+            'port' => env('AZURE_DB_PORT', '3306'),
+            'database' => env('AZURE_DB_DATABASE'),
+            'username' => env('AZURE_DB_USERNAME'),
+            'password' => env('AZURE_DB_PASSWORD'),
+            'unix_socket' => '',
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => [],
+            'dump' => [
+                'dump_binary_path' => env('DB_DUMP_PATH', '/usr/bin'),
+                'use_single_transaction' => true,
+                'timeout' => 60 * 5, // 5 minute timeout
+            ],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
