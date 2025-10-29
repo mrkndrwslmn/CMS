@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 abstract class BaseMailable extends Mailable
 {
@@ -35,6 +36,13 @@ abstract class BaseMailable extends Mailable
         if ($this->senderType === EmailSenderService::SENDER_DEFAULT) {
             $this->senderType = $this->senderService->autoDetectSender(static::class);
         }
+
+        // Log mail creation
+        Log::info('Mail instance created', [
+            'mail_class' => static::class,
+            'sender_type' => $this->senderType,
+            'queue' => $this->queue ?? 'default'
+        ]);
     }
 
     /**
@@ -42,12 +50,63 @@ abstract class BaseMailable extends Mailable
      */
     public function envelope(): Envelope
     {
-        $sender = $this->senderService->getSender($this->senderType);
-        
-        return new Envelope(
-            from: new Address($sender['address'], $sender['name']),
-            subject: $this->getSubject(),
-        );
+        try {
+            $sender = $this->senderService->getSender($this->senderType);
+            
+            $envelope = new Envelope(
+                from: new Address($sender['address'], $sender['name']),
+                subject: $this->getSubject(),
+            );
+
+            Log::info('Mail envelope created successfully', [
+                'mail_class' => static::class,
+                'sender_type' => $this->senderType,
+                'from_address' => $sender['address'],
+                'from_name' => $sender['name'],
+                'subject' => $this->getSubject()
+            ]);
+
+            return $envelope;
+        } catch (\Exception $e) {
+            Log::error('Mail envelope creation failed', [
+                'mail_class' => static::class,
+                'sender_type' => $this->senderType,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            throw $e;
+        }
+    }
+
+    /**
+     * Build the message (called by Laravel when sending email)
+     */
+    public function build()
+    {
+        try {
+            $result = parent::build();
+            
+            Log::info('Mail built successfully', [
+                'mail_class' => static::class,
+                'sender_type' => $this->senderType,
+                'to' => $this->to,
+                'cc' => $this->cc,
+                'bcc' => $this->bcc,
+                'subject' => $this->subject
+            ]);
+            
+            return $result;
+        } catch (\Exception $e) {
+            Log::error('Mail build failed', [
+                'mail_class' => static::class,
+                'sender_type' => $this->senderType,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            throw $e;
+        }
     }
 
     /**
@@ -76,6 +135,12 @@ abstract class BaseMailable extends Mailable
     public function setSenderType(string $senderType): self
     {
         $this->senderType = $senderType;
+        
+        Log::debug('Mail sender type changed', [
+            'mail_class' => static::class,
+            'new_sender_type' => $senderType
+        ]);
+        
         return $this;
     }
 

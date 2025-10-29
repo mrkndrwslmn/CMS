@@ -4,74 +4,88 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Enhanced Header with Gradient -->
-    <div class="mb-8">
-        <!-- Breadcrumb -->
-        <nav class="flex items-center space-x-2 text-sm text-neutral-500 mb-4">
-            <a href="{{ route('adiutor.dashboard') }}" class="hover:text-primary-600 transition-colors flex items-center">
-                <i class="fas fa-home mr-1.5"></i>
-                Dashboard
-            </a>
-            <i class="fas fa-chevron-right text-xs"></i>
-            <a href="{{ route('adiutor.tasks.index') }}" class="hover:text-primary-600 transition-colors">Tasks</a>
-            <i class="fas fa-chevron-right text-xs"></i>
-            <span class="text-neutral-900 font-medium">{{ Str::limit($task->taskTitle, 40) }}</span>
-        </nav>
+    <!-- Breadcrumb Navigation -->
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+        <a href="{{ route('adiutor.dashboard') }}" class="hover:text-primary-600 transition-colors">Dashboard</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <a href="{{ route('adiutor.tasks.index') }}" class="hover:text-primary-600 transition-colors">Tasks</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <span class="text-gray-900 font-medium">{{ Str::limit($task->taskTitle, 40) }}</span>
+    </nav>
 
-        <!-- Title Section -->
-        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div class="flex-1">
-                <div class="flex items-start gap-3 mb-3">
-                    <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30">
-                        <i class="fas fa-tasks text-white text-xl"></i>
+                <div class="flex items-start gap-4 mb-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
                     </div>
                     <div class="flex-1">
-                        <h1 class="text-3xl font-bold text-neutral-900 mb-2">{{ $task->taskTitle }}</h1>
+                        <h1 class="text-3xl font-bold text-gray-900 mb-3">{{ $task->taskTitle }}</h1>
                         <div class="flex flex-wrap items-center gap-3">
-                            <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm
-                                @if($task->status === 'completed') bg-green-50 text-green-700 ring-1 ring-green-600/20
-                                @elseif($task->status === 'in_progress') bg-blue-50 text-blue-700 ring-1 ring-blue-600/20
-                                @elseif($task->status === 'pending') bg-amber-50 text-amber-700 ring-1 ring-amber-600/20
-                                @elseif($task->status === 'pending_approval') bg-purple-50 text-purple-700 ring-1 ring-purple-600/20
-                                @else bg-neutral-50 text-neutral-700 ring-1 ring-neutral-600/20 @endif">
+                            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium
+                                {{ $task->status === 'completed' ? 'bg-green-100 text-green-800' : '' }}
+                                {{ $task->status === 'in_progress' ? 'bg-primary-100 text-primary-800' : '' }}
+                                {{ $task->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                {{ $task->status === 'pending_approval' ? 'bg-purple-100 text-purple-800' : '' }}">
                                 <span class="w-2 h-2 rounded-full mr-2
-                                    @if($task->status === 'completed') bg-green-500
-                                    @elseif($task->status === 'in_progress') bg-blue-500
-                                    @elseif($task->status === 'pending') bg-amber-500
-                                    @elseif($task->status === 'pending_approval') bg-purple-500
-                                    @else bg-neutral-500 @endif"></span>
+                                    {{ $task->status === 'completed' ? 'bg-green-600' : '' }}
+                                    {{ $task->status === 'in_progress' ? 'bg-primary-600' : '' }}
+                                    {{ $task->status === 'pending' ? 'bg-yellow-600' : '' }}
+                                    {{ $task->status === 'pending_approval' ? 'bg-purple-600' : '' }}"></span>
                                 {{ ucfirst(str_replace('_', ' ', $task->status)) }}
                             </span>
                             
-                            <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
-                                @if($task->priority === 'urgent') bg-red-50 text-red-700 ring-1 ring-red-600/20
-                                @elseif($task->priority === 'high') bg-orange-50 text-orange-700 ring-1 ring-orange-600/20
-                                @elseif($task->priority === 'medium') bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20
-                                @else bg-neutral-50 text-neutral-700 ring-1 ring-neutral-600/20 @endif">
-                                <i class="fas fa-flag mr-2"></i>
+                            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium
+                                {{ $task->priority === 'urgent' ? 'bg-red-100 text-red-800' : '' }}
+                                {{ $task->priority === 'high' ? 'bg-orange-100 text-orange-800' : '' }}
+                                {{ $task->priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                {{ $task->priority === 'low' ? 'bg-gray-100 text-gray-800' : (!$task->priority ? 'bg-gray-100 text-gray-800' : '') }}">
+                                <svg class="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                                </svg>
                                 {{ ucfirst($task->priority ?? 'Normal') }} Priority
                             </span>
                         </div>
                     </div>
                 </div>
             </div>
+            @if($task->status !== 'completed')
+                <div class="flex-shrink-0">
+                    <button onclick="updateProgress()" class="px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        Update Progress
+                    </button>
+                </div>
+            @endif
         </div>
     </div>
 
-    <!-- Modern Stats Cards -->
+    <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Budget Card -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-neutral-200">
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-neutral-500 text-sm font-medium">Allocated Budget</span>
-                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-wallet text-green-600"></i>
+                <span class="text-gray-500 text-sm font-medium">Allocated Budget</span>
+                <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
                 </div>
             </div>
-            <p class="text-3xl font-bold text-neutral-900">₱{{ number_format($task->allocated_budget ?? 0, 2) }}</p>
+            <p class="text-2xl font-bold text-gray-900">₱{{ number_format($task->allocated_budget ?? 0, 2) }}</p>
             @if($task->actual_cost)
                 <div class="mt-2 flex items-center text-xs">
-                    <span class="text-neutral-500">Spent: ₱{{ number_format($task->actual_cost, 2) }}</span>
+                    <span class="text-gray-500">Spent: ₱{{ number_format($task->actual_cost, 2) }}</span>
                     @php
                         $remaining = ($task->allocated_budget ?? 0) - $task->actual_cost;
                         $isOverBudget = $remaining < 0;
@@ -81,86 +95,102 @@
                     </span>
                 </div>
             @else
-                <p class="text-neutral-500 text-xs mt-1">No expenses yet</p>
+                <p class="text-gray-500 text-xs mt-1">No expenses yet</p>
             @endif
         </div>
 
         <!-- Deadline Card -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-neutral-200">
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-neutral-500 text-sm font-medium">Deadline</span>
-                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-calendar-alt text-blue-600"></i>
+                <span class="text-gray-500 text-sm font-medium">Deadline</span>
+                <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
                 </div>
             </div>
             @if($task->deadline)
-                <p class="text-2xl font-bold text-neutral-900">{{ \Carbon\Carbon::parse($task->deadline)->format('M d, Y') }}</p>
-                <p class="text-neutral-500 text-xs mt-1">{{ \Carbon\Carbon::parse($task->deadline)->diffForHumans() }}</p>
+                <p class="text-2xl font-bold text-gray-900">{{ \Carbon\Carbon::parse($task->deadline)->format('M d, Y') }}</p>
+                <p class="text-gray-500 text-xs mt-1">{{ \Carbon\Carbon::parse($task->deadline)->diffForHumans() }}</p>
             @else
-                <p class="text-2xl font-bold text-neutral-900">No deadline</p>
-                <p class="text-neutral-500 text-xs mt-1">Flexible timeline</p>
+                <p class="text-2xl font-bold text-gray-900">No deadline</p>
+                <p class="text-gray-500 text-xs mt-1">Flexible timeline</p>
             @endif
         </div>
 
         <!-- Progress Card -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-neutral-200">
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-neutral-500 text-sm font-medium">Progress</span>
-                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-chart-line text-purple-600"></i>
+                <span class="text-gray-500 text-sm font-medium">Progress</span>
+                <div class="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
                 </div>
             </div>
-            <p class="text-3xl font-bold text-neutral-900">{{ $task->progress_percentage ?? 0 }}%</p>
-            <div class="w-full bg-neutral-200 rounded-full h-2 mt-3">
-                <div class="bg-primary-500 h-2 rounded-full transition-all duration-300" style="width: {{ $task->progress_percentage ?? 0 }}%"></div>
+            <p class="text-2xl font-bold text-primary-600">{{ $task->progress_percentage ?? 0 }}%</p>
+            <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                <div class="bg-linear-to-r from-primary-500 to-primary-600 h-2 rounded-full transition-all duration-300" 
+                     style="width: {{ $task->progress_percentage ?? 0 }}%"></div>
             </div>
         </div>
 
         <!-- Project Card -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-neutral-200">
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-neutral-500 text-sm font-medium">Parent Project</span>
-                <div class="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-project-diagram text-neutral-600"></i>
+                <span class="text-gray-500 text-sm font-medium">Parent Project</span>
+                <div class="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
                 </div>
             </div>
-            <p class="text-lg font-bold text-neutral-900 line-clamp-2 mb-2">{{ Str::limit($task->project_title, 35) }}</p>
+            <p class="text-lg font-bold text-gray-900 mb-2">{{ Str::limit($task->project_title, 35) }}</p>
             <a href="{{ route('adiutor.projects.show', $task->project_id) }}" class="inline-flex items-center text-primary-600 text-sm font-medium hover:text-primary-700 transition-colors">
-                View details <i class="fas fa-arrow-right ml-1.5 text-xs"></i>
+                View details 
+                <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
             </a>
         </div>
     </div>
 
     <!-- Phase Information (if applicable) -->
     @if($task->phase_id && $task->phase_name)
-        <div class="bg-gradient-to-r from-primary-50 to-blue-50 rounded-2xl p-6 shadow-sm border border-primary-200 mb-8">
+        <div class="bg-primary-50 rounded-xl p-6 border border-primary-200 mb-8">
             <div class="flex items-center justify-between flex-wrap gap-4">
                 <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
-                        <i class="fas fa-layer-group text-primary-600 text-xl"></i>
+                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
                     </div>
                     <div>
-                        <p class="text-sm text-neutral-600 font-medium mb-1">Project Phase</p>
-                        <h3 class="text-xl font-bold text-neutral-900">{{ $task->phase_name }}</h3>
+                        <p class="text-sm text-gray-600 font-medium mb-1">Project Phase</p>
+                        <h3 class="text-xl font-bold text-gray-900">{{ $task->phase_name }}</h3>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
                     @if($task->phase_budget)
-                        <div class="bg-white px-4 py-2.5 rounded-lg shadow-sm border border-neutral-200">
-                            <p class="text-xs text-neutral-500 mb-0.5">Phase Budget</p>
-                            <p class="text-lg font-bold text-neutral-900">₱{{ number_format($task->phase_budget, 2) }}</p>
+                        <div class="bg-white px-4 py-2.5 rounded-lg border border-gray-200">
+                            <p class="text-xs text-gray-500 mb-0.5">Phase Budget</p>
+                            <p class="text-lg font-bold text-gray-900">₱{{ number_format($task->phase_budget, 2) }}</p>
                         </div>
                     @endif
-                    <div class="bg-white px-4 py-2.5 rounded-lg shadow-sm border border-neutral-200">
-                        <p class="text-xs text-neutral-500 mb-0.5">Payment Status</p>
+                    <div class="bg-white px-4 py-2.5 rounded-lg border border-gray-200">
+                        <p class="text-xs text-gray-500 mb-0.5">Payment Status</p>
                         @if($task->phase_is_paid)
                             <span class="inline-flex items-center px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                                <i class="fas fa-check-circle mr-1.5"></i>
+                                <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
                                 Paid
                             </span>
                         @else
-                            <span class="inline-flex items-center px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
-                                <i class="fas fa-clock mr-1.5"></i>
+                            <span class="inline-flex items-center px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
+                                <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
                                 Pending
                             </span>
                         @endif
@@ -175,26 +205,30 @@
         <!-- Left Column - Main Content -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Task Description -->
-            <div class="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
-                <div class="px-6 py-4 bg-gradient-to-r from-neutral-50 to-white border-b border-neutral-200">
-                    <h3 class="text-lg font-semibold text-neutral-900 flex items-center">
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                         <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
-                            <i class="fas fa-align-left text-primary-600 text-sm"></i>
+                            <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+                            </svg>
                         </div>
                         Description
                     </h3>
                 </div>
                 <div class="px-6 py-5">
                     @if($task->taskDescription)
-                        <div class="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
+                        <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed">
                             {{ $task->taskDescription }}
                         </div>
                     @else
                         <div class="text-center py-8">
-                            <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i class="fas fa-file-alt text-neutral-400 text-2xl"></i>
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
                             </div>
-                            <p class="text-neutral-500 text-sm">No description provided</p>
+                            <p class="text-gray-500 text-sm">No description provided</p>
                         </div>
                     @endif
                 </div>

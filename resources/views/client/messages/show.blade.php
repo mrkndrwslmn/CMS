@@ -5,14 +5,21 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
-    <nav class="mb-6" aria-label="Breadcrumb">
+    <nav class="mb-8" aria-label="Breadcrumb">
         <ol class="flex items-center gap-2 text-sm">
             <li>
-                <a href="{{ route('client.messages.index') }}" class="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path>
-                    </svg>
-                    My Messages
+                <a href="{{ route('client.dashboard') }}" class="text-gray-600 hover:text-primary-600 transition-colors">
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+            </li>
+            <li>
+                <a href="{{ route('client.messages.index') }}" class="text-gray-600 hover:text-primary-600 transition-colors">
+                    Messages
                 </a>
             </li>
             <li>
@@ -25,19 +32,19 @@
     </nav>
 
     <!-- Chat Container -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-primary-600 to-accent-600 px-6 py-4">
+        <div class="bg-primary-600 px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-3 mb-2">
-                        <svg class="w-6 h-6 text-white/90" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path>
                             <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path>
                         </svg>
                         <h1 class="text-xl font-bold text-white truncate">{{ $project->title }}</h1>
                     </div>
-                    <div class="flex items-center gap-4 text-sm text-white/80">
+                    <div class="flex items-center gap-4 text-sm text-white/90">
                         <div class="flex items-center gap-1.5">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path>
@@ -47,7 +54,7 @@
                     </div>
                 </div>
                 <a href="{{ route('client.projects.show', $project->id) }}" 
-                   class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm font-medium backdrop-blur-sm">
+                   class="flex items-center gap-2 px-4 py-2 bg-white text-primary-600 rounded-lg hover:bg-gray-50 transition-colors text-sm font-semibold">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                     </svg>
@@ -57,10 +64,10 @@
         </div>
 
         <!-- Meeting Actions Bar -->
-        <div class="border-b border-gray-200 bg-gray-50 px-6 py-3">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
             <button type="button" 
                     onclick="openScheduleMeetingModal()"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md text-sm font-medium">
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-semibold">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
@@ -87,10 +94,10 @@
         </div>
 
         <!-- Message Input -->
-        <div class="border-t border-gray-200 bg-white p-4">
+        <div class="border-t border-gray-200 bg-white p-6">
             <form id="message-form">
                 @csrf
-                <div class="space-y-3">
+                <div class="space-y-4">
                     <div>
                         <textarea 
                             id="message-textarea"
@@ -99,8 +106,8 @@
                             placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
                             required
                             maxlength="5000"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm placeholder-gray-400"></textarea>
-                        <div class="mt-1 flex items-center justify-between">
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none text-sm placeholder-gray-400"></textarea>
+                        <div class="mt-2 flex items-center justify-between">
                             <span class="text-xs text-gray-500">
                                 <span id="char-count" class="font-medium">0</span>/5000 characters
                             </span>
@@ -125,7 +132,7 @@
                             <span class="text-xs text-gray-500">Max 10MB per file</span>
                         </div>
                         
-                        <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md text-sm font-medium">
+                        <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-semibold">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
                             </svg>
@@ -141,12 +148,12 @@
 </div>
 
 <!-- Schedule Meeting Modal -->
-<div id="scheduleMeetingModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+<div id="scheduleMeetingModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 items-center justify-center p-4" style="display: none;">
+    <div class="bg-white rounded-xl border border-gray-200 max-w-md w-full max-h-[90vh] overflow-y-auto">
         <!-- Modal Header -->
-        <div class="bg-gradient-to-r from-primary-600 to-accent-600 px-6 py-4 flex items-center justify-between">
+        <div class="bg-primary-600 px-6 py-4 rounded-t-xl flex items-center justify-between">
             <h3 class="text-lg font-bold text-white">Schedule a Meeting</h3>
-            <button type="button" onclick="closeScheduleMeetingModal()" class="text-white/80 hover:text-white">
+            <button type="button" onclick="closeScheduleMeetingModal()" class="text-white/80 hover:text-white transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -205,13 +212,13 @@
             </div>
 
             <!-- Info Box -->
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+            <div class="bg-primary-50 border border-primary-200 rounded-lg p-4">
                 <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="w-5 h-5 text-primary-600 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                     </svg>
-                    <div class="text-sm text-blue-800">
-                        <p class="font-medium">Meeting Request Process</p>
+                    <div class="text-sm text-primary-800">
+                        <p class="font-semibold">Meeting Request Process</p>
                         <ul class="mt-2 space-y-1 text-xs">
                             <li>• Your request will be sent to the admin for review</li>
                             <li>• Admin can approve, reschedule, or decline</li>
@@ -226,11 +233,11 @@
             <div class="flex items-center gap-3 pt-4">
                 <button type="button" 
                         onclick="closeScheduleMeetingModal()"
-                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-semibold">
                     Cancel
                 </button>
                 <button type="submit" 
-                        class="flex-1 px-4 py-2 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md font-medium">
+                        class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold">
                     Submit Request
                 </button>
             </div>
@@ -660,7 +667,7 @@ document.addEventListener('DOMContentLoaded', function() {
             attachmentsHtml = message.attachments.map(att => `
                 <a href="/storage/${att.path}" 
                    download="${att.name}" 
-                   class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${isSender ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}">
+                   class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${isSender ? 'bg-primary-100 text-primary-800 hover:bg-primary-200' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}">
                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clip-rule="evenodd"></path>
                     </svg>
@@ -674,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="max-w-[70%]">
                     ${!isSender ? `
                         <div class="flex items-center gap-2 mb-1.5 px-1">
-                            <div class="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                            <div class="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
                                 <svg class="w-3.5 h-3.5 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
                                 </svg>
@@ -682,8 +689,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="text-xs font-medium text-gray-700">${escapeHtml(message.sender.fullName)}</span>
                         </div>
                     ` : ''}
-                    <div class="rounded-2xl px-4 py-3 shadow-sm ${isSender ? 'bg-gradient-to-br from-primary-600 to-accent-600 text-white rounded-br-md' : 'bg-white border border-gray-200 text-gray-900 rounded-bl-md'}">
-                        <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">${escapeHtml(message.message)}</p>
+                    <div class="rounded-2xl px-4 py-3 ${isSender ? 'bg-primary-600 text-white rounded-br-md' : 'bg-white border border-gray-200 text-gray-900 rounded-bl-md'}">
+                        <p class="text-sm leading-relaxed whitespace-pre-wrap wrap-break-word">${escapeHtml(message.message)}</p>
                         ${attachmentsHtml}
                     </div>
                     <div class="flex items-center gap-1.5 mt-1.5 px-1 text-xs text-gray-500 ${isSender ? 'justify-end' : 'justify-start'}">

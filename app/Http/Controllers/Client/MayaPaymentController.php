@@ -281,13 +281,54 @@ class MayaPaymentController extends Controller
                     // Notify client about payment confirmation
                     $clientUser = \App\Models\User::find($payment->client_id);
                     if ($clientUser) {
-                        $clientUser->notify(new PaymentConfirmedNotification($payment));
+                        try {
+                            Log::info('Dispatching PaymentConfirmedNotification to client', [
+                                'payment_id' => $payment->id,
+                                'client_id' => $clientUser->id,
+                                'client_email' => $clientUser->email,
+                                'amount' => $payment->amount
+                            ]);
+                            
+                            $clientUser->notify(new PaymentConfirmedNotification($payment));
+                            
+                            Log::info('PaymentConfirmedNotification dispatched to client successfully', [
+                                'payment_id' => $payment->id,
+                                'client_id' => $clientUser->id
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error('Failed to notify client about payment confirmation', [
+                                'payment_id' => $payment->id,
+                                'client_id' => $clientUser->id,
+                                'error' => $e->getMessage(),
+                                'trace' => $e->getTraceAsString()
+                            ]);
+                        }
                     }
 
                     // Notify admins using Laravel's notification structure
                     $admins = User::where('role', 'admin')->get();
+                    Log::info('Dispatching PaymentConfirmedNotification to admins', [
+                        'payment_id' => $payment->id,
+                        'admin_count' => $admins->count(),
+                        'amount' => $payment->amount
+                    ]);
+                    
                     foreach ($admins as $admin) {
-                        $admin->notify(new PaymentConfirmedNotification($payment));
+                        try {
+                            $admin->notify(new PaymentConfirmedNotification($payment));
+                            
+                            Log::debug('PaymentConfirmedNotification dispatched to admin', [
+                                'payment_id' => $payment->id,
+                                'admin_id' => $admin->id,
+                                'admin_email' => $admin->email
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error('Failed to notify admin about payment confirmation', [
+                                'payment_id' => $payment->id,
+                                'admin_id' => $admin->id,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
                     }
 
                     Log::info('Payment confirmed successfully', [

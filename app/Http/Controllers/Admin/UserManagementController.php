@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\LogsNotifications;
 use App\Notifications\UserCreatedNotification;
 use App\Notifications\UserStatusChangedNotification;
 use App\Notifications\UserDeletedNotification;
@@ -14,10 +15,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class UserManagementController extends Controller
 {
+    use LogsNotifications;
     /**
      * Display a listing of users.
      */
@@ -93,17 +96,37 @@ class UserManagementController extends Controller
 
         // Notify all admins about new user creation
         $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
-        foreach ($admins as $admin) {
-            $admin->notify(new UserCreatedNotification($user, Auth::user()->fullName, true));
-        }
+        $this->sendNotificationToManyWithLogging(
+            $admins,
+            new UserCreatedNotification($user, Auth::user()->fullName, true),
+            [
+                'created_user_id' => $user->id,
+                'created_user_email' => $user->email,
+                'created_user_role' => $user->role,
+                'created_by' => Auth::user()->fullName
+            ]
+        );
 
         // 📧 Send welcome email to new user
         try {
-            Mail::to($user->email)->send(new WelcomeNewUserMail($user));
-        } catch (\Exception $e) {
-            \Log::error('Failed to send welcome email to new user', [
+            Log::info('Sending welcome email to new user', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'user_email' => $user->email,
+                'user_role' => $user->role
+            ]);
+            
+            Mail::to($user->email)->send(new WelcomeNewUserMail($user));
+            
+            Log::info('Welcome email sent successfully', [
+                'user_id' => $user->id,
+                'user_email' => $user->email
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send welcome email to new user', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
 
