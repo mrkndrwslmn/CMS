@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\Document;
 
 class ClientController extends Controller
 {
@@ -557,12 +558,24 @@ class ClientController extends Controller
         }
         
         // Download file
-        $filePath = storage_path('app/public/' . $document->filePath);
+        // Check if file is stored in R2 (has URL format) or local storage
+        $isR2File = $document->filePath && (
+            str_starts_with($document->filePath, 'https://') || 
+            str_starts_with($document->filePath, 'http://')
+        );
         
-        if (!file_exists($filePath)) {
-            abort(404, 'File not found on server.');
+        if ($isR2File) {
+            // File is in R2, redirect to the direct URL
+            return redirect($document->filePath);
+        } else {
+            // Legacy: File is in local storage
+            $filePath = storage_path('app/public/' . $document->filePath);
+            
+            if (!file_exists($filePath)) {
+                abort(404, 'File not found on server.');
+            }
+            
+            return response()->download($filePath, $document->fileName);
         }
-        
-        return response()->download($filePath, $document->fileName);
     }
 }

@@ -201,7 +201,7 @@
                                     <div class="flex items-center">
                                         @if($feedback->client)
                                             @if($feedback->client->profilePic)
-                                                <img src="{{ asset('storage/' . $feedback->client->profilePic) }}" class="w-10 h-10 rounded-full object-cover mr-3">
+                                                <img src="{{ $feedback->client->getProfilePictureUrl() }}" class="w-10 h-10 rounded-full object-cover mr-3">
                                             @else
                                                 <div class="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold mr-3">
                                                     {{ substr($feedback->client->fullName, 0, 1) }}

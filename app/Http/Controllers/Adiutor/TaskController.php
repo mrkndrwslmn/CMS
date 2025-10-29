@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Adiutor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Models\Document;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\BudgetChangeRequest;
@@ -13,6 +14,7 @@ use App\Notifications\ProjectAcceptedNotification;
 use App\Notifications\ProjectDeclinedNotification;
 use App\Notifications\ProjectProgressUpdateNotification;
 use App\Mail\BudgetChangeRequested;
+use App\Services\CloudflareR2Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -441,29 +443,40 @@ class TaskController extends Controller
                 ->withErrors(['error' => 'Task not found or you do not have access to it.']);
         }
         
-        // Store the file
+        // Store the file using Cloudflare R2
         $file = $request->file('file');
-        $originalName = $file->getClientOriginalName();
-        $fileName = time() . '_' . $originalName;
-        $filePath = $file->storeAs('task_files', $fileName, 'public');
+        $r2Service = new CloudflareR2Service();
         
-        // Save to documents table
-        DB::table('documents')->insert([
-            'taskID' => $taskId,
-            'uploaded_by' => $user->id,
-            'fileName' => $originalName,
-            'filePath' => $filePath,
-            'fileType' => $file->getClientMimeType(),
-            'fileSize' => $file->getSize(),
-            'description' => $request->description,
-            'is_archived' => false,
-            'uploadedAt' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // Get task details for proper R2 organization
+        $task = DB::table('tasks')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->where('tasks.taskID', $taskId)
+            ->select('tasks.*', 'projects.service_request_id')
+            ->first();
         
-        return redirect()->back()
-            ->with('success', 'File uploaded successfully.');
+        $serviceRequestId = $task->service_request_id ?? 'unknown';
+        $uploadResult = $r2Service->uploadDocument($file, $serviceRequestId, $taskId);
+        
+        if ($uploadResult['success']) {
+            // Save to documents table with R2 URL
+            DB::table('documents')->insert([
+                'taskID' => $taskId,
+                'uploaded_by' => $user->id,
+                'fileName' => $uploadResult['original_name'],
+                'filePath' => $uploadResult['url'], // Store R2 URL
+                'fileType' => $uploadResult['mime_type'],
+                'fileSize' => $uploadResult['size'],
+                'description' => $request->description,
+                'is_archived' => false,
+                'uploadedAt' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            
+            return redirect()->back()->with('success', 'File uploaded successfully to cloud storage.');
+        } else {
+            return redirect()->back()->withErrors(['error' => 'Failed to upload file: ' . $uploadResult['error']]);
+        }
     }
 
     /**
@@ -473,26 +486,20 @@ class TaskController extends Controller
     {
         $user = Auth::user();
         
-        // Get file and verify access
-        $file = DB::table('documents')
-            ->join('tasks', 'documents.taskID', '=', 'tasks.taskID')
+        // Get file and verify access using Document model
+        $document = Document::join('tasks', 'documents.taskID', '=', 'tasks.taskID')
             ->where('documents.documentID', $fileId)
             ->where('tasks.assignedTo', $user->id)
             ->where('documents.is_archived', false)
             ->select('documents.*')
             ->first();
             
-        if (!$file) {
+        if (!$document) {
             abort(404, 'File not found or you do not have access to it.');
         }
         
-        $filePath = storage_path('app/public/' . $file->filePath);
-        
-        if (!file_exists($filePath)) {
-            abort(404, 'File not found on server.');
-        }
-        
-        return response()->download($filePath, $file->fileName);
+        // Use the model's method to get the proper download URL
+        return redirect($document->getDownloadUrl());
     }
 
     /**
@@ -518,9 +525,22 @@ class TaskController extends Controller
         }
         
         // Delete physical file from storage
-        $filePath = storage_path('app/public/' . $file->filePath);
-        if (file_exists($filePath)) {
-            unlink($filePath);
+        // Check if file is stored in R2 (has URL format) or local storage
+        $isR2File = $file->filePath && (
+            str_starts_with($file->filePath, 'https://') || 
+            str_starts_with($file->filePath, 'http://')
+        );
+        
+        if ($isR2File) {
+            // File is in R2 - we just remove the database record
+            // R2 files are managed by Cloudflare
+            \Log::info('Deleting R2 file from database: ' . $file->filePath);
+        } else {
+            // Legacy: Delete local file
+            $filePath = storage_path('app/public/' . $file->filePath);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
         }
         
         // Delete record from database

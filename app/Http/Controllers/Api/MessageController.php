@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\Project;
 use App\Models\User;
 use App\Services\FirebaseService;
+use App\Services\CloudflareR2Service;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -172,14 +173,24 @@ class MessageController extends Controller
             // Handle attachments
             $attachmentPaths = [];
             if ($request->hasFile('attachments')) {
+                $r2Service = new CloudflareR2Service();
+                
                 foreach ($request->file('attachments') as $file) {
-                    $path = $file->store('message-attachments', 'public');
-                    $attachmentPaths[] = [
-                        'name' => $file->getClientOriginalName(),
-                        'path' => $path,
-                        'size' => $file->getSize(),
-                        'mime_type' => $file->getMimeType(),
-                    ];
+                    // Upload to R2 in message-attachments directory
+                    $uploadResult = $r2Service->uploadFile($file, 'message-attachments', null, [
+                        'type' => 'message_attachment',
+                        'user_id' => Auth::id(),
+                    ]);
+                    
+                    if ($uploadResult['success']) {
+                        $attachmentPaths[] = [
+                            'name' => $uploadResult['original_name'],
+                            'path' => $uploadResult['path'],
+                            'url' => $uploadResult['url'], // Include URL for direct access
+                            'size' => $uploadResult['size'],
+                            'mime_type' => $uploadResult['mime_type'],
+                        ];
+                    }
                 }
             }
 

@@ -218,6 +218,27 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the profile picture URL for display
+     */
+    public function getProfilePictureUrl(): string
+    {
+        $profilePic = $this->getBestProfilePicture();
+        
+        if (!$profilePic) {
+            // Return default avatar from UI Avatars
+            return 'https://ui-avatars.com/api/?name=' . urlencode($this->fullName);
+        }
+        
+        // Check if it's already a full URL (Auth0 or R2)
+        if (str_starts_with($profilePic, 'https://') || str_starts_with($profilePic, 'http://')) {
+            return $profilePic;
+        }
+        
+        // Legacy local file
+        return asset('storage/' . $profilePic);
+    }
+
+    /**
      * Get the adiutor profile for this user
      */
     public function adiutorProfile()

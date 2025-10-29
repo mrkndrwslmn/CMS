@@ -27,7 +27,7 @@
                 <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-8 text-center">
                     <div class="flex justify-center mb-4">
                         @if($user->profilePic)
-                            <img src="{{ asset('storage/' . $user->profilePic) }}" 
+                            <img src="{{ $user->getProfilePictureUrl() }}" 
                                  class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
                                  alt="{{ $user->fullName }}">
                         @else

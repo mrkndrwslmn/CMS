@@ -170,20 +170,35 @@ class Document extends Model
      */
     public function getFormattedSizeAttribute(): string
     {
-        if (!file_exists($this->filePath)) {
-            return 'Unknown';
+        // If fileSize is already stored in database, use it
+        if ($this->fileSize && $this->fileSize > 0) {
+            $size = $this->fileSize;
+            $units = ['B', 'KB', 'MB', 'GB'];
+            
+            $i = 0;
+            while ($size >= 1024 && $i < count($units) - 1) {
+                $size /= 1024;
+                $i++;
+            }
+
+            return round($size, 2) . ' ' . $units[$i];
         }
 
-        $size = filesize($this->filePath);
-        $units = ['B', 'KB', 'MB', 'GB'];
-        
-        $i = 0;
-        while ($size >= 1024 && $i < count($units) - 1) {
-            $size /= 1024;
-            $i++;
+        // Legacy support: Check if it's a local file
+        if (!$this->isR2File() && file_exists($this->filePath)) {
+            $size = filesize($this->filePath);
+            $units = ['B', 'KB', 'MB', 'GB'];
+            
+            $i = 0;
+            while ($size >= 1024 && $i < count($units) - 1) {
+                $size /= 1024;
+                $i++;
+            }
+
+            return round($size, 2) . ' ' . $units[$i];
         }
 
-        return round($size, 2) . ' ' . $units[$i];
+        return 'Unknown';
     }
 
     /**
@@ -192,6 +207,60 @@ class Document extends Model
     public function getFileExtensionAttribute(): string
     {
         return pathinfo($this->fileName, PATHINFO_EXTENSION);
+    }
+
+    /**
+     * Check if file is stored in Cloudflare R2
+     */
+    public function isR2File(): bool
+    {
+        return $this->filePath && (
+            str_starts_with($this->filePath, 'https://') || 
+            str_starts_with($this->filePath, 'http://')
+        );
+    }
+
+    /**
+     * Get the download URL for this document
+     */
+    public function getDownloadUrl(): string
+    {
+        if ($this->isR2File()) {
+            // R2 files are stored with the full public URL - return directly
+            return $this->filePath;
+        }
+        
+        // Legacy local file - construct URL
+        return route('client.documents.download', $this->documentID);
+    }
+
+    /**
+     * Get the display URL for this document (for images and previews)
+     */
+    public function getDisplayUrl(): string
+    {
+        if ($this->isR2File()) {
+            // R2 files are stored with the full public URL - return directly
+            return $this->filePath;
+        }
+        
+        // Legacy local file - use asset helper
+        return asset('storage/' . $this->filePath);
+    }
+
+    /**
+     * Check if document file exists
+     */
+    public function fileExists(): bool
+    {
+        if ($this->isR2File()) {
+            // For R2 files, we'll assume they exist unless we can verify otherwise
+            // You could implement an R2 service call here if needed
+            return true;
+        }
+        
+        // Legacy local file check
+        return file_exists($this->filePath);
     }
 
     /**

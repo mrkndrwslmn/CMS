@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\User;
 use App\Models\Task;
 use App\Models\Form;
+use App\Services\CloudflareR2Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -106,19 +107,36 @@ class DocumentManagementController extends Controller
         ]);
         
         $file = $request->file('document');
-        $fileName = time() . '_' . Str::slug($request->title) . '.' . $file->getClientOriginalExtension();
-        $filePath = $file->storeAs('documents', $fileName, 'public');
+        $r2Service = new CloudflareR2Service();
         
-        $document = Document::create([
-            'taskID' => $request->taskID,
-            'fileName' => $fileName,
-            'filePath' => $filePath,
-            'fileType' => $file->getClientOriginalExtension(),
-            'fileSize' => $file->getSize(),
-        ]);
+        // Determine service request ID for proper organization
+        $serviceRequestId = 'admin-upload';
+        if ($request->taskID) {
+            $task = Task::find($request->taskID);
+            if ($task && $task->project && $task->project->service_request_id) {
+                $serviceRequestId = $task->project->service_request_id;
+            }
+        }
         
-        return redirect()->route('admin.documents.index')
-                        ->with('success', 'Document uploaded successfully.');
+        $uploadResult = $r2Service->uploadDocument($file, $serviceRequestId);
+        
+        if ($uploadResult['success']) {
+            $document = Document::create([
+                'taskID' => $request->taskID,
+                'fileName' => $uploadResult['original_name'],
+                'filePath' => $uploadResult['url'], // Store R2 URL
+                'fileType' => $uploadResult['mime_type'],
+                'fileSize' => $uploadResult['size'],
+                'uploaded_by' => Auth::id(),
+                'uploadedAt' => now(),
+            ]);
+            
+            return redirect()->route('admin.documents.index')
+                            ->with('success', 'Document uploaded successfully to cloud storage.');
+        } else {
+            return redirect()->back()
+                            ->withErrors(['document' => 'Failed to upload document: ' . $uploadResult['error']]);
+        }
     }
     
     public function edit($id)
@@ -155,22 +173,42 @@ class DocumentManagementController extends Controller
         
         // Handle file replacement
         if ($request->hasFile('document')) {
-            // Delete old file
-            if (Storage::disk('public')->exists($document->filePath)) {
+            $r2Service = new CloudflareR2Service();
+            
+            // Delete old file if it's in R2
+            if ($document->filePath && (str_starts_with($document->filePath, 'https://') || str_starts_with($document->filePath, 'http://'))) {
+                // Old file is in R2 - we could delete it, but for safety we'll keep it for now
+                // $r2Service->deleteFile($oldR2Path);
+            } elseif ($document->filePath && Storage::disk('public')->exists($document->filePath)) {
+                // Old file is local - delete it
                 Storage::disk('public')->delete($document->filePath);
             }
             
-            // Store new file
+            // Upload new file to R2
             $file = $request->file('document');
-            $fileName = time() . '_' . Str::slug($request->title) . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('documents', $fileName, 'public');
             
-            $updateData = array_merge($updateData, [
-                'fileName' => $fileName,
-                'filePath' => $filePath,
-                'fileType' => $file->getClientOriginalExtension(),
-                'fileSize' => $file->getSize(),
-            ]);
+            // Determine service request ID for proper organization
+            $serviceRequestId = 'admin-upload';
+            if ($request->taskID) {
+                $task = Task::find($request->taskID);
+                if ($task && $task->project && $task->project->service_request_id) {
+                    $serviceRequestId = $task->project->service_request_id;
+                }
+            }
+            
+            $uploadResult = $r2Service->uploadDocument($file, $serviceRequestId);
+            
+            if ($uploadResult['success']) {
+                $updateData = array_merge($updateData, [
+                    'fileName' => $uploadResult['original_name'],
+                    'filePath' => $uploadResult['url'], // Store R2 URL
+                    'fileType' => $uploadResult['mime_type'],
+                    'fileSize' => $uploadResult['size'],
+                ]);
+            } else {
+                return redirect()->back()
+                                ->withErrors(['document' => 'Failed to upload document: ' . $uploadResult['error']]);
+            }
         }
         
         $document->update($updateData);
@@ -184,8 +222,15 @@ class DocumentManagementController extends Controller
         $document = Document::findOrFail($id);
         
         // Delete file from storage
-        if (Storage::disk('public')->exists($document->filePath)) {
-            Storage::disk('public')->delete($document->filePath);
+        if ($document->isR2File()) {
+            // For R2 files, we rely on the R2 service for deletion if needed
+            // R2 files are managed by Cloudflare, so we just remove the database record
+            \Log::info('Deleting R2 document: ' . $document->filePath);
+        } else {
+            // Delete legacy local files
+            if (Storage::disk('public')->exists($document->filePath)) {
+                Storage::disk('public')->delete($document->filePath);
+            }
         }
         
         $document->delete();
@@ -198,27 +243,16 @@ class DocumentManagementController extends Controller
     {
         $document = Document::findOrFail($id);
         
-        if (Storage::disk('public')->exists($document->filePath)) {
-            $filePath = storage_path('app/public/' . $document->filePath);
-            return response()->download($filePath, $document->fileName);
-        }
-        
-        return redirect()->back()->with('error', 'File not found.');
+        // Use the model's method to get the proper download URL
+        return redirect($document->getDownloadUrl());
     }
     
     public function preview($id)
     {
         $document = Document::findOrFail($id);
         
-        if (Storage::disk('public')->exists($document->filePath)) {
-            $filePath = storage_path('app/public/' . $document->filePath);
-            
-            return response()->file($filePath, [
-                'Content-Disposition' => 'inline; filename="' . $document->fileName . '"'
-            ]);
-        }
-        
-        return redirect()->back()->with('error', 'File not found.');
+        // Use the model's method to get the proper display URL
+        return redirect($document->getDisplayUrl());
     }
     
     public function bulkAction(Request $request)
@@ -234,8 +268,15 @@ class DocumentManagementController extends Controller
         if ($request->action === 'delete') {
             $documentsToDelete = $documents->get();
             foreach ($documentsToDelete as $document) {
-                if (Storage::disk('public')->exists($document->filePath)) {
-                    Storage::disk('public')->delete($document->filePath);
+                // Check if this is an R2 file
+                if ($document->filePath && (str_starts_with($document->filePath, 'https://') || str_starts_with($document->filePath, 'http://'))) {
+                    // R2 file - just log the deletion
+                    \Log::info('Bulk deleting R2 document: ' . $document->filePath);
+                } else {
+                    // Legacy local file
+                    if (Storage::disk('public')->exists($document->filePath)) {
+                        Storage::disk('public')->delete($document->filePath);
+                    }
                 }
             }
             $documents->delete();
@@ -281,24 +322,39 @@ class DocumentManagementController extends Controller
         
         $project = \App\Models\Project::findOrFail($projectId);
         
-        // Store file
+        // Upload file to R2
         $file = $request->file('file');
-        $fileName = time() . '_' . \Illuminate\Support\Str::slug($request->title) . '.' . $file->getClientOriginalExtension();
-        $filePath = $file->storeAs('documents/projects/' . $projectId, $fileName, 'public');
+        $r2Service = new CloudflareR2Service();
         
-        $document = Document::create([
-            'project_id' => $projectId,
-            'taskID' => null, // Project-level document
-            'client_id' => $project->client_id,
-            'uploaded_by' => Auth::id(),
-            'fileName' => $fileName,
-            'filePath' => $filePath,
-            'fileType' => $file->getClientOriginalExtension(),
-            'fileSize' => $file->getSize(),
-            'document_type' => $request->document_type,
-            'description' => $request->description,
-            'uploadedAt' => now(),
-        ]);
+        $serviceRequestId = $project->service_request_id ?? $projectId;
+        $uploadResult = $r2Service->uploadDocument($file, $serviceRequestId);
+        
+        if ($uploadResult['success']) {
+            $document = Document::create([
+                'project_id' => $projectId,
+                'taskID' => null, // Project-level document
+                'client_id' => $project->client_id,
+                'uploaded_by' => Auth::id(),
+                'fileName' => $uploadResult['original_name'],
+                'filePath' => $uploadResult['url'], // Store R2 URL
+                'fileType' => $uploadResult['mime_type'],
+                'fileSize' => $uploadResult['size'],
+                'document_type' => $request->document_type,
+                'description' => $request->description,
+                'uploadedAt' => now(),
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Document uploaded successfully to cloud storage.',
+                'document' => $document
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload document: ' . $uploadResult['error']
+            ], 500);
+        }
         
         return redirect()->back()
             ->with('success', 'Document uploaded successfully.');

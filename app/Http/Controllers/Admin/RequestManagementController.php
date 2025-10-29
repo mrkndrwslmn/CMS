@@ -400,11 +400,8 @@ class RequestManagementController extends Controller
         // Get attachment for ServiceRequest
         $attachment = RequestAttachment::where('service_request_id', $requestId)->findOrFail($fileId);
         
-        if (Storage::exists($attachment->file_path)) {
-            return Storage::download($attachment->file_path, $attachment->original_filename);
-        }
-        
-        return redirect()->back()->with('error', 'File not found.');
+        // Use the model's method to get the proper download URL
+        return redirect($attachment->getDownloadUrl());
     }
     
     public function export(Request $request)

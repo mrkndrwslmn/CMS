@@ -44,10 +44,19 @@ A client management system designed to facilitate service request handling, proj
 - Budget change requests
 
 ### Document Management
-- File upload and storage
+- File upload and storage with Cloudflare R2 integration
 - Project-level documents
 - Task-level documents
-- Document download
+- Document download with direct R2 URLs
+- Automatic migration from local storage
+- Organized bucket structure for scalability
+
+### Cloud Storage (Cloudflare R2) ☁️ (NEW!)
+- Integrated Cloudflare R2 for all file storage
+- Automatic file organization by type and project
+- Seamless migration from local storage
+- Cost-effective cloud storage with CDN support
+- [Setup Guide](CLOUDFLARE_R2_SETUP.md)
 
 ### Feedback System
 - Client project feedback

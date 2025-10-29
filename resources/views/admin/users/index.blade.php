@@ -223,7 +223,7 @@
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
                                             @if($user->profilePic)
-                                                <img src="{{ asset('storage/' . $user->profilePic) }}" class="h-10 w-10 rounded-full object-cover">
+                                                <img src="{{ $user->getProfilePictureUrl() }}" class="h-10 w-10 rounded-full object-cover">
                                             @else
                                                 <div class="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center">
                                                     <span class="text-white font-bold">{{ substr($user->fullName, 0, 1) }}</span>

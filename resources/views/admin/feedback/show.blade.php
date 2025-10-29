@@ -153,7 +153,7 @@
                     @if($feedback->client)
                         <div class="flex items-center mb-4">
                             @if($feedback->client->profilePic)
-                                <img src="{{ asset('storage/' . $feedback->client->profilePic) }}" class="w-16 h-16 rounded-full object-cover mr-3">
+                                <img src="{{ $feedback->client->getProfilePictureUrl() }}" class="w-16 h-16 rounded-full object-cover mr-3">
                             @else
                                 <div class="w-16 h-16 rounded-full bg-primary-500 flex items-center justify-center text-white text-xl font-bold mr-3">
                                     {{ substr($feedback->client->fullName, 0, 1) }}
@@ -191,7 +191,7 @@
                     <div class="p-4">
                         <div class="flex items-center mb-4">
                             @if($feedback->adiutor->profilePic)
-                                <img src="{{ asset('storage/' . $feedback->adiutor->profilePic) }}" class="w-12 h-12 rounded-full object-cover mr-3">
+                                <img src="{{ $feedback->adiutor->getProfilePictureUrl() }}" class="w-12 h-12 rounded-full object-cover mr-3">
                             @else
                                 <div class="w-12 h-12 rounded-full bg-accent-500 flex items-center justify-center text-white font-bold mr-3">
                                     {{ substr($feedback->adiutor->fullName, 0, 1) }}

@@ -61,7 +61,7 @@
                     <div class="text-center">
                         <div class="mb-4">
                             @if($user->profilePicture)
-                                <img src="{{ asset('storage/' . $user->profilePicture) }}" alt="{{ $user->fullName }}" class="w-32 h-32 rounded-full mx-auto object-cover border-4 border-primary-100" id="profilePreview">
+                                <img src="{{ $user->getProfilePictureUrl() }}" alt="{{ $user->fullName }}" class="w-32 h-32 rounded-full mx-auto object-cover border-4 border-primary-100" id="profilePreview">
                             @else
                                 <div class="w-32 h-32 rounded-full mx-auto bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-primary-100" id="profilePreview">
                                     {{ strtoupper(substr($user->fullName, 0, 1)) }}

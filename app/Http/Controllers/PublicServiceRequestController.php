@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Notifications\NewServiceRequestNotification;
 use App\Rules\RecaptchaValidation;
+use App\Services\CloudflareR2Service;
 
 class PublicServiceRequestController extends Controller
 {
@@ -126,38 +127,38 @@ class PublicServiceRequestController extends Controller
             'updated_at' => now(),
         ]);
 
-        // Handle file uploads (TODO: Implement documents table)
+        // Handle file uploads using Cloudflare R2
         if ($request->hasFile('file_upload')) {
-            $uploadDir = storage_path('app/public/documents/user-uploads/');
-            
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
+            $r2Service = new CloudflareR2Service();
 
             foreach ($request->file('file_upload') as $file) {
-                $originalName = $file->getClientOriginalName();
-                $uniqueName = uniqid() . '_' . Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
-                $relativePath = 'documents/user-uploads/' . $uniqueName;
+                $uploadResult = $r2Service->uploadPublicFile($file, $userId);
                 
-                // Store the file
-                $file->storeAs('public/' . dirname($relativePath), basename($relativePath));
-
-                // Insert into documents table
-                DB::table('documents')->insert([
-                    'service_request_id' => $serviceRequestId,
-                    'client_id' => $userId,
-                    'uploaded_by' => $userId,
-                    'fileName' => $originalName,
-                    'filePath' => '/storage/' . $relativePath,
-                    'fileType' => $file->getClientMimeType(),
-                    'fileSize' => $file->getSize(),
-                    'document_type' => 'requirement',
-                    'is_public' => false,
-                    'is_archived' => false,
-                    'uploadedAt' => now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                if ($uploadResult['success']) {
+                    // Insert into documents table
+                    DB::table('documents')->insert([
+                        'service_request_id' => $serviceRequestId,
+                        'client_id' => $userId,
+                        'uploaded_by' => $userId,
+                        'fileName' => $uploadResult['original_name'],
+                        'filePath' => $uploadResult['url'], // Store R2 URL instead of local path
+                        'fileType' => $uploadResult['mime_type'],
+                        'fileSize' => $uploadResult['size'],
+                        'document_type' => 'requirement',
+                        'is_public' => false,
+                        'is_archived' => false,
+                        'uploadedAt' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    Log::error('Failed to upload file to R2: ' . $uploadResult['error'], [
+                        'file' => $file->getClientOriginalName(),
+                        'service_request_id' => $serviceRequestId,
+                        'user_id' => $userId,
+                    ]);
+                    // Continue with other files, don't fail the entire request
+                }
             }
         }
 

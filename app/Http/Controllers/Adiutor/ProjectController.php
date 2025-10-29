@@ -69,7 +69,8 @@ class ProjectController extends Controller
                 'clients.phoneNumber as client_phone',
                 'clients.profilePic as client_photo',
                 'service_requests.service_type',
-                'service_requests.description as request_description'
+                'service_requests.request_description',
+                'service_requests.payment_type'
             )
             ->first();
         
@@ -94,7 +95,7 @@ class ProjectController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         
-        // Get team members on this project
+        // Get team members on this project - safely handle no results
         $teamMembers = DB::table('project_assignments')
             ->join('users', 'project_assignments.adiutor_id', '=', 'users.id')
             ->where('project_assignments.project_id', $id)
@@ -103,17 +104,15 @@ class ProjectController extends Controller
                 'users.fullName',
                 'users.email',
                 'users.profilePic',
-                'project_assignments.status as assignment_status',
-                'project_assignments.role'
+                'project_assignments.status as assignment_status'
             )
             ->get();
         
-        // Get recent activity/notes
-        $activities = DB::table('notes')
-            ->where('project_id', $id)
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+        // Ensure we have at least empty collection if no team members
+        $teamMembers = $teamMembers ?: collect();
+        
+        // Get recent activity/notes (placeholder - notes table doesn't exist yet)
+        $activities = collect(); // Empty collection until notes system is implemented
         
         return view('adiutor.projects.show', compact(
             'user',

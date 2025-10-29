@@ -45,7 +45,7 @@
                         @endphp
 
                         @if($isImage)
-                            <img src="{{ asset('storage/' . $document->filePath) }}" alt="{{ $document->fileName }}" class="img-fluid">
+                            <img src="{{ $document->getDisplayUrl() }}" alt="{{ $document->fileName }}" class="img-fluid">
                         @elseif($isPDF)
                             <iframe src="{{ route('admin.documents.preview', $document->documentID) }}" width="100%" height="600px" style="border: none;"></iframe>
                         @else

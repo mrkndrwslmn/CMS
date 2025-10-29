@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Notifications\NewServiceRequestNotification;
+use App\Services\CloudflareR2Service;
 
 class ServiceRequestController extends Controller
 {
@@ -132,24 +133,34 @@ class ServiceRequestController extends Controller
             'updated_at' => now(),
         ]);
 
-        // Handle file uploads
+        // Handle file uploads using Cloudflare R2
         if ($request->hasFile('attachments')) {
+            $r2Service = new CloudflareR2Service();
+            
             foreach ($request->file('attachments') as $file) {
-                $originalName = $file->getClientOriginalName();
-                $storedName = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('service-requests/' . $serviceRequestId, $storedName, 'public');
-
-                DB::table('request_attachments')->insert([
-                    'service_request_id' => $serviceRequestId,
-                    'original_filename' => $originalName,
-                    'stored_filename' => $storedName,
-                    'file_path' => $path,
-                    'mime_type' => $file->getMimeType(),
-                    'file_size' => $file->getSize(),
-                    'file_hash' => hash_file('md5', $file->getPathname()),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                $uploadResult = $r2Service->uploadAttachment($file, $serviceRequestId);
+                
+                if ($uploadResult['success']) {
+                    DB::table('request_attachments')->insert([
+                        'service_request_id' => $serviceRequestId,
+                        'original_filename' => $uploadResult['original_name'],
+                        'stored_filename' => $uploadResult['stored_name'],
+                        'file_path' => $uploadResult['path'], // Store R2 path
+                        'file_url' => $uploadResult['url'], // Store R2 URL for easy access
+                        'mime_type' => $uploadResult['mime_type'],
+                        'file_size' => $uploadResult['size'],
+                        'file_hash' => hash('md5', file_get_contents($file->getRealPath())),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    Log::error('Failed to upload attachment to R2: ' . $uploadResult['error'], [
+                        'file' => $file->getClientOriginalName(),
+                        'service_request_id' => $serviceRequestId,
+                        'user_id' => Auth::id(),
+                    ]);
+                    // Continue with other files, don't fail the entire request
+                }
             }
         }
 
@@ -260,7 +271,10 @@ class ServiceRequestController extends Controller
             return redirect()->back()->with('error', 'File not found.');
         }
 
-        $filePath = storage_path('app/public/' . $attachment->file_path);
-        return response()->download($filePath, $attachment->original_filename);
+        // Convert to model instance to use helper methods
+        $attachmentModel = new \App\Models\RequestAttachment((array) $attachment);
+        
+        // Use the model's method to get the proper download URL
+        return redirect($attachmentModel->getDownloadUrl());
     }
 }

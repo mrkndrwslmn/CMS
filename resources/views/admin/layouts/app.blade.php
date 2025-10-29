@@ -192,7 +192,7 @@
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
                         @if(Auth::user()->profilePic)
-                            <img src="{{ asset('storage/' . Auth::user()->profilePic) }}" class="rounded-full w-8 h-8 object-cover">
+                            <img src="{{ Auth::user()->getProfilePictureUrl() }}" class="rounded-full w-8 h-8 object-cover">
                         @else
                             <div class="bg-primary-500 rounded-full w-8 h-8 flex items-center justify-center">
                                 <span class="text-white font-medium">{{ substr(Auth::user()->fullName, 0, 1) }}</span>

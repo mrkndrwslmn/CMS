@@ -177,17 +177,23 @@
                 @if(count($tasks) > 0)
                     <div class="space-y-3">
                         @foreach($tasks->take(5) as $task)
-                            <a href="{{ route('adiutor.tasks.show', $task->id) }}" class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            @if(isset($task->id))
+                                <a href="{{ route('adiutor.tasks.show', $task->id) }}" class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            @else
+                                <div class="block p-4 bg-gray-50 rounded-lg">
+                            @endif
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1">
-                                        <h4 class="font-semibold text-gray-900">{{ $task->title }}</h4>
-                                        <p class="text-sm text-gray-600 mt-1">{{ Str::limit($task->description, 100) }}</p>
+                                        <h4 class="font-semibold text-gray-900">{{ $task->title ?? 'Untitled Task' }}</h4>
+                                        <p class="text-sm text-gray-600 mt-1">{{ Str::limit($task->description ?? '', 100) }}</p>
                                         <div class="flex items-center space-x-3 mt-2">
-                                            <span class="text-xs text-gray-500">
-                                                <i class="fas fa-calendar mr-1"></i>
-                                                Due: {{ \Carbon\Carbon::parse($task->deadline)->format('M d, Y') }}
-                                            </span>
-                                            @if($task->priority)
+                                            @if(isset($task->deadline))
+                                                <span class="text-xs text-gray-500">
+                                                    <i class="fas fa-calendar mr-1"></i>
+                                                    Due: {{ \Carbon\Carbon::parse($task->deadline)->format('M d, Y') }}
+                                                </span>
+                                            @endif
+                                            @if($task->priority ?? null)
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                                                     @if($task->priority === 'urgent') bg-red-100 text-red-800
                                                     @elseif($task->priority === 'high') bg-orange-100 text-orange-800
@@ -198,13 +204,17 @@
                                         </div>
                                     </div>
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-                                        @if($task->status === 'completed') bg-green-100 text-green-800
-                                        @elseif($task->status === 'in_progress') bg-blue-100 text-blue-800
+                                        @if(($task->status ?? 'pending') === 'completed') bg-green-100 text-green-800
+                                        @elseif(($task->status ?? 'pending') === 'in_progress') bg-blue-100 text-blue-800
                                         @else bg-gray-100 text-gray-800 @endif">
-                                        {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                        {{ ucfirst(str_replace('_', ' ', $task->status ?? 'pending')) }}
                                     </span>
                                 </div>
-                            </a>
+                            @if(isset($task->id))
+                                </a>
+                            @else
+                                </div>
+                            @endif
                         @endforeach
                     </div>
                 @else
@@ -283,7 +293,7 @@
                                     <p class="font-medium text-gray-900">{{ $member->fullName }}</p>
                                     <p class="text-xs text-gray-500">{{ $member->role ?? 'Team Member' }}</p>
                                 </div>
-                                @if($member->id === $user->id)
+                                @if(isset($member->id) && $member->id == $user->id)
                                     <span class="text-xs bg-accent-100 text-accent-800 px-2 py-1 rounded">You</span>
                                 @endif
                             </div>
