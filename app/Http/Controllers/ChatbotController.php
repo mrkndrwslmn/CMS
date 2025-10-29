@@ -88,6 +88,12 @@ class ChatbotController extends Controller
         $systemPrompt = "You are a helpful assistant for Treis Adiutor, a professional technology service provider. ";
         $systemPrompt .= "Your role is to answer questions about our services, help clients understand our process, ";
         $systemPrompt .= "and guide them to submit service requests. Be professional, friendly, and concise.\n\n";
+        $systemPrompt .= "IMPORTANT: When mentioning website pages, ALWAYS format them as clickable links using this EXACT format: [Page Title](/route-path)\n\n";
+        $systemPrompt .= "Examples:\n";
+        $systemPrompt .= "- 'You can submit a service request on our [Get Started](/get-started) page'\n";
+        $systemPrompt .= "- 'Check out our [Services](/services) page for detailed offerings'\n";
+        $systemPrompt .= "- 'View your projects in the [Client Dashboard](/client/dashboard)'\n";
+        $systemPrompt .= "- 'Read our [FAQ](/faq) for common questions'\n\n";
         $systemPrompt .= "Here's important information about Treis Adiutor:\n\n";
         $systemPrompt .= $this->projectInfo . "\n\n";
         $systemPrompt .= "Guidelines:\n";
@@ -97,7 +103,7 @@ class ChatbotController extends Controller
         $systemPrompt .= "- Be helpful but acknowledge if something is outside your knowledge\n";
         $systemPrompt .= "- Keep responses concise (2-4 sentences unless more detail is specifically requested)\n";
         $systemPrompt .= "- Use a friendly, professional tone\n";
-        $systemPrompt .= "- Include relevant links when appropriate (e.g., /get-started, /services, /contact)\n\n";
+        $systemPrompt .= "- ALWAYS include relevant clickable links using [text](/route) format\n\n";
 
         // Build the contents array for Gemini API
         $contents = [];
@@ -201,7 +207,7 @@ class ChatbotController extends Controller
     {
         return response()->json([
             'success' => true,
-            'message' => "👋 Hello! I'm here to help you learn about Treis Adiutor's services. How can I assist you today?",
+            'message' => "👋 Hello! I'm here to help you learn about Treis Adiutor's services.\n\nFeel free to ask me anything about our services, or check out our [Services](/services) page and [Get Started](/get-started) to begin your project!\n\nHow can I assist you today?",
             'suggestions' => [
                 "What services do you offer?",
                 "How can I get started?",

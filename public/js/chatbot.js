@@ -249,11 +249,17 @@ class ChatbotWidget {
     renderMessage(message) {
         const container = document.getElementById('chatbot-messages');
         const isBot = message.role === 'bot';
+        
+        // Process content for links if it's a bot message
+        let processedContent = message.content;
+        if (isBot) {
+            processedContent = this.parseLinks(message.content);
+        }
 
         const messageHTML = `
             <div class="flex ${isBot ? 'justify-start' : 'justify-end'}">
                 <div class="max-w-[80%] ${isBot ? 'bg-white border border-neutral-200' : 'bg-gradient-to-r from-primary-600 to-primary-700 text-white'} rounded-2xl px-4 py-3 shadow-sm">
-                    <p class="text-sm whitespace-pre-wrap">${this.escapeHtml(message.content)}</p>
+                    <div class="text-sm whitespace-pre-wrap">${processedContent}</div>
                     ${message.suggestions ? this.renderSuggestions(message.suggestions) : ''}
                     <p class="text-xs ${isBot ? 'text-neutral-400' : 'text-white/70'} mt-1">
                         ${this.formatTime(message.timestamp)}
@@ -347,6 +353,52 @@ class ChatbotWidget {
             hour: '2-digit', 
             minute: '2-digit' 
         });
+    }
+
+    parseLinks(content) {
+        // Get the base URL from the current page
+        const baseUrl = window.location.origin;
+        
+        // First, escape the entire content to prevent XSS
+        let processedContent = this.escapeHtml(content);
+        
+        // Now parse markdown-style links [text](/route) from the escaped content
+        // The brackets are now &gt; and &lt; so we need to match the escaped versions
+        processedContent = processedContent.replace(
+            /\[([^\]]+)\]\(([^)]+)\)/g,
+            (match, text, url) => {
+                // Text is already escaped, just use it directly
+                // If URL starts with /, it's a relative path - make it absolute
+                const fullUrl = url.startsWith('/') ? baseUrl + url : url;
+                
+                return `<a href="${fullUrl}" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="text-primary-600 hover:text-primary-800 underline font-medium transition-colors duration-200"
+                    style="display: inline;"
+                    title="Click to visit ${text}"
+                >${text}</a>`;
+            }
+        );
+        
+        // Also parse direct URLs (http:// or https://) from escaped content
+        processedContent = processedContent.replace(
+            /(^|[^">])(https?:\/\/[^\s<>'"]+)(?![^<]*<\/a>)/g,
+            (match, prefix, url) => {
+                // Extract domain for display text
+                const domain = url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
+                
+                return prefix + `<a href="${url}" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="text-primary-600 hover:text-primary-800 underline font-medium transition-colors duration-200"
+                    style="display: inline;"
+                    title="Visit ${url}"
+                >${domain}</a>`;
+            }
+        );
+        
+        return processedContent;
     }
 
     escapeHtml(text) {
