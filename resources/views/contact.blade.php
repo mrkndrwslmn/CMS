@@ -52,7 +52,7 @@
                 <div class="mt-8">
                     <h3 class="font-semibold mb-4">Follow Us</h3>
                     <div class="flex space-x-4">
-                        <a href="https://www.facebook.com/treisadiutor" class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all">
+                        <a href="https://www.facebook.com/treisadiutorofficial" class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all">
                             <i class="fab fa-facebook"></i>
                         </a>
                         <a href="https://www.twitter.com/treisadiutor" class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all">

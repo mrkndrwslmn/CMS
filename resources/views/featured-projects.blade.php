@@ -28,7 +28,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const response = await fetch('/api/projects');
+        const response = await fetch('/api/showcases');
         const projects = await response.json();
         
         const container = document.getElementById('projects-container');

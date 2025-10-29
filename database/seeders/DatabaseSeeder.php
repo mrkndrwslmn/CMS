@@ -39,6 +39,18 @@ class DatabaseSeeder extends Seeder
             FeedbackSeeder::class,        // Client feedback on completed work
         ]);
 
+        // 5. Seed showcases (portfolio/featured projects)
+        $this->command->info('🎨 Seeding showcase portfolio...');
+        $this->call([
+            ShowcaseSeeder::class,        // Portfolio projects with screenshots
+        ]);
+
+        // 6. Seed tech stack (technologies we use)
+        $this->command->info('💻 Seeding tech stack...');
+        $this->call([
+            TechStackSeeder::class,       // Technologies and tools we use
+        ]);
+
         $this->command->info('✅ Database seeding completed successfully!');
         $this->command->info('');
         $this->command->info('🎯 Summary:');
@@ -48,6 +60,8 @@ class DatabaseSeeder extends Seeder
         $this->command->info('   • Projects: Approved requests converted to active projects');
         $this->command->info('   • Tasks: Project work broken down into actionable tasks');
         $this->command->info('   • Feedback: Client feedback with ratings and admin responses');
+        $this->command->info('   • Showcases: Portfolio projects with screenshots for public display');
+        $this->command->info('   • Tech Stack: 51 technologies and tools across 9 categories');
         $this->command->info('');
         $this->command->info('🔑 Login credentials:');
         $this->command->info('   Admin: admin@treisadiutor.com / admin123');

@@ -47,4 +47,8 @@ return [
         'client_secret' => env('ZOOM_CLIENT_SECRET'),
     ],
 
+    'brandfetch' => [
+        'client_id' => env('BRANDFETCH_CLIENTID'),
+    ],
+
 ];

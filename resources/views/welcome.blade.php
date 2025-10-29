@@ -1033,45 +1033,67 @@
             const techStackContainer = document.getElementById('tech-stack-container');
             techStackContainer.innerHTML = ''; 
             
-            const colors = {
-                frontEnd: { from: 'primary-700/30', to: 'primary-500/30', text: 'primary-300', hover: 'primary-200', bg: 'primary-900/60', accent: 'primary-400' },
-                backEnd: { from: 'accent-700/30', to: 'accent-500/30', text: 'accent-300', hover: 'accent-200', bg: 'accent-900/60', accent: 'accent-400' },
-                mobile: { from: 'emerald-700/30', to: 'emerald-500/30', text: 'emerald-300', hover: 'emerald-200', bg: 'emerald-900/60', accent: 'emerald-400' },
-                devOps: { from: 'purple-700/30', to: 'purple-500/30', text: 'purple-300', hover: 'purple-200', bg: 'purple-900/60', accent: 'purple-400' },
-                design: { from: 'rose-700/30', to: 'rose-500/30', text: 'rose-300', hover: 'rose-200', bg: 'rose-900/60', accent: 'rose-400' },
-                database: { from: 'amber-700/30', to: 'amber-500/30', text: 'amber-300', hover: 'amber-200', bg: 'amber-900/60', accent: 'amber-400' }
+            // Map category keys to color schemes
+            const categoryColorMap = {
+                'Programming Languages': { from: 'blue-700/30', to: 'blue-500/30', text: 'blue-300', hover: 'blue-200', bg: 'blue-900/60', accent: 'blue-400' },
+                'Frontend': { from: 'primary-700/30', to: 'primary-500/30', text: 'primary-300', hover: 'primary-200', bg: 'primary-900/60', accent: 'primary-400' },
+                'Backend': { from: 'accent-700/30', to: 'accent-500/30', text: 'accent-300', hover: 'accent-200', bg: 'accent-900/60', accent: 'accent-400' },
+                'Databases & Database Management': { from: 'amber-700/30', to: 'amber-500/30', text: 'amber-300', hover: 'amber-200', bg: 'amber-900/60', accent: 'amber-400' },
+                'Version Control & Collaboration': { from: 'emerald-700/30', to: 'emerald-500/30', text: 'emerald-300', hover: 'emerald-200', bg: 'emerald-900/60', accent: 'emerald-400' },
+                'DevOps & Cloud': { from: 'purple-700/30', to: 'purple-500/30', text: 'purple-300', hover: 'purple-200', bg: 'purple-900/60', accent: 'purple-400' },
+                'Testing & CI/CD': { from: 'cyan-700/30', to: 'cyan-500/30', text: 'cyan-300', hover: 'cyan-200', bg: 'cyan-900/60', accent: 'cyan-400' },
+                'Productivity Tools': { from: 'indigo-700/30', to: 'indigo-500/30', text: 'indigo-300', hover: 'indigo-200', bg: 'indigo-900/60', accent: 'indigo-400' },
+                'Design & Multimedia Tools': { from: 'rose-700/30', to: 'rose-500/30', text: 'rose-300', hover: 'rose-200', bg: 'rose-900/60', accent: 'rose-400' }
             };
             
-            const defaultColor = { from: 'blue-700/30', to: 'blue-500/30', text: 'blue-300', hover: 'blue-200', bg: 'blue-900/60', accent: 'blue-400' };
+            const defaultColor = { from: 'gray-700/30', to: 'gray-500/30', text: 'gray-300', hover: 'gray-200', bg: 'gray-900/60', accent: 'gray-400' };
 
             let delay = 100;
-            for (const category in techData) {
-                if (techData.hasOwnProperty(category)) {
+            for (const categoryKey in techData) {
+                if (techData.hasOwnProperty(categoryKey)) {
+                    const categoryData = techData[categoryKey];
                     const categoryDiv = document.createElement('div');
                     categoryDiv.classList.add('glass-dark', 'rounded-3xl', 'p-8', 'border', 'border-white/10', 'hover:border-white/20', 'transition-all', 'duration-300');
                     categoryDiv.setAttribute('data-aos', 'fade-up');
                     categoryDiv.setAttribute('data-aos-delay', delay.toString());
                     delay += 100;
                     
-                    const formattedCategory = category.replace(/([A-Z])/g, ' $1').trim();
-                    const colorSet = colors[category] || defaultColor;
+                    const categoryName = categoryData.name;
+                    const colorSet = categoryColorMap[categoryName] || defaultColor;
 
                     categoryDiv.innerHTML = `
                         <div class="flex items-center mb-8">
-                            <h3 class="text-xl font-semibold heading-serif text-neutral-800 ml-4 group-hover:text-${colorSet.text} transition-colors duration-300">${formattedCategory}</h3>
+                            <h3 class="text-xl font-semibold heading-serif text-neutral-800 ml-4 group-hover:text-${colorSet.text} transition-colors duration-300">${categoryName}</h3>
                         </div>
                         <div class="grid grid-cols-3 gap-4"></div>
                     `;
 
                     const techItemsContainer = categoryDiv.querySelector('.grid');
 
-                    techData[category].forEach(item => {
+                    categoryData.technologies.forEach(tech => {
                         const techItemDiv = document.createElement('div');
                         techItemDiv.classList.add('tech-item', 'p-3', 'bg-primary-50/50', 'rounded-xl', 'text-center', 'backdrop-blur-sm', 'border', 'border-neutral-100', 'hover:bg-primary-100/50', 'hover:border-neutral-200', 'transition-all', 'duration-300');
-                        techItemDiv.innerHTML = `
-                            <img src="${item.image_url}" alt="${item.item_name}" class="w-8 h-8 mx-auto mb-2">
-                            <span class="text-sm text-neutral-600 font-medium">${item.item_name}</span>
-                        `;
+                        
+                        // Create image with error handling for Brandfetch API
+                        const img = document.createElement('img');
+                        img.src = tech.image;
+                        img.alt = tech.name;
+                        img.className = 'w-8 h-8 mx-auto mb-2 object-contain';
+                        img.loading = 'lazy'; // Lazy load for better performance
+                        
+                        // Add error handling in case Brandfetch image fails to load
+                        img.onerror = function() {
+                            // If Brandfetch fails, this will already have the fallback lettermark
+                            // But we can add additional styling to indicate it's a fallback
+                            console.warn(`Failed to load logo for ${tech.name}`);
+                        };
+                        
+                        const span = document.createElement('span');
+                        span.className = 'text-sm text-neutral-600 font-medium';
+                        span.textContent = tech.name;
+                        
+                        techItemDiv.appendChild(img);
+                        techItemDiv.appendChild(span);
                         techItemsContainer.appendChild(techItemDiv); 
                     });
                     techStackContainer.appendChild(categoryDiv); 
@@ -1086,7 +1108,7 @@
             if (!container) return;
 
             try {
-                const response = await fetch('/api/projects?limit=8');
+                const response = await fetch('/api/showcases?limit=8');
 
                 if (!response.ok) throw new Error('Failed to fetch projects from API');
 
@@ -1103,7 +1125,7 @@
                 projects.forEach(project => {
                     const imageUrl = project.thumbnail || fallbackImage;
                     cardsHtml += `
-                    <a href="/project-details.html?slug=${project.slug}" class="project-card relative block group mx-4">
+                    <a href="/project-details?slug=${project.slug}" class="project-card relative block group mx-4">
                         <img src="${imageUrl}" 
                             alt="Preview of ${project.project_name}" 
                             class="w-full h-full object-cover bg-neutral-100 aspect-[4/3]">

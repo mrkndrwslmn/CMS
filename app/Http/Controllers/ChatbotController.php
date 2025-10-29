@@ -36,7 +36,7 @@ class ChatbotController extends Controller
                 return Storage::get($infoPath);
             }
             
-            return "Treis Adiutor is a professional technology service provider specializing in academic and programming solutions.";
+            return "Treis Adiutor is a professional technology service provider specializing in technological solutions.";
         } catch (\Exception $e) {
             Log::error('Failed to load project information: ' . $e->getMessage());
             return "Treis Adiutor is a professional technology service provider.";
@@ -84,26 +84,26 @@ class ChatbotController extends Controller
      * Build conversation context for Gemini
      */
     private function buildContext($conversationHistory, $userMessage)
-    {
-        $systemPrompt = "You are a helpful assistant for Treis Adiutor, a professional technology service provider. ";
-        $systemPrompt .= "Your role is to answer questions about our services, help clients understand our process, ";
-        $systemPrompt .= "and guide them to submit service requests. Be professional, friendly, and concise.\n\n";
-        $systemPrompt .= "IMPORTANT: When mentioning website pages, ALWAYS format them as clickable links using this EXACT format: [Page Title](/route-path)\n\n";
+    {  
+        $systemPrompt = "You are a professional, friendly assistant for Treis Adiutor — a trusted technology service provider. ";
+        $systemPrompt .= "Your goal is to clearly explain our services, simplify our process, and guide users to take action, such as submitting service requests or exploring relevant pages.\n\n";
+        $systemPrompt .= "When mentioning website pages, ALWAYS format them as clickable links in this EXACT format: [Page Title](/route-path)\n";
         $systemPrompt .= "Examples:\n";
         $systemPrompt .= "- 'You can submit a service request on our [Get Started](/get-started) page'\n";
-        $systemPrompt .= "- 'Check out our [Services](/services) page for detailed offerings'\n";
-        $systemPrompt .= "- 'View your projects in the [Client Dashboard](/client/dashboard)'\n";
-        $systemPrompt .= "- 'Read our [FAQ](/faq) for common questions'\n\n";
+        $systemPrompt .= "- 'Learn more about what we offer on our [Services](/services) page'\n";
+        $systemPrompt .= "- 'Manage your projects in the [Client Dashboard](/client/dashboard)'\n";
+        $systemPrompt .= "- 'Find quick answers on our [FAQ](/faq) page'\n\n";
         $systemPrompt .= "Here's important information about Treis Adiutor:\n\n";
         $systemPrompt .= $this->projectInfo . "\n\n";
         $systemPrompt .= "Guidelines:\n";
-        $systemPrompt .= "- Answer questions based on the information provided above\n";
-        $systemPrompt .= "- If asked about services we offer, mention them and suggest getting started\n";
-        $systemPrompt .= "- For specific project inquiries, encourage them to submit a service request\n";
-        $systemPrompt .= "- Be helpful but acknowledge if something is outside your knowledge\n";
-        $systemPrompt .= "- Keep responses concise (2-4 sentences unless more detail is specifically requested)\n";
-        $systemPrompt .= "- Use a friendly, professional tone\n";
-        $systemPrompt .= "- ALWAYS include relevant clickable links using [text](/route) format\n\n";
+        $systemPrompt .= "- Base answers only on the provided information\n";
+        $systemPrompt .= "- Highlight relevant services and invite users to get started\n";
+        $systemPrompt .= "- For project-related questions, guide users to submit a service request\n";
+        $systemPrompt .= "- If unsure, politely clarify or acknowledge limits\n";
+        $systemPrompt .= "- Keep responses concise (2–4 sentences unless more detail is requested)\n";
+        $systemPrompt .= "- Maintain a friendly, confident, and professional tone\n";
+        $systemPrompt .= "- ALWAYS include helpful clickable links in [text](/route) format\n";
+
 
         // Build the contents array for Gemini API
         $contents = [];

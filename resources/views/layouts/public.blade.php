@@ -102,7 +102,7 @@
           </a>
           <p class="text-neutral-600 mb-6">Your trusted technology partner for innovative startups and forward-thinking businesses.</p>
           <div class="flex space-x-5 items-center">
-            <a href="https://www.facebook.com/treisadiutor" class="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-neutral-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-300 text-neutral-600 hover:text-primary-600 shadow-sm"><i class="fa-brands fa-facebook"></i></a>
+            <a href="https://www.facebook.com/treisadiutorofficial" class="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-neutral-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-300 text-neutral-600 hover:text-primary-600 shadow-sm"><i class="fa-brands fa-facebook"></i></a>
             <a href="https://www.twitter.com/treisadiutor" class="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-neutral-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-300 text-neutral-600 hover:text-primary-600 shadow-sm"><i class="fa-brands fa-x-twitter"></i></a>
             <a href="https://www.instagram.com/treisadiutor" class="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-neutral-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-300 text-neutral-600 hover:text-primary-600 shadow-sm"><i class="fa-brands fa-instagram"></i></a>
           </div>

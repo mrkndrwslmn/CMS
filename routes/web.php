@@ -96,6 +96,11 @@ Route::prefix('api')->group(function () {
     Route::get('/services', [ServiceController::class, 'index']);
     Route::post('/aiSearch', [AiSearchController::class, 'search']);
     
+    // Showcase routes
+    Route::get('/showcases', [\App\Http\Controllers\Api\ShowcaseController::class, 'index']);
+    Route::get('/showcases/{slug}', [\App\Http\Controllers\Api\ShowcaseController::class, 'show']);
+    Route::get('/tech_stack', [\App\Http\Controllers\Api\ShowcaseController::class, 'techStack']);
+    
     // Chatbot routes
     Route::post('/chatbot/chat', [\App\Http\Controllers\ChatbotController::class, 'chat']);
     Route::get('/chatbot/greeting', [\App\Http\Controllers\ChatbotController::class, 'greeting']);
@@ -152,6 +157,10 @@ Route::get('/contact', function () {
 Route::get('/featured-projects', function () {
     return view('featured-projects');
 })->name('featured-projects');
+
+Route::get('/project-details', function () {
+    return view('project-details');
+})->name('project-details');
 
 Route::get('/client-testimonials', function () {
     return view('client-testimonials');
