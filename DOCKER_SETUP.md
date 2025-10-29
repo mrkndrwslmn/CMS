@@ -12,29 +12,13 @@ This guide will help you set up the Treis Adiutor CMS using Docker instead of XA
 
 ### 1. Update Your Existing Environment Configuration
 
-I've already updated your `.env` file with the necessary Docker-specific settings:
-
-✅ **Database**: Changed `DB_HOST` from `127.0.0.1` to `mysql` (Docker container name)  
-✅ **Database Password**: Set to `secret` for Docker MySQL  
-✅ **Redis**: Changed `REDIS_HOST` from `127.0.0.1` to `redis` (Docker container name)  
-✅ **App URL**: Updated to `http://localhost:8000` for Docker port  
-
-**All your existing configurations are preserved:**
+**All existing configurations are preserved:**
 - Auth0 settings
 - Firebase configuration  
 - Maya payment gateway
 - Supabase settings
 - Email configuration
 - All API keys and secrets
-
-The changes made to your `.env` file:
-```bash
-# Modified for Docker
-DB_HOST=mysql                    # was: 127.0.0.1
-DB_PASSWORD=secret              # was: (empty)
-REDIS_HOST=redis                # was: 127.0.0.1
-APP_URL=http://localhost:8000   # was: http://localhost
-```
 
 ### 2. Run the Setup Script
 
