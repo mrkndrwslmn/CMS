@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "treis-adiutor-cms",
+  "private_key_id": "3d20daaf755f360606c60c1caee9d04f3939d767",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDQWQIu7U/HBtHw\n5vAHWQiy3WvWUQgCNviFr5TwlBW/G3QXOY6lb/b6pzWxHAryKqahIHKi03oBdTdE\nvjZZ+fEco8HvL6Ub5UUkzGRQovuv5pj6rdMr/hc4PZw2UzudzixyqPr/2TCjDaDO\nfwV0AcoWmvVWYqbPAAdwheT2aa7+XAdqEZ1tatwzO1GTf4GAe+QtlBQZmJ6xpSgD\nzdFZYIsJh4plFcoySbFAYSaKnjyfFOw8ekp0ETKsqPFGTkH/KlQawIzFo2xajPDi\nN7ohdQw0vEnJ5NQcaqSndzs8xI2N/AX5HmPcICT1/3PQF4ccwRccAz3vxlxYUcqX\nBcUnVmlFAgMBAAECggEAF0F8LidEkqNm/zQT4koUn7x56z33viGLK4buAc2RwNds\nZaRB0SMWhyNvaZHHAgFzQIR570VaNrvx+50cvX3Z5Te9L7jaferhRSqAXwTWQavk\ncwTAj8ZIqrkrzN+NBcAL8497lt/UHzsn8iy4+9owR8YrsOUJmAz5h5yWck/ZHeCN\ntfOy2hoWlVLr0qHmgkqGVEG7x1m6Kz+KsjWByJOzysvzZV9o/3HmCxm/C4A34xQa\n3Irccme8hBfHSBPnsMRQDlTHEEgb1g03g7nFnkrpa9SewU5MQKk11rF9qXFC9z2x\nM8Tj3j/bJvsYR/wOKZaKapcDapQHILBmZWs7RnTUsQKBgQD1yJmOlquaPG3vfiMy\ngPxSxolKBSapH0q97iKCFcul+dksQ5K6sRCVvsf95Jowz2+6XCoMZDReIYr40T1h\no8YCXhi91tZK4S+kamFf6oQVMwRZruToryJiIWKayzJrzELCiPCR/VbnccVoILaG\nke2LvGbVUED7ljRrRo4Ht9w/1QKBgQDZAgz4XruGMM6V2TaUH+3aCwdA69dvu5ID\n6CaLz9N9FMyogJVtzg8fRK29XshAbwyv4XXjm2i341+2uTaBKd1ScMhXGQjhmhVR\n0w0v13kJdVMGlXbU+FQ4NBekMwBzBBQCKha30e9YT6ns692LqVOTLEH4vVtFdErz\naZKMZD+rsQKBgAypOL/Poyde1YrwxH9lhZn+ADR/723m3sLJ8Z0h4ku6gyV0lapo\nVKJiIYtCq264QNkoxkG9J7VxpOcMYE0XUqvsjPm6h290CjA+CqYWPpeY+TBlggU6\ngFrtvVacAQzsiMPcqgfbNQ7XHYQvqzdjbQk1u1Zhu/c51ZlxGP/syLvBAoGAKVc3\nq1U4uj6wDGH+AMf4YvJ45khHmXSNQ4tFVJs5+fktZ+hfDzUTMmy+AHZ/Ba9iJlt4\nPu0LTQTW5hNwq7iS/jKYJ+eQBpJ4/0aKm5Ob7k5Yi8eLhNTuDmr2GgTRUBf1y9fC\nzjADPbqnb4gbg5C1aDMlOkKwkZGu+aIiFfa/HnECgYACp1gU8/8C+5LF4hU4StBs\n19N/+k4va7PINc9KQjCU4xE8OHryDTDksl7AV7/gYNAKKiJDKAEn+ndx/03tg5Lm\nWkWSxEK3rOdYZYsS05OvjMQ2iRO/LGPXjsNyJDhvgQHy6IZANPlGkJ2iSzNEPD4C\ni29nnJ2A+Fde+GGs+wAnYg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@treis-adiutor-cms.iam.gserviceaccount.com",
+  "client_id": "113732006184712048184",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40treis-adiutor-cms.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
