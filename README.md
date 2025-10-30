@@ -605,11 +605,11 @@ The Treis Adiutor platform integrates with 10 major external APIs to provide com
 
 **Configuration (Windows .env):**
 ```env
-AUTH0_DOMAIN=your-domain.auth0.com
-AUTH0_CLIENT_ID=your_client_id
-AUTH0_CLIENT_SECRET=your_client_secret
-AUTH0_REDIRECT_URI=https://yourdomain.com/auth/callback
-AUTH0_LOGOUT_URI=https://yourdomain.com/logout
+Firebase Authentication_DOMAIN=your-domain.auth0.com
+Firebase Authentication_CLIENT_ID=your_client_id
+Firebase Authentication_CLIENT_SECRET=your_client_secret
+Firebase Authentication_REDIRECT_URI=https://yourdomain.com/auth/callback
+Firebase Authentication_LOGOUT_URI=https://yourdomain.com/logout
 ```
 
 **Key Endpoints:**
