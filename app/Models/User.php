@@ -26,10 +26,10 @@ class User extends Authenticatable
         'phoneNumber',
         'profilePic',
         'status',
-        'auth0_id',
+        'firebase_uid',
         'auth_provider',
-        'auth0_profile',
-        'last_auth0_sync',
+        'firebase_profile',
+        'last_firebase_sync',
     ];
 
     /**
@@ -52,8 +52,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'auth0_profile' => 'array',
-            'last_auth0_sync' => 'datetime',
+            'firebase_profile' => 'array',
+            'last_firebase_sync' => 'datetime',
         ];
     }
 
@@ -115,11 +115,11 @@ class User extends Authenticatable
      */
 
     /**
-     * Check if user is authenticated via Auth0
+     * Check if user is authenticated via Firebase
      */
-    public function isAuth0User(): bool
+    public function isFirebaseUser(): bool
     {
-        return $this->auth_provider === 'auth0' && !empty($this->auth0_id);
+        return $this->auth_provider === 'firebase' && !empty($this->firebase_uid);
     }
 
     /**
@@ -131,90 +131,90 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user can link their account to Auth0
+     * Check if user can link their account to Firebase
      */
-    public function canLinkAuth0(): bool
+    public function canLinkFirebase(): bool
     {
-        return empty($this->auth0_id) && $this->isLocalUser();
+        return empty($this->firebase_uid) && $this->isLocalUser();
     }
 
     /**
-     * Check if user can unlink their Auth0 account
+     * Check if user can unlink their Firebase account
      */
-    public function canUnlinkAuth0(): bool
+    public function canUnlinkFirebase(): bool
     {
-        return $this->isAuth0User() && !empty($this->password);
+        return $this->isFirebaseUser() && !empty($this->password);
     }
 
     /**
-     * Link user account to Auth0
+     * Link user account to Firebase
      */
-    public function linkAuth0Profile(array $auth0Profile): void
+    public function linkFirebaseProfile(array $firebaseProfile): void
     {
         $this->update([
-            'auth0_id' => $auth0Profile['sub'],
-            'auth_provider' => 'auth0',
-            'auth0_profile' => $auth0Profile,
-            'last_auth0_sync' => now(),
-            'email_verified_at' => $auth0Profile['email_verified'] ?? false ? now() : null,
+            'firebase_uid' => $firebaseProfile['uid'],
+            'auth_provider' => 'firebase',
+            'firebase_profile' => $firebaseProfile,
+            'last_firebase_sync' => now(),
+            'email_verified_at' => $firebaseProfile['email_verified'] ?? false ? now() : null,
         ]);
     }
 
     /**
-     * Unlink user account from Auth0
+     * Unlink user account from Firebase
      */
-    public function unlinkAuth0(): void
+    public function unlinkFirebase(): void
     {
         $this->update([
-            'auth0_id' => null,
+            'firebase_uid' => null,
             'auth_provider' => 'local',
-            'auth0_profile' => null,
-            'last_auth0_sync' => null,
+            'firebase_profile' => null,
+            'last_firebase_sync' => null,
         ]);
     }
 
     /**
-     * Sync user profile with Auth0 data
+     * Sync user profile with Firebase data
      */
-    public function syncAuth0Profile(array $auth0Profile): void
+    public function syncFirebaseProfile(array $firebaseProfile): void
     {
         $updates = [
-            'auth0_profile' => $auth0Profile,
-            'last_auth0_sync' => now(),
+            'firebase_profile' => $firebaseProfile,
+            'last_firebase_sync' => now(),
         ];
 
-        // Optionally sync email if it changed in Auth0
-        if (isset($auth0Profile['email']) && $auth0Profile['email'] !== $this->email) {
-            $updates['email'] = $auth0Profile['email'];
+        // Optionally sync email if it changed in Firebase
+        if (isset($firebaseProfile['email']) && $firebaseProfile['email'] !== $this->email) {
+            $updates['email'] = $firebaseProfile['email'];
         }
 
-        // Optionally sync name if it changed in Auth0
-        if (isset($auth0Profile['name']) && $auth0Profile['name'] !== $this->fullName) {
-            $updates['fullName'] = $auth0Profile['name'];
+        // Optionally sync name if it changed in Firebase
+        if (isset($firebaseProfile['name']) && $firebaseProfile['name'] !== $this->fullName) {
+            $updates['fullName'] = $firebaseProfile['name'];
         }
 
         // Update email verification status
-        if (isset($auth0Profile['email_verified'])) {
-            $updates['email_verified_at'] = $auth0Profile['email_verified'] ? now() : null;
+        if (isset($firebaseProfile['email_verified'])) {
+            $updates['email_verified_at'] = $firebaseProfile['email_verified'] ? now() : null;
         }
 
         $this->update($updates);
     }
 
     /**
-     * Get Auth0 profile picture URL
+     * Get Firebase profile picture URL
      */
-    public function getAuth0ProfilePicture(): ?string
+    public function getFirebaseProfilePicture(): ?string
     {
-        return $this->auth0_profile['picture'] ?? null;
+        return $this->firebase_profile['picture'] ?? null;
     }
 
     /**
-     * Get the best available profile picture (Auth0 or local)
+     * Get the best available profile picture (Firebase or local)
      */
     public function getBestProfilePicture(): ?string
     {
-        return $this->getAuth0ProfilePicture() ?: $this->profilePic;
+        return $this->getFirebaseProfilePicture() ?: $this->profilePic;
     }
 
     /**

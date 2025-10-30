@@ -221,9 +221,17 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
     
-    // Social Login Routes
-    Route::get('/auth/social', [\App\Http\Controllers\Auth\SocialLoginController::class, 'redirectToProvider'])->name('social.login');
-    Route::get('/auth0/callback', [\App\Http\Controllers\Auth\SocialLoginController::class, 'handleCallback'])->name('social.callback');
+    // Firebase Authentication Routes
+    Route::prefix('auth/firebase')->name('firebase.')->group(function () {
+        Route::post('/callback', [\App\Http\Controllers\Auth\FirebaseAuthController::class, 'handleCallback'])->name('callback');
+        Route::get('/config', [\App\Http\Controllers\Auth\FirebaseAuthController::class, 'getConfig'])->name('config');
+    });
+});
+
+// Firebase account linking (requires authentication)
+Route::middleware('auth')->prefix('auth/firebase')->name('firebase.')->group(function () {
+    Route::post('/link/initiate', [\App\Http\Controllers\Auth\FirebaseAuthController::class, 'initiateLink'])->name('link.initiate');
+    Route::post('/unlink', [\App\Http\Controllers\Auth\FirebaseAuthController::class, 'unlinkAccount'])->name('unlink');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');

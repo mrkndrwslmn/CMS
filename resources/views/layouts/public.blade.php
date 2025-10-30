@@ -32,6 +32,19 @@
     <!-- Analytics -->
     @stack('analytics')
     
+    <!-- Firebase Configuration -->
+    <script>
+        window.firebaseConfig = {
+            apiKey: "{{ config('firebase.web_api_key') }}",
+            authDomain: "{{ config('firebase.project_id') }}.firebaseapp.com",
+            projectId: "{{ config('firebase.project_id') }}",
+            storageBucket: "{{ config('firebase.project_id') }}.appspot.com",
+            messagingSenderId: "{{ config('firebase.messaging_sender_id') }}",
+            appId: "{{ config('firebase.app_id') }}",
+            measurementId: "{{ config('firebase.measurement_id') }}"
+        };
+    </script>
+    
     @stack('styles')
 
     <style>

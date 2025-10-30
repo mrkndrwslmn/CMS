@@ -13,7 +13,7 @@ This guide will help you set up the Treis Adiutor CMS using Docker instead of XA
 ### 1. Update Your Existing Environment Configuration
 
 **All existing configurations are preserved:**
-- Auth0 settings
+- Firebase Authentication settings
 - Firebase configuration  
 - Maya payment gateway
 - Supabase settings
@@ -225,6 +225,6 @@ docker-compose.yml         # All services
 3. Start developing your application
 4. Use the provided commands for daily development tasks
 
-**Important:** All your existing configurations (Auth0, Firebase, Maya, Supabase) are preserved and will work with Docker!
+**Important:** All your existing configurations (Firebase Authentication, Firebase, Maya, Supabase) are preserved and will work with Docker!
 
 For any issues, check the troubleshooting section or examine the logs using `docker-compose logs -f`.

@@ -13,7 +13,7 @@ A comprehensive project execution and management platform designed to facilitate
 ### External API Integrations & Services
 
 #### 🔐 Authentication & Security
-- **Auth0 API** - Single Sign-On (SSO) and multi-provider authentication
+- **Firebase Authentication API** - Single Sign-On (SSO) and multi-provider authentication
   - **Features:** User registration, login, password management, social logins
   - **Implementation:** Role-based access control, secure session management
   - **Endpoints:** `/auth/login`, `/auth/register`, `/auth/callback`
@@ -121,7 +121,7 @@ A comprehensive project execution and management platform designed to facilitate
 - **Intelligent Organization:** Automatic categorization by project and type with metadata indexing
 - **Seamless Migration:** Automated transition from local to cloud storage via Cloudflare R2 API
 - **Multi-Level Attachments:** Project, task, and request-level documents with role-based access control
-- **Secure Access Control:** Auth0-integrated role-based document permissions and sharing controls
+- **Secure Access Control:** Firebase Authentication-integrated role-based document permissions and sharing controls
 - **Version Management:** Document history and revision tracking with automated backup via Azure Database
 - **CDN Distribution:** Global content delivery optimization through Cloudflare edge network
 
@@ -144,10 +144,10 @@ A comprehensive project execution and management platform designed to facilitate
 - **Video Meetings:** Zoom API integration for client feedback sessions and project reviews
 
 ### 👥 Advanced User Management
-- **Role-Based Access Control:** Admin, Client, Adiutor with Auth0 SSO integration and granular permissions
+- **Role-Based Access Control:** Admin, Client, Adiutor with Firebase Authentication SSO integration and granular permissions
 - **Profile Specialization:** Role-specific profile extensions with Google Calendar availability integration
 - **Status Management:** Active/inactive controls with automated Brevo email workflows for status changes
-- **Authentication Integration:** Auth0 API for SSO, social logins, and multi-provider support
+- **Authentication Integration:** Firebase Authentication API for SSO, social logins, and multi-provider support
 - **Security Framework:** Comprehensive permission and policy system with reCAPTCHA spam protection
 - **User Analytics:** Engagement and performance tracking with Azure Database analytics and reporting
 
@@ -368,7 +368,7 @@ php artisan key:generate
 # - Firebase FCM server key and project configuration
 # - Google Gemini AI API key for chatbot functionality
 # - Brevo SMTP settings for email notifications
-# - Auth0 domain, client ID, and client secret for SSO
+# - Firebase Authentication domain, client ID, and client secret for SSO
 # - Google Calendar API credentials for scheduling
 # - Zoom API credentials for meeting integration
 # - reCAPTCHA site key and secret key for spam protection
@@ -582,7 +582,7 @@ The Treis Adiutor platform integrates with 10 major external APIs to provide com
 
 | API Service | Primary Purpose | Implementation Areas | Key Features | Setup Complexity |
 |-------------|----------------|---------------------|--------------|------------------|
-| **Auth0** | Authentication & User Management | Login, Registration, SSO | Multi-provider login, JWT tokens, user profiles | Medium |
+| **Firebase Authentication** | Authentication & User Management | Login, Registration, SSO | Multi-provider login, JWT tokens, user profiles | Medium |
 | **Maya Business** | Payment Processing | Service payments, billing | Card processing, webhooks, transaction tracking | High |
 | **Google Gemini AI** | Intelligent Chatbot | Customer support, FAQ automation | Natural language processing, context awareness | Medium |
 | **Brevo (SMTP)** | Email Communications | Notifications, marketing | Transactional emails, templates, analytics | Low |
@@ -595,7 +595,7 @@ The Treis Adiutor platform integrates with 10 major external APIs to provide com
 
 ### 🛡️ Authentication & Security APIs
 
-#### Auth0 SSO Integration
+#### Firebase Authentication SSO Integration
 **Implementation Areas:**
 - User registration and login workflows
 - Password reset and account management

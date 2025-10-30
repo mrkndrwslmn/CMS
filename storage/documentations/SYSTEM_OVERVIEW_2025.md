@@ -35,7 +35,7 @@ Unlike traditional CRM or project management tools, the SDP specifically address
 #### Backend Infrastructure
 - **Framework:** Laravel 12.33.0 with PHP 8.2.12
 - **Database:** Multi-tier support (SQLite development, MySQL/PostgreSQL production)
-- **Authentication:** Laravel Sanctum with Auth0 SSO integration
+- **Authentication:** Laravel Sanctum with Firebase Authentication SSO integration
 - **API:** RESTful architecture with comprehensive documentation
 - **Queue System:** Redis-based background job processing
 - **Caching:** Multi-layer caching with Redis and file-based fallbacks
@@ -169,7 +169,7 @@ Feedback & Completion
 #### Integration & Infrastructure (100% Complete)
 - **Cloudflare R2 Storage:** Enterprise-grade file management with CDN
 - **Firebase Notifications:** Real-time push notification infrastructure
-- **Auth0 Integration:** Enterprise SSO and multi-provider authentication
+- **Firebase Authentication Integration:** Enterprise SSO and multi-provider authentication
 - **API Framework:** Comprehensive RESTful API with documentation
 - **Performance Monitoring:** Application and infrastructure health tracking
 

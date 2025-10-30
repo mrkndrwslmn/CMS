@@ -44,6 +44,10 @@
         <div class="p-8 md:w-1/2 bg-white">
             <h2 class="heading-serif text-3xl text-primary-700 mb-8 text-center">Sign In</h2>
             
+            <!-- Error/Success Messages -->
+            <div id="auth-error" class="hidden mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm"></div>
+            <div id="auth-success" class="hidden mb-4 p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm"></div>
+            
             <form method="POST" action="{{ route('login') }}" class="smooth-transition">
                 @csrf
                 
@@ -114,8 +118,7 @@
                     Sign In
                 </button>
                 
-                <!-- Auth0 Login Options -->
-                @if(config('auth0.enabled', true))
+                <!-- Firebase Social Login Options -->
                 <div class="mt-6">
                     <div class="relative">
                         <div class="absolute inset-0 flex items-center">
@@ -128,9 +131,11 @@
                     
                     <div class="mt-6 grid grid-cols-1 gap-3">
                         <!-- Google Login -->
-                        @if(config('auth0.socialProviders.google', true))
-                        <a 
-                            href="{{ route('social.login') }}?provider=google" 
+                        @if(config('firebase.social_providers.google', true))
+                        <button 
+                            type="button"
+                            onclick="handleSocialLogin('google')"
+                            id="google-login-btn"
                             class="w-full inline-flex justify-center items-center px-4 py-3 border border-neutral-300 rounded-xl shadow-sm text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
                         >
                             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
@@ -140,37 +145,40 @@
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                             </svg>
                             Continue with Google
-                        </a>
+                        </button>
                         @endif
                         
                         <!-- Apple Login -->
-                        @if(config('auth0.socialProviders.apple', true))
-                        <a 
-                            href="{{ route('social.login') }}?provider=apple" 
+                        @if(config('firebase.social_providers.apple', true))
+                        <button 
+                            type="button"
+                            onclick="handleSocialLogin('apple')"
+                            id="apple-login-btn"
                             class="w-full inline-flex justify-center items-center px-4 py-3 border border-neutral-300 rounded-xl shadow-sm text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
                         >
                             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
                                 <path fill="#000000" d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                             </svg>
                             Continue with Apple
-                        </a>
+                        </button>
                         @endif
                         
                         <!-- Twitter Login -->
-                        @if(config('auth0.socialProviders.twitter', true))
-                        <a 
-                            href="{{ route('social.login') }}?provider=twitter" 
+                        @if(config('firebase.social_providers.twitter', true))
+                        <button 
+                            type="button"
+                            onclick="handleSocialLogin('twitter')"
+                            id="twitter-login-btn"
                             class="w-full inline-flex justify-center items-center px-4 py-3 border border-neutral-300 rounded-xl shadow-sm text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
                         >
                             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
                                 <path fill="#1DA1F2" d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                             </svg>
                             Continue with Twitter
-                        </a>
+                        </button>
                         @endif
                     </div>
                 </div>
-                @endif
                 
                 <!-- Register Link -->
                 <div class="text-center mt-6">
@@ -186,7 +194,76 @@
 @endsection
 
 @push('scripts')
+@vite(['resources/js/firebase-auth.js'])
+
 <script>
+// Handle social login button clicks
+window.handleSocialLogin = async function(provider) {
+    const buttonId = `${provider}-login-btn`;
+    const button = document.getElementById(buttonId);
+    
+    if (!button) return;
+    
+    try {
+        // Wait for firebaseAuthService to be ready
+        if (!window.firebaseAuthService) {
+            throw new Error('Firebase Auth not initialized');
+        }
+        
+        // Set initial loading state on button
+        window.firebaseAuthService.setButtonLoading(button, true, 'Processing...');
+        
+        // Hide any previous messages
+        document.getElementById('auth-error').classList.add('hidden');
+        document.getElementById('auth-success').classList.add('hidden');
+        
+        // Call the appropriate sign-in method
+        let result;
+        switch(provider) {
+            case 'google':
+                result = await window.firebaseAuthService.signInWithGoogle();
+                break;
+            case 'apple':
+                result = await window.firebaseAuthService.signInWithApple();
+                break;
+            case 'twitter':
+                result = await window.firebaseAuthService.signInWithTwitter();
+                break;
+            default:
+                throw new Error('Unsupported provider');
+        }
+        
+        // Update button message during backend processing
+        window.firebaseAuthService.updateButtonMessage(button, 'Completing sign in...');
+        
+        // Show success and redirect
+        if (result.success) {
+            window.firebaseAuthService.updateButtonMessage(button, 'Redirecting...');
+            window.firebaseAuthService.showSuccess(result.message || 'Successfully signed in!');
+            
+            // Redirect immediately
+            window.location.href = result.redirect;
+        } else {
+            throw new Error(result.message);
+        }
+        
+    } catch (error) {
+        console.error('Social login error:', error);
+        if (window.firebaseAuthService) {
+            window.firebaseAuthService.showError(error.message);
+            window.firebaseAuthService.setButtonLoading(button, false);
+        } else {
+            alert(error.message);
+            if (button) {
+                button.disabled = false;
+                if (button.dataset.originalText) {
+                    button.innerHTML = button.dataset.originalText;
+                }
+            }
+        }
+    }
+};
+
 function togglePassword() {
     const pwd = document.getElementById('password');
     const icon = document.getElementById('toggleIcon');
@@ -200,6 +277,9 @@ function togglePassword() {
         icon.classList.add('fa-eye');
     }
 }
+
+// Make togglePassword available globally
+window.togglePassword = togglePassword;
 </script>
 @endpush
 

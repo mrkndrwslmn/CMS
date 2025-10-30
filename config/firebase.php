@@ -81,4 +81,31 @@ return [
     'notification_icon' => env('APP_URL') . '/favicon.ico',
     'notification_sound' => 'default',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Firebase Authentication
+    |--------------------------------------------------------------------------
+    |
+    | Firebase Authentication configuration for social login
+    | Get the Web API Key from Firebase Console -> Project Settings -> General
+    |
+    */
+    'authentication' => [
+        'enabled' => env('FIREBASE_AUTH_ENABLED', true),
+        'web_api_key' => env('FIREBASE_WEB_API_KEY', env('FIREBASE_API_KEY')),
+        'social_providers' => [
+            'google' => env('FIREBASE_GOOGLE_ENABLED', true),
+            'apple' => env('FIREBASE_APPLE_ENABLED', false),
+            'twitter' => env('FIREBASE_TWITTER_ENABLED', true),
+        ],
+    ],
+
+    // Legacy keys for backward compatibility
+    'web_api_key' => env('FIREBASE_WEB_API_KEY', env('FIREBASE_API_KEY')),
+    'social_providers' => [
+        'google' => env('FIREBASE_GOOGLE_ENABLED', true),
+        'apple' => env('FIREBASE_APPLE_ENABLED', false),
+        'twitter' => env('FIREBASE_TWITTER_ENABLED', true),
+    ],
+
 ];

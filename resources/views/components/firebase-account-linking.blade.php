@@ -1,11 +1,11 @@
-@if(config('auth0.enabled', true))
+@if(config('firebase.authentication.enabled', true))
 <div class="bg-white border border-neutral-200 rounded-lg p-6 shadow-sm">
     <h3 class="text-lg font-semibold text-neutral-900 mb-4">
         <i class="fas fa-link text-primary-600 mr-2"></i>
         Social Account Integration
     </h3>
     
-    @if(auth()->user()->isAuth0User())
+    @if(auth()->user()->isFirebaseUser())
         <!-- User is logged in via social login -->
         <div class="space-y-4">
             <div class="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -13,12 +13,11 @@
                     <div class="flex-shrink-0">
                         @php
                             $provider = 'social';
-                            if (auth()->user()->auth0_profile) {
-                                $sub = auth()->user()->auth0_profile['sub'] ?? '';
-                                if (str_contains($sub, 'google')) $provider = 'google';
-                                elseif (str_contains($sub, 'apple')) $provider = 'apple';
-                                elseif (str_contains($sub, 'twitter')) $provider = 'twitter';
-                                elseif (str_contains($sub, 'facebook')) $provider = 'facebook';
+                            if (auth()->user()->firebase_profile) {
+                                $providerId = auth()->user()->firebase_profile['firebase']['sign_in_provider'] ?? '';
+                                if (str_contains($providerId, 'google')) $provider = 'google';
+                                elseif (str_contains($providerId, 'apple')) $provider = 'apple';
+                                elseif (str_contains($providerId, 'twitter')) $provider = 'twitter';
                             }
                         @endphp
                         
@@ -61,7 +60,7 @@
             </div>
         </div>
         
-    @elseif(auth()->user()->canLinkAuth0())
+    @elseif(auth()->user()->canLinkFirebase())
         <!-- User can link to social accounts -->
         <div class="space-y-4">
             <div class="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -82,9 +81,9 @@
                 <h5 class="text-sm font-medium text-neutral-700">Available social login options:</h5>
                 
                 <div class="grid grid-cols-1 gap-3">
-                    @if(config('auth0.socialProviders.google', true))
-                    <a 
-                        href="{{ route('social.login') }}?provider=google&link=true" 
+                    @if(config('firebase.authentication.social_providers.google', true))
+                    <button 
+                        onclick="linkFirebaseAccount('google')" 
                         class="flex items-center justify-between p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
                     >
                         <div class="flex items-center">
@@ -97,12 +96,12 @@
                             <span class="text-sm font-medium">Connect Google Account</span>
                         </div>
                         <i class="fas fa-arrow-right text-neutral-400"></i>
-                    </a>
+                    </button>
                     @endif
                     
-                    @if(config('auth0.socialProviders.apple', true))
-                    <a 
-                        href="{{ route('social.login') }}?provider=apple&link=true" 
+                    @if(config('firebase.authentication.social_providers.apple', true))
+                    <button 
+                        onclick="linkFirebaseAccount('apple')" 
                         class="flex items-center justify-between p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
                     >
                         <div class="flex items-center">
@@ -112,12 +111,12 @@
                             <span class="text-sm font-medium">Connect Apple Account</span>
                         </div>
                         <i class="fas fa-arrow-right text-neutral-400"></i>
-                    </a>
+                    </button>
                     @endif
                     
-                    @if(config('auth0.socialProviders.twitter', true))
-                    <a 
-                        href="{{ route('social.login') }}?provider=twitter&link=true" 
+                    @if(config('firebase.authentication.social_providers.twitter', true))
+                    <button 
+                        onclick="linkFirebaseAccount('twitter')" 
                         class="flex items-center justify-between p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
                     >
                         <div class="flex items-center">
@@ -127,7 +126,7 @@
                             <span class="text-sm font-medium">Connect Twitter Account</span>
                         </div>
                         <i class="fas fa-arrow-right text-neutral-400"></i>
-                    </a>
+                    </button>
                     @endif
                 </div>
             </div>
@@ -150,4 +149,20 @@
         </div>
     @endif
 </div>
+
+<script type="module">
+import { linkAccount } from '@/firebase-auth.js';
+
+window.linkFirebaseAccount = async function(provider) {
+    try {
+        const result = await linkAccount(provider);
+        if (result.success) {
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Failed to link account:', error);
+        alert('Failed to link account. Please try again.');
+    }
+};
+</script>
 @endif

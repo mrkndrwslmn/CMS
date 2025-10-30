@@ -544,7 +544,6 @@
     // Function to download report
     function downloadReport() {
         const timeFilter = Alpine.store('timeFilter');
-        console.log('Downloading report for: ' + timeFilter);
         
         // Show loading state
         const button = event.target;
@@ -575,7 +574,6 @@
     
     // Function to refresh dashboard data
     function refreshDashboard() {
-        console.log('Refreshing dashboard data...');
         
         // Show loading toast
         showToast('info', 'Refreshing dashboard data...', 2000);

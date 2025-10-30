@@ -11,17 +11,14 @@
     
     openApproveModal() {
         this.showApproveModal = true;
-        console.log('Opening Approve Modal', this.showApproveModal);
     },
     
     openRejectModal() {
         this.showRejectModal = true;
-        console.log('Opening Reject Modal', this.showRejectModal);
     },
     
     openCreateTaskModal() {
         this.showCreateTaskModal = true;
-        console.log('Opening Create Task Modal', this.showCreateTaskModal);
     }
 }">
     <!-- Alert Messages -->

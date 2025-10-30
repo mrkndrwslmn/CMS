@@ -255,9 +255,6 @@ function timeTracker() {
         },
         
         init() {
-            console.log('Time tracker initialized');
-            console.log('Active timer:', this.activeTimer);
-            console.log('Available tasks count: {{ count($availableTasks) }}');
             
             if (this.activeTimer.active) {
                 this.updateElapsedTime();
@@ -289,8 +286,6 @@ function timeTracker() {
             this.loading = true;
             
             try {
-                console.log('Starting timer with data:', this.newTimer);
-                
                 const response = await fetch('/adiutor/time-tracking/start', {
                     method: 'POST',
                     headers: {
@@ -300,9 +295,7 @@ function timeTracker() {
                     body: JSON.stringify(this.newTimer)
                 });
                 
-                console.log('Response status:', response.status);
                 const data = await response.json();
-                console.log('Response data:', data);
                 
                 if (data.success) {
                     this.activeTimer = {

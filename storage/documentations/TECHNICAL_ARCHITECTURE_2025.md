@@ -274,7 +274,7 @@ CREATE INDEX idx_projects_timeline ON projects(start_date, deadline, status);
 │                    AUTHENTICATION LAYER                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────┬─────────────┬─────────────┬─────────────┐      │
-│  │    Auth0    │   Session   │   API Token │   OAuth     │      │
+│  │    Firebase Authentication    │   Session   │   API Token │   OAuth     │      │
 │  │    SSO      │    Based    │     Based   │  Providers  │      │
 │  └─────────────┴─────────────┴─────────────┴─────────────┘      │
 └─────────────────┬───────────────────────────────────────────────┘
@@ -417,7 +417,7 @@ Adiutor
 │   AUTHENTICATION│    │    PAYMENTS     │
 │                 │    │                 │
 │ ┌─────────────┐ │    │ ┌─────────────┐ │
-│ │    Auth0    │ │    │ │    Maya     │ │
+│ │   Firebase  │ │    │ │    Maya     │ │
 │ │     SSO     │ │    │ │  Business   │ │
 │ └─────────────┘ │    │ └─────────────┘ │
 └─────────────────┘    └─────────────────┘

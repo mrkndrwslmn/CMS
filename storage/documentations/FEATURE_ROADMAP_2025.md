@@ -40,7 +40,7 @@
 #### Advanced User Management
 - ✅ **Role-Based Security:** Admin, Client, Adiutor with granular permissions
 - ✅ **Profile Specialization:** Role-specific profile extensions and capabilities
-- ✅ **Authentication Integration:** Auth0 SSO with multi-provider support
+- ✅ **Authentication Integration:** Firebase Authentication SSO with multi-provider support
 - ✅ **Status Management:** Active/inactive controls with automated workflows
 - ✅ **Permission Framework:** Policy-based access control system
 - ✅ **Activity Tracking:** Comprehensive user behavior analytics

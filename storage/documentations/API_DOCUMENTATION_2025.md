@@ -40,7 +40,7 @@ Authorization: Bearer YOUR_API_TOKEN
 Cookie: laravel_session=YOUR_SESSION_TOKEN
 ```
 
-#### 3. Auth0 OAuth 2.0
+#### 3. Firebase Authentication OAuth 2.0
 ```http
 Authorization: Bearer YOUR_OAUTH_TOKEN
 ```

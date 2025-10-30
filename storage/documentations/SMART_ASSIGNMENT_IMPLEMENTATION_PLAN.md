@@ -1446,7 +1446,7 @@ docs/
 ## Previous System Enhancements
 
 ### 1. Multi-Role Authentication System
-- **Auth0 integration** for social login
+- **Firebase Authentication integration** for social login
 - **OAuth 2.0** for third-party services
 - **Role-based access control** (Admin, Client, Adiutor)
 - **Profile management** per role type
