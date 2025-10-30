@@ -28,6 +28,7 @@
 
 ## 🔐 Authentication
 
+
 ### Authentication Methods
 
 #### 1. API Token Authentication (Recommended)
