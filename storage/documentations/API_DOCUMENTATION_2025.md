@@ -30,7 +30,6 @@
 
 
 ### Authentication Methods
-
 #### 1. API Token Authentication (Recommended)
 ```http
 Authorization: Bearer YOUR_API_TOKEN
