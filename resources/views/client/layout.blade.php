@@ -38,11 +38,41 @@
         #mobile-menu.active {
             max-height: 500px;
         }
+
+        /* Text pulse animation for announcements */
+        @keyframes text-pulse {
+            0%, 100% {
+                color: rgba(255, 255, 255, 1);
+            }
+            50% {
+                color: rgba(255, 255, 255, 0.7);
+            }
+        }
+        
+        .announcement-text-pulse {
+            animation: text-pulse 1.5s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="bg-neutral-50 antialiased min-h-screen flex flex-col">
+    <!-- Announcements Banner - Full Width at Top -->
+    @if(isset($announcements) && $announcements->count() > 0)
+        <div class="bg-gradient-to-r from-primary-600 to-accent-600 border-b border-primary-700 fixed top-0 left-0 right-0 z-50">
+            @php $announcement = $announcements->first(); @endphp
+            <div class="px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3">
+                <svg class="w-4 h-4 text-primary-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                </svg>
+                <div class="text-center announcement-text-pulse">
+                    <span class="font-semibold text-sm">{{ $announcement->title }}:</span>
+                    <span class="text-sm ml-2">{{ $announcement->content }}</span>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm fixed top-0 left-0 right-0 z-50 border-b border-gray-200">
+    <nav class="bg-white shadow-sm fixed left-0 right-0 z-40 border-b border-gray-200" style="top: 0;" id="main-nav">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
@@ -288,7 +318,21 @@
     </nav>
     
     <!-- Main Content -->
-    <main class="pt-16 min-h-screen">
+    <main class="min-h-screen" id="main-content" style="padding-top: 64px;">
+        <script>
+            // Adjust main content padding based on announcements banner height
+            document.addEventListener('DOMContentLoaded', function() {
+                const announcementsBanner = document.querySelector('.bg-gradient-to-r.from-primary-600.fixed');
+                const mainNav = document.getElementById('main-nav');
+                const mainContent = document.getElementById('main-content');
+                
+                if (announcementsBanner) {
+                    const bannerHeight = announcementsBanner.offsetHeight;
+                    mainNav.style.top = bannerHeight + 'px';
+                    mainContent.style.paddingTop = (bannerHeight + 64) + 'px';
+                }
+            });
+        </script>
         <!-- Flash Messages -->
         @if(session('success'))
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

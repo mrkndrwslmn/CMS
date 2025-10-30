@@ -133,7 +133,35 @@ Route::prefix('api')->group(function () {
 
 // Public routes
 Route::get('/', function () {
-    return view('welcome');
+    // Get active announcements for public
+    $announcements = DB::table('announcements')
+        ->join('users', 'announcements.created_by', '=', 'users.id')
+        ->where('announcements.status', 'active')
+        ->whereIn('announcements.target_audience', ['public', 'all'])
+        ->where(function ($query) {
+            $query->whereNull('announcements.expires_at')
+                  ->orWhere('announcements.expires_at', '>', now());
+        })
+        ->where(function ($query) {
+            $query->whereNull('announcements.starts_at')
+                  ->orWhere('announcements.starts_at', '<=', now());
+        })
+        ->select(
+            'announcements.id',
+            'announcements.title',
+            'announcements.content',
+            'announcements.priority',
+            'announcements.status',
+            'announcements.starts_at',
+            'announcements.expires_at',
+            'announcements.created_at',
+            'users.fullName as creator_name'
+        )
+        ->orderByRaw("FIELD(announcements.priority, 'high', 'medium', 'low')")
+        ->orderBy('announcements.created_at', 'desc')
+        ->get();
+    
+    return view('welcome', compact('announcements'));
 })->name('home');
 
 Route::get('/services', function () {

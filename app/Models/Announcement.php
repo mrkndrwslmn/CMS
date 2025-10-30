@@ -15,6 +15,7 @@ class Announcement extends Model
         'content',
         'priority',
         'status',
+        'target_audience',
         'starts_at',
         'expires_at',
         'created_by',

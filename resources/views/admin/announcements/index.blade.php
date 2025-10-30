@@ -253,6 +253,21 @@
                         </div>
                     </div>
 
+                    <!-- Target Audience -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Target Audience *</label>
+                        <select x-model="form.target_audience"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                required>
+                            <option value="">Select Audience</option>
+                            <option value="client">Clients Only</option>
+                            <option value="adiutor">Adiutors Only</option>
+                            <option value="public">Public (Landing Page)</option>
+                            <option value="all">All (Clients, Adiutors & Public)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Choose who will see this announcement</p>
+                    </div>
+
                     <!-- Start Date for Scheduled Announcements -->
                     <div x-show="form.status === 'scheduled'" x-cloak>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Start Date & Time *</label>
@@ -307,6 +322,7 @@ function announcementManager() {
             title: '',
             content: '',
             priority: '',
+            target_audience: 'all',
             starts_at: '',
             expires_at: '',
             status: 'active'
@@ -327,6 +343,7 @@ function announcementManager() {
                 title: announcement.title,
                 content: announcement.content,
                 priority: announcement.priority,
+                target_audience: announcement.target_audience || 'all',
                 starts_at: announcement.starts_at ? announcement.starts_at.slice(0, 16) : '',
                 expires_at: announcement.expires_at ? announcement.expires_at.slice(0, 16) : '',
                 status: announcement.status
@@ -345,6 +362,7 @@ function announcementManager() {
                 title: '',
                 content: '',
                 priority: '',
+                target_audience: 'all',
                 starts_at: '',
                 expires_at: '',
                 status: 'active'

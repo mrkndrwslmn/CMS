@@ -33,6 +33,21 @@
     @stack('analytics')
     
     @stack('styles')
+
+    <style>
+        @keyframes text-pulse {
+            0%, 100% {
+                color: rgba(255, 255, 255, 1);
+            }
+            50% {
+                color: rgba(255, 255, 255, 0.7);
+            }
+        }
+        
+        .announcement-text-pulse {
+            animation: text-pulse 1.5s ease-in-out infinite;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <!-- Header -->
@@ -85,6 +100,22 @@
         </div>
     </div>
 </header>
+
+    <!-- Announcements Banner -->
+    @if(isset($announcements) && $announcements->count() > 0)
+    <div id="announcements-banner" class="bg-gradient-to-r from-primary-600 to-accent-600 border-b border-primary-700 fixed top-0 left-0 right-0 z-50">
+        @php $announcement = $announcements->first(); @endphp
+        <div class="px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3">
+            <svg class="w-4 h-4 text-primary-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+            </svg>
+            <div class="text-center announcement-text-pulse">
+                <span class="font-semibold text-sm">{{ $announcement->title }}:</span>
+                <span class="text-sm ml-2">{{ $announcement->content }}</span>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Main Content -->
     <main class="flex-1">
@@ -154,6 +185,27 @@
             const menu = document.getElementById('mobile-menu');
             menu.classList.toggle('hidden');
         });
+
+        // Adjust header position based on announcements banner
+        function adjustHeaderPosition() {
+            const announcementsBanner = document.getElementById('announcements-banner');
+            const header = document.querySelector('header');
+            const mainContent = document.querySelector('main');
+            
+            if (announcementsBanner && header) {
+                const bannerHeight = announcementsBanner.offsetHeight;
+                header.style.top = bannerHeight + 'px';
+                if (mainContent) {
+                    mainContent.style.paddingTop = (header.offsetHeight + bannerHeight) + 'px';
+                }
+            }
+        }
+
+        // Run on page load and window resize
+        if (document.getElementById('announcements-banner')) {
+            adjustHeaderPosition();
+            window.addEventListener('resize', adjustHeaderPosition);
+        }
     </script>
     
     <!-- Chatbot Widget -->

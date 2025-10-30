@@ -147,12 +147,57 @@ class ClientController extends Controller
                 return $project;
             });
         
+        // Get active announcements
+        $announcements = DB::table('announcements')
+            ->join('users', 'announcements.created_by', '=', 'users.id')
+            ->where('announcements.status', 'active')
+            ->whereIn('announcements.target_audience', ['client', 'all'])
+            ->where(function ($query) {
+                $query->whereNull('announcements.expires_at')
+                      ->orWhere('announcements.expires_at', '>', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('announcements.starts_at')
+                      ->orWhere('announcements.starts_at', '<=', now());
+            })
+            ->select(
+                'announcements.id',
+                'announcements.title',
+                'announcements.content',
+                'announcements.priority',
+                'announcements.status',
+                'announcements.starts_at',
+                'announcements.expires_at',
+                'announcements.created_at',
+                'users.fullName as creator_name'
+            )
+            ->orderByRaw("FIELD(announcements.priority, 'high', 'medium', 'low')")
+            ->orderBy('announcements.created_at', 'desc')
+            ->get()
+            ->map(function ($announcement) {
+                // Convert date strings to Carbon instances
+                $announcement->created_at = Carbon::parse($announcement->created_at);
+                if ($announcement->starts_at) {
+                    $announcement->starts_at = Carbon::parse($announcement->starts_at);
+                }
+                if ($announcement->expires_at) {
+                    $announcement->expires_at = Carbon::parse($announcement->expires_at);
+                }
+                
+                // Create creator object structure that the view expects
+                $announcement->creator = (object) [
+                    'fullName' => $announcement->creator_name
+                ];
+                return $announcement;
+            });
+        
         // Ensure collections are always defined (convert to collections if they aren't already)
         $recentProjects = collect($recentProjects);
         $recentMessages = collect($recentMessages);
         $upcomingDeadlines = collect($upcomingDeadlines);
+        $announcements = collect($announcements);
         
-        return view('client.dashboard', compact('user', 'stats', 'recentProjects', 'recentMessages', 'upcomingDeadlines'));
+        return view('client.dashboard', compact('user', 'stats', 'recentProjects', 'recentMessages', 'upcomingDeadlines', 'announcements'));
     }
 
     /**
