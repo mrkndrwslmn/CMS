@@ -331,6 +331,23 @@ class MayaPaymentController extends Controller
                                 'error' => $e->getMessage(),
                             ]);
                         }
+
+                        // 🎁 Process referral completion (if this is user's first payment)
+                        try {
+                            $referralService = app(\App\Services\ReferralService::class);
+                            $paymentModel = \App\Models\Payment::find($payment->id);
+                            $referralService->processReferralCompletion($paymentModel);
+                            
+                            Log::info('Referral completion processed for payment', [
+                                'payment_id' => $payment->id,
+                                'client_id' => $clientUser->id,
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error('Failed to process referral completion', [
+                                'payment_id' => $payment->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
                     }
 
                     // Update coupon usage status

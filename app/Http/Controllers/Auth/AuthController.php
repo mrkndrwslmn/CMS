@@ -88,6 +88,7 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'phoneNumber' => ['nullable', 'string', 'max:20'],
             'role' => ['required', 'in:client,adiutor'], // Admin accounts should be created by existing admins
+            'referralCode' => ['nullable', 'string', 'max:20'],
         ]);
 
         $user = User::create([
@@ -98,6 +99,26 @@ class AuthController extends Controller
             'role' => $request->role,
             'status' => 'active',
         ]);
+
+        // 🎁 Process referral if code was provided
+        if ($request->filled('referralCode')) {
+            try {
+                $referralService = app(\App\Services\ReferralService::class);
+                $metadata = [
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'source' => 'registration_form',
+                ];
+                $referralService->processRegistrationReferral($user, $request->referralCode, $metadata);
+            } catch (\Exception $e) {
+                \Log::error('Failed to process referral during registration', [
+                    'user_id' => $user->id,
+                    'referral_code' => $request->referralCode,
+                    'error' => $e->getMessage()
+                ]);
+                // Don't fail registration if referral processing fails
+            }
+        }
 
         // 🔔 Notify all admins about new user registration
         $admins = User::where('role', 'admin')->get();
@@ -117,7 +138,13 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route($user->getDashboardRoute())->with('success', 'Welcome to Treis Adiutor! Your account has been created successfully.');
+        // Show referral welcome message if referred
+        $message = 'Welcome to Treis Adiutor! Your account has been created successfully.';
+        if ($request->filled('referralCode') && $user->isReferred()) {
+            $message .= ' 🎉 Your referral bonus has been credited!';
+        }
+
+        return redirect()->route($user->getDashboardRoute())->with('success', $message);
     }
 
     /**

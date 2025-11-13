@@ -69,6 +69,33 @@
                             <li><a href="{{ route('client.dashboard') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.dashboard') ? 'border-primary text-primary' : 'border-transparent' }}">Home</a></li>
                             <li><a href="{{ route('client.tasks') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.tasks') ? 'border-primary text-primary' : 'border-transparent' }}">Tasks</a></li>
                             <li><a href="{{ route('client.requests') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.requests') ? 'border-primary text-primary' : 'border-transparent' }}">My Request</a></li>
+                            <li><a href="{{ route('client.referrals.dashboard') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.referrals.*') ? 'border-primary text-primary' : 'border-transparent' }}">
+                                Referrals
+                                @php
+                                    $pendingReferralsCount = Auth::user()->referralsMade()->where('status', 'pending')->count();
+                                @endphp
+                                @if($pendingReferralsCount > 0)
+                                    <span class="ml-1 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingReferralsCount }}</span>
+                                @endif
+                            </a></li>
+                            <li><a href="{{ route('client.coupons.index') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.coupons.*') ? 'border-primary text-primary' : 'border-transparent' }}">
+                                Coupons
+                                @php
+                                    $activeCouponsCount = Auth::user()->coupons()->where('is_active', true)->where('expires_at', '>', now())->count();
+                                @endphp
+                                @if($activeCouponsCount > 0)
+                                    <span class="ml-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $activeCouponsCount }}</span>
+                                @endif
+                            </a></li>
+                            <li><a href="{{ route('client.loyalty.dashboard') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.loyalty.*') ? 'border-primary text-primary' : 'border-transparent' }}">
+                                Loyalty
+                                @php
+                                    $userPoints = Auth::user()->loyalty_points ?? 0;
+                                @endphp
+                                @if($userPoints > 0)
+                                    <span class="ml-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
+                                @endif
+                            </a></li>
                             <li><a href="{{ route('client.messages.index') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.messages.*') ? 'border-primary text-primary' : 'border-transparent' }}">
                                 Messages
                                 <span id="unread-badge" class="ml-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full" style="display:none;">0</span>
@@ -118,6 +145,33 @@
                         </a></li>
                         <li><a href="{{ route('client.requests') }}" class="block py-2 px-3 rounded {{ request()->routeIs('client.requests') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">
                             <i class="fas fa-tasks mr-2"></i> My Requests
+                        </a></li>
+                        <li><a href="{{ route('client.referrals.dashboard') }}" class="block py-2 px-3 rounded {{ request()->routeIs('client.referrals.*') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">
+                            <i class="fas fa-share-nodes mr-2"></i> Referrals
+                            @php
+                                $pendingReferralsCount = Auth::user()->referralsMade()->where('status', 'pending')->count();
+                            @endphp
+                            @if($pendingReferralsCount > 0)
+                                <span class="ml-1 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingReferralsCount }}</span>
+                            @endif
+                        </a></li>
+                        <li><a href="{{ route('client.coupons.index') }}" class="block py-2 px-3 rounded {{ request()->routeIs('client.coupons.*') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">
+                            <i class="fas fa-ticket mr-2"></i> Coupons
+                            @php
+                                $activeCouponsCount = Auth::user()->coupons()->where('is_active', true)->where('expires_at', '>', now())->count();
+                            @endphp
+                            @if($activeCouponsCount > 0)
+                                <span class="ml-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $activeCouponsCount }}</span>
+                            @endif
+                        </a></li>
+                        <li><a href="{{ route('client.loyalty.dashboard') }}" class="block py-2 px-3 rounded {{ request()->routeIs('client.loyalty.*') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">
+                            <i class="fas fa-star mr-2"></i> Loyalty
+                            @php
+                                $userPoints = Auth::user()->loyalty_points ?? 0;
+                            @endphp
+                            @if($userPoints > 0)
+                                <span class="ml-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
+                            @endif
                         </a></li>
                         <li><a href="{{ route('client.messages.index') }}" class="block py-2 px-3 rounded {{ request()->routeIs('client.messages.*') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">
                             <i class="fas fa-comments mr-2"></i> Messages

@@ -373,6 +373,18 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::post('/{user}/adjust', [\App\Http\Controllers\Admin\LoyaltyController::class, 'adjustPoints'])->name('adjust');
     });
     
+    // Referral Program Management
+    Route::prefix('referrals')->name('referrals.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ReferralController::class, 'index'])->name('index');
+        Route::get('/list', [\App\Http\Controllers\Admin\ReferralController::class, 'list'])->name('list');
+        Route::get('/codes', [\App\Http\Controllers\Admin\ReferralController::class, 'codes'])->name('codes');
+        Route::get('/analytics', [\App\Http\Controllers\Admin\ReferralController::class, 'analytics'])->name('analytics');
+        Route::get('/export', [\App\Http\Controllers\Admin\ReferralController::class, 'export'])->name('export');
+        Route::get('/{referral}', [\App\Http\Controllers\Admin\ReferralController::class, 'show'])->name('show');
+        Route::post('/{referral}/process', [\App\Http\Controllers\Admin\ReferralController::class, 'processPending'])->name('process');
+        Route::patch('/codes/{code}/toggle', [\App\Http\Controllers\Admin\ReferralController::class, 'toggleCodeStatus'])->name('codes.toggle');
+    });
+    
     // Document Management
     Route::resource('documents', \App\Http\Controllers\Admin\DocumentManagementController::class);
     Route::get('/documents/{document}/download', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'download'])->name('documents.download');
@@ -522,6 +534,18 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
         Route::get('/widget-data', [\App\Http\Controllers\Client\LoyaltyController::class, 'widgetData'])->name('widget-data');
         Route::post('/calculate-earning', [\App\Http\Controllers\Client\LoyaltyController::class, 'calculateEarning'])->name('calculate-earning');
         Route::post('/calculate-discount', [\App\Http\Controllers\Client\LoyaltyController::class, 'calculateDiscount'])->name('calculate-discount');
+    });
+    
+    // Referral Program routes
+    Route::prefix('referrals')->name('referrals.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Client\ReferralController::class, 'dashboard'])->name('dashboard');
+        Route::get('/share', [\App\Http\Controllers\Client\ReferralController::class, 'share'])->name('share');
+        Route::get('/history', [\App\Http\Controllers\Client\ReferralController::class, 'history'])->name('history');
+        Route::get('/code', [\App\Http\Controllers\Client\ReferralController::class, 'getCode'])->name('code');
+        Route::get('/stats', [\App\Http\Controllers\Client\ReferralController::class, 'getStats'])->name('stats');
+        Route::post('/validate', [\App\Http\Controllers\Client\ReferralController::class, 'validateCode'])->name('validate');
+        Route::post('/invite', [\App\Http\Controllers\Client\ReferralController::class, 'sendInvitation'])->name('invite');
+        Route::post('/generate-link', [\App\Http\Controllers\Client\ReferralController::class, 'generateLink'])->name('generate-link');
     });
     
     // Revision Request routes

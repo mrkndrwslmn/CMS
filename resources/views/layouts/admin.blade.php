@@ -101,6 +101,24 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('admin.referrals.index') }}"
+                               class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.referrals.*') ? 'border-b-2 border-primary text-primary' : '' }}">
+                               Referrals
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.coupons.index') }}"
+                               class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.coupons.*') ? 'border-b-2 border-primary text-primary' : '' }}">
+                               Coupons
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.loyalty.index') }}"
+                               class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.loyalty.*') ? 'border-b-2 border-primary text-primary' : '' }}">
+                               Loyalty
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('admin.messages.index') }}"
                                class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.messages.*') ? 'border-b-2 border-primary text-primary' : '' }}">
                                Messages
@@ -148,6 +166,24 @@
                         <a href="{{ route('admin.requests.index') }}"
                            class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.requests.*') ? 'border-b-2 border-primary text-primary' : '' }}">
                            Requests
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.referrals.index') }}"
+                           class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.referrals.*') ? 'border-b-2 border-primary text-primary' : '' }}">
+                           Referrals
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.coupons.index') }}"
+                           class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.coupons.*') ? 'border-b-2 border-primary text-primary' : '' }}">
+                           Coupons
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.loyalty.index') }}"
+                           class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium {{ request()->routeIs('admin.loyalty.*') ? 'border-b-2 border-primary text-primary' : '' }}">
+                           Loyalty
                         </a>
                     </li>
                     <li>

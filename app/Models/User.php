@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable
 {
@@ -479,5 +481,81 @@ class User extends Authenticatable
                 'points_to_next_tier' => 5000,
             ]
         );
+    }
+
+    /**
+     * ==========================================
+     * REFERRAL SYSTEM RELATIONSHIPS
+     * ==========================================
+     */
+
+    /**
+     * Get the user's referral code
+     */
+    public function referralCode(): HasOne
+    {
+        return $this->hasOne(ReferralCode::class);
+    }
+
+    /**
+     * Get or create user's referral code
+     */
+    public function getOrCreateReferralCode(): ReferralCode
+    {
+        return $this->referralCode()->firstOrCreate(
+            ['user_id' => $this->id],
+            [
+                'code' => ReferralCode::generateUniqueCode($this),
+                'is_active' => true,
+            ]
+        );
+    }
+
+    /**
+     * Get referrals made by this user (as referrer)
+     */
+    public function referralsMade(): HasMany
+    {
+        return $this->hasMany(Referral::class, 'referrer_id');
+    }
+
+    /**
+     * Get the referral record (if this user was referred)
+     */
+    public function referralReceived(): HasOne
+    {
+        return $this->hasOne(Referral::class, 'referred_id');
+    }
+
+    /**
+     * Get the user who referred this user
+     */
+    public function referredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by_user_id');
+    }
+
+    /**
+     * Check if user was referred by someone
+     */
+    public function isReferred(): bool
+    {
+        return !is_null($this->referred_by_user_id);
+    }
+
+    /**
+     * Get total referrals made
+     */
+    public function getTotalReferralsAttribute(): int
+    {
+        return $this->referralsMade()->count();
+    }
+
+    /**
+     * Get successful referrals (completed first payment)
+     */
+    public function getSuccessfulReferralsAttribute(): int
+    {
+        return $this->referralsMade()->where('status', 'rewarded')->count();
     }
 }
