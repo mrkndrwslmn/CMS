@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Mail\PaymentConfirmed;
 use App\Services\MayaPaymentService;
+use App\Services\LoyaltyService;
+use App\Services\CouponService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,10 +18,17 @@ use App\Notifications\PaymentConfirmedNotification;
 class MayaPaymentController extends Controller
 {
     protected MayaPaymentService $mayaService;
+    protected LoyaltyService $loyaltyService;
+    protected CouponService $couponService;
 
-    public function __construct(MayaPaymentService $mayaService)
-    {
+    public function __construct(
+        MayaPaymentService $mayaService,
+        LoyaltyService $loyaltyService,
+        CouponService $couponService
+    ) {
         $this->mayaService = $mayaService;
+        $this->loyaltyService = $loyaltyService;
+        $this->couponService = $couponService;
     }
 
     /**
@@ -301,6 +310,43 @@ class MayaPaymentController extends Controller
                                 'client_id' => $clientUser->id,
                                 'error' => $e->getMessage(),
                                 'trace' => $e->getTraceAsString()
+                            ]);
+                        }
+                    }
+
+                    // Award loyalty points for payment
+                    if ($serviceRequest && $clientUser) {
+                        try {
+                            $paymentModel = \App\Models\Payment::find($payment->id);
+                            $this->loyaltyService->awardPointsForPayment($serviceRequest, $paymentModel);
+                            
+                            Log::info('Loyalty points awarded for payment', [
+                                'payment_id' => $payment->id,
+                                'service_request_id' => $serviceRequest->id,
+                                'client_id' => $clientUser->id,
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error('Failed to award loyalty points', [
+                                'payment_id' => $payment->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+
+                    // Update coupon usage status
+                    if ($serviceRequest && $serviceRequest->applied_coupon_id) {
+                        try {
+                            $this->couponService->updateCouponUsageStatus($serviceRequest, 'completed');
+                            
+                            Log::info('Coupon usage marked as completed', [
+                                'payment_id' => $payment->id,
+                                'service_request_id' => $serviceRequest->id,
+                                'coupon_id' => $serviceRequest->applied_coupon_id,
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error('Failed to update coupon usage status', [
+                                'payment_id' => $payment->id,
+                                'error' => $e->getMessage(),
                             ]);
                         }
                     }

@@ -917,6 +917,127 @@
                         </div>
                     </div>
                     
+                    <!-- Coupon Assignment Section -->
+                    <div class="bg-success-50 rounded-lg p-4 mb-5" x-data="{
+                        assignCoupon: false,
+                        couponType: 'existing',
+                        discountType: 'percentage',
+                        discountValue: '',
+                        couponCode: ''
+                    }">
+                        <h3 class="text-neutral-800 font-medium mb-3 flex items-center">
+                            <i class="fas fa-ticket-alt mr-2 text-success-600"></i>
+                            Coupon Assignment (Optional)
+                        </h3>
+                        
+                        <div class="flex items-center mb-3">
+                            <input type="checkbox" id="assign_coupon" name="assign_coupon" value="1" 
+                                   x-model="assignCoupon"
+                                   class="rounded border-neutral-300 text-success-600 focus:ring-success-500">
+                            <label for="assign_coupon" class="ml-2 text-neutral-800 font-medium">
+                                Assign a discount coupon to this request
+                            </label>
+                        </div>
+                        
+                        <div x-show="assignCoupon" x-transition class="space-y-4">
+                            <!-- Coupon Type Selection -->
+                            <div class="flex gap-3">
+                                <label class="flex-1 flex items-center p-3 border rounded-lg cursor-pointer hover:bg-white transition-colors" 
+                                       :class="couponType === 'existing' ? 'border-success-500 bg-white' : 'border-neutral-300'">
+                                    <input type="radio" name="coupon_type" value="existing" 
+                                           x-model="couponType"
+                                           class="text-success-600 focus:ring-success-500">
+                                    <span class="ml-2 text-sm font-medium text-neutral-800">Use Existing Coupon</span>
+                                </label>
+                                
+                                <label class="flex-1 flex items-center p-3 border rounded-lg cursor-pointer hover:bg-white transition-colors"
+                                       :class="couponType === 'new' ? 'border-success-500 bg-white' : 'border-neutral-300'">
+                                    <input type="radio" name="coupon_type" value="new" 
+                                           x-model="couponType"
+                                           class="text-success-600 focus:ring-success-500">
+                                    <span class="ml-2 text-sm font-medium text-neutral-800">Generate New Coupon</span>
+                                </label>
+                            </div>
+                            
+                            <!-- Existing Coupon Selection -->
+                            <div x-show="couponType === 'existing'" class="p-3 bg-white rounded-lg">
+                                <label for="coupon_code" class="block text-sm font-medium text-neutral-700 mb-1">Select Coupon</label>
+                                <select id="coupon_code" name="coupon_code"
+                                        class="w-full rounded border border-neutral-300 px-3 py-2 text-neutral-800 focus:border-success-500 focus:ring focus:ring-success-200 focus:ring-opacity-50">
+                                    <option value="">-- Select an existing coupon --</option>
+                                    @if(isset($availableCoupons) && $availableCoupons->count() > 0)
+                                        @foreach($availableCoupons as $coupon)
+                                        <option value="{{ $coupon->code }}">
+                                            {{ $coupon->code }} - 
+                                            @if($coupon->discount_type === 'percentage')
+                                                {{ $coupon->discount_value }}% OFF
+                                            @else
+                                                ₱{{ number_format($coupon->discount_value, 2) }} OFF
+                                            @endif
+                                        </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                                <p class="text-xs text-neutral-600 mt-1">Choose from active public coupons</p>
+                            </div>
+                            
+                            <!-- New Coupon Generation -->
+                            <div x-show="couponType === 'new'" class="p-3 bg-white rounded-lg space-y-3">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-neutral-700 mb-1">Discount Type</label>
+                                        <select name="new_coupon_discount_type" x-model="discountType"
+                                                class="w-full rounded border border-neutral-300 px-3 py-2 text-neutral-800 focus:border-success-500 focus:ring focus:ring-success-200 focus:ring-opacity-50">
+                                            <option value="percentage">Percentage (%)</option>
+                                            <option value="fixed">Fixed Amount (₱)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-neutral-700 mb-1">Discount Value</label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" x-text="discountType === 'percentage' ? '%' : '₱'"></span>
+                                            <input type="number" name="new_coupon_discount_value" x-model="discountValue"
+                                                   class="w-full pl-8 pr-3 py-2 rounded border border-neutral-300 text-neutral-800 focus:border-success-500 focus:ring focus:ring-success-200 focus:ring-opacity-50"
+                                                   :max="discountType === 'percentage' ? '100' : ''"
+                                                   step="0.01"
+                                                   placeholder="Enter value">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-700 mb-1">Coupon Description (Optional)</label>
+                                    <input type="text" name="new_coupon_description"
+                                           class="w-full rounded border border-neutral-300 px-3 py-2 text-neutral-800 focus:border-success-500 focus:ring focus:ring-success-200 focus:ring-opacity-50"
+                                           placeholder="e.g., Approval bonus discount">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-700 mb-1">Valid Until</label>
+                                    <input type="date" name="new_coupon_valid_until"
+                                           :min="new Date().toISOString().split('T')[0]"
+                                           class="w-full rounded border border-neutral-300 px-3 py-2 text-neutral-800 focus:border-success-500 focus:ring focus:ring-success-200 focus:ring-opacity-50">
+                                    <p class="text-xs text-neutral-600 mt-1">Leave empty for 30 days from today</p>
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    <input type="checkbox" name="new_coupon_auto_apply" value="1" 
+                                           class="rounded border-neutral-300 text-success-600 focus:ring-success-500"
+                                           checked>
+                                    <label class="ml-2 text-sm text-neutral-700">
+                                        Automatically apply to this request
+                                    </label>
+                                </div>
+                                
+                                <p class="text-xs text-info-600 flex items-start">
+                                    <i class="fas fa-info-circle mr-1 mt-0.5"></i>
+                                    <span>A unique coupon code will be generated and assigned specifically to this client for this request.</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="mb-5">
                         <label for="admin_notes" class="block text-sm font-medium text-neutral-700 mb-1">Admin Notes (Optional)</label>
                         <textarea id="admin_notes" name="admin_notes" rows="3" 

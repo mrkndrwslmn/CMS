@@ -48,6 +48,21 @@ class ServiceRequest extends Model
         'remaining_balance_paid',
         'remaining_balance_paid_at',
         'total_milestones',
+        // Coupon fields
+        'applied_coupon_id',
+        'original_approved_budget',
+        'coupon_discount_amount',
+        'coupon_applied_at',
+        'coupon_auto_applied',
+        // Loyalty fields
+        'loyalty_points_used',
+        'loyalty_discount_amount',
+        'loyalty_applied_at',
+        'loyalty_points_earned',
+        'loyalty_points_awarded',
+        'loyalty_points_awarded_at',
+        'total_discount_amount',
+        'discount_percentage',
     ];
 
     protected $casts = [
@@ -67,6 +82,18 @@ class ServiceRequest extends Model
         'downpayment_paid_at' => 'datetime',
         'remaining_balance_paid' => 'boolean',
         'remaining_balance_paid_at' => 'datetime',
+        // Coupon casts
+        'original_approved_budget' => 'decimal:2',
+        'coupon_discount_amount' => 'decimal:2',
+        'coupon_applied_at' => 'datetime',
+        'coupon_auto_applied' => 'boolean',
+        // Loyalty casts
+        'loyalty_discount_amount' => 'decimal:2',
+        'loyalty_applied_at' => 'datetime',
+        'loyalty_points_awarded' => 'boolean',
+        'loyalty_points_awarded_at' => 'datetime',
+        'total_discount_amount' => 'decimal:2',
+        'discount_percentage' => 'decimal:2',
     ];
 
     /**
@@ -100,6 +127,22 @@ class ServiceRequest extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(RequestAttachment::class);
+    }
+
+    /**
+     * Get the applied coupon for this request
+     */
+    public function appliedCoupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class, 'applied_coupon_id');
+    }
+
+    /**
+     * Get coupon usage record for this request
+     */
+    public function couponUsage(): HasOne
+    {
+        return $this->hasOne(CouponUsage::class);
     }
 
     /**
@@ -507,5 +550,46 @@ class ServiceRequest extends Model
     public function isFullyPaid(): bool
     {
         return $this->getRemainingPaymentBalance() <= 0 && $this->approved_budget > 0;
+    }
+
+    /**
+     * Check if coupon is applied
+     */
+    public function hasCoupon(): bool
+    {
+        return $this->applied_coupon_id !== null;
+    }
+
+    /**
+     * Check if loyalty points were used
+     */
+    public function hasLoyaltyDiscount(): bool
+    {
+        return $this->loyalty_points_used > 0;
+    }
+
+    /**
+     * Get total discount amount from all sources
+     */
+    public function getTotalDiscount(): float
+    {
+        return ($this->coupon_discount_amount ?? 0) + ($this->loyalty_discount_amount ?? 0);
+    }
+
+    /**
+     * Get final amount after all discounts
+     */
+    public function getFinalAmount(): float
+    {
+        $original = $this->original_approved_budget ?? $this->approved_budget ?? 0;
+        return max(0, $original - $this->getTotalDiscount());
+    }
+
+    /**
+     * Check if loyalty points have been awarded
+     */
+    public function loyaltyPointsAwarded(): bool
+    {
+        return $this->loyalty_points_awarded === true;
     }
 }

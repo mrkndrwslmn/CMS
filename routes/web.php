@@ -344,6 +344,35 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::get('/requests/{request}/files/{file}/download', [\App\Http\Controllers\Admin\RequestManagementController::class, 'downloadFile'])->name('requests.download-file');
     Route::get('/requests/export', [\App\Http\Controllers\Admin\RequestManagementController::class, 'export'])->name('requests.export');
     
+    // Coupon Management
+    Route::prefix('coupons')->name('coupons.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\CouponController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\CouponController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\CouponController::class, 'store'])->name('store');
+        Route::get('/{coupon}', [\App\Http\Controllers\Admin\CouponController::class, 'show'])->name('show');
+        Route::get('/{coupon}/edit', [\App\Http\Controllers\Admin\CouponController::class, 'edit'])->name('edit');
+        Route::put('/{coupon}', [\App\Http\Controllers\Admin\CouponController::class, 'update'])->name('update');
+        Route::delete('/{coupon}', [\App\Http\Controllers\Admin\CouponController::class, 'destroy'])->name('destroy');
+        Route::post('/{coupon}/toggle', [\App\Http\Controllers\Admin\CouponController::class, 'toggleStatus'])->name('toggle');
+        Route::get('/{coupon}/usage', [\App\Http\Controllers\Admin\CouponController::class, 'usageHistory'])->name('usage');
+        Route::post('/bulk-generate', [\App\Http\Controllers\Admin\CouponController::class, 'bulkGenerate'])->name('bulk');
+        Route::post('/check-code', [\App\Http\Controllers\Admin\CouponController::class, 'checkCode'])->name('check-code');
+    });
+    
+    // Loyalty Program Management
+    Route::prefix('loyalty')->name('loyalty.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\LoyaltyController::class, 'index'])->name('index');
+        Route::get('/leaderboard', [\App\Http\Controllers\Admin\LoyaltyController::class, 'leaderboard'])->name('leaderboard');
+        Route::get('/transactions', [\App\Http\Controllers\Admin\LoyaltyController::class, 'transactions'])->name('transactions');
+        Route::get('/settings/tiers', [\App\Http\Controllers\Admin\LoyaltyController::class, 'tierSettings'])->name('settings');
+        Route::put('/settings/tiers', [\App\Http\Controllers\Admin\LoyaltyController::class, 'updateTierSettings'])->name('settings.update');
+        Route::get('/export/report', [\App\Http\Controllers\Admin\LoyaltyController::class, 'exportLoyaltyReport'])->name('export');
+        Route::post('/expiry-warnings', [\App\Http\Controllers\Admin\LoyaltyController::class, 'sendExpiryWarnings'])->name('expiry-warnings');
+        Route::get('/dashboard-widget', [\App\Http\Controllers\Admin\LoyaltyController::class, 'dashboardWidget'])->name('widget');
+        Route::get('/{user}', [\App\Http\Controllers\Admin\LoyaltyController::class, 'show'])->name('show');
+        Route::post('/{user}/adjust', [\App\Http\Controllers\Admin\LoyaltyController::class, 'adjustPoints'])->name('adjust');
+    });
+    
     // Document Management
     Route::resource('documents', \App\Http\Controllers\Admin\DocumentManagementController::class);
     Route::get('/documents/{document}/download', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'download'])->name('documents.download');
@@ -472,6 +501,27 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
     Route::prefix('feedback')->name('feedback.')->group(function () {
         Route::get('/{projectId}/create', [\App\Http\Controllers\Client\FeedbackController::class, 'create'])->name('create');
         Route::post('/{projectId}', [\App\Http\Controllers\Client\FeedbackController::class, 'store'])->name('store');
+    });
+    
+    // Coupon routes
+    Route::prefix('coupons')->name('coupons.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Client\CouponController::class, 'index'])->name('index');
+        Route::get('/{coupon}', [\App\Http\Controllers\Client\CouponController::class, 'show'])->name('show');
+        Route::post('/validate', [\App\Http\Controllers\Client\CouponController::class, 'validateCode'])->name('validate');
+        Route::post('/requests/{serviceRequest}/apply', [\App\Http\Controllers\Client\CouponController::class, 'applyCoupon'])->name('apply');
+        Route::delete('/requests/{serviceRequest}/remove', [\App\Http\Controllers\Client\CouponController::class, 'removeCoupon'])->name('remove');
+        Route::post('/{coupon}/copy', [\App\Http\Controllers\Client\CouponController::class, 'copyCode'])->name('copy');
+    });
+    
+    // Loyalty Program routes
+    Route::prefix('loyalty')->name('loyalty.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Client\LoyaltyController::class, 'dashboard'])->name('dashboard');
+        Route::get('/transactions', [\App\Http\Controllers\Client\LoyaltyController::class, 'transactions'])->name('transactions');
+        Route::post('/requests/{serviceRequest}/redeem', [\App\Http\Controllers\Client\LoyaltyController::class, 'redeemPoints'])->name('redeem');
+        Route::delete('/requests/{serviceRequest}/remove-redemption', [\App\Http\Controllers\Client\LoyaltyController::class, 'removeRedemption'])->name('remove-redemption');
+        Route::get('/widget-data', [\App\Http\Controllers\Client\LoyaltyController::class, 'widgetData'])->name('widget-data');
+        Route::post('/calculate-earning', [\App\Http\Controllers\Client\LoyaltyController::class, 'calculateEarning'])->name('calculate-earning');
+        Route::post('/calculate-discount', [\App\Http\Controllers\Client\LoyaltyController::class, 'calculateDiscount'])->name('calculate-discount');
     });
     
     // Revision Request routes

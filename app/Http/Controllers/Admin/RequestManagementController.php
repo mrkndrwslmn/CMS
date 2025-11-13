@@ -9,8 +9,11 @@ use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Models\RequestAttachment;
 use App\Models\Project;
+use App\Models\Coupon;
 use App\Mail\RequestApproved;
 use App\Mail\PaymentConfirmed;
+use App\Mail\CouponAssignedMail;
+use App\Services\CouponService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +22,13 @@ use Illuminate\Support\Facades\Log;
 
 class RequestManagementController extends Controller
 {
+    protected CouponService $couponService;
+
+    public function __construct(CouponService $couponService)
+    {
+        $this->couponService = $couponService;
+    }
+
     public function index(Request $request)
     {
         $query = ServiceRequest::with(['client', 'attachments', 'project']);
@@ -84,10 +94,23 @@ class RequestManagementController extends Controller
     
     public function show($id)
     {
-        $serviceRequest = ServiceRequest::with(['client', 'attachments', 'project.tasks', 'payments'])
+        $serviceRequest = ServiceRequest::with(['client', 'attachments', 'project.tasks', 'payments', 'appliedCoupon'])
                                        ->findOrFail($id);
         
-        return view('admin.requests.show', ['request' => $serviceRequest]);
+        // Get available coupons for the coupon assignment modal
+        $availableCoupons = Coupon::where('status', 'active')
+            ->where(function ($q) {
+                $q->where('coupon_type', 'public')
+                  ->orWhereNull('specific_request_id');
+            })
+            ->whereHas('usages', fn($q) => $q, '<', 'max_total_uses')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return view('admin.requests.show', [
+            'request' => $serviceRequest,
+            'availableCoupons' => $availableCoupons,
+        ]);
     }
     
     public function approve(Request $request, $id)
@@ -112,6 +135,16 @@ class RequestManagementController extends Controller
             'task_priority' => 'nullable|required_if:create_task,on|in:low,medium,high,urgent',
             'task_due_date' => 'nullable|date',
             'adiutor_id' => 'nullable|exists:users,id',
+            // Coupon fields
+            'attach_coupon' => 'nullable|boolean',
+            'coupon_id' => 'nullable|exists:coupons,id',
+            'create_new_coupon' => 'nullable|boolean',
+            'new_coupon_code' => 'nullable|required_if:create_new_coupon,on|string|max:50',
+            'new_coupon_name' => 'nullable|required_if:create_new_coupon,on|string|max:255',
+            'new_coupon_description' => 'nullable|string',
+            'new_coupon_discount_type' => 'nullable|required_if:create_new_coupon,on|in:percentage,fixed_amount',
+            'new_coupon_discount_value' => 'nullable|required_if:create_new_coupon,on|numeric|min:0',
+            'new_coupon_valid_until' => 'nullable|date',
         ]);
 
         // Validate milestone percentages total 100% if milestone payment
@@ -152,6 +185,79 @@ class RequestManagementController extends Controller
         
         // Update request
         $serviceRequest->update($updateData);
+        
+        // Handle coupon attachment
+        if ($request->has('attach_coupon') && $request->attach_coupon) {
+            try {
+                $coupon = null;
+                
+                // Option 1: Create new request-specific coupon
+                if ($request->has('create_new_coupon') && $request->create_new_coupon) {
+                    $couponData = [
+                        'code' => $request->new_coupon_code,
+                        'name' => $request->new_coupon_name,
+                        'description' => $request->new_coupon_description,
+                        'discount_type' => $request->new_coupon_discount_type,
+                        'discount_value' => $request->new_coupon_discount_value,
+                        'max_discount_amount' => $request->new_coupon_max_discount ?? null,
+                        'min_purchase_amount' => 0,
+                        'valid_until' => $request->new_coupon_valid_until ?? now()->addDays(30),
+                        'stackable_with_loyalty_tier' => $request->new_coupon_stackable_tier ?? false,
+                        'stackable_with_points' => $request->new_coupon_stackable_points ?? true,
+                    ];
+                    
+                    $coupon = $this->couponService->createRequestSpecificCoupon(
+                        $couponData,
+                        $serviceRequest,
+                        Auth::user()
+                    );
+                }
+                // Option 2: Use existing coupon
+                elseif ($request->filled('coupon_id')) {
+                    $coupon = Coupon::find($request->coupon_id);
+                }
+                
+                // Apply the coupon if found
+                if ($coupon) {
+                    $this->couponService->autoAssignCouponToRequest($serviceRequest, $coupon);
+                    Log::info('Coupon applied to service request during approval', [
+                        'coupon_id' => $coupon->id,
+                        'service_request_id' => $serviceRequest->id,
+                    ]);
+                    
+                    // Send coupon assignment email
+                    try {
+                        $serviceRequest->refresh();
+                        $serviceRequest->load(['client', 'appliedCoupon']);
+                        
+                        Mail::to($serviceRequest->client->email)
+                            ->queue(new CouponAssignedMail(
+                                $serviceRequest->client,
+                                $coupon,
+                                $serviceRequest
+                            ));
+                        
+                        Log::info('Coupon assignment email queued', [
+                            'user_id' => $serviceRequest->client->id,
+                            'coupon_id' => $coupon->id,
+                            'service_request_id' => $serviceRequest->id
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send coupon assignment email', [
+                            'error' => $e->getMessage(),
+                            'user_id' => $serviceRequest->client->id,
+                            'coupon_id' => $coupon->id
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to apply coupon during approval', [
+                    'error' => $e->getMessage(),
+                    'service_request_id' => $serviceRequest->id,
+                ]);
+                // Don't fail the entire approval if coupon fails
+            }
+        }
         
         // Create project immediately when approved (needed for milestones)
         $project = Project::firstOrCreate(

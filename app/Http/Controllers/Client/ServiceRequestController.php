@@ -16,9 +16,20 @@ use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Notifications\NewServiceRequestNotification;
 use App\Services\CloudflareR2Service;
+use App\Services\CouponService;
+use App\Services\LoyaltyService;
 
 class ServiceRequestController extends Controller
 {
+    protected CouponService $couponService;
+    protected LoyaltyService $loyaltyService;
+
+    public function __construct(CouponService $couponService, LoyaltyService $loyaltyService)
+    {
+        $this->couponService = $couponService;
+        $this->loyaltyService = $loyaltyService;
+    }
+
     /**
      * Show service request creation form
      */
@@ -223,7 +234,7 @@ class ServiceRequestController extends Controller
         $user = Auth::user();
         
         // Use Eloquent to access relationships and methods
-        $request = \App\Models\ServiceRequest::with(['project.milestones', 'approvedBy'])
+        $request = \App\Models\ServiceRequest::with(['project.milestones', 'approvedBy', 'appliedCoupon', 'couponUsage'])
             ->where('id', $id)
             ->where('client_id', $user->id)
             ->first();
@@ -240,7 +251,28 @@ class ServiceRequestController extends Controller
         // Get associated project (already loaded via relationship)
         $project = $request->project;
 
-        return view('client.requests.show', compact('user', 'request', 'attachments', 'project'));
+        // Get available coupons if request is approved
+        $availableCoupons = collect();
+        if (in_array($request->status, ['approved', 'pending_payment']) && !$request->applied_coupon_id) {
+            $availableCoupons = $this->couponService->getAvailableCouponsForUser($user);
+        }
+
+        // Get loyalty points info
+        $loyaltyPoints = $user->getOrCreateLoyaltyPoints();
+        $loyaltyStats = null;
+        if (in_array($request->status, ['approved', 'pending_payment'])) {
+            $loyaltyStats = $this->loyaltyService->getUserStatistics($user);
+        }
+
+        return view('client.requests.show', compact(
+            'user',
+            'request',
+            'attachments',
+            'project',
+            'availableCoupons',
+            'loyaltyPoints',
+            'loyaltyStats'
+        ));
     }
 
     /**

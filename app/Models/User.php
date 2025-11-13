@@ -422,4 +422,62 @@ class User extends Authenticatable
     {
         return $this->hasMany(AuditLog::class, 'user_id');
     }
+
+    /**
+     * Get loyalty points for this user
+     */
+    public function loyaltyPoints()
+    {
+        return $this->hasOne(LoyaltyPoint::class);
+    }
+
+    /**
+     * Get loyalty transactions for this user
+     */
+    public function loyaltyTransactions(): HasMany
+    {
+        return $this->hasMany(LoyaltyTransaction::class);
+    }
+
+    /**
+     * Get coupons created by this user (admin)
+     */
+    public function createdCoupons(): HasMany
+    {
+        return $this->hasMany(Coupon::class, 'created_by');
+    }
+
+    /**
+     * Get user-specific coupons for this user
+     */
+    public function specificCoupons(): HasMany
+    {
+        return $this->hasMany(Coupon::class, 'specific_user_id');
+    }
+
+    /**
+     * Get coupon usages by this user
+     */
+    public function couponUsages(): HasMany
+    {
+        return $this->hasMany(CouponUsage::class);
+    }
+
+    /**
+     * Get or create loyalty points account
+     */
+    public function getOrCreateLoyaltyPoints(): LoyaltyPoint
+    {
+        return $this->loyaltyPoints()->firstOrCreate(
+            ['user_id' => $this->id],
+            [
+                'total_points' => 0,
+                'available_points' => 0,
+                'lifetime_earned' => 0,
+                'lifetime_redeemed' => 0,
+                'tier' => 'bronze',
+                'points_to_next_tier' => 5000,
+            ]
+        );
+    }
 }

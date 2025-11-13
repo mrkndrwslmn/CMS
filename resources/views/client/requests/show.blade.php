@@ -187,6 +187,39 @@
             </div>
         @endif
 
+        <!-- Applied Coupon -->
+        @if($request->coupon_code)
+            <div class="glass-card p-5 text-center border-2 border-success-200 bg-success-50">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-success-100 mb-2">
+                    <i class="fas fa-ticket-alt text-success-500 text-xl"></i>
+                </div>
+                <p class="text-xs text-neutral-600 font-medium mb-1">Coupon Applied</p>
+                <p class="text-sm font-bold text-success-700 font-mono tracking-wider">{{ $request->coupon_code }}</p>
+                @if($request->coupon_discount_amount > 0)
+                    <p class="text-xs text-success-600 font-semibold mt-1">-₱{{ number_format($request->coupon_discount_amount, 2) }}</p>
+                @endif
+                @if($request->coupon && !$request->coupon->isValid())
+                    <p class="text-xs text-error-600 mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>Expired
+                    </p>
+                @endif
+            </div>
+        @endif
+
+        <!-- Loyalty Discount -->
+        @if($request->loyalty_discount_amount > 0)
+            <div class="glass-card p-5 text-center border-2 border-primary-200 bg-primary-50">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 mb-2">
+                    <i class="fas fa-medal text-primary-500 text-xl"></i>
+                </div>
+                <p class="text-xs text-neutral-600 font-medium mb-1">Loyalty Discount</p>
+                <p class="text-sm font-bold text-primary-700">-₱{{ number_format($request->loyalty_discount_amount, 2) }}</p>
+                @if($request->loyalty_points_used > 0)
+                    <p class="text-xs text-primary-600 mt-1">{{ number_format($request->loyalty_points_used) }} points used</p>
+                @endif
+            </div>
+        @endif
+
         <!-- Contact Method -->
         <div class="glass-card p-5 text-center">
             <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary-100 mb-2">

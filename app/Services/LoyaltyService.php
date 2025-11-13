@@ -1,0 +1,613 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\LoyaltyPoint;
+use App\Models\LoyaltyTransaction;
+use App\Models\ServiceRequest;
+use App\Models\User;
+use App\Models\Payment;
+use App\Events\TierUpgraded;
+use App\Mail\LoyaltyPointsEarnedMail;
+use App\Mail\TierUpgradedMail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+
+class LoyaltyService
+{
+    /**
+     * Calculate points earned for a payment
+     * 
+     * @param Payment $payment
+     * @return int
+     */
+    public function calculatePointsForPayment(Payment $payment): int
+    {
+        $loyaltyPoint = $payment->user->getOrCreateLoyaltyPoints();
+        $earningRate = $loyaltyPoint->getEarningRate();
+        
+        // Base calculation: 1 point per ₱100 spent, multiplied by tier rate
+        // Example: ₱10,000 payment * (2% / 100) = 200 points for Silver tier
+        $basePoints = floor($payment->amount / 100);
+        $earnedPoints = floor($basePoints * ($earningRate / 100));
+
+        return max(1, $earnedPoints); // Minimum 1 point
+    }
+
+    /**
+     * Award points for completed payment
+     * 
+     * @param ServiceRequest $request
+     * @param Payment $payment
+     * @return void
+     */
+    public function awardPointsForPayment(ServiceRequest $request, Payment $payment): void
+    {
+        try {
+            $user = $request->client;
+            $points = $this->calculatePointsForPayment($payment);
+
+            // Check for first project bonus
+            $isFirstProject = $user->serviceRequests()
+                ->whereHas('payments', function ($query) {
+                    $query->where('status', 'completed');
+                })
+                ->count() === 1;
+
+            if ($isFirstProject) {
+                $firstProjectBonus = config('loyalty.bonuses.first_project', 500);
+                $points += $firstProjectBonus;
+            }
+
+            // Award the points
+            $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+            $loyaltyPoint->earnPoints(
+                $points,
+                'payment_completed',
+                "Payment completed for {$request->project_name}",
+                $request
+            );
+
+            Log::info('Loyalty points awarded for payment', [
+                'user_id' => $user->id,
+                'payment_id' => $payment->id,
+                'service_request_id' => $request->id,
+                'points' => $points,
+                'is_first_project' => $isFirstProject,
+            ]);
+
+            // Send points earned email notification
+            try {
+                $user->refresh();
+                $user->load('loyaltyPoints');
+                
+                // Get the transaction that was just created
+                $transaction = LoyaltyTransaction::where('user_id', $user->id)
+                    ->where('payment_id', $payment->id)
+                    ->where('transaction_type', 'earned')
+                    ->latest()
+                    ->first();
+                
+                if ($transaction) {
+                    Mail::to($user->email)
+                        ->queue(new LoyaltyPointsEarnedMail($user, $transaction));
+                    
+                    Log::info('Loyalty points earned email queued', [
+                        'user_id' => $user->id,
+                        'points' => $points,
+                        'transaction_id' => $transaction->id
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send loyalty points earned email', [
+                    'error' => $e->getMessage(),
+                    'user_id' => $user->id,
+                    'payment_id' => $payment->id
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to award loyalty points for payment', [
+                'error' => $e->getMessage(),
+                'payment_id' => $payment->id,
+                'service_request_id' => $request->id,
+            ]);
+        }
+    }
+
+    /**
+     * Award milestone bonus points
+     * 
+     * @param ServiceRequest $request
+     * @param string $milestoneName
+     * @return void
+     */
+    public function awardMilestoneBonus(ServiceRequest $request, string $milestoneName): void
+    {
+        try {
+            $user = $request->client;
+            $bonusPoints = config('loyalty.bonuses.milestone_completion', 200);
+
+            $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+            $loyaltyPoint->earnPoints(
+                $bonusPoints,
+                'milestone_completed',
+                "Milestone '{$milestoneName}' completed for {$request->project_name}",
+                $request
+            );
+
+            Log::info('Milestone bonus points awarded', [
+                'user_id' => $user->id,
+                'service_request_id' => $request->id,
+                'milestone' => $milestoneName,
+                'points' => $bonusPoints,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to award milestone bonus points', [
+                'error' => $e->getMessage(),
+                'service_request_id' => $request->id,
+            ]);
+        }
+    }
+
+    /**
+     * Award project completion bonus
+     * 
+     * @param ServiceRequest $request
+     * @return void
+     */
+    public function awardProjectCompletionBonus(ServiceRequest $request): void
+    {
+        try {
+            $user = $request->client;
+            $bonusPoints = config('loyalty.bonuses.project_completion', 500);
+
+            $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+            $loyaltyPoint->earnPoints(
+                $bonusPoints,
+                'project_completed',
+                "Project '{$request->project_name}' completed successfully",
+                $request
+            );
+
+            Log::info('Project completion bonus points awarded', [
+                'user_id' => $user->id,
+                'service_request_id' => $request->id,
+                'points' => $bonusPoints,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to award project completion bonus', [
+                'error' => $e->getMessage(),
+                'service_request_id' => $request->id,
+            ]);
+        }
+    }
+
+    /**
+     * Award referral bonus points
+     * 
+     * @param User $referrer
+     * @param User $referred
+     * @return void
+     */
+    public function awardReferralBonus(User $referrer, User $referred): void
+    {
+        try {
+            $bonusPoints = config('loyalty.bonuses.referral', 1000);
+
+            $loyaltyPoint = $referrer->getOrCreateLoyaltyPoints();
+            $loyaltyPoint->earnPoints(
+                $bonusPoints,
+                'referral',
+                "Referral bonus for inviting {$referred->first_name} {$referred->last_name}"
+            );
+
+            Log::info('Referral bonus points awarded', [
+                'referrer_id' => $referrer->id,
+                'referred_id' => $referred->id,
+                'points' => $bonusPoints,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to award referral bonus points', [
+                'error' => $e->getMessage(),
+                'referrer_id' => $referrer->id,
+            ]);
+        }
+    }
+
+    /**
+     * Award feedback submission bonus
+     * 
+     * @param User $user
+     * @param ServiceRequest $request
+     * @return void
+     */
+    public function awardFeedbackBonus(User $user, ServiceRequest $request): void
+    {
+        try {
+            $bonusPoints = config('loyalty.bonuses.feedback_submission', 100);
+
+            $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+            $loyaltyPoint->earnPoints(
+                $bonusPoints,
+                'feedback_submitted',
+                "Feedback submitted for {$request->project_name}",
+                $request
+            );
+
+            Log::info('Feedback bonus points awarded', [
+                'user_id' => $user->id,
+                'service_request_id' => $request->id,
+                'points' => $bonusPoints,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to award feedback bonus points', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+            ]);
+        }
+    }
+
+    /**
+     * Convert points to discount amount
+     * 
+     * @param int $points
+     * @return float
+     */
+    public function convertPointsToDiscount(int $points): float
+    {
+        $conversionRate = config('loyalty.points.conversion_rate', 1);
+        return $points * $conversionRate;
+    }
+
+    /**
+     * Apply loyalty discount to service request
+     * 
+     * @param ServiceRequest $request
+     * @param int $points
+     * @return bool
+     */
+    public function applyLoyaltyDiscount(ServiceRequest $request, int $points): bool
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = $request->client;
+            $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+
+            // Validate points availability
+            if ($points > $loyaltyPoint->available_points) {
+                throw new \Exception('Insufficient loyalty points available.');
+            }
+
+            // Check minimum redemption
+            $minRedemption = config('loyalty.points.minimum_redemption', 100);
+            if ($points < $minRedemption) {
+                throw new \Exception("Minimum redemption is {$minRedemption} points.");
+            }
+
+            // Calculate discount
+            $discount = $this->convertPointsToDiscount($points);
+
+            // Check maximum redemption percentage
+            $maxRedemptionPercentage = config('loyalty.points.maximum_redemption_percentage', 50);
+            $currentAmount = $request->approved_budget;
+            $maxDiscount = $currentAmount * ($maxRedemptionPercentage / 100);
+
+            if ($discount > $maxDiscount) {
+                throw new \Exception("Maximum points redemption is {$maxRedemptionPercentage}% of order value.");
+            }
+
+            // Store original budget if not already stored
+            if (!$request->original_approved_budget) {
+                $request->original_approved_budget = $request->approved_budget;
+            }
+
+            // Apply loyalty discount
+            $request->update([
+                'loyalty_points_used' => $points,
+                'loyalty_discount_amount' => $discount,
+                'approved_budget' => $request->approved_budget - $discount,
+                'total_discount_amount' => ($request->total_discount_amount ?? 0) + $discount,
+                'loyalty_discount_applied_at' => now(),
+            ]);
+
+            // Redeem points (will be finalized after payment)
+            $loyaltyPoint->redeemPoints(
+                $points,
+                'discount_applied',
+                "Points redeemed for {$request->project_name}",
+                $request
+            );
+
+            DB::commit();
+
+            Log::info('Loyalty discount applied to service request', [
+                'user_id' => $user->id,
+                'service_request_id' => $request->id,
+                'points' => $points,
+                'discount' => $discount,
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to apply loyalty discount', [
+                'error' => $e->getMessage(),
+                'service_request_id' => $request->id,
+                'points' => $points,
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Refund loyalty points if payment fails
+     * 
+     * @param ServiceRequest $request
+     * @return void
+     */
+    public function refundLoyaltyPoints(ServiceRequest $request): void
+    {
+        if ($request->loyalty_points_used > 0) {
+            try {
+                $user = $request->client;
+                $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+
+                $loyaltyPoint->refundPoints(
+                    $request->loyalty_points_used,
+                    'payment_failed',
+                    "Points refunded due to failed payment for {$request->project_name}",
+                    $request
+                );
+
+                Log::info('Loyalty points refunded', [
+                    'user_id' => $user->id,
+                    'service_request_id' => $request->id,
+                    'points' => $request->loyalty_points_used,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to refund loyalty points', [
+                    'error' => $e->getMessage(),
+                    'service_request_id' => $request->id,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Get tier benefits for a specific tier
+     * 
+     * @param string $tier
+     * @return array
+     */
+    public function getTierBenefits(string $tier): array
+    {
+        $benefits = [
+            'bronze' => [
+                'earning_rate' => '1%',
+                'discount' => '0%',
+                'benefits' => [
+                    'Basic support',
+                    'Standard processing',
+                    'Access to basic coupons',
+                ],
+            ],
+            'silver' => [
+                'earning_rate' => '2%',
+                'discount' => '5%',
+                'benefits' => [
+                    '2% points earning rate',
+                    '5% discount on all services',
+                    'Priority support (response within 24h)',
+                    'Early access to new services',
+                ],
+            ],
+            'gold' => [
+                'earning_rate' => '3%',
+                'discount' => '10%',
+                'benefits' => [
+                    '3% points earning rate',
+                    '10% discount on all services',
+                    'Priority support (response within 12h)',
+                    'Free minor revisions (1 per project)',
+                    'Birthday month special coupon',
+                ],
+            ],
+            'platinum' => [
+                'earning_rate' => '5%',
+                'discount' => '15%',
+                'benefits' => [
+                    '5% points earning rate',
+                    '15% discount on all services',
+                    'VIP support (response within 6h)',
+                    'Free minor revisions (2 per project)',
+                    'Quarterly exclusive coupons',
+                    'Dedicated account manager',
+                    'Free consultation sessions',
+                ],
+            ],
+        ];
+
+        return $benefits[$tier] ?? $benefits['bronze'];
+    }
+
+    /**
+     * Get all tiers with their requirements
+     * 
+     * @return array
+     */
+    public function getAllTiers(): array
+    {
+        return config('loyalty.tiers', [
+            'bronze' => ['points' => 0, 'discount' => 0],
+            'silver' => ['points' => 5000, 'discount' => 5],
+            'gold' => ['points' => 15000, 'discount' => 10],
+            'platinum' => ['points' => 50000, 'discount' => 15],
+        ]);
+    }
+
+    /**
+     * Check if user qualifies for tier upgrade and upgrade if eligible
+     * 
+     * @param User $user
+     * @return bool True if upgraded
+     */
+    public function checkAndUpgradeTier(User $user): bool
+    {
+        $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+        return $loyaltyPoint->checkAndUpgradeTier();
+    }
+
+    /**
+     * Manually adjust user's loyalty points (admin only)
+     * 
+     * @param User $user
+     * @param int $points Can be positive (add) or negative (deduct)
+     * @param string $reason
+     * @param User $adjustedBy
+     * @return void
+     */
+    public function adjustPoints(User $user, int $points, string $reason, User $adjustedBy): void
+    {
+        try {
+            $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+            $loyaltyPoint->adjustPoints($points, $reason, $adjustedBy);
+
+            Log::info('Loyalty points manually adjusted', [
+                'user_id' => $user->id,
+                'points' => $points,
+                'reason' => $reason,
+                'adjusted_by' => $adjustedBy->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to adjust loyalty points', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+                'points' => $points,
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Get loyalty statistics for a user
+     * 
+     * @param User $user
+     * @return array
+     */
+    public function getUserStatistics(User $user): array
+    {
+        $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+        $tiers = $this->getAllTiers();
+        $currentTierData = $tiers[$loyaltyPoint->tier] ?? $tiers['bronze'];
+        
+        // Find next tier
+        $nextTier = null;
+        $pointsToNextTier = null;
+        foreach ($tiers as $tierName => $tierData) {
+            if ($tierData['points'] > $loyaltyPoint->lifetime_earned) {
+                $nextTier = $tierName;
+                $pointsToNextTier = $tierData['points'] - $loyaltyPoint->lifetime_earned;
+                break;
+            }
+        }
+
+        return [
+            'current_tier' => $loyaltyPoint->tier,
+            'available_points' => $loyaltyPoint->available_points,
+            'lifetime_earned' => $loyaltyPoint->lifetime_earned,
+            'lifetime_redeemed' => $loyaltyPoint->lifetime_redeemed,
+            'next_tier' => $nextTier,
+            'points_to_next_tier' => $pointsToNextTier,
+            'tier_benefits' => $this->getTierBenefits($loyaltyPoint->tier),
+            'earning_rate' => $loyaltyPoint->getEarningRate() . '%',
+            'expiring_soon' => $user->loyaltyTransactions()
+                ->earned()
+                ->where('expires_at', '<=', now()->addDays(30))
+                ->where('expires_at', '>', now())
+                ->sum('points'),
+        ];
+    }
+
+    /**
+     * Get global loyalty system statistics
+     * 
+     * @return array
+     */
+    public function getGlobalStatistics(): array
+    {
+        $totalMembers = LoyaltyPoint::count();
+        
+        return [
+            'total_members' => $totalMembers,
+            'total_points_circulation' => LoyaltyPoint::sum('available_points'),
+            'total_points_earned' => LoyaltyPoint::sum('lifetime_earned'),
+            'total_points_redeemed' => LoyaltyPoint::sum('lifetime_redeemed'),
+            'average_points_per_user' => $totalMembers > 0 
+                ? LoyaltyPoint::avg('available_points') 
+                : 0,
+            'tier_distribution' => [
+                'bronze' => LoyaltyPoint::where('tier', 'bronze')->count(),
+                'silver' => LoyaltyPoint::where('tier', 'silver')->count(),
+                'gold' => LoyaltyPoint::where('tier', 'gold')->count(),
+                'platinum' => LoyaltyPoint::where('tier', 'platinum')->count(),
+            ],
+            'transactions_this_month' => LoyaltyTransaction::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
+        ];
+    }
+
+    /**
+     * Expire old loyalty points (run via scheduled task)
+     * 
+     * @return int Number of points expired
+     */
+    public function expireOldPoints(): int
+    {
+        $expiredTransactions = LoyaltyTransaction::where('transaction_type', 'earned')
+            ->where('expires_at', '<', now())
+            ->whereNull('expired_at')
+            ->get();
+
+        $totalPointsExpired = 0;
+
+        foreach ($expiredTransactions as $transaction) {
+            try {
+                DB::beginTransaction();
+
+                $user = $transaction->user;
+                $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+
+                // Deduct expired points
+                $loyaltyPoint->adjustPoints(
+                    -$transaction->points,
+                    'points_expired',
+                    "Points expired from transaction #{$transaction->id}"
+                );
+
+                // Mark transaction as expired
+                $transaction->update(['expired_at' => now()]);
+
+                $totalPointsExpired += $transaction->points;
+
+                DB::commit();
+
+                Log::info('Loyalty points expired', [
+                    'user_id' => $user->id,
+                    'transaction_id' => $transaction->id,
+                    'points' => $transaction->points,
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Failed to expire loyalty points', [
+                    'error' => $e->getMessage(),
+                    'transaction_id' => $transaction->id,
+                ]);
+            }
+        }
+
+        return $totalPointsExpired;
+    }
+}
