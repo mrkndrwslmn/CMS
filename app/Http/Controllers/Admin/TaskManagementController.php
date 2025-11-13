@@ -120,6 +120,11 @@ class TaskManagementController extends Controller
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'allocated_budget' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
+            'payment_type' => 'nullable|in:hourly,fixed,none',
+            'hourly_rate' => 'nullable|numeric|min:0',
+            'budget_cap' => 'nullable|numeric|min:0',
+            'fixed_budget' => 'nullable|numeric|min:0',
+            'requires_time_tracking' => 'nullable|boolean',
         ]);
         
         // Get project and client_id from project
@@ -167,7 +172,9 @@ class TaskManagementController extends Controller
             }
         }
         
-        $task = Task::create([
+        // Handle payment configuration
+        $paymentType = $request->payment_type ?? 'hourly';
+        $taskData = [
             'project_id' => $request->project_id,
             'phase_id' => $request->phase_id,
             'taskTitle' => $request->taskTitle,
@@ -177,11 +184,29 @@ class TaskManagementController extends Controller
             'priority' => $request->priority,
             'deadline' => $request->deadline,
             'status' => $request->status,
-            'allocated_budget' => $request->allocated_budget,
             'notes' => $request->notes,
             'createdBy' => Auth::id(),
             'dateAssigned' => $request->assignedTo ? now() : null,
-        ]);
+        ];
+        
+        // Apply payment configuration based on type
+        if ($paymentType === 'hourly') {
+            $taskData['hourly_rate'] = $request->hourly_rate;
+            $taskData['requires_time_tracking'] = $request->has('requires_time_tracking');
+            $taskData['use_fixed_budget'] = false;
+            $taskData['allocated_budget'] = $request->budget_cap ?? $request->allocated_budget;
+        } elseif ($paymentType === 'fixed') {
+            $taskData['allocated_budget'] = $request->fixed_budget ?? $request->allocated_budget;
+            $taskData['use_fixed_budget'] = true;
+            $taskData['requires_time_tracking'] = false;
+        } else {
+            // No payment
+            $taskData['use_fixed_budget'] = false;
+            $taskData['requires_time_tracking'] = false;
+            $taskData['allocated_budget'] = $request->allocated_budget;
+        }
+        
+        $task = Task::create($taskData);
         
         // 🔔 Notify all admins about new task creation
         $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();

@@ -15,7 +15,11 @@ class AdiutorProfile extends Model
         'user_id',
         'bio',
         'title',
-        'hourly_rate',
+        'standard_hourly_rate',
+        'currency',
+        'minimum_payout_amount',
+        'preferred_payout_method',
+        'payout_details',
         'availability',
         'portfolio_url',
         'linkedin_url',
@@ -32,7 +36,9 @@ class AdiutorProfile extends Model
     protected $casts = [
         'availability' => 'array',
         'languages' => 'array',
-        'hourly_rate' => 'decimal:2',
+        'standard_hourly_rate' => 'decimal:2',
+        'minimum_payout_amount' => 'decimal:2',
+        'payout_details' => 'array',
         'rating' => 'decimal:2',
         'is_verified' => 'boolean',
     ];
@@ -69,5 +75,36 @@ class AdiutorProfile extends Model
     public function getFormattedRating(): string
     {
         return number_format($this->rating, 1);
+    }
+
+    /**
+     * Get formatted standard hourly rate
+     */
+    public function getFormattedStandardRate(): string
+    {
+        return '₱' . number_format($this->standard_hourly_rate ?? 0, 2) . '/hr';
+    }
+
+    /**
+     * Check if payout details are configured
+     */
+    public function hasPayoutDetails(): bool
+    {
+        return !empty($this->payout_details) && !empty($this->preferred_payout_method);
+    }
+
+    /**
+     * Get payout method label
+     */
+    public function getPayoutMethodLabel(): string
+    {
+        return match($this->preferred_payout_method) {
+            'bank_transfer' => 'Bank Transfer',
+            'paypal' => 'PayPal',
+            'gcash' => 'GCash',
+            'paymaya' => 'PayMaya',
+            'other' => 'Other',
+            default => 'Not Set'
+        };
     }
 }

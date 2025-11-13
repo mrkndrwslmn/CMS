@@ -310,6 +310,108 @@
                         @enderror
                     </div>
                     
+                    <!-- Payment Configuration Section -->
+                    <div class="md:col-span-2">
+                        <div class="border-2 border-primary-100 rounded-lg p-4 bg-primary-50/30">
+                            <h3 class="text-md font-semibold text-neutral-900 mb-3 flex items-center">
+                                <i class="fas fa-dollar-sign text-primary-600 mr-2"></i>
+                                Payment Configuration
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <!-- Payment Type Selection -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-neutral-700 mb-3">
+                                        Payment Type <span class="text-error-500">*</span>
+                                    </label>
+                                    
+                                    <div class="space-y-3">
+                                        <!-- Hourly with Time Tracking -->
+                                        <label class="flex items-start p-3 border-2 border-neutral-200 rounded-lg cursor-pointer hover:border-primary-300 transition-colors">
+                                            <input type="radio" name="payment_type" value="hourly" 
+                                                   class="mt-1 w-4 h-4 text-primary-600 focus:ring-primary-500" checked>
+                                            <div class="ml-3 flex-1">
+                                                <span class="block text-sm font-semibold text-neutral-900">Hourly with Time Tracking</span>
+                                                <span class="block text-xs text-neutral-600 mt-0.5">Adiutor tracks time, paid per hour worked</span>
+                                            </div>
+                                        </label>
+                                        
+                                        <!-- Fixed Budget -->
+                                        <label class="flex items-start p-3 border-2 border-neutral-200 rounded-lg cursor-pointer hover:border-primary-300 transition-colors">
+                                            <input type="radio" name="payment_type" value="fixed" 
+                                                   class="mt-1 w-4 h-4 text-primary-600 focus:ring-primary-500">
+                                            <div class="ml-3 flex-1">
+                                                <span class="block text-sm font-semibold text-neutral-900">Fixed Budget</span>
+                                                <span class="block text-xs text-neutral-600 mt-0.5">Fixed amount, no time tracking needed</span>
+                                            </div>
+                                        </label>
+                                        
+                                        <!-- No Payment -->
+                                        <label class="flex items-start p-3 border-2 border-neutral-200 rounded-lg cursor-pointer hover:border-primary-300 transition-colors">
+                                            <input type="radio" name="payment_type" value="none" 
+                                                   class="mt-1 w-4 h-4 text-primary-600 focus:ring-primary-500">
+                                            <div class="ml-3 flex-1">
+                                                <span class="block text-sm font-semibold text-neutral-900">No Payment</span>
+                                                <span class="block text-xs text-neutral-600 mt-0.5">Internal/volunteer work</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hourly Rate Fields (shown for hourly payment type) -->
+                                <div id="hourly_fields" class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="hourly_rate" class="block text-sm font-semibold text-neutral-700 mb-2">
+                                            Hourly Rate (Optional)
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 font-medium">₱</span>
+                                            <input type="number" name="hourly_rate" id="hourly_rate" step="0.01" min="0"
+                                                   class="w-full rounded-lg border-2 border-neutral-300 pl-8 pr-4 py-2.5 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                                   placeholder="Uses adiutor's standard rate if empty">
+                                        </div>
+                                        <p class="text-xs text-neutral-500 mt-1">Overrides adiutor's standard rate</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="budget_cap" class="block text-sm font-semibold text-neutral-700 mb-2">
+                                            Budget Cap (Optional)
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 font-medium">₱</span>
+                                            <input type="number" name="budget_cap" id="budget_cap" step="0.01" min="0"
+                                                   class="w-full rounded-lg border-2 border-neutral-300 pl-8 pr-4 py-2.5 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                                   placeholder="Maximum budget">
+                                        </div>
+                                        <p class="text-xs text-neutral-500 mt-1">Maximum amount for this task</p>
+                                    </div>
+                                    
+                                    <div class="col-span-2">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="requires_time_tracking" value="1" checked
+                                                   class="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                                            <span class="text-sm font-medium text-neutral-700">Require time tracking</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Fixed Budget Fields (hidden by default) -->
+                                <div id="fixed_fields" class="hidden">
+                                    <label for="fixed_budget" class="block text-sm font-semibold text-neutral-700 mb-2">
+                                        Fixed Budget Amount <span class="text-error-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 font-medium">₱</span>
+                                        <input type="number" name="fixed_budget" id="fixed_budget" step="0.01" min="0"
+                                               class="w-full rounded-lg border-2 border-neutral-300 pl-8 pr-4 py-2.5 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                               placeholder="5000.00">
+                                    </div>
+                                    <p class="text-xs text-neutral-500 mt-1">Fixed amount paid upon completion</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Allocated Budget -->
                     <div>
                         <label for="allocated_budget" class="block text-sm font-semibold text-neutral-700 mb-2">
@@ -537,6 +639,33 @@
                 }
             });
         }
+        
+        // Payment type toggle functionality
+        const paymentTypeRadios = document.querySelectorAll('input[name="payment_type"]');
+        const hourlyFields = document.getElementById('hourly_fields');
+        const fixedFields = document.getElementById('fixed_fields');
+        
+        function togglePaymentFields() {
+            const selectedType = document.querySelector('input[name="payment_type"]:checked').value;
+            
+            if (selectedType === 'hourly') {
+                hourlyFields.style.display = 'grid';
+                fixedFields.style.display = 'none';
+            } else if (selectedType === 'fixed') {
+                hourlyFields.style.display = 'none';
+                fixedFields.style.display = 'block';
+            } else {
+                hourlyFields.style.display = 'none';
+                fixedFields.style.display = 'none';
+            }
+        }
+        
+        paymentTypeRadios.forEach(radio => {
+            radio.addEventListener('change', togglePaymentFields);
+        });
+        
+        // Initialize on page load
+        togglePaymentFields();
     });
 </script>
 @endpush

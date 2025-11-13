@@ -37,6 +37,12 @@ class Task extends Model
         'actual_cost',
         'progress_percentage',
         'completion_notes',
+        // Earnings and time tracking fields
+        'hourly_rate',
+        'requires_time_tracking',
+        'total_hours_tracked',
+        'calculated_earnings',
+        'use_fixed_budget',
         // Legacy fields (keep for backward compatibility but should not be used)
         'formID',
         'service_request_id',
@@ -51,7 +57,12 @@ class Task extends Model
         'dateAssigned' => 'datetime',
         'allocated_budget' => 'decimal:2',
         'actual_cost' => 'decimal:2',
+        'hourly_rate' => 'decimal:2',
+        'total_hours_tracked' => 'decimal:2',
+        'calculated_earnings' => 'decimal:2',
         'progress_percentage' => 'integer',
+        'requires_time_tracking' => 'boolean',
+        'use_fixed_budget' => 'boolean',
     ];
 
     /**
@@ -232,6 +243,98 @@ class Task extends Model
             return 0;
         }
         return ($this->actual_cost / $this->allocated_budget) * 100;
+    }
+
+    /**
+     * Get time entries for this task
+     */
+    public function timeEntries()
+    {
+        return $this->hasMany(TimeEntry::class, 'task_id', 'taskID');
+    }
+
+    /**
+     * Get the effective hourly rate for this task
+     * Priority: task rate > project assignment rate > adiutor standard rate
+     */
+    public function getEffectiveHourlyRate(): ?float
+    {
+        if ($this->hourly_rate) {
+            return (float) $this->hourly_rate;
+        }
+
+        if ($this->assignedUser) {
+            $assignment = ProjectAssignment::where('project_id', $this->project_id)
+                ->where('adiutor_id', $this->assignedTo)
+                ->first();
+            
+            if ($assignment) {
+                return $assignment->getEffectiveHourlyRate();
+            }
+
+            $adiutorProfile = $this->assignedUser->adiutorProfile;
+            return $adiutorProfile?->standard_hourly_rate ? (float) $adiutorProfile->standard_hourly_rate : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Calculate and update earnings from time entries
+     */
+    public function updateEarnings()
+    {
+        if ($this->use_fixed_budget) {
+            // For fixed budget tasks, earnings = allocated budget
+            $this->update([
+                'calculated_earnings' => $this->allocated_budget ?? 0,
+            ]);
+            return;
+        }
+
+        if ($this->requires_time_tracking) {
+            $timeEntries = $this->timeEntries()
+                ->whereNotNull('end_time')
+                ->get();
+
+            $totalHours = $timeEntries->sum('duration_minutes') / 60;
+            $totalEarnings = $timeEntries->sum('calculated_amount');
+
+            $this->update([
+                'total_hours_tracked' => $totalHours,
+                'calculated_earnings' => $totalEarnings,
+                'actual_cost' => $totalEarnings, // Update actual cost as well
+            ]);
+        }
+    }
+
+    /**
+     * Get formatted hourly rate
+     */
+    public function getFormattedHourlyRate(): string
+    {
+        $rate = $this->getEffectiveHourlyRate();
+        return $rate ? '₱' . number_format($rate, 2) . '/hr' : 'Not Set';
+    }
+
+    /**
+     * Get formatted earnings
+     */
+    public function getFormattedEarnings(): string
+    {
+        return '₱' . number_format($this->calculated_earnings ?? 0, 2);
+    }
+
+    /**
+     * Get payable amount (either fixed budget or calculated earnings)
+     */
+    public function getPayableAmount(): float
+    {
+        if ($this->use_fixed_budget) {
+            return (float) ($this->allocated_budget ?? 0);
+        }
+
+        return (float) ($this->calculated_earnings ?? 0);
     }
 
     /**

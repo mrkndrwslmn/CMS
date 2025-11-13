@@ -334,6 +334,8 @@ class ProjectManagementController extends Controller
     {
         $request->validate([
             'adiutor_id' => 'required|exists:users,id',
+            'hourly_rate' => 'nullable|numeric|min:0',
+            'requires_time_tracking' => 'nullable|boolean',
             'agreed_rate' => 'nullable|numeric|min:0',
             'expected_completion' => 'nullable|date',
             'notes' => 'nullable|string|max:500',
@@ -354,6 +356,8 @@ class ProjectManagementController extends Controller
         DB::table('project_assignments')->insert([
             'project_id' => $id,
             'adiutor_id' => $request->adiutor_id,
+            'hourly_rate' => $request->hourly_rate,
+            'requires_time_tracking' => $request->has('requires_time_tracking'),
             'agreed_rate' => $request->agreed_rate,
             'start_date' => now(),
             'expected_completion' => $request->expected_completion,

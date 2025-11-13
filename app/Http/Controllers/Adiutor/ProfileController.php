@@ -162,4 +162,72 @@ class ProfileController extends Controller
 
         return redirect()->route('adiutor.profile.show')->with('success', 'Skills updated successfully!');
     }
+
+    /**
+     * Show earnings settings page
+     */
+    public function earningsSettings()
+    {
+        $user = Auth::user();
+        
+        // Get or create adiutor profile
+        $profile = DB::table('adiutor_profiles')->where('user_id', $user->id)->first();
+        
+        if (!$profile) {
+            // Create profile if it doesn't exist
+            DB::table('adiutor_profiles')->insert([
+                'user_id' => $user->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $profile = DB::table('adiutor_profiles')->where('user_id', $user->id)->first();
+        }
+        
+        $payoutDetails = $profile->payout_details ? json_decode($profile->payout_details, true) : [];
+        
+        return view('adiutor.profile.earnings-settings', compact('user', 'profile', 'payoutDetails'));
+    }
+
+    /**
+     * Update earnings settings
+     */
+    public function updateEarningsSettings(Request $request)
+    {
+        $user = Auth::user();
+        
+        $validator = Validator::make($request->all(), [
+            'standard_hourly_rate' => 'required|numeric|min:0',
+            'minimum_payout_amount' => 'nullable|numeric|min:100',
+            'preferred_payout_method' => 'required|in:bank_transfer,gcash,paymaya,paypal,other',
+            'payout_details' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $profileData = [
+            'standard_hourly_rate' => $request->standard_hourly_rate,
+            'minimum_payout_amount' => $request->minimum_payout_amount ?? 500,
+            'preferred_payout_method' => $request->preferred_payout_method,
+            'payout_details' => $request->payout_details ? json_encode($request->payout_details) : null,
+            'currency' => 'PHP',
+            'updated_at' => now(),
+        ];
+
+        $existingProfile = DB::table('adiutor_profiles')->where('user_id', $user->id)->first();
+        
+        if ($existingProfile) {
+            DB::table('adiutor_profiles')
+                ->where('user_id', $user->id)
+                ->update($profileData);
+        } else {
+            $profileData['user_id'] = $user->id;
+            $profileData['created_at'] = now();
+            DB::table('adiutor_profiles')->insert($profileData);
+        }
+
+        return redirect()->route('adiutor.profile.show')
+            ->with('success', 'Earnings settings updated successfully!');
+    }
 }

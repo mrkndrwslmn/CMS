@@ -107,6 +107,14 @@ Route::prefix('api')->group(function () {
     
     // Messaging API routes (requires authentication)
     Route::middleware('auth')->group(function () {
+        // Adiutor rate endpoint for auto-fill
+        Route::get('/adiutor/{id}/rate', function($id) {
+            $user = \App\Models\User::with('adiutorProfile')->findOrFail($id);
+            return response()->json([
+                'rate' => $user->adiutorProfile->standard_hourly_rate ?? 0
+            ]);
+        })->name('api.adiutor.rate');
+        
         Route::prefix('messages')->name('api.messages.')->group(function () {
             Route::get('/conversations', [\App\Http\Controllers\Api\MessageController::class, 'index'])->name('conversations');
             Route::get('/unread-count', [\App\Http\Controllers\Api\MessageController::class, 'unreadCount'])->name('unread-count');
@@ -281,6 +289,18 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::post('/{id}/approve', [\App\Http\Controllers\Admin\BudgetChangeRequestController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [\App\Http\Controllers\Admin\BudgetChangeRequestController::class, 'reject'])->name('reject');
         Route::delete('/{id}', [\App\Http\Controllers\Admin\BudgetChangeRequestController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Payout Management
+    Route::prefix('payouts')->name('payouts.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'index'])->name('index');
+        Route::get('/export', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'export'])->name('export');
+        Route::get('/adiutor/{adiutorId}', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'adiutorEarnings'])->name('adiutor-earnings');
+        Route::post('/approve-time-entries', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'approveTimeEntries'])->name('approve-entries');
+        Route::get('/{id}', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'show'])->name('show');
+        Route::post('/{id}/process', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'markAsProcessing'])->name('process');
+        Route::post('/{id}/complete', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'complete'])->name('complete');
+        Route::post('/{id}/cancel', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'cancel'])->name('cancel');
     });
     
     // Payment Management
@@ -620,12 +640,23 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
         Route::delete('/entries/{timeEntry}', [TimeTrackingController::class, 'delete'])->name('entries.delete');
     });
     
+    // Earnings & Payout Routes
+    Route::prefix('earnings')->name('earnings.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Adiutor\EarningsController::class, 'index'])->name('index');
+        Route::get('/request-payout', [\App\Http\Controllers\Adiutor\EarningsController::class, 'showRequestForm'])->name('request-form');
+        Route::post('/request-payout', [\App\Http\Controllers\Adiutor\EarningsController::class, 'requestPayout'])->name('request');
+        Route::get('/payouts', [\App\Http\Controllers\Adiutor\EarningsController::class, 'payouts'])->name('payouts');
+        Route::get('/payouts/{id}', [\App\Http\Controllers\Adiutor\EarningsController::class, 'showPayout'])->name('payout.show');
+    });
+    
     // Profile management routes
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Adiutor\ProfileController::class, 'show'])->name('show');
         Route::get('/edit', [\App\Http\Controllers\Adiutor\ProfileController::class, 'edit'])->name('edit');
         Route::put('/update', [\App\Http\Controllers\Adiutor\ProfileController::class, 'update'])->name('update');
         Route::put('/skills', [\App\Http\Controllers\Adiutor\ProfileController::class, 'updateSkills'])->name('skills.update');
+        Route::get('/earnings', [\App\Http\Controllers\Adiutor\ProfileController::class, 'earningsSettings'])->name('earnings');
+        Route::put('/earnings', [\App\Http\Controllers\Adiutor\ProfileController::class, 'updateEarningsSettings'])->name('earnings.update');
     });
     
     // Revision Management routes

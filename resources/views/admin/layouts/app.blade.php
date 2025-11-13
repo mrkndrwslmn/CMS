@@ -207,6 +207,39 @@
                     </div>
                 </div>
                 
+                <!-- Payouts Section -->
+                <div class="mb-2">
+                    <button @click="toggle('payouts')" class="w-full flex items-center justify-between py-2 px-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-money-check-alt w-5 mr-3"></i>
+                            <span class="text-sm font-medium">Payouts</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSections.payouts }"></i>
+                    </button>
+                    <div x-show="openSections.payouts" x-collapse class="ml-6 mt-1 space-y-1">
+                        <a href="{{ route('admin.payouts.index') }}" class="flex items-center py-2 px-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm {{ request()->routeIs('admin.payouts.index') ? 'bg-white/10 text-white' : '' }}">
+                            <i class="fas fa-list w-4 mr-2"></i>
+                            <span>All Payouts</span>
+                        </a>
+                        <a href="{{ route('admin.payouts.index', ['status' => 'pending']) }}" class="flex items-center py-2 px-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm {{ request()->routeIs('admin.payouts.index') && request('status') === 'pending' ? 'bg-white/10 text-white' : '' }}">
+                            <i class="fas fa-clock w-4 mr-2"></i>
+                            <span>Pending Review</span>
+                        </a>
+                        <a href="{{ route('admin.payouts.index', ['status' => 'processing']) }}" class="flex items-center py-2 px-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm {{ request()->routeIs('admin.payouts.index') && request('status') === 'processing' ? 'bg-white/10 text-white' : '' }}">
+                            <i class="fas fa-spinner w-4 mr-2"></i>
+                            <span>Processing</span>
+                        </a>
+                        <a href="{{ route('admin.payouts.index', ['status' => 'completed']) }}" class="flex items-center py-2 px-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm {{ request()->routeIs('admin.payouts.index') && request('status') === 'completed' ? 'bg-white/10 text-white' : '' }}">
+                            <i class="fas fa-check-circle w-4 mr-2"></i>
+                            <span>Completed</span>
+                        </a>
+                        <a href="{{ route('admin.payouts.export') }}" class="flex items-center py-2 px-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm">
+                            <i class="fas fa-file-export w-4 mr-2"></i>
+                            <span>Export Report</span>
+                        </a>
+                    </div>
+                </div>
+                
                 <!-- System Management Section -->
                 <div class="mb-2">
                     <button @click="toggle('system')" class="w-full flex items-center justify-between py-2 px-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg">
@@ -414,6 +447,7 @@
                     finance: {{ request()->routeIs('admin.payments*', 'admin.budget-requests*') ? 'true' : 'false' }},
                     communication: {{ request()->routeIs('admin.messages*', 'admin.feedback*', 'admin.announcements*') ? 'true' : 'false' }},
                     content: {{ request()->routeIs('admin.documents*', 'admin.templates*') ? 'true' : 'false' }},
+                    payouts: {{ request()->routeIs('admin.payouts*') ? 'true' : 'false' }},
                     system: {{ request()->routeIs('admin.audit*', 'admin.notifications*') ? 'true' : 'false' }},
                     analytics: {{ request()->routeIs('admin.reports*') ? 'true' : 'false' }}
                 },

@@ -143,12 +143,16 @@ class TimeTrackingController extends Controller
             ], 404);
         }
 
+        // Get the effective hourly rate for this task
+        $hourlyRate = $task->getEffectiveHourlyRate();
+
         $timeEntry = TimeEntry::create([
             'adiutor_id' => $adiutorId,
             'task_id' => $request->task_id,
             'project_id' => $task->project_id,
             'start_time' => Carbon::now(),
             'description' => $request->description,
+            'hourly_rate' => $hourlyRate,
             'is_approved' => false
         ]);
 
@@ -175,7 +179,7 @@ class TimeTrackingController extends Controller
         $adiutorId = Auth::id();
         
         $activeTimer = TimeEntry::where('adiutor_id', $adiutorId)
-            ->whereNull('ended_at')
+            ->whereNull('end_time')
             ->first();
 
         if (!$activeTimer) {
@@ -188,10 +192,21 @@ class TimeTrackingController extends Controller
         $now = Carbon::now();
         $durationMinutes = $activeTimer->start_time->diffInMinutes($now);
 
+        // Calculate earnings
+        $calculatedAmount = null;
+        if ($activeTimer->hourly_rate) {
+            $hours = $durationMinutes / 60;
+            $calculatedAmount = $hours * $activeTimer->hourly_rate;
+        }
+
         $activeTimer->update([
             'end_time' => $now,
-            'duration_minutes' => $durationMinutes
+            'duration_minutes' => $durationMinutes,
+            'calculated_amount' => $calculatedAmount
         ]);
+
+        // Update task earnings
+        $activeTimer->task->updateEarnings();
 
         return response()->json([
             'success' => true,
@@ -199,7 +214,8 @@ class TimeTrackingController extends Controller
             'duration' => [
                 'minutes' => $durationMinutes,
                 'formatted' => $this->formatDuration($durationMinutes)
-            ]
+            ],
+            'earnings' => $calculatedAmount ? number_format($calculatedAmount, 2) : null
         ]);
     }
 

@@ -470,7 +470,7 @@
                             <label class="block text-sm font-medium text-neutral-700 mb-2">
                                 Select Adiutor <span class="text-error-500">*</span>
                             </label>
-                            <select name="adiutor_id" required
+                            <select name="adiutor_id" id="adiutor_select" required
                                     class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
                                 <option value="">-- Select Adiutor --</option>
                                 @foreach($availableAdiutors as $adiutor)
@@ -481,12 +481,34 @@
                         
                         <div>
                             <label class="block text-sm font-medium text-neutral-700 mb-2">
+                                Hourly Rate (₱)
+                            </label>
+                            <input type="number" name="hourly_rate" id="hourly_rate_input" step="0.01" min="0"
+                                   class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                   placeholder="Leave empty to use adiutor's standard rate">
+                            <p class="text-xs text-neutral-500 mt-1">
+                                <span id="standard_rate_display" class="font-medium text-primary-600"></span>
+                                Override the adiutor's standard rate for this project
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="requires_time_tracking" value="1"
+                                       class="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                                <span class="text-sm font-medium text-neutral-700">Require time tracking for this project</span>
+                            </label>
+                            <p class="text-xs text-neutral-500 mt-1 ml-6">Adiutor must log time entries for hourly payment</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 mb-2">
                                 Agreed Rate (₱)
                             </label>
                             <input type="number" name="agreed_rate" step="0.01" min="0"
                                    class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-                                   placeholder="e.g., 500.00">
-                            <p class="text-xs text-neutral-500 mt-1">Hourly or fixed rate for this project</p>
+                                   placeholder="e.g., 5000.00">
+                            <p class="text-xs text-neutral-500 mt-1">Fixed project rate or budget cap (optional)</p>
                         </div>
                         
                         <div>
@@ -580,7 +602,49 @@ function showAssignModal() {
 function hideAssignModal() {
     const modal = document.getElementById('assignModal');
     modal.classList.add('hidden');
+    // Reset form
+    document.getElementById('hourly_rate_input').value = '';
+    document.getElementById('standard_rate_display').textContent = '';
 }
+
+// Auto-fill hourly rate when adiutor is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const adiutorSelect = document.getElementById('adiutor_select');
+    const hourlyRateInput = document.getElementById('hourly_rate_input');
+    const standardRateDisplay = document.getElementById('standard_rate_display');
+    
+    if (adiutorSelect) {
+        adiutorSelect.addEventListener('change', function() {
+            const adiutorId = this.value;
+            
+            if (adiutorId) {
+                // Fetch adiutor's standard rate
+                fetch(`/api/adiutor/${adiutorId}/rate`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.rate && data.rate > 0) {
+                            standardRateDisplay.textContent = `Standard Rate: ₱${parseFloat(data.rate).toFixed(2)}/hr - `;
+                            
+                            // Auto-fill if field is empty
+                            if (!hourlyRateInput.value) {
+                                hourlyRateInput.value = data.rate;
+                            }
+                        } else {
+                            standardRateDisplay.textContent = 'No standard rate set - ';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching rate:', error);
+                        standardRateDisplay.textContent = '';
+                    });
+            } else {
+                standardRateDisplay.textContent = '';
+                hourlyRateInput.value = '';
+            }
+        });
+    }
+});
+
 
 // Close modal when pressing Escape key
 document.addEventListener('keydown', function(event) {

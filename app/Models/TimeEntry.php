@@ -17,8 +17,12 @@ class TimeEntry extends Model
         'start_time',
         'end_time',
         'duration_minutes',
+        'hourly_rate',
+        'calculated_amount',
         'description',
         'is_approved',
+        'is_paid',
+        'payout_id',
         'approved_by',
         'approved_at',
         'notes'
@@ -29,7 +33,10 @@ class TimeEntry extends Model
         'end_time' => 'datetime',
         'approved_at' => 'datetime',
         'is_approved' => 'boolean',
-        'duration_minutes' => 'integer'
+        'is_paid' => 'boolean',
+        'duration_minutes' => 'integer',
+        'hourly_rate' => 'decimal:2',
+        'calculated_amount' => 'decimal:2',
     ];
 
     /**
@@ -41,19 +48,110 @@ class TimeEntry extends Model
     }
 
     /**
-     * Get the task this time entry is associated with
+     * Get the payout this entry belongs to
      */
-    public function task(): BelongsTo
+    public function payout(): BelongsTo
     {
-        return $this->belongsTo(Task::class, 'task_id', 'taskID');
+        return $this->belongsTo(Payout::class);
     }
 
     /**
-     * Get the admin who approved this time entry
+     * Get the user who approved this entry
      */
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Calculate and set the amount based on duration and rate
+     */
+    public function calculateAmount()
+    {
+        if ($this->duration_minutes && $this->hourly_rate) {
+            $hours = $this->duration_minutes / 60;
+            $this->calculated_amount = $hours * $this->hourly_rate;
+            $this->save();
+        }
+    }
+
+    /**
+     * Set hourly rate from task/assignment
+     */
+    public function setHourlyRateFromTask()
+    {
+        if ($this->task) {
+            $rate = $this->task->getEffectiveHourlyRate();
+            if ($rate) {
+                $this->hourly_rate = $rate;
+                $this->save();
+            }
+        }
+    }
+
+    /**
+     * Calculate duration when entry is stopped
+     */
+    public function calculateDuration()
+    {
+        if ($this->start_time && $this->end_time) {
+            $this->duration_minutes = $this->start_time->diffInMinutes($this->end_time);
+            $this->save();
+        }
+    }
+
+    /**
+     * Get formatted duration
+     */
+    public function getFormattedDuration(): string
+    {
+        if (!$this->duration_minutes) {
+            return 'Running...';
+        }
+
+        $hours = floor($this->duration_minutes / 60);
+        $minutes = $this->duration_minutes % 60;
+
+        return sprintf('%dh %dm', $hours, $minutes);
+    }
+
+    /**
+     * Get formatted amount
+     */
+    public function getFormattedAmount(): string
+    {
+        return '₱' . number_format($this->calculated_amount ?? 0, 2);
+    }
+
+    /**
+     * Check if entry is billable (approved and not paid)
+     */
+    public function isBillable(): bool
+    {
+        return $this->is_approved && !$this->is_paid;
+    }
+
+    /**
+     * Approve time entry
+     */
+    public function approve($approverId = null)
+    {
+        $this->update([
+            'is_approved' => true,
+            'approved_by' => $approverId ?? auth()->id(),
+            'approved_at' => now(),
+        ]);
+
+        // Update task earnings
+        $this->task?->updateEarnings();
+    }
+
+    /**
+     * The task this time entry is associated with
+     */
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(Task::class, 'task_id', 'taskID');
     }
 
     /**
