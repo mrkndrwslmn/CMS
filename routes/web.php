@@ -161,49 +161,53 @@ Route::get('/', function () {
         ->orderBy('announcements.created_at', 'desc')
         ->get();
     
-    return view('welcome', compact('announcements'));
+    return view('public.welcome', compact('announcements'));
 })->name('home');
 
 Route::get('/services', function () {
-    return view('services');
+    return view('public.services');
 })->name('services');
 
 Route::get('/about', function () {
-    return view('about');
+    return view('public.about');
 })->name('about');
 
 Route::get('/about-us', function () {
-    return view('about');
+    return view('public.about');
 })->name('about-us');
 
 Route::get('/contact', function () {
     $user = Auth::user();
     $isLoggedIn = $user !== null;
-    return view('get-started', compact('user', 'isLoggedIn'));
+    return view('public.get-started', compact('user', 'isLoggedIn'));
 })->name('contact');
 
 Route::get('/featured-projects', function () {
-    return view('featured-projects');
+    return view('public.featured-projects');
 })->name('featured-projects');
 
 Route::get('/project-details', function () {
-    return view('project-details');
-})->name('project-details');
+    return view('public.project-details');
+})->name('public.project-details');
 
 Route::get('/client-testimonials', function () {
-    return view('client-testimonials');
+    return view('public.client-testimonials');
 })->name('client-testimonials');
 
 Route::get('/faq', function () {
-    return view('faq');
+    return view('public.faq');
 })->name('faq');
 
+Route::get('/referral-program', function () {
+    return view('public.referral-program');
+})->name('referral-program');
+
 Route::get('/privacy-policy', function () {
-    return view('privacy-policy');
+    return view('public.privacy-policy');
 })->name('privacy-policy');
 
 Route::get('/terms-and-conditions', function () {
-    return view('terms-and-conditions');
+    return view('public.terms-and-conditions');
 })->name('terms-and-conditions');
 
 // Public service request form

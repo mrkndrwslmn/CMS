@@ -272,7 +272,11 @@
                 <div>
                     <h3 class="text-lg font-semibold mb-4">Company</h3>
                     <ul class="space-y-2">
-                        <li><a href="../about.php" class="text-gray-400 hover:text-white transition-colors duration-300">About Us</a></li>                        
+                        <li><a href="../about.php" class="text-gray-400 hover:text-white transition-colors duration-300">About Us</a></li>
+                        <li><a href="{{ route('referral-program') }}" class="text-gray-400 hover:text-white transition-colors duration-300 flex items-center">
+                            Referral Program
+                            <span class="ml-2 px-2 py-0.5 bg-accent text-white text-xs rounded-full">New</span>
+                        </a></li>
                         <li><a href="../privacy-policy.php" class="text-gray-400 hover:text-white transition-colors duration-300">Privacy Policy</a></li>
                         <li><a href="../tnc.php" class="text-gray-400 hover:text-white transition-colors duration-300">Terms and Conditions</a></li>
                     </ul>

@@ -164,6 +164,10 @@
           <ul class="space-y-3 text-sm">
             <li><a href="/featured-projects" class="text-neutral-600 hover:text-primary-600 transition-colors">Projects</a></li>
             <li><a href="/client-testimonials" class="text-neutral-600 hover:text-primary-600 transition-colors">Testimonials</a></li>
+            <li><a href="/referral-program" class="text-neutral-600 hover:text-primary-600 transition-colors flex items-center">
+              Referral Program
+              <span class="ml-2 px-2 py-0.5 bg-accent text-white text-xs rounded-full font-medium">Earn Rewards</span>
+            </a></li>
             <li><a href="/faq" class="text-neutral-600 hover:text-primary-600 transition-colors">FAQs</a></li>
           </ul>
         </div>
