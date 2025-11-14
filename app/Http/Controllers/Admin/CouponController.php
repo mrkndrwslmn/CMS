@@ -73,7 +73,7 @@ class CouponController extends Controller
     public function create()
     {
         $clients = User::where('role', 'client')
-            ->orderBy('first_name')
+            ->orderBy('fullName')
             ->get();
 
         $serviceRequests = ServiceRequest::where('status', 'approved')
@@ -158,7 +158,7 @@ class CouponController extends Controller
     public function edit(Coupon $coupon)
     {
         $clients = User::where('role', 'client')
-            ->orderBy('first_name')
+            ->orderBy('fullName')
             ->get();
 
         $serviceRequests = ServiceRequest::where('status', 'approved')

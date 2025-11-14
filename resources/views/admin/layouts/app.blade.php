@@ -240,6 +240,31 @@
                     </div>
                 </div>
                 
+                <!-- Coupons & Loyalty Section -->
+                <div class="mb-2">
+                    <button @click="toggle('rewards')" class="w-full flex items-center justify-between py-2 px-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-gift w-5 mr-3"></i>
+                            <span class="text-sm font-medium">Coupons & Loyalty</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSections.rewards }"></i>
+                    </button>
+                    <div x-show="openSections.rewards" x-collapse class="ml-6 mt-1 space-y-1">
+                        <a href="{{ route('admin.coupons.index') }}" class="flex items-center py-2 px-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm {{ request()->routeIs('admin.coupons*') ? 'bg-white/10 text-white' : '' }}">
+                            <i class="fas fa-ticket-alt w-4 mr-2"></i>
+                            <span>Coupons</span>
+                        </a>
+                        <a href="{{ route('admin.loyalty.index') }}" class="flex items-center py-2 px-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm {{ request()->routeIs('admin.loyalty*') ? 'bg-white/10 text-white' : '' }}">
+                            <i class="fas fa-award w-4 mr-2"></i>
+                            <span>Loyalty Program</span>
+                        </a>
+                        <a href="{{ route('admin.referrals.index') }}" class="flex items-center py-2 px-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm {{ request()->routeIs('admin.referrals*') ? 'bg-white/10 text-white' : '' }}">
+                            <i class="fas fa-users w-4 mr-2"></i>
+                            <span>Referral System</span>
+                        </a>
+                    </div>
+                </div>
+                
                 <!-- System Management Section -->
                 <div class="mb-2">
                     <button @click="toggle('system')" class="w-full flex items-center justify-between py-2 px-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg">
@@ -448,6 +473,7 @@
                     communication: {{ request()->routeIs('admin.messages*', 'admin.feedback*', 'admin.announcements*') ? 'true' : 'false' }},
                     content: {{ request()->routeIs('admin.documents*', 'admin.templates*') ? 'true' : 'false' }},
                     payouts: {{ request()->routeIs('admin.payouts*') ? 'true' : 'false' }},
+                    rewards: {{ request()->routeIs('admin.coupons*', 'admin.loyalty*', 'admin.referrals*') ? 'true' : 'false' }},
                     system: {{ request()->routeIs('admin.audit*', 'admin.notifications*') ? 'true' : 'false' }},
                     analytics: {{ request()->routeIs('admin.reports*') ? 'true' : 'false' }}
                 },

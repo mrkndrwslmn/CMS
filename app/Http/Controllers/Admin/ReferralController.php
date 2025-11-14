@@ -297,12 +297,10 @@ class ReferralController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->whereHas('referrer', function ($q) use ($search) {
-                    $q->where('firstName', 'like', "%{$search}%")
-                      ->orWhere('lastName', 'like', "%{$search}%")
+                    $q->where('fullName', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%");
                 })->orWhereHas('referred', function ($q) use ($search) {
-                    $q->where('firstName', 'like', "%{$search}%")
-                      ->orWhere('lastName', 'like', "%{$search}%")
+                    $q->where('fullName', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%");
                 });
             });

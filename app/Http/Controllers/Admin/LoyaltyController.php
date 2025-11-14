@@ -35,8 +35,7 @@ class LoyaltyController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('user', function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
+                $q->where('fullName', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
@@ -108,7 +107,7 @@ class LoyaltyController extends Controller
             $action = $validated['points'] > 0 ? 'added to' : 'deducted from';
             $pointsAbs = abs($validated['points']);
 
-            return back()->with('success', "{$pointsAbs} points {$action} {$user->first_name}'s account.");
+            return back()->with('success', "{$pointsAbs} points {$action} {$user->fullName}'s account.");
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to adjust points: ' . $e->getMessage()]);
         }
@@ -176,7 +175,7 @@ class LoyaltyController extends Controller
                     foreach ($loyaltyPoints as $lp) {
                         fputcsv($file, [
                             $lp->user_id,
-                            $lp->user->first_name . ' ' . $lp->user->last_name,
+                            $lp->user->fullName,
                             $lp->user->email,
                             ucfirst($lp->tier),
                             $lp->available_points,
@@ -222,8 +221,7 @@ class LoyaltyController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('user', function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
+                $q->where('fullName', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
