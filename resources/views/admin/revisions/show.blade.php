@@ -15,7 +15,7 @@
                     </a>
                     <h1 class="text-2xl font-semibold text-neutral-900">Revision Request #{{ $revision->id }}</h1>
                     <p class="mt-1 text-sm text-neutral-500">
-                        Requested by {{ $revision->requestedBy->name ?? 'N/A' }} on {{ $revision->created_at->format('M d, Y') }}
+                        Requested by {{ $revision->requestedBy->fullName ?? 'N/A' }} on {{ $revision->created_at->format('M d, Y') }}
                     </p>
                 </div>
                 <div>
@@ -108,7 +108,7 @@
                 </div>
 
                 <!-- Related Items -->
-                @if($revision->project || ($revision->tasks && $revision->tasks->count() > 0) || $revision->document)
+                @if($revision->project || $revision->task || $revision->document)
                 <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden">
                     <div class="px-6 py-4 bg-neutral-50 border-b border-neutral-200">
                         <h2 class="text-base font-semibold text-neutral-900">Related Items</h2>
@@ -127,14 +127,16 @@
                         </div>
                         @endif
 
-                        @if($revision->tasks && $revision->tasks->count() > 0)
+                        @if($revision->task)
                         <div>
-                            <label class="text-xs font-medium text-neutral-500 uppercase tracking-wider block mb-2">Tasks</label>
-                            <div class="space-y-1.5">
-                                @foreach($revision->tasks as $task)
-                                <div class="text-sm text-neutral-700 pl-3 border-l-2 border-neutral-200">{{ $task->taskName }}</div>
-                                @endforeach
-                            </div>
+                            <label class="text-xs font-medium text-neutral-500 uppercase tracking-wider block mb-2">Task</label>
+                            <a href="{{ route('admin.tasks.show', $revision->task->taskID) }}" 
+                               class="inline-flex items-center text-sm font-medium text-neutral-900 hover:text-primary-600">
+                                {{ $revision->task->taskTitle }}
+                                <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                </svg>
+                            </a>
                         </div>
                         @endif
 
@@ -165,7 +167,7 @@
                             <div>
                                 <dt class="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1">Reviewed By</dt>
                                 <dd class="text-sm text-neutral-700">
-                                    {{ $revision->reviewedBy->name ?? 'N/A' }}
+                                    {{ $revision->reviewedBy->fullName ?? 'N/A' }}
                                 </dd>
                             </div>
                             <div>
@@ -181,7 +183,7 @@
                             @if($revision->status === 'approved' && $revision->assignedAdiutor)
                             <div>
                                 <dt class="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1">Assigned To</dt>
-                                <dd class="text-sm text-neutral-700">{{ $revision->assignedAdiutor->name }}</dd>
+                                <dd class="text-sm text-neutral-700">{{ $revision->assignedAdiutor->fullName }}</dd>
                             </div>
                             @endif
                             @if($revision->approved_due_date)
@@ -212,7 +214,7 @@
                             <div>
                                 <dt class="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1">Completed By</dt>
                                 <dd class="text-sm text-neutral-700">
-                                    {{ $revision->completedBy->name ?? 'N/A' }}
+                                    {{ $revision->completedBy->fullName ?? 'N/A' }}
                                 </dd>
                             </div>
                             <div>
@@ -257,7 +259,7 @@
                                             required>
                                         <option value="">Select Adiutor</option>
                                         @foreach($adiutors as $adiutor)
-                                            <option value="{{ $adiutor->id }}">{{ $adiutor->name }}</option>
+                                            <option value="{{ $adiutor->id }}">{{ $adiutor->fullName }}</option>
                                         @endforeach
                                     </select>
                                 </div>

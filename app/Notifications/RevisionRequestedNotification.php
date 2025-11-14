@@ -46,7 +46,7 @@ class RevisionRequestedNotification extends Notification
             'type' => 'revision_requested',
             'revision_request_id' => $this->revisionRequest->id,
             'document_id' => $this->revisionRequest->document_id,
-            'document_name' => $this->revisionRequest->document->fileName,
+            'document_name' => $this->revisionRequest->document ? $this->revisionRequest->document->fileName : 'N/A',
             'client_name' => $this->revisionRequest->requestedBy->fullName,
             'source_type' => $this->revisionRequest->source_type,
             'source_description' => $this->revisionRequest->getSourceDescription(),

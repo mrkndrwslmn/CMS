@@ -52,7 +52,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
                                 @if($revision->requestedBy)
-                                    {{ $revision->requestedBy->name }}
+                                    {{ $revision->requestedBy->fullName }}
                                 @else
                                     <span class="text-neutral-400">N/A</span>
                                 @endif
