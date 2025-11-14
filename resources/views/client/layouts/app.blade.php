@@ -7,6 +7,9 @@
     
     <title>{{ config('app.name', 'CMS') }} - @yield('title', 'Client Dashboard')</title>
     
+    <!-- Favicon -->
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
     
@@ -179,6 +182,55 @@
                                 </a>
                             </div>
                             
+                            <!-- Rewards & Benefits Section -->
+                            <div class="border-t border-gray-200 py-2">
+                                <div class="px-4 py-2">
+                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rewards & Benefits</p>
+                                </div>
+                                
+                                <a href="{{ route('client.referrals.dashboard') }}" 
+                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.referrals.*') ? 'bg-primary-50 text-primary-700' : '' }}">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    Referrals
+                                    @php
+                                        $pendingReferralsCount = Auth::user()->referralsMade()->where('status', 'pending')->count();
+                                    @endphp
+                                    @if($pendingReferralsCount > 0)
+                                        <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingReferralsCount }}</span>
+                                    @endif
+                                </a>
+                                
+                                <a href="{{ route('client.coupons.index') }}" 
+                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.coupons.*') ? 'bg-primary-50 text-primary-700' : '' }}">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                                    </svg>
+                                    Coupons
+                                    @php
+                                        $activeCouponsCount = Auth::user()->coupons()->where('status', 'active')->where('valid_until', '>', now())->count();
+                                    @endphp
+                                    @if($activeCouponsCount > 0)
+                                        <span class="ml-auto bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $activeCouponsCount }}</span>
+                                    @endif
+                                </a>
+                                
+                                <a href="{{ route('client.loyalty.dashboard') }}" 
+                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.loyalty.*') ? 'bg-primary-50 text-primary-700' : '' }}">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                                    </svg>
+                                    Loyalty Program
+                                    @php
+                                        $userPoints = Auth::user()->loyalty_points ?? 0;
+                                    @endphp
+                                    @if($userPoints > 0)
+                                        <span class="ml-auto bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
+                                    @endif
+                                </a>
+                            </div>
+                            
                             <!-- Account Section -->
                             <div class="border-t border-gray-200 py-2">
                                 <a href="{{ route('client.profile') }}" 
@@ -283,6 +335,55 @@
                     </svg>
                     Feedback
                 </a>
+                
+                <!-- Rewards & Benefits Section -->
+                <div class="border-t border-gray-200 my-2 pt-2">
+                    <div class="px-3 py-2">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rewards & Benefits</p>
+                    </div>
+                    
+                    <a href="{{ route('client.referrals.dashboard') }}" 
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.referrals.*') ? 'bg-primary-50 text-primary-700' : '' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Referrals
+                        @php
+                            $pendingReferralsCount = Auth::user()->referralsMade()->where('status', 'pending')->count();
+                        @endphp
+                        @if($pendingReferralsCount > 0)
+                            <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingReferralsCount }}</span>
+                        @endif
+                    </a>
+                    
+                    <a href="{{ route('client.coupons.index') }}" 
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.coupons.*') ? 'bg-primary-50 text-primary-700' : '' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                        </svg>
+                        Coupons
+                        @php
+                            $activeCouponsCount = Auth::user()->coupons()->where('status', 'active')->where('valid_until', '>', now())->count();
+                        @endphp
+                        @if($activeCouponsCount > 0)
+                            <span class="ml-auto bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $activeCouponsCount }}</span>
+                        @endif
+                    </a>
+                    
+                    <a href="{{ route('client.loyalty.dashboard') }}" 
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.loyalty.*') ? 'bg-primary-50 text-primary-700' : '' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                        </svg>
+                        Loyalty Program
+                        @php
+                            $userPoints = Auth::user()->loyalty_points ?? 0;
+                        @endphp
+                        @if($userPoints > 0)
+                            <span class="ml-auto bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
+                        @endif
+                    </a>
+                </div>
                 
                 <div class="border-t border-gray-200 my-2 pt-2">
                     <a href="{{ route('client.requests.create') }}" 

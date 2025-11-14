@@ -466,6 +466,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all coupons available to this user (user-specific coupons)
+     * This is an alias for specificCoupons for easier access
+     */
+    public function coupons(): HasMany
+    {
+        return $this->specificCoupons();
+    }
+
+    /**
      * Get or create loyalty points account
      */
     public function getOrCreateLoyaltyPoints(): LoyaltyPoint

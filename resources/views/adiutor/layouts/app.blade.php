@@ -8,7 +8,7 @@
     <title>@yield('title', 'Adiutor Dashboard') - {{ config('app.name', 'CMS') }}</title>
     
     <!-- Favicon -->
-    <link rel="icon" href="@yield('favicon', 'https://qzdtlrbpjudrvffrnory.supabase.co/storage/v1/object/public/Treis%20Adiutor//favico.ico')" type="image/x-icon">
+    <link rel="icon" href="@yield('favicon', '/favicon.svg')" type="image/x-icon">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

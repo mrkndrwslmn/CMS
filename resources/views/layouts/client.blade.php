@@ -81,7 +81,7 @@
                             <li><a href="{{ route('client.coupons.index') }}" class="py-2 px-1 text-gray-700 hover:text-primary transition-colors duration-300 font-medium border-b-2 {{ request()->routeIs('client.coupons.*') ? 'border-primary text-primary' : 'border-transparent' }}">
                                 Coupons
                                 @php
-                                    $activeCouponsCount = Auth::user()->coupons()->where('is_active', true)->where('expires_at', '>', now())->count();
+                                    $activeCouponsCount = Auth::user()->coupons()->where('status', 'active')->where('valid_until', '>', now())->count();
                                 @endphp
                                 @if($activeCouponsCount > 0)
                                     <span class="ml-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $activeCouponsCount }}</span>
@@ -158,7 +158,7 @@
                         <li><a href="{{ route('client.coupons.index') }}" class="block py-2 px-3 rounded {{ request()->routeIs('client.coupons.*') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">
                             <i class="fas fa-ticket mr-2"></i> Coupons
                             @php
-                                $activeCouponsCount = Auth::user()->coupons()->where('is_active', true)->where('expires_at', '>', now())->count();
+                                $activeCouponsCount = Auth::user()->coupons()->where('status', 'active')->where('valid_until', '>', now())->count();
                             @endphp
                             @if($activeCouponsCount > 0)
                                 <span class="ml-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $activeCouponsCount }}</span>
