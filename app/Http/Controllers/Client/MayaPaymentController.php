@@ -262,12 +262,14 @@ class MayaPaymentController extends Controller
                         // Create project from service request
                         $serviceRequest = DB::table('service_requests')->find($payment->service_request_id);
                         
+                        // Use approved_budget from service request (which reflects discounts)
+                        // NOT the payment amount (which might be partial payment like downpayment)
                         $projectId = DB::table('projects')->insertGetId([
                             'service_request_id' => $payment->service_request_id,
                             'client_id' => $payment->client_id,
                             'title' => $serviceRequest->project_name,
                             'description' => $serviceRequest->request_description,
-                            'budget' => $payment->amount,
+                            'budget' => $serviceRequest->approved_budget, // Use service request's approved budget (after discounts)
                             'deadline' => $serviceRequest->deadline,
                             'status' => 'active',
                             'priority' => $serviceRequest->priority ?? 'medium',
@@ -277,7 +279,9 @@ class MayaPaymentController extends Controller
 
                         Log::info('Project created from payment', [
                             'project_id' => $projectId,
-                            'service_request_id' => $payment->service_request_id
+                            'service_request_id' => $payment->service_request_id,
+                            'budget' => $serviceRequest->approved_budget,
+                            'payment_amount' => $payment->amount
                         ]);
                     } else {
                         $projectId = $existingProject->id;
@@ -288,8 +292,11 @@ class MayaPaymentController extends Controller
                     }
 
                     // Notify client about payment confirmation
+                    // First, retrieve the Payment model instance for the notification
+                    $paymentModel = \App\Models\Payment::find($payment->id);
                     $clientUser = \App\Models\User::find($payment->client_id);
-                    if ($clientUser) {
+                    
+                    if ($clientUser && $paymentModel) {
                         try {
                             Log::info('Dispatching PaymentConfirmedNotification to client', [
                                 'payment_id' => $payment->id,
@@ -298,7 +305,7 @@ class MayaPaymentController extends Controller
                                 'amount' => $payment->amount
                             ]);
                             
-                            $clientUser->notify(new PaymentConfirmedNotification($payment));
+                            $clientUser->notify(new PaymentConfirmedNotification($paymentModel));
                             
                             Log::info('PaymentConfirmedNotification dispatched to client successfully', [
                                 'payment_id' => $payment->id,
@@ -315,9 +322,8 @@ class MayaPaymentController extends Controller
                     }
 
                     // Award loyalty points for payment
-                    if ($serviceRequest && $clientUser) {
+                    if ($serviceRequest && $clientUser && $paymentModel) {
                         try {
-                            $paymentModel = \App\Models\Payment::find($payment->id);
                             $this->loyaltyService->awardPointsForPayment($serviceRequest, $paymentModel);
                             
                             Log::info('Loyalty points awarded for payment', [
@@ -335,7 +341,6 @@ class MayaPaymentController extends Controller
                         // 🎁 Process referral completion (if this is user's first payment)
                         try {
                             $referralService = app(\App\Services\ReferralService::class);
-                            $paymentModel = \App\Models\Payment::find($payment->id);
                             $referralService->processReferralCompletion($paymentModel);
                             
                             Log::info('Referral completion processed for payment', [
@@ -370,27 +375,30 @@ class MayaPaymentController extends Controller
 
                     // Notify admins using Laravel's notification structure
                     $admins = User::where('role', 'admin')->get();
-                    Log::info('Dispatching PaymentConfirmedNotification to admins', [
-                        'payment_id' => $payment->id,
-                        'admin_count' => $admins->count(),
-                        'amount' => $payment->amount
-                    ]);
                     
-                    foreach ($admins as $admin) {
-                        try {
-                            $admin->notify(new PaymentConfirmedNotification($payment));
-                            
-                            Log::debug('PaymentConfirmedNotification dispatched to admin', [
-                                'payment_id' => $payment->id,
-                                'admin_id' => $admin->id,
-                                'admin_email' => $admin->email
-                            ]);
-                        } catch (\Exception $e) {
-                            Log::error('Failed to notify admin about payment confirmation', [
-                                'payment_id' => $payment->id,
-                                'admin_id' => $admin->id,
-                                'error' => $e->getMessage()
-                            ]);
+                    if ($paymentModel) {
+                        Log::info('Dispatching PaymentConfirmedNotification to admins', [
+                            'payment_id' => $payment->id,
+                            'admin_count' => $admins->count(),
+                            'amount' => $payment->amount
+                        ]);
+                        
+                        foreach ($admins as $admin) {
+                            try {
+                                $admin->notify(new PaymentConfirmedNotification($paymentModel));
+                                
+                                Log::debug('PaymentConfirmedNotification dispatched to admin', [
+                                    'payment_id' => $payment->id,
+                                    'admin_id' => $admin->id,
+                                    'admin_email' => $admin->email
+                                ]);
+                            } catch (\Exception $e) {
+                                Log::error('Failed to notify admin about payment confirmation', [
+                                    'payment_id' => $payment->id,
+                                    'admin_id' => $admin->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                            }
                         }
                     }
 

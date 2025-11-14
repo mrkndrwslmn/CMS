@@ -103,7 +103,11 @@ class RequestManagementController extends Controller
                 $q->where('coupon_type', 'public')
                   ->orWhereNull('specific_request_id');
             })
-            ->whereHas('usages', fn($q) => $q, '<', 'max_total_uses')
+            ->where(function ($q) {
+                // Either unlimited uses or hasn't reached limit
+                $q->whereNull('max_total_uses')
+                  ->orWhereRaw('current_uses < max_total_uses');
+            })
             ->orderBy('created_at', 'desc')
             ->get();
         
@@ -259,6 +263,9 @@ class RequestManagementController extends Controller
             }
         }
         
+        // Refresh service request to get updated budget after coupon application
+        $serviceRequest->refresh();
+        
         // Create project immediately when approved (needed for milestones)
         $project = Project::firstOrCreate(
             ['service_request_id' => $serviceRequest->id],
@@ -266,7 +273,7 @@ class RequestManagementController extends Controller
                 'client_id' => $serviceRequest->client_id,
                 'title' => $serviceRequest->project_name,
                 'description' => $serviceRequest->request_description,
-                'budget' => $request->approved_budget,
+                'budget' => $serviceRequest->approved_budget, // Use service request's budget (after coupon discount)
                 'deadline' => $serviceRequest->deadline,
                 'status' => 'active', // Project is active once approved, will move to in_progress after payment
                 'priority' => $serviceRequest->priority ?? 'medium',
@@ -283,7 +290,8 @@ class RequestManagementController extends Controller
             $phaseOrder = 1;
             foreach ($request->milestone_phases as $phase) {
                 if (!empty($phase['name']) && !empty($phase['percentage'])) {
-                    $phaseAmount = ($request->approved_budget * $phase['percentage']) / 100;
+                    // Use service request's approved budget (after coupon discount) for milestone calculations
+                    $phaseAmount = ($serviceRequest->approved_budget * $phase['percentage']) / 100;
                     
                     \App\Models\ProjectMilestone::create([
                         'project_id' => $project->id,

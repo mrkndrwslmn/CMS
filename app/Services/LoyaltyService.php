@@ -24,7 +24,15 @@ class LoyaltyService
      */
     public function calculatePointsForPayment(Payment $payment): int
     {
-        $loyaltyPoint = $payment->user->getOrCreateLoyaltyPoints();
+        // Get the client (user) from the payment
+        $user = $payment->client;
+        
+        if (!$user) {
+            Log::warning('Payment has no associated client', ['payment_id' => $payment->id]);
+            return 0;
+        }
+        
+        $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
         $earningRate = $loyaltyPoint->getEarningRate();
         
         // Base calculation: 1 point per ₱100 spent, multiplied by tier rate

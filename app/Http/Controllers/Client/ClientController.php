@@ -216,10 +216,11 @@ class ClientController extends Controller
     {
         $user = Auth::user();
         
-        // Get all projects for this client
+        // Get all projects for this client with service request data
         $projects = DB::table('projects')
             ->leftJoin('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
             ->leftJoin('users', 'project_assignments.adiutor_id', '=', 'users.id')
+            ->leftJoin('service_requests', 'projects.service_request_id', '=', 'service_requests.id')
             ->where('projects.client_id', $user->id)
             ->select(
                 'projects.*',
@@ -229,7 +230,11 @@ class ClientController extends Controller
                 'project_assignments.start_date',
                 'project_assignments.expected_completion',
                 'users.fullName as adiutor_name',
-                'users.email as adiutor_email'
+                'users.email as adiutor_email',
+                'service_requests.original_approved_budget',
+                'service_requests.coupon_discount_amount',
+                'service_requests.loyalty_discount_amount',
+                'service_requests.applied_coupon_id'
             )
             ->orderBy('projects.created_at', 'desc')
             ->get()
@@ -263,6 +268,10 @@ class ClientController extends Controller
 
                 // Set progress from progress_percentage
                 $project->progress = $project->progress_percentage;
+
+                // Calculate if discounts were applied
+                $project->hasDiscounts = ($project->coupon_discount_amount > 0 || $project->loyalty_discount_amount > 0);
+                $project->originalBudget = $project->original_approved_budget ?? $project->budget;
 
                 return $project;
             });

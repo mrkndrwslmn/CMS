@@ -408,8 +408,35 @@
                 <div class="p-6 space-y-4">
                     @if($project->budget)
                         <div class="pb-4 border-b border-gray-200">
-                            <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Budget</dt>
-                            <dd class="text-lg font-bold text-primary-600">₱{{ number_format($project->budget, 2) }}</dd>
+                            <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Project Budget</dt>
+                            
+                            @if($serviceRequest && ($serviceRequest->coupon_discount_amount > 0 || $serviceRequest->loyalty_discount_amount > 0))
+                                <!-- Show breakdown if discounts applied -->
+                                <dd class="text-sm text-gray-500 line-through">₱{{ number_format($serviceRequest->getOriginalBudget(), 2) }}</dd>
+                                
+                                @if($serviceRequest->coupon_discount_amount > 0)
+                                    <dd class="text-xs text-success-600 mt-1">
+                                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                                        </svg>
+                                        Coupon: -₱{{ number_format($serviceRequest->coupon_discount_amount, 2) }}
+                                    </dd>
+                                @endif
+                                
+                                @if($serviceRequest->loyalty_discount_amount > 0)
+                                    <dd class="text-xs text-primary-600 mt-1">
+                                        <i class="fas fa-medal text-xs mr-1"></i>
+                                        Loyalty: -₱{{ number_format($serviceRequest->loyalty_discount_amount, 2) }}
+                                    </dd>
+                                @endif
+                                
+                                <dd class="text-lg font-bold text-primary-600 mt-2">₱{{ number_format($project->budget, 2) }}</dd>
+                                <dd class="text-xs text-gray-500 mt-1">Final amount (after discounts)</dd>
+                            @else
+                                <!-- No discounts -->
+                                <dd class="text-lg font-bold text-primary-600">₱{{ number_format($project->budget, 2) }}</dd>
+                            @endif
+                            
                             @if($project->budget_type)
                                 <dd class="text-xs text-gray-500 mt-1">{{ ucfirst($project->budget_type) }}</dd>
                             @endif

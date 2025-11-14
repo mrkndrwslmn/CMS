@@ -578,11 +578,43 @@ class ServiceRequest extends Model
 
     /**
      * Get final amount after all discounts
+     * Note: approved_budget already contains the final discounted amount
+     * This method returns the same value as approved_budget
+     * 
+     * Budget Flow:
+     * 1. Admin approves request with original budget (e.g., ₱350,000)
+     * 2. Coupon/loyalty discounts are applied (e.g., -₱70,000)
+     * 3. approved_budget is updated to final amount (e.g., ₱280,000)
+     * 4. original_approved_budget stores the original (e.g., ₱350,000)
+     * 5. Project is created with budget = approved_budget (e.g., ₱280,000)
+     * 
+     * This ensures:
+     * - Client pays the discounted amount (₱280,000)
+     * - Financial tracking reflects actual revenue (₱280,000)
+     * - Admin/Adiutor sees original budget for transparency
      */
     public function getFinalAmount(): float
     {
-        $original = $this->original_approved_budget ?? $this->approved_budget ?? 0;
-        return max(0, $original - $this->getTotalDiscount());
+        return (float) ($this->approved_budget ?? 0);
+    }
+
+    /**
+     * Get the original budget before any discounts were applied
+     * This is used for displaying the "before discount" price
+     */
+    public function getOriginalBudget(): float
+    {
+        return (float) ($this->original_approved_budget ?? $this->approved_budget ?? 0);
+    }
+
+    /**
+     * Get the final budget (what client actually pays)
+     * This is the approved_budget after discounts have been deducted
+     * This is the amount used for project budget and financial tracking
+     */
+    public function getFinalBudget(): float
+    {
+        return (float) ($this->approved_budget ?? 0);
     }
 
     /**

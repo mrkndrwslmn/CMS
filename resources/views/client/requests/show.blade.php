@@ -1,9 +1,44 @@
-@extends('client.layout')
+@extends('client.layouts.app')
 
 @section('title', 'Service Request Details')
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Success/Error Messages -->
+    @if(session('success'))
+        <div class="mb-6 bg-success-50 border-l-4 border-success-500 p-4 rounded-r-lg shadow-sm">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-success-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <p class="text-sm font-semibold text-success-800">{{ session('success') }}</p>
+            </div>
+        </div>
+    @endif
+
+    @if(session('error') || $errors->any())
+        <div class="mb-6 bg-error-50 border-l-4 border-error-500 p-4 rounded-r-lg shadow-sm">
+            <div class="flex items-start">
+                <svg class="w-5 h-5 text-error-500 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    @if(session('error'))
+                        <p class="text-sm font-semibold text-error-800">{{ session('error') }}</p>
+                    @endif
+                    @if($errors->has('error'))
+                        <p class="text-sm font-semibold text-error-800">{{ $errors->first('error') }}</p>
+                    @endif
+                    @foreach($errors->all() as $error)
+                        @if(!$errors->has('error') || $error !== $errors->first('error'))
+                            <p class="text-sm text-error-700 mt-1">{{ $error }}</p>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Back Button -->
     <div class="mb-6">
         <a href="{{ route('client.requests') }}" class="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium transition-colors">
@@ -188,19 +223,25 @@
         @endif
 
         <!-- Applied Coupon -->
-        @if($request->coupon_code)
+        @if($request->applied_coupon_id && $request->appliedCoupon)
             <div class="glass-card p-5 text-center border-2 border-success-200 bg-success-50">
                 <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-success-100 mb-2">
-                    <i class="fas fa-ticket-alt text-success-500 text-xl"></i>
+                    <svg class="w-6 h-6 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                    </svg>
                 </div>
                 <p class="text-xs text-neutral-600 font-medium mb-1">Coupon Applied</p>
-                <p class="text-sm font-bold text-success-700 font-mono tracking-wider">{{ $request->coupon_code }}</p>
+                <p class="text-sm font-bold text-success-700 font-mono tracking-wider">{{ $request->appliedCoupon->code }}</p>
                 @if($request->coupon_discount_amount > 0)
                     <p class="text-xs text-success-600 font-semibold mt-1">-₱{{ number_format($request->coupon_discount_amount, 2) }}</p>
                 @endif
-                @if($request->coupon && !$request->coupon->isValid())
+                <p class="text-xs text-success-600 mt-1">{{ $request->appliedCoupon->getDiscountLabel() }}</p>
+                @if(!$request->appliedCoupon->isValid())
                     <p class="text-xs text-error-600 mt-1">
-                        <i class="fas fa-exclamation-circle mr-1"></i>Expired
+                        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        Expired
                     </p>
                 @endif
             </div>
@@ -232,6 +273,123 @@
             <p class="text-xs text-neutral-500 mt-1 truncate">{{ $request->contact_details }}</p>
         </div>
     </div>
+
+    <!-- Coupon Application Section (only for approved/pending_payment requests without auto-applied coupons) -->
+    @if(in_array($request->status, ['approved', 'pending_payment']) && !$request->coupon_auto_applied && $request->approved_budget)
+        <div class="glass-card overflow-hidden border-l-4 border-success-300 mb-6">
+            <div class="p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-neutral-900 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                            </svg>
+                            Have a Coupon Code?
+                        </h3>
+                        <p class="text-sm text-neutral-600 mt-1">Apply a discount coupon to save on your project budget.</p>
+                    </div>
+                    @if($request->applied_coupon_id)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-success-100 text-success-800 border border-success-300">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Coupon Applied
+                        </span>
+                    @endif
+                </div>
+
+                @if($request->applied_coupon_id)
+                    <!-- Show Applied Coupon -->
+                    <div class="bg-gradient-to-br from-success-50 to-success-100 border-2 border-success-300 rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md">
+                                    <svg class="w-8 h-8 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-neutral-600 font-medium">Coupon Code</p>
+                                    <p class="text-2xl font-bold text-success-700 font-mono tracking-wider">{{ $request->appliedCoupon->code }}</p>
+                                    <p class="text-sm text-success-600 font-semibold mt-1">{{ $request->appliedCoupon->getDiscountLabel() }}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-neutral-600 font-medium">You Save</p>
+                                <p class="text-3xl font-bold text-success-600">₱{{ number_format($request->coupon_discount_amount, 2) }}</p>
+                                @if(!$request->coupon_auto_applied)
+                                    <form action="{{ route('client.coupons.remove', $request) }}" method="POST" class="mt-3">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" onclick="return confirm('Are you sure you want to remove this coupon?')" class="text-xs text-error-600 hover:text-error-700 font-medium underline">
+                                            Remove Coupon
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </div>
+                        @if(!$request->appliedCoupon->isValid())
+                            <div class="mt-4 bg-error-100 border border-error-300 rounded-lg p-3 flex items-start">
+                                <svg class="w-5 h-5 text-error-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-bold text-error-800">Coupon Expired</p>
+                                    <p class="text-xs text-error-700 mt-1">This coupon is no longer valid. Please remove it and apply a new one.</p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <!-- Coupon Input Form -->
+                    <form action="{{ route('client.coupons.apply', $request) }}" method="POST" class="space-y-4">
+                        @csrf
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <input type="text" 
+                                       name="coupon_code" 
+                                       id="coupon_code"
+                                       placeholder="Enter coupon code (e.g., PROMO-ABC123)" 
+                                       class="w-full px-4 py-3 border-2 border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all font-mono uppercase text-lg"
+                                       value="{{ old('coupon_code') }}"
+                                       required>
+                                @error('coupon_code')
+                                    <p class="text-xs text-error-600 mt-1 flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+                            <button type="submit" 
+                                    class="px-8 py-3 bg-gradient-to-r from-success-500 to-success-600 text-white font-bold rounded-lg hover:from-success-600 hover:to-success-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 whitespace-nowrap">
+                                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Apply Coupon
+                            </button>
+                        </div>
+                        
+                        <div class="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
+                            <p class="text-xs text-neutral-600 font-semibold mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-1 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                How to use:
+                            </p>
+                            <ul class="text-xs text-neutral-600 space-y-1 ml-5">
+                                <li>• Enter your coupon code in the box above</li>
+                                <li>• Click "Apply Coupon" to validate and apply the discount</li>
+                                <li>• Your total budget will be automatically updated</li>
+                                <li>• You can view available coupons in your <a href="{{ route('client.coupons.index') }}" class="text-primary-600 hover:text-primary-700 font-medium underline">Coupons page</a></li>
+                            </ul>
+                        </div>
+                    </form>
+                @endif
+            </div>
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Content -->
@@ -479,9 +637,42 @@
                         <!-- Payment Breakdown -->
                         <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-4 space-y-3">
                             <div class="flex justify-between items-center">
-                                <span class="text-sm text-white/90">Total Budget:</span>
+                                <span class="text-sm text-white/90">Original Budget:</span>
                                 <span class="text-sm font-bold text-white">₱{{ number_format($totalBudget, 2) }}</span>
                             </div>
+                            
+                            @if($request->coupon_discount_amount > 0 || $request->loyalty_discount_amount > 0)
+                                @if($request->coupon_discount_amount > 0)
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-white/90">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                                        </svg>
+                                        Coupon Discount:
+                                    </span>
+                                    <span class="text-sm font-bold text-success-200">-₱{{ number_format($request->coupon_discount_amount, 2) }}</span>
+                                </div>
+                                @endif
+                                
+                                @if($request->loyalty_discount_amount > 0)
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-white/90">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                        </svg>
+                                        Loyalty Discount:
+                                    </span>
+                                    <span class="text-sm font-bold text-warning-200">-₱{{ number_format($request->loyalty_discount_amount, 2) }}</span>
+                                </div>
+                                @endif
+                                
+                                <div class="h-px bg-white/30"></div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-bold text-white/90">Final Budget:</span>
+                                    <span class="text-lg font-bold text-white">₱{{ number_format($totalBudget, 2) }}</span>
+                                </div>
+                            @endif
+                            
                             <div class="flex justify-between items-center">
                                 <span class="text-sm text-white/90">Amount Paid:</span>
                                 <span class="text-sm font-bold text-success-200">₱{{ number_format($totalPaid, 2) }}</span>
@@ -645,7 +836,35 @@
                     @if($request->approved_budget)
                         <div class="pb-4 border-b border-neutral-200">
                             <dt class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Approved Budget</dt>
-                            <dd class="text-lg font-bold text-success-600">₱{{ number_format($request->approved_budget, 2) }}</dd>
+                            
+                            @if($request->coupon_discount_amount > 0 || $request->loyalty_discount_amount > 0)
+                                <!-- Show original budget with strikethrough -->
+                                <dd class="text-sm text-neutral-400 line-through">₱{{ number_format($request->approved_budget + ($request->coupon_discount_amount ?? 0) + ($request->loyalty_discount_amount ?? 0), 2) }}</dd>
+                                
+                                <!-- Show discounts -->
+                                @if($request->coupon_discount_amount > 0)
+                                    <dd class="text-xs text-success-600 flex items-center mt-1">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                                        </svg>
+                                        Coupon: -₱{{ number_format($request->coupon_discount_amount, 2) }}
+                                    </dd>
+                                @endif
+                                
+                                @if($request->loyalty_discount_amount > 0)
+                                    <dd class="text-xs text-warning-600 flex items-center mt-1">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                        </svg>
+                                        Loyalty: -₱{{ number_format($request->loyalty_discount_amount, 2) }}
+                                    </dd>
+                                @endif
+                                
+                                <!-- Final budget -->
+                                <dd class="text-lg font-bold text-success-600 mt-2">₱{{ number_format($request->approved_budget, 2) }}</dd>
+                            @else
+                                <dd class="text-lg font-bold text-success-600">₱{{ number_format($request->approved_budget, 2) }}</dd>
+                            @endif
                             
                             @if($request->payment_type)
                                 @php
