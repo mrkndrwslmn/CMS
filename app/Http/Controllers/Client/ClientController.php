@@ -473,7 +473,6 @@ class ClientController extends Controller
                 'users.email as adiutor_email',
                 'adiutor_profiles.bio',
                 'adiutor_profiles.title',
-                'adiutor_profiles.hourly_rate',
                 'adiutor_profiles.portfolio_url'
             )
             ->get();
