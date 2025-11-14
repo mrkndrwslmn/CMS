@@ -60,9 +60,38 @@
         .announcement-text-pulse {
             animation: text-pulse 1.5s ease-in-out infinite;
         }
+
+        /* Prevent AOS from hiding content during page load */
+        body.aos-preload [data-aos] {
+            opacity: 1 !important;
+            transform: none !important;
+            pointer-events: auto !important;
+        }
+        
+        /* Only apply AOS animations after page is ready */
+        body:not(.aos-preload) [data-aos] {
+            opacity: 0;
+        }
+        
+        body:not(.aos-preload) [data-aos].aos-animate {
+            opacity: 1;
+        }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col relative overflow-x-hidden bg-white aos-preload">
+  <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+    <!-- Top gradient wash -->
+    <div class="absolute inset-x-0 top-0 h-[600px] bg-gradient-to-b from-primary-50/80 via-primary-100/40 to-transparent"></div>
+    
+    <!-- Animated gradient orbs -->
+    <div class="absolute -top-32 -left-24 w-[520px] h-[520px] bg-primary-300/40 blur-[160px] rounded-full animate-float"></div>
+    <div class="absolute top-1/4 right-[-120px] w-[420px] h-[420px] bg-accent-400/35 blur-[150px] rounded-full animate-float-delay"></div>
+    <div class="absolute bottom-[-160px] left-1/3 w-[560px] h-[560px] bg-secondary-300/30 blur-[180px] rounded-full animate-float-slow"></div>
+    
+    <!-- Additional accent orbs for vibrancy -->
+    <div class="absolute top-1/2 left-[-100px] w-[380px] h-[380px] bg-primary-400/25 blur-[140px] rounded-full animate-float"></div>
+    <div class="absolute bottom-32 right-[-80px] w-[440px] h-[440px] bg-accent-300/30 blur-[160px] rounded-full animate-float-delay"></div>
+  </div>
     <!-- Header -->
     <header class="bg-white shadow-md fixed w-full z-50">
     <div class="container mx-auto px-4 py-4 max-w-7xl">

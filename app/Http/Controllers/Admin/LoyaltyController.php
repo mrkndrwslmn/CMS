@@ -287,24 +287,38 @@ class LoyaltyController extends Controller
         try {
             $expiringDate = now()->addDays(config('loyalty.points.expiry_warning_days', 30));
             
+            // Get all expiring transactions grouped by user
             $expiringTransactions = LoyaltyTransaction::where('transaction_type', 'earned')
                 ->where('expires_at', '<=', $expiringDate)
                 ->where('expires_at', '>', now())
                 ->whereNull('expiry_warning_sent_at')
-                ->with('user')
-                ->get();
+                ->with('user.loyaltyPoints')
+                ->get()
+                ->groupBy('user_id');
 
             $sentCount = 0;
 
-            foreach ($expiringTransactions as $transaction) {
-                // TODO: Send email notification
-                // Mail::to($transaction->user)->send(new PointsExpiringMail($transaction));
+            foreach ($expiringTransactions as $userId => $userTransactions) {
+                $user = $userTransactions->first()->user;
                 
-                $transaction->update(['expiry_warning_sent_at' => now()]);
+                // Skip if user doesn't exist
+                if (!$user) {
+                    continue;
+                }
+
+                // Send email notification with all expiring points for this user
+                \Mail::to($user->email)->send(
+                    new \App\Mail\PointsExpiringMail($user, $userTransactions)
+                );
+                
+                // Mark all transactions as having warning sent
+                LoyaltyTransaction::whereIn('id', $userTransactions->pluck('id'))
+                    ->update(['expiry_warning_sent_at' => now()]);
+                
                 $sentCount++;
             }
 
-            return back()->with('success', "Expiry warnings sent to {$sentCount} users.");
+            return back()->with('success', "Expiry warnings sent to {$sentCount} user(s).");
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to send warnings: ' . $e->getMessage()]);
         }

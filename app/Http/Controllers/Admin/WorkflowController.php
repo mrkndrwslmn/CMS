@@ -49,7 +49,24 @@ class WorkflowController extends Controller
             ]);
 
         // Send email notification to client about approval and payment
-        // TODO: Implement email sending
+        try {
+            $client = DB::table('users')->where('id', $serviceRequest->client_id)->first();
+            if ($client && $client->email) {
+                \Mail::to($client->email)->send(
+                    new \App\Mail\RequestApproved((object) array_merge((array) $serviceRequest, [
+                        'approved_budget' => $request->approved_budget,
+                        'payment_method' => $request->payment_method,
+                        'payment_due_date' => Carbon::now()->addDays($request->payment_due_days),
+                        'payment_instructions' => $request->payment_instructions,
+                    ]))
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send request approval email', [
+                'request_id' => $requestId,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Service request approved. Client will be notified about payment details.');
     }
@@ -83,7 +100,24 @@ class WorkflowController extends Controller
             ]);
 
         // Send email notification to client about rejection
-        // TODO: Implement email sending
+        try {
+            $client = DB::table('users')->where('id', $serviceRequest->client_id)->first();
+            if ($client && $client->email) {
+                \Mail::to($client->email)->send(
+                    new \App\Mail\RequestRejected(
+                        (object) array_merge((array) $serviceRequest, [
+                            'rejection_reason' => $request->rejection_reason
+                        ]),
+                        $request->rejection_reason
+                    )
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send request rejection email', [
+                'request_id' => $requestId,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Service request rejected. Client will be notified.');
     }
@@ -148,7 +182,35 @@ class WorkflowController extends Controller
             DB::commit();
 
             // Send email notification to client about payment confirmation and project start
-            // TODO: Implement email sending
+            try {
+                $client = DB::table('users')->where('id', $serviceRequest->client_id)->first();
+                if ($client && $client->email) {
+                    // Create a payment object for the email
+                    $payment = (object) [
+                        'id' => null,
+                        'amount' => $serviceRequest->approved_budget,
+                        'payment_method' => $serviceRequest->payment_method,
+                        'payment_reference' => $request->payment_reference,
+                        'status' => 'completed',
+                        'payment_date' => now(),
+                    ];
+                    
+                    $payment->serviceRequest = (object) array_merge((array) $serviceRequest, [
+                        'project_id' => $projectId,
+                        'payment_confirmed_at' => now(),
+                    ]);
+                    
+                    \Mail::to($client->email)->send(
+                        new \App\Mail\PaymentConfirmed($payment)
+                    );
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send payment confirmation email', [
+                    'request_id' => $requestId,
+                    'project_id' => $projectId,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             return redirect()->back()->with('success', "Payment confirmed! Project #{$projectId} has been created and is ready for task assignment.");
 
@@ -208,7 +270,41 @@ class WorkflowController extends Controller
         ]);
 
         // Send email notification to assigned adiutor
-        // TODO: Implement email sending
+        try {
+            $assignee = DB::table('users')->where('id', $request->assigned_to)->first();
+            $assignedBy = Auth::user();
+            
+            if ($assignee && $assignee->email) {
+                // Create task and user objects for the email
+                $task = (object) [
+                    'id' => $taskId,
+                    'taskTitle' => $request->task_title,
+                    'taskDescription' => $request->task_description,
+                    'allocated_budget' => $request->allocated_budget,
+                    'deadline' => $request->deadline,
+                    'priority' => $request->priority,
+                    'status' => 'pending',
+                    'project_id' => $projectId,
+                    'dateAssigned' => now(),
+                ];
+                
+                $task->project = $project;
+                
+                \Mail::to($assignee->email)->send(
+                    new \App\Mail\TaskAssigned(
+                        (object) $task,
+                        (object) $assignee,
+                        $assignedBy
+                    )
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send task assignment email', [
+                'task_id' => $taskId,
+                'assignee_id' => $request->assigned_to,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return redirect()->back()->with('success', "Task #{$taskId} created and assigned successfully.");
     }

@@ -81,7 +81,7 @@ class ProfileController extends Controller
         $validator = Validator::make($request->all(), [
             'bio' => 'nullable|string|max:1000',
             'title' => 'nullable|string|max:255',
-            'hourly_rate' => 'nullable|numeric|min:0|max:999999.99',
+            'standard_hourly_rate' => 'nullable|numeric|min:0|max:999999.99',
             'portfolio_url' => 'nullable|url|max:255',
             'linkedin_url' => 'nullable|url|max:255',
             'github_url' => 'nullable|url|max:255',
@@ -98,7 +98,7 @@ class ProfileController extends Controller
         $profileData = [
             'bio' => $request->bio,
             'title' => $request->title,
-            'hourly_rate' => $request->hourly_rate,
+            'standard_hourly_rate' => $request->standard_hourly_rate,
             'portfolio_url' => $request->portfolio_url,
             'linkedin_url' => $request->linkedin_url,
             'github_url' => $request->github_url,

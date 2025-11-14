@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ReferralInvitationMail;
 use App\Services\ReferralService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 
@@ -179,14 +182,31 @@ class ReferralController extends Controller
         $referralCode = $user->getOrCreateReferralCode();
         
         try {
-            // TODO: Send invitation email
-            // Mail::to($request->email)->queue(new ReferralInvitationMail($user, $referralCode, $request->message));
+            // Send invitation email
+            Mail::to($request->email)->queue(
+                new ReferralInvitationMail($user, $referralCode, $request->message)
+            );
+            
+            Log::info('Referral invitation sent', [
+                'referrer_id' => $user->id,
+                'referrer_email' => $user->email,
+                'invited_email' => $request->email,
+                'referral_code' => $referralCode->code,
+                'has_personal_message' => !empty($request->message),
+            ]);
             
             return response()->json([
                 'success' => true,
                 'message' => 'Invitation sent successfully!',
             ]);
         } catch (\Exception $e) {
+            Log::error('Failed to send referral invitation', [
+                'referrer_id' => $user->id,
+                'invited_email' => $request->email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send invitation. Please try again.',

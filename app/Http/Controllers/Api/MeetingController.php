@@ -3,13 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\MeetingApproved;
+use App\Mail\MeetingRejected;
+use App\Mail\MeetingRequested;
+use App\Mail\MeetingRescheduled;
+use App\Mail\MeetingRescheduleRejected;
 use App\Models\Meeting;
 use App\Models\Project;
+use App\Models\User;
 use App\Services\ZoomService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class MeetingController extends Controller
 {
@@ -73,7 +80,25 @@ class MeetingController extends Controller
             'status' => Meeting::STATUS_PENDING,
         ]);
 
-        // TODO: Send notification to admin
+        // Send notification to admin
+        try {
+            $admins = User::where('role', 'admin')->where('isActive', true)->get();
+            
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)->queue(new MeetingRequested($meeting->load(['client', 'project'])));
+            }
+            
+            Log::info('Meeting requested notifications sent to admins', [
+                'meeting_id' => $meeting->id,
+                'admin_count' => $admins->count(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send meeting requested notification', [
+                'meeting_id' => $meeting->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail the request if notification fails
+        }
 
         return response()->json([
             'success' => true,
@@ -127,7 +152,23 @@ class MeetingController extends Controller
 
         $meeting->save();
 
-        // TODO: Send notification to client
+        // Send notification to client
+        try {
+            $client = $meeting->client;
+            
+            Mail::to($client->email)->queue(new MeetingApproved($meeting->load(['client', 'admin', 'project'])));
+            
+            Log::info('Meeting approved notification sent to client', [
+                'meeting_id' => $meeting->id,
+                'client_id' => $client->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send meeting approved notification', [
+                'meeting_id' => $meeting->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail the request if notification fails
+        }
 
         return response()->json([
             'success' => true,
@@ -165,7 +206,23 @@ class MeetingController extends Controller
             'status' => Meeting::STATUS_RESCHEDULED,
         ]);
 
-        // TODO: Send notification to client
+        // Send notification to client
+        try {
+            $client = $meeting->client;
+            
+            Mail::to($client->email)->queue(new MeetingRescheduled($meeting->load(['client', 'admin', 'project'])));
+            
+            Log::info('Meeting rescheduled notification sent to client', [
+                'meeting_id' => $meeting->id,
+                'client_id' => $client->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send meeting rescheduled notification', [
+                'meeting_id' => $meeting->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail the request if notification fails
+        }
 
         return response()->json([
             'success' => true,
@@ -218,7 +275,25 @@ class MeetingController extends Controller
 
         $meeting->save();
 
-        // TODO: Send notification to admin
+        // Send notification to admin (confirming client approved the reschedule)
+        try {
+            $admin = $meeting->admin;
+            
+            if ($admin) {
+                Mail::to($admin->email)->queue(new MeetingApproved($meeting->load(['client', 'admin', 'project'])));
+                
+                Log::info('Meeting reschedule approval notification sent to admin', [
+                    'meeting_id' => $meeting->id,
+                    'admin_id' => $admin->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send meeting reschedule approval notification to admin', [
+                'meeting_id' => $meeting->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail the request if notification fails
+        }
 
         return response()->json([
             'success' => true,
@@ -266,7 +341,28 @@ class MeetingController extends Controller
 
         $meeting->save();
 
-        // TODO: Send notification to admin
+        // Send notification to admin
+        try {
+            $admin = $meeting->admin;
+            
+            if ($admin) {
+                Mail::to($admin->email)->queue(new MeetingRescheduleRejected(
+                    $meeting->load(['client', 'admin', 'project']),
+                    $validated['reason'] ?? 'No reason provided'
+                ));
+                
+                Log::info('Meeting reschedule rejection notification sent to admin', [
+                    'meeting_id' => $meeting->id,
+                    'admin_id' => $admin->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send meeting reschedule rejection notification', [
+                'meeting_id' => $meeting->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail the request if notification fails
+        }
 
         return response()->json([
             'success' => true,
@@ -300,7 +396,23 @@ class MeetingController extends Controller
             'status' => Meeting::STATUS_REJECTED,
         ]);
 
-        // TODO: Send notification to client
+        // Send notification to client
+        try {
+            $client = $meeting->client;
+            
+            Mail::to($client->email)->queue(new MeetingRejected($meeting->load(['client', 'admin', 'project'])));
+            
+            Log::info('Meeting rejected notification sent to client', [
+                'meeting_id' => $meeting->id,
+                'client_id' => $client->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send meeting rejected notification', [
+                'meeting_id' => $meeting->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail the request if notification fails
+        }
 
         return response()->json([
             'success' => true,

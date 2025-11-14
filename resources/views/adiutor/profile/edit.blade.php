@@ -120,52 +120,28 @@
                     <h3 class="text-lg font-semibold text-gray-900 mb-6">Professional Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label for="job_title" class="block text-sm font-medium text-gray-700 mb-2">Job Title</label>
-                            <input type="text" id="job_title" name="job_title" value="{{ old('job_title', $profile->job_title ?? '') }}" 
+                            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Professional Title</label>
+                            <input type="text" id="title" name="title" value="{{ old('title', $profile->title ?? '') }}" 
                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
                                    placeholder="e.g. Senior Developer">
-                        </div>
-                        
-                        <div>
-                            <label for="company_name" class="block text-sm font-medium text-gray-700 mb-2">Company</label>
-                            <input type="text" id="company_name" name="company_name" value="{{ old('company_name', $profile->company_name ?? '') }}" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
-                                   placeholder="e.g. Tech Corp">
-                        </div>
-                        
-                        <div>
-                            <label for="years_of_experience" class="block text-sm font-medium text-gray-700 mb-2">Years of Experience</label>
-                            <input type="number" id="years_of_experience" name="years_of_experience" value="{{ old('years_of_experience', $profile->years_of_experience ?? '') }}" 
-                                   min="0" max="50" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
-                                   placeholder="0">
-                        </div>
-                        
-                        <div>
-                            <label for="hourly_rate" class="block text-sm font-medium text-gray-700 mb-2">Hourly Rate ($)</label>
-                            <input type="number" id="hourly_rate" name="hourly_rate" value="{{ old('hourly_rate', $profile->hourly_rate ?? '') }}" 
-                                   min="0" step="0.01" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
-                                   placeholder="0.00">
-                        </div>
-                        
-                        <div>
-                            <label for="availability_status" class="block text-sm font-medium text-gray-700 mb-2">Availability</label>
-                            <select id="availability_status" name="availability_status" 
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
-                                <option value="">Select availability</option>
-                                <option value="available" {{ old('availability_status', $profile->availability_status ?? '') == 'available' ? 'selected' : '' }}>Available</option>
-                                <option value="busy" {{ old('availability_status', $profile->availability_status ?? '') == 'busy' ? 'selected' : '' }}>Busy</option>
-                                <option value="unavailable" {{ old('availability_status', $profile->availability_status ?? '') == 'unavailable' ? 'selected' : '' }}>Unavailable</option>
-                            </select>
                         </div>
                         
                         <div>
                             <label for="location" class="block text-sm font-medium text-gray-700 mb-2">Location</label>
                             <input type="text" id="location" name="location" value="{{ old('location', $profile->location ?? '') }}" 
                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
-                                   placeholder="e.g. New York, USA">
+                                   placeholder="e.g. Manila, Philippines">
                         </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-600">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            For earnings settings including hourly rate, please visit the 
+                            <a href="{{ route('adiutor.profile.earnings') }}" class="text-primary-600 hover:text-primary-700 font-medium">Earnings Settings</a> page.
+                        </p>
                     </div>
                 </div>
 
@@ -270,15 +246,6 @@
                             <input type="url" id="portfolio_url" name="portfolio_url" value="{{ old('portfolio_url', $profile->portfolio_url ?? '') }}" 
                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
                                    placeholder="https://yourportfolio.com">
-                        </div>
-                        
-                        <div>
-                            <label for="website_url" class="block text-sm font-medium text-gray-700 mb-2">
-                                Website URL
-                            </label>
-                            <input type="url" id="website_url" name="website_url" value="{{ old('website_url', $profile->website_url ?? '') }}" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
-                                   placeholder="https://yourwebsite.com">
                         </div>
                     </div>
                 </div>

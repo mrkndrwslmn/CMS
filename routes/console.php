@@ -72,10 +72,7 @@ Schedule::call(function () {
     // Get expiring points grouped by user
     $expiringPoints = LoyaltyTransaction::where('transaction_type', 'earned')
         ->whereDate('expires_at', $warningDate->toDateString())
-        ->where(function($query) {
-            $query->whereNull('expiry_warning_sent')
-                  ->orWhere('expiry_warning_sent', false);
-        })
+        ->whereNull('expiry_warning_sent_at')
         ->with('user.loyaltyPoints')
         ->get()
         ->groupBy('user_id');
@@ -88,10 +85,9 @@ Schedule::call(function () {
                 Mail::to($user->email)
                     ->queue(new PointsExpiringMail($user, $transactions));
                 
-                // Mark warnings as sent
-                $transactions->each(function($transaction) {
-                    $transaction->update(['expiry_warning_sent' => true]);
-                });
+                // Mark warnings as sent with timestamp
+                LoyaltyTransaction::whereIn('id', $transactions->pluck('id'))
+                    ->update(['expiry_warning_sent_at' => now()]);
                 
                 \Log::info("Sent points expiry warning", [
                     'user_id' => $userId,

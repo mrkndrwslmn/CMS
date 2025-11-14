@@ -11,6 +11,17 @@
 @section('content')
 
     <section class="min-h-screen relative flex items-center pt-24 pb-16 section-padding overflow-hidden">
+        <!-- Vibrant gradient base -->
+        <div class="absolute inset-0 -z-10 bg-gradient-to-br from-white via-primary-100/50 to-accent-100/40"></div>
+        
+        <!-- Animated light orbs for energy -->
+        <div class="absolute top-10 -right-16 w-72 h-72 bg-accent-400/50 blur-[160px] rounded-full -z-10 animate-float"></div>
+        <div class="absolute bottom-[-80px] -left-10 w-80 h-80 bg-primary-400/45 blur-[140px] rounded-full -z-10 animate-float-delay"></div>
+        <div class="absolute top-1/2 left-1/4 w-64 h-64 bg-secondary-400/35 blur-[130px] rounded-full -z-10 animate-float-slow"></div>
+        
+        <!-- Soft gradient fade at bottom -->
+        <div class="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-white/90 via-white/40 to-transparent -z-10"></div>
+        
         <div class="relative z-10 max-w-7xl mx-auto px-6">
             <div class="grid md:grid-cols-2 gap-16 items-center">
                 <div>
@@ -107,9 +118,14 @@
         </div>
     </section>
 
-    <section id="featured-projects" class="section-padding bg-neutral-50/50 relative overflow-hidden">
-        <div class="absolute inset-0 -z-10 bg-grid-pattern opacity-50"></div>
-        <div class="max-w-7xl mx-auto px-6">
+    <section id="featured-projects" class="section-padding bg-white relative overflow-hidden">
+        <!-- Seamless transition gradients -->
+        <div class="absolute inset-0 bg-gradient-to-b from-primary-50/30 via-white to-accent-50/30 -z-10"></div>
+        <div class="absolute top-0 right-[-100px] w-[400px] h-[400px] bg-primary-400/20 blur-[130px] rounded-full -z-10 animate-float"></div>
+        <div class="absolute bottom-0 left-[-100px] w-[380px] h-[380px] bg-accent-400/20 blur-[120px] rounded-full -z-10 animate-float-delay"></div>
+        <div class="absolute inset-0 bg-grid-pattern opacity-20 -z-10"></div>
+        
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
             <div class="text-center mb-16" data-aos="fade-up">
                 <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100 backdrop-blur-md">Our Work</span>
                 <h2 class="heading-serif text-3xl md:text-4xl mb-6">From <span class="gradient-text">Concept to Completion</span></h2>
@@ -119,8 +135,8 @@
             </div>
         </div>
 
-        <div class="marquee-container" data-aos="fade-up" data-aos-delay="100">
-            <div id="marquee-content" class="marquee-content flex items-center space-x-8 py-4">
+        <div class="marquee-container" data-aos="fade-up" data-aos-delay="100" style="min-height: 96px;">
+            <div id="marquee-content" class="marquee-content flex items-center space-x-8 py-4 min-h-[96px]" style="opacity: 1 !important;">
                 <div class="flex items-center justify-center w-screen text-neutral-500">
                     <svg class="animate-spin h-6 w-6 text-primary-500 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     Loading Projects...
@@ -136,8 +152,14 @@
         </div>
     </section>
 
-    <section class="py-24 relative">
-        <div class="max-w-7xl mx-auto px-6">
+    <section class="py-20 relative overflow-hidden -mb-12">
+        <!-- Cohesive background that flows from previous section -->
+        <div class="absolute inset-0 bg-gradient-to-b from-accent-50/40 via-white/60 to-transparent -z-10"></div>
+        <div class="absolute top-0 right-[-80px] w-[450px] h-[450px] bg-accent-400/25 blur-[140px] rounded-full -z-10 animate-float"></div>
+        <div class="absolute bottom-[-100px] left-[-60px] w-[400px] h-[400px] bg-primary-400/25 blur-[130px] rounded-full -z-10 animate-float-delay"></div>
+        <div class="absolute inset-0 bg-grid-pattern opacity-15 -z-10"></div>
+        
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
             <div class="text-center mb-16" data-aos="fade-up">
                 <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100 backdrop-blur-md">Our Services</span>
                 <h2 class="heading-serif text-3xl md:text-4xl mb-4 mt-4">What We <span class="gradient-text">Excel At</span></h2>
@@ -356,8 +378,14 @@
         </div>
     </section>
 
-    <section class="py-24 relative">
-    <div class="max-w-7xl mx-auto px-6">
+    <section class="py-20 relative overflow-hidden -mb-12">
+    <!-- Flow from services section -->
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-transparent -z-10"></div>
+    <div class="absolute top-[-80px] right-[-100px] w-[500px] h-[500px] bg-primary-400/25 blur-[150px] rounded-full -z-10 animate-float"></div>
+    <div class="absolute bottom-[-100px] left-[-80px] w-[480px] h-[480px] bg-accent-400/20 blur-[140px] rounded-full -z-10 animate-float-delay"></div>
+    <div class="absolute inset-0 bg-grid-pattern opacity-15 -z-10"></div>
+    
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
         <div class="text-center mb-16" data-aos="fade-up">
             <div class="flex items-center justify-center mb-3">
                 <div class="flex -space-x-2 mr-3">
@@ -585,8 +613,14 @@
     </div>
 </section>
 
-    <section class="py-32 relative">
-    <div class="max-w-7xl mx-auto px-6">
+    <section class="py-28 relative overflow-hidden -mb-16">
+    <!-- Flow from testimonials section -->
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-transparent -z-10"></div>
+    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-400/25 blur-[150px] rounded-full -z-10 animate-float"></div>
+    <div class="absolute bottom-0 left-0 w-[450px] h-[450px] bg-accent-400/20 blur-[140px] rounded-full -z-10 animate-float-delay"></div>
+    <div class="absolute inset-0 bg-grid-pattern opacity-15 -z-10"></div>
+    
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
         <div class="text-center mb-16" data-aos="fade-up">
             <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100 backdrop-blur-md">Why Choose Us</span>
             <h2 class="heading-serif text-3xl md:text-4xl mb-4 mt-4">Why <span class="gradient-text">Treis Adiutor</span>?</h2>
@@ -720,10 +754,14 @@
     </div>
 </section>
 
-    <section class="py-32 relative">
-        <div class="absolute inset-0 bg-white/5"></div>
+    <section class="py-28 relative overflow-hidden -mb-16">
+        <!-- Flow from why choose us section -->
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-transparent -z-10"></div>
+        <div class="absolute top-20 right-0 w-96 h-96 bg-primary-400/25 blur-[140px] rounded-full -z-10 animate-float"></div>
+        <div class="absolute bottom-0 left-0 w-80 h-80 bg-accent-400/20 blur-[120px] rounded-full -z-10 animate-float-delay"></div>
+        <div class="absolute inset-0 bg-grid-pattern opacity-15 -z-10"></div>
         
-        <div class="max-w-7xl mx-auto px-6 relative">
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
             <div class="text-center mb-16" data-aos="fade-up">
                 <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100 backdrop-blur-md">Our Technologies</span>
                 <h2 class="heading-serif text-3xl md:text-4xl mb-4 mt-4">Built With <span class="gradient-text">Modern Tech</span></h2>
@@ -731,8 +769,8 @@
                 <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-accent-500 mx-auto mt-6 rounded-full"></div>
             </div>
             
-            <div id="tech-stack-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative">                
-                <div class="glass-dark rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="100">
+            <div id="tech-stack-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative" style="min-height: 400px;">                
+                <div class="glass-dark rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="100" style="opacity: 1 !important; transform: none !important;">
                     <div class="flex items-center mb-8">
                         <div class="w-12 h-12 organic-shape bg-gradient-to-br from-primary-700/20 to-primary-500/20 backdrop-blur-md flex items-center justify-center">
                             <div class="w-6 h-6 bg-primary-400/30 rounded"></div>
@@ -755,7 +793,7 @@
                     </div>
                 </div>
                 
-                <div class="glass-dark rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="200">
+                <div class="glass-dark rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="200" style="opacity: 1 !important; transform: none !important;">
                     <div class="flex items-center mb-8">
                         <div class="w-12 h-12 organic-shape bg-gradient-to-br from-accent-700/20 to-accent-500/20 backdrop-blur-md flex items-center justify-center">
                             <div class="w-6 h-6 bg-accent-400/30 rounded"></div>
@@ -778,7 +816,7 @@
                     </div>
                 </div>
                 
-                <div class="glass-dark rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="300">
+                <div class="glass-dark rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="300" style="opacity: 1 !important; transform: none !important;">
                     <div class="flex items-center mb-8">
                         <div class="w-12 h-12 organic-shape bg-gradient-to-br from-emerald-700/20 to-emerald-500/20 backdrop-blur-md flex items-center justify-center">
                             <div class="w-6 h-6 bg-emerald-400/30 rounded"></div>
@@ -804,8 +842,14 @@
         </div>
     </section>
 
-    <section class="py-24 relative">
-        <div class="max-w-7xl mx-auto px-6">
+    <section class="py-20 relative overflow-hidden -mb-12">
+        <!-- Flow from tech section -->
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-transparent -z-10"></div>
+        <div class="absolute top-[-100px] left-0 w-[480px] h-[480px] bg-secondary-400/25 blur-[150px] rounded-full -z-10 animate-float"></div>
+        <div class="absolute bottom-[-120px] right-0 w-[520px] h-[520px] bg-primary-400/25 blur-[160px] rounded-full -z-10 animate-float-delay"></div>
+        <div class="absolute inset-0 bg-grid-pattern opacity-15 -z-10"></div>
+        
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
             <div class="text-center mb-16" data-aos="fade-up">
                 <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100 backdrop-blur-md">Frequently Asked Questions</span>
                 <h2 class="heading-serif text-3xl md:text-4xl mb-4 mt-4">Got <span class="gradient-text">Questions</span>?</h2>
@@ -888,101 +932,96 @@
         </div>
     </section>
     
-    <section class="py-32 relative">
-        
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="rounded-3xl overflow-hidden relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-primary-600/20 to-accent-600/20 backdrop-blur-xl"></div>
-                <div class="absolute inset-0 bg-primary-600/10 
-                    bg-[radial-gradient(#3b82f620_1px,transparent_1px)] [background-size:20px_20px]"></div>
-                
-                <div class="absolute top-0 left-0 w-40 h-40 bg-primary-300/20 rounded-full blur-3xl"></div>
-                <div class="absolute bottom-0 right-0 w-40 h-40 bg-accent-300/20 rounded-full blur-3xl"></div>
-                
-                <div class="relative p-12 md:p-20 z-10">
-                    <div class="max-w-4xl mx-auto">
-                        <div class="text-center">
-                            <span class="inline-block px-5 py-1.5 rounded-full bg-white/90 text-primary-600 text-sm font-bold mb-6 shadow-md border border-primary-100 animate-pulse">
-                                <span class="inline-block mr-2 bg-red-100 text-red-600 px-2 py-0.5 rounded-md text-xs font-bold">LIMITED SLOTS</span>
-                                Start your project today before this week’s queue fills up!
-                            </span>
-                            <h2 class="heading-serif text-4xl md:text-5xl mb-6">Ready to <span class="gradient-text">accelerate your growth</span> with technology?</h2>
-                            <p class="text-lg text-neutral-700 mb-5 max-w-2xl mx-auto">From MVP launches to enterprise solutions, we've got your back with technology that scales with your business.</p>
-                            
-                            <div class="flex justify-center items-center mb-6">
-                                <span class="text-sm bg-green-50 text-green-700 px-3 py-2 rounded-lg flex items-center">
-                                    <svg class="w-5 h-5 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span>Join over 500+ tech startups and businesses who trust us</span>
-                                </span>
-                            </div>
+    <section class="py-20 md:py-28 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-primary-50/30 to-white -z-10"></div>
+
+        <div class="max-w-7xl mx-auto px-6 relative">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-12" data-aos="fade-up">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-neutral-200 mb-8">
+                        <div class="flex -space-x-2">
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 border-2 border-white"></div>
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-accent-400 to-accent-600 border-2 border-white"></div>
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 border-2 border-white"></div>
                         </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl text-center">
-                                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-primary-100 flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                                <h3 class="text-sm font-semibold text-neutral-800 mb-1">Fast Turnaround</h3>
-                                <p class="text-xs text-neutral-600">Most projects delivered within 48-72 hours</p>
-                            </div>
-                            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl text-center">
-                                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-primary-100 flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                                    </svg>
-                                </div>
-                                <h3 class="text-sm font-semibold text-neutral-800 mb-1">Client Satisfaction Priority</h3>
-                                <p class="text-xs text-neutral-600">Money-back guarantee if you're not satisfied</p>
-                            </div>
-                            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-xl text-center">
-                                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-primary-100 flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                    </svg>
-                                </div>
-                                <h3 class="text-sm font-semibold text-neutral-800 mb-1">Complete Confidentiality</h3>
-                                <p class="text-xs text-neutral-600">Your project details remain private</p>
-                            </div>
+                        <span class="text-sm font-medium text-neutral-700">Trusted by 500+ tech companies</span>
+                    </div>
+
+                    <h2 class="heading-serif text-4xl md:text-5xl lg:text-6xl mb-6 text-neutral-900">
+                        Ready to start your <br class="hidden md:block"/>
+                        <span class="gradient-text">next project?</span>
+                    </h2>
+
+                    <p class="text-lg md:text-xl text-neutral-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+                        From concept to launch, we deliver professional solutions that help your business grow. Let's build something great together.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+                        <a href="/contact" class="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-semibold shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transition-all duration-300 hover:-translate-y-0.5">
+                            <span class="relative">Get Started</span>
+                            <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </a>
+                        <a href="/services" class="group inline-flex items-center justify-center px-8 py-4 bg-white text-neutral-700 rounded-xl font-semibold border-2 border-neutral-200 hover:border-neutral-300 shadow-sm hover:shadow-md transition-all duration-300">
+                            <span>View Services</span>
+                            <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-500">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">Fast turnaround</span>
                         </div>
-                        
-                        <div class="flex flex-col md:flex-row gap-6 justify-center">
-                            <a href="/contact" class="inline-flex items-center justify-center px-8 py-5 bg-gradient-to-r from-primary-500 to-accent-500 text-white rounded-full hover:shadow-glow transition-all duration-300 font-bold group relative overflow-hidden">
-                                
-                                <span class="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-[2.5] rounded-full transition-all duration-1000 origin-center"></span>
-                                
-                                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shine"></span>
-                                
-                                <svg class="w-5 h-5 mr-2 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                                <span class="relative text">Start Your Project Now</span>
-                                <svg class="w-5 h-5 ml-2 relative transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                                </svg>
-                            </a>
-                            <a href="/services" class="btn-secondary inline-flex items-center justify-center px-8 py-5 group bg-white border border-primary-200 hover:border-primary-300 rounded-full shadow-sm hover:shadow-md transition-all duration-300">
-                                <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                                </svg>
-                                <span>See Pricing & Services</span>
-                                <svg class="w-5 h-5 ml-2 opacity-70 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </a>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">Quality guaranteed</span>
                         </div>
-                        
-                        <div class="flex justify-center mt-6">
-                            <span class="text-xs text-neutral-500 flex items-center">
-                                <svg class="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                </svg>
-                                Secure payment • No obligation quotes • On-time delivery
-                            </span>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">100% secure</span>
                         </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-neutral-900 mb-2">Quick Response</h3>
+                        <p class="text-sm text-neutral-600">Get a personalized quote within 2 hours of your inquiry</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-accent-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-neutral-900 mb-2">Expert Team</h3>
+                        <p class="text-sm text-neutral-600">Dedicated professionals committed to your success</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-neutral-900 mb-2">Full Confidentiality</h3>
+                        <p class="text-sm text-neutral-600">Your data and projects are always protected</p>
                     </div>
                 </div>
             </div>
@@ -993,10 +1032,64 @@
 
 @push('scripts')
 <script>
-    AOS.init({
-        duration: 1000,
-        once: true
+    // Initialize AOS but keep content visible during load
+    function initializeAOS() {
+        if (typeof AOS !== 'undefined') {
+            AOS.init({
+                duration: 1000,
+                once: true,
+                startEvent: 'load', // Wait for page load
+                disable: false
+            });
+        }
+    }
+
+    // Force visibility for elements in viewport
+    function ensureContentVisible() {
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        document.querySelectorAll('[data-aos]').forEach(el => {
+            const rect = el.getBoundingClientRect();
+            // If element is in viewport or close to it, show immediately
+            if (rect.top <= viewportHeight * 1.2 && rect.bottom >= -100) {
+                el.classList.add('aos-animate');
+                el.style.opacity = '1';
+                el.style.transform = 'none';
+            }
+        });
+    }
+
+    // Run immediately to show content
+    ensureContentVisible();
+    
+    // Wait for page to be fully ready before enabling AOS animations
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            ensureContentVisible();
+            setTimeout(() => {
+                document.body.classList.remove('aos-preload');
+                initializeAOS();
+                ensureContentVisible();
+            }, 100);
+        });
+    } else {
+        // DOM already loaded
+        ensureContentVisible();
+        setTimeout(() => {
+            document.body.classList.remove('aos-preload');
+            initializeAOS();
+            ensureContentVisible();
+        }, 100);
+    }
+
+    // Ensure visibility after full page load
+    window.addEventListener('load', () => {
+        ensureContentVisible();
+        setTimeout(ensureContentVisible, 200);
     });
+
+    // Handle viewport changes
+    window.addEventListener('resize', ensureContentVisible);
+    window.addEventListener('scroll', ensureContentVisible);
 
     document.addEventListener('DOMContentLoaded', async () => {            
         const mobileMenuButton = document.getElementById('mobile-menu-button');
@@ -1031,7 +1124,7 @@
 
         function updateTechStackUI(techData) {
             const techStackContainer = document.getElementById('tech-stack-container');
-            techStackContainer.innerHTML = ''; 
+            // Keep any existing skeleton/placeholders until new content is ready
             
             // Map category keys to color schemes
             const categoryColorMap = {
@@ -1049,11 +1142,12 @@
             const defaultColor = { from: 'gray-700/30', to: 'gray-500/30', text: 'gray-300', hover: 'gray-200', bg: 'gray-900/60', accent: 'gray-400' };
 
             let delay = 100;
+            const frag = document.createDocumentFragment();
             for (const categoryKey in techData) {
                 if (techData.hasOwnProperty(categoryKey)) {
                     const categoryData = techData[categoryKey];
                     const categoryDiv = document.createElement('div');
-                    categoryDiv.classList.add('glass-dark', 'rounded-3xl', 'p-8', 'border', 'border-white/10', 'hover:border-white/20', 'transition-all', 'duration-300');
+                    categoryDiv.classList.add('group', 'relative', 'bg-white/80', 'backdrop-blur-sm', 'rounded-2xl', 'p-8', 'border', 'border-neutral-100/50', 'hover:border-primary-300/50', 'shadow-sm', 'hover:shadow-xl', 'transition-all', 'duration-500', 'hover:-translate-y-1');
                     categoryDiv.setAttribute('data-aos', 'fade-up');
                     categoryDiv.setAttribute('data-aos-delay', delay.toString());
                     delay += 100;
@@ -1062,23 +1156,34 @@
                     const colorSet = categoryColorMap[categoryName] || defaultColor;
 
                     categoryDiv.innerHTML = `
-                        <div class="flex items-center mb-8">
-                            <h3 class="text-xl font-semibold heading-serif text-neutral-800 ml-4 group-hover:text-${colorSet.text} transition-colors duration-300">${categoryName}</h3>
+                        <div class="absolute inset-0 bg-gradient-to-br from-${colorSet.from} to-${colorSet.to} rounded-3xl opacity-50"></div>
+                        <div class="relative">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-${colorSet.bg} to-${colorSet.accent}/20 flex items-center justify-center shadow-lg">
+                                    <svg class="w-7 h-7 text-${colorSet.accent}" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-bold text-neutral-800 group-hover:text-${colorSet.accent} transition-colors duration-300">${categoryName}</h3>
+                                    <p class="text-xs text-neutral-500 mt-0.5">Modern tools & frameworks</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3"></div>
                         </div>
-                        <div class="grid grid-cols-3 gap-4"></div>
                     `;
 
                     const techItemsContainer = categoryDiv.querySelector('.grid');
 
                     categoryData.technologies.forEach(tech => {
                         const techItemDiv = document.createElement('div');
-                        techItemDiv.classList.add('tech-item', 'p-3', 'bg-primary-50/50', 'rounded-xl', 'text-center', 'backdrop-blur-sm', 'border', 'border-neutral-100', 'hover:bg-primary-100/50', 'hover:border-neutral-200', 'transition-all', 'duration-300');
+                        techItemDiv.classList.add('tech-item', 'group/item', 'p-4', 'bg-primary-50/30', 'rounded-xl', 'text-center', 'backdrop-blur-sm', 'border', 'border-primary-100/40', 'hover:bg-white', 'hover:border-primary-300', 'hover:shadow-md', 'transition-all', 'duration-300', 'hover:-translate-y-1', 'cursor-pointer');
                         
                         // Create image with error handling for Brandfetch API
                         const img = document.createElement('img');
                         img.src = tech.image;
                         img.alt = tech.name;
-                        img.className = 'w-8 h-8 mx-auto mb-2 object-contain';
+                        img.className = 'w-10 h-10 mx-auto mb-3 object-contain group-hover/item:scale-110 transition-transform duration-300';
                         img.loading = 'lazy'; // Lazy load for better performance
                         
                         // Add error handling in case Brandfetch image fails to load
@@ -1089,16 +1194,21 @@
                         };
                         
                         const span = document.createElement('span');
-                        span.className = 'text-sm text-neutral-600 font-medium';
+                        span.className = 'text-xs text-neutral-700 font-semibold group-hover/item:text-primary-600 transition-colors duration-300';
                         span.textContent = tech.name;
                         
                         techItemDiv.appendChild(img);
                         techItemDiv.appendChild(span);
                         techItemsContainer.appendChild(techItemDiv); 
                     });
-                    techStackContainer.appendChild(categoryDiv); 
+                    frag.appendChild(categoryDiv);
                 }
             }
+            // Replace placeholders with the built content in one operation
+            // Remove simple skeletons (elements with animate-pulse) if present
+            const placeholders = techStackContainer.querySelectorAll('.animate-pulse');
+            placeholders.forEach(p => p.remove());
+            techStackContainer.appendChild(frag);
         }
 
         fetchTechStack();
@@ -1106,6 +1216,19 @@
         async function fetchFeaturedProjects() {
             const container = document.getElementById('marquee-content');
             if (!container) return;
+
+                // show a lightweight skeleton while projects load (prevents empty/zero-height area)
+                const projectsSkeleton = `
+                    <div class="flex items-center gap-4 w-screen py-6 justify-center">
+                        <div class="w-48 h-28 bg-neutral-100 rounded-md animate-pulse"></div>
+                        <div class="w-48 h-28 bg-neutral-100 rounded-md animate-pulse"></div>
+                        <div class="w-48 h-28 bg-neutral-100 rounded-md animate-pulse"></div>
+                    </div>
+                `;
+                // Only set skeleton if container appears empty
+                if (container.children.length === 0 || container.textContent.trim().length === 0) {
+                    container.innerHTML = projectsSkeleton;
+                }
 
             try {
                 const response = await fetch('/api/showcases?limit=8');

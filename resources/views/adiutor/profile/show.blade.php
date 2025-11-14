@@ -95,29 +95,25 @@
             </div>
 
             <!-- Quick Stats -->
-            @if($profile && ($profile->hourly_rate || $profile->years_of_experience || $profile->availability_status))
+            @if($profile && $profile->standard_hourly_rate)
             <div class="bg-white rounded-xl border border-gray-200 p-6 mt-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Earnings Info</h3>
                 <div class="space-y-4">
-                    @if($profile->hourly_rate)
                     <div>
-                        <p class="text-xs text-gray-500 mb-1">Hourly Rate</p>
-                        <p class="text-2xl font-bold text-primary-600">${{ number_format($profile->hourly_rate, 2) }}</p>
+                        <p class="text-xs text-gray-500 mb-1">Standard Hourly Rate</p>
+                        <p class="text-2xl font-bold text-primary-600">₱{{ number_format($profile->standard_hourly_rate, 2) }}</p>
+                    </div>
+                    @if($profile->minimum_payout_amount)
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Minimum Payout Amount</p>
+                        <p class="text-lg font-semibold text-gray-900">₱{{ number_format($profile->minimum_payout_amount, 2) }}</p>
                     </div>
                     @endif
-                    
-                    @if($profile->years_of_experience)
+                    @if($profile->preferred_payout_method)
                     <div>
-                        <p class="text-xs text-gray-500 mb-1">Experience</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $profile->years_of_experience }} <span class="text-sm font-normal">years</span></p>
-                    </div>
-                    @endif
-                    
-                    @if($profile->availability_status)
-                    <div>
-                        <p class="text-xs text-gray-500 mb-1">Availability</p>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $profile->availability_status === 'available' ? 'bg-green-100 text-green-800' : ($profile->availability_status === 'busy' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') }}">
-                            {{ ucfirst($profile->availability_status) }}
+                        <p class="text-xs text-gray-500 mb-1">Preferred Payout Method</p>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {{ ucfirst(str_replace('_', ' ', $profile->preferred_payout_method)) }}
                         </span>
                     </div>
                     @endif
@@ -174,44 +170,16 @@
             </div>
             @endif
 
-            <!-- Professional Information -->
-            @if($profile)
+            <!-- Experience Section -->
+            @if($profile && $profile->experience)
             <div class="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-6">Professional Information</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    @if($profile->job_title)
-                    <div>
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Job Title</p>
-                        <p class="text-gray-900">{{ $profile->job_title }}</p>
-                    </div>
-                    @endif
-                    
-                    @if($profile->company_name)
-                    <div>
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Company</p>
-                        <p class="text-gray-900">{{ $profile->company_name }}</p>
-                    </div>
-                    @endif
-                    
-                    @if($profile->years_of_experience)
-                    <div>
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Experience</p>
-                        <p class="text-gray-900">{{ $profile->years_of_experience }} years</p>
-                    </div>
-                    @endif
-                    
-                    @if($profile->hourly_rate)
-                    <div>
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Hourly Rate</p>
-                        <p class="text-gray-900">${{ number_format($profile->hourly_rate, 2) }}/hr</p>
-                    </div>
-                    @endif
-                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Experience</h3>
+                <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ $profile->experience }}</p>
             </div>
             @endif
 
             <!-- Social Links -->
-            @if($profile && ($profile->linkedin_url || $profile->github_url || $profile->portfolio_url || $profile->website_url))
+            @if($profile && ($profile->linkedin_url || $profile->github_url || $profile->portfolio_url))
             <div class="bg-white rounded-xl border border-gray-200 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-6">Links & Portfolio</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -256,21 +224,6 @@
                         <div>
                             <p class="font-medium text-gray-900">Portfolio</p>
                             <p class="text-xs text-gray-500">View work</p>
-                        </div>
-                    </a>
-                    @endif
-                    
-                    @if($profile->website_url)
-                    <a href="{{ $profile->website_url }}" target="_blank" 
-                       class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group">
-                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-blue-200 transition-colors">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-900">Website</p>
-                            <p class="text-xs text-gray-500">Visit site</p>
                         </div>
                     </a>
                     @endif
