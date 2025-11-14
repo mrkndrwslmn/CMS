@@ -396,6 +396,9 @@ class CouponService
         if ($coupon) {
             return [
                 'total_uses' => $coupon->current_uses,
+                'pending_uses' => $coupon->usages()->pending()->count(),
+                'completed_uses' => $coupon->usages()->completed()->count(),
+                'total_discount' => $coupon->usages()->completed()->sum('discount_amount'),
                 'total_discount_given' => $coupon->usages()->sum('discount_amount'),
                 'unique_users' => $coupon->usages()->distinct('user_id')->count(),
                 'usage_percentage' => $coupon->getUsagePercentage(),

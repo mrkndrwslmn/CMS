@@ -31,9 +31,9 @@
                     <div class="flex items-start justify-between mb-6">
                         <div>
                             <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold
-                                {{ $coupon->is_active ? 'bg-success-100 text-success-700' : 'bg-neutral-200 text-neutral-600' }}">
+                                {{ $coupon->status === 'active' ? 'bg-success-100 text-success-700' : 'bg-neutral-200 text-neutral-600' }}">
                                 <i class="fas fa-circle text-xs mr-2"></i>
-                                {{ $coupon->is_active ? 'Active' : 'Inactive' }}
+                                {{ $coupon->status === 'active' ? 'Active' : 'Inactive' }}
                             </div>
                             <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold ml-2
                                 {{ $coupon->coupon_type === 'public' ? 'bg-info-100 text-info-700' : 'bg-warning-100 text-warning-700' }}">
@@ -296,21 +296,15 @@
                 <div class="space-y-3">
                     <form action="{{ route('admin.coupons.toggle', $coupon) }}" method="POST">
                         @csrf
-                        @method('PATCH')
                         <button type="submit" class="w-full btn-secondary justify-center">
                             <i class="fas fa-power-off mr-2"></i>
-                            {{ $coupon->is_active ? 'Deactivate' : 'Activate' }} Coupon
+                            {{ $coupon->status === 'active' ? 'Deactivate' : 'Activate' }} Coupon
                         </button>
                     </form>
 
                     <button onclick="copyCouponCode()" class="w-full btn-secondary justify-center">
                         <i class="fas fa-copy mr-2"></i>Copy Code
                     </button>
-
-                    <a href="{{ route('admin.coupons.export', ['coupon_id' => $coupon->id]) }}" 
-                       class="block w-full btn-secondary text-center">
-                        <i class="fas fa-download mr-2"></i>Export Usage Report
-                    </a>
 
                     <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST" 
                           onsubmit="return confirm('Are you sure you want to delete this coupon? This action cannot be undone.')">
