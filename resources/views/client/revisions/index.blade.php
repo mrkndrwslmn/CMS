@@ -1,4 +1,4 @@
-@extends('client.layout')
+@extends('client.layouts.app')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 py-8 px-4 sm:px-6 lg:px-8">

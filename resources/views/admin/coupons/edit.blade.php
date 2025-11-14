@@ -445,66 +445,109 @@
             </div>
         </div>
 
-            <!-- Additional Settings -->
-            <div class="glass-card p-6">
-                <h3 class="text-lg font-bold text-neutral-800 mb-6">
-                    <i class="fas fa-cog text-neutral-600 mr-2"></i>Additional Settings
-                </h3>
-
-                <div class="space-y-4">
-                    <!-- Can Combine With Others -->
-                    <div class="flex items-start">
-                        <input type="checkbox" name="can_combine_with_others" id="can_combine_with_others" 
-                               value="1" {{ old('can_combine_with_others', $coupon->can_combine_with_others) ? 'checked' : '' }}
-                               class="mt-1 mr-3">
-                        <div>
-                            <label for="can_combine_with_others" class="text-sm font-semibold text-neutral-700 cursor-pointer">
-                                Allow Combining with Other Coupons
-                            </label>
-                            <p class="text-xs text-neutral-500 mt-1">Enable this to allow stacking with other coupons</p>
-                        </div>
+        <!-- Additional Settings Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-neutral-50 to-neutral-100 border-b border-neutral-200 px-6 py-4">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-neutral-600 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-sliders-h text-white"></i>
                     </div>
-
-                    <!-- Can Combine With Loyalty -->
-                    <div class="flex items-start">
-                        <input type="checkbox" name="can_combine_with_loyalty" id="can_combine_with_loyalty" 
-                               value="1" {{ old('can_combine_with_loyalty', $coupon->can_combine_with_loyalty) ? 'checked' : '' }}
-                               class="mt-1 mr-3">
-                        <div>
-                            <label for="can_combine_with_loyalty" class="text-sm font-semibold text-neutral-700 cursor-pointer">
-                                Allow Combining with Loyalty Points
-                            </label>
-                            <p class="text-xs text-neutral-500 mt-1">Users can use both coupon and loyalty points</p>
-                        </div>
-                    </div>
-
-                    <!-- Is Active -->
-                    <div class="flex items-start">
-                        <input type="checkbox" name="is_active" id="is_active" 
-                               value="1" {{ old('is_active', $coupon->is_active) ? 'checked' : '' }}
-                               class="mt-1 mr-3">
-                        <div>
-                            <label for="is_active" class="text-sm font-semibold text-neutral-700 cursor-pointer">
-                                Active
-                            </label>
-                            <p class="text-xs text-neutral-500 mt-1">Make this coupon available for use</p>
-                        </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-neutral-900">Additional Settings</h2>
+                        <p class="text-sm text-neutral-600">Configure stacking rules and coupon status</p>
                     </div>
                 </div>
             </div>
+            
+            <div class="p-6">
+                <div class="space-y-6">
+                    <!-- Stackable with Loyalty Tier -->
+                    <div class="flex items-start p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+                        <input type="checkbox" name="stackable_with_loyalty_tier" id="stackable_with_loyalty_tier" 
+                               value="1" {{ old('stackable_with_loyalty_tier', $coupon->stackable_with_loyalty_tier ?? true) ? 'checked' : '' }}
+                               class="mt-1 mr-3 w-5 h-5 text-primary-600 border-2 border-neutral-300 rounded focus:ring-2 focus:ring-primary-200">
+                        <div class="flex-1">
+                            <label for="stackable_with_loyalty_tier" class="text-sm font-semibold text-neutral-800 cursor-pointer flex items-center">
+                                <i class="fas fa-award text-warning-500 mr-2"></i>
+                                Allow Combining with Loyalty Tier Discounts
+                            </label>
+                            <p class="text-xs text-neutral-600 mt-1">Users can use both coupon and their loyalty tier discount together</p>
+                        </div>
+                    </div>
 
-            <!-- Actions -->
-            <div class="flex items-center justify-end gap-4">
-                <a href="{{ route('admin.coupons.show', $coupon) }}" class="btn-secondary">
-                    <i class="fas fa-times mr-2"></i>Cancel
-                </a>
-                <button type="submit" class="btn-primary">
-                    <i class="fas fa-save mr-2"></i>Update Coupon
-                </button>
+                    <!-- Stackable with Points -->
+                    <div class="flex items-start p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+                        <input type="checkbox" name="stackable_with_points" id="stackable_with_points" 
+                               value="1" {{ old('stackable_with_points', $coupon->stackable_with_points ?? true) ? 'checked' : '' }}
+                               class="mt-1 mr-3 w-5 h-5 text-primary-600 border-2 border-neutral-300 rounded focus:ring-2 focus:ring-primary-200">
+                        <div class="flex-1">
+                            <label for="stackable_with_points" class="text-sm font-semibold text-neutral-800 cursor-pointer flex items-center">
+                                <i class="fas fa-coins text-warning-500 mr-2"></i>
+                                Allow Combining with Loyalty Points
+                            </label>
+                            <p class="text-xs text-neutral-600 mt-1">Users can use both coupon and redeem loyalty points together</p>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="status" class="block text-sm font-semibold text-neutral-700 mb-2">
+                            Status <span class="text-error-500">*</span>
+                        </label>
+                        <select name="status" id="status" 
+                                class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all @error('status') border-error-500 @enderror" 
+                                required>
+                            <option value="active" {{ old('status', $coupon->status) === 'active' ? 'selected' : '' }}>
+                                ✅ Active - Ready to use
+                            </option>
+                            <option value="inactive" {{ old('status', $coupon->status) === 'inactive' ? 'selected' : '' }}>
+                                ⏸️ Inactive - Not available for use
+                            </option>
+                        </select>
+                        @error('status')
+                            <p class="text-error-500 text-sm mt-2 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <!-- Admin Notes -->
+                    <div>
+                        <label for="admin_notes" class="block text-sm font-semibold text-neutral-700 mb-2">
+                            Admin Notes
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-700 ml-2">
+                                <i class="fas fa-lock mr-1"></i> Internal Only
+                            </span>
+                        </label>
+                        <textarea name="admin_notes" id="admin_notes" rows="3" 
+                                  class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all @error('admin_notes') border-error-500 @enderror"
+                                  placeholder="Internal notes about this coupon (not visible to clients)...">{{ old('admin_notes', $coupon->admin_notes) }}</textarea>
+                        @error('admin_notes')
+                            <p class="text-error-500 text-sm mt-2 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-end gap-4 mt-6">
+            <a href="{{ route('admin.coupons.show', $coupon) }}" 
+               class="inline-flex items-center px-6 py-3 bg-white border-2 border-neutral-300 hover:border-neutral-400 text-neutral-700 rounded-lg transition-all shadow-sm hover:shadow font-medium">
+                <i class="fas fa-times mr-2"></i>
+                Cancel
+            </a>
+            <button type="submit" 
+                    class="inline-flex items-center px-8 py-3 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-lg transition-all shadow-lg hover:shadow-xl font-semibold">
+                <i class="fas fa-save mr-2"></i>
+                Update Coupon
+            </button>
         </div>
     </form>
 </div>
+@endsection
 
 @push('scripts')
 <script>
@@ -529,11 +572,11 @@
         if (type === 'percentage') {
             prefix.textContent = '%';
             input.max = '100';
-            hint.textContent = 'Max: 100%';
+            hint.innerHTML = '<i class="fas fa-lightbulb text-warning-500"></i> Max: 100%';
         } else {
             prefix.textContent = '₱';
             input.removeAttribute('max');
-            hint.textContent = 'Enter fixed discount amount';
+            hint.innerHTML = '<i class="fas fa-lightbulb text-warning-500"></i> Enter fixed discount amount';
         }
     }
 
@@ -546,17 +589,17 @@
         userField.classList.add('hidden');
         requestField.classList.add('hidden');
 
-        if (type === 'specific_user') {
+        if (type === 'user_specific') {
             userField.classList.remove('hidden');
-            document.querySelector('[name="user_id"]').required = true;
-            document.querySelector('[name="service_request_id"]').required = false;
-        } else if (type === 'specific_request') {
+            document.querySelector('[name="specific_user_id"]').required = true;
+            document.querySelector('[name="specific_request_id"]').required = false;
+        } else if (type === 'request_specific') {
             requestField.classList.remove('hidden');
-            document.querySelector('[name="service_request_id"]').required = true;
-            document.querySelector('[name="user_id"]').required = false;
+            document.querySelector('[name="specific_request_id"]').required = true;
+            document.querySelector('[name="specific_user_id"]').required = false;
         } else {
-            document.querySelector('[name="user_id"]').required = false;
-            document.querySelector('[name="service_request_id"]').required = false;
+            document.querySelector('[name="specific_user_id"]').required = false;
+            document.querySelector('[name="specific_request_id"]').required = false;
         }
     }
 
@@ -579,4 +622,3 @@
     });
 </script>
 @endpush
-@endsection
