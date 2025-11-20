@@ -146,6 +146,10 @@
                             <i class="fas fa-redo w-4 mr-3 text-xs"></i>
                             <span>Revision Requests</span>
                         </a>
+                        <a href="{{ route('admin.calendar.index') }}" class="flex items-center py-2 px-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm {{ request()->routeIs('admin.calendar*') ? 'bg-white/10 text-white' : '' }}">
+                            <i class="fas fa-calendar-alt w-4 mr-2"></i>
+                            <span>Project Calendar</span>
+                        </a>
                     </div>
                 </div>
                 

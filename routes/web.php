@@ -115,6 +115,329 @@ Route::prefix('api')->group(function () {
             ]);
         })->name('api.adiutor.rate');
         
+        // Adiutor schedule timeline endpoint
+        Route::get('/schedule/adiutor/{id}/timeline', function($id, \Illuminate\Http\Request $request) {
+            $user = \App\Models\User::findOrFail($id);
+            $startDate = $request->query('start_date', now()->startOfWeek()->format('Y-m-d'));
+            $projectId = $request->query('project_id'); // Get project filter
+            
+            // Parse start date
+            $weekStart = \Carbon\Carbon::parse($startDate);
+            $weekEnd = $weekStart->copy()->addDays(4)->endOfDay(); // Monday to Friday
+            
+            // Get scheduled tasks from task_schedules table
+            $scheduledTasks = \App\Models\TaskSchedule::where('adiutor_id', $id)
+                ->whereBetween('scheduled_start', [$weekStart, $weekEnd])
+                ->with('task');
+            
+            // Apply project filter if provided
+            if ($projectId) {
+                $scheduledTasks = $scheduledTasks->whereHas('task', function($query) use ($projectId) {
+                    $query->where('project_id', $projectId);
+                });
+            }
+            
+            $scheduledTasks = $scheduledTasks->get();
+            
+            // Build slots array from scheduled tasks
+            $slots = [];
+            
+            foreach ($scheduledTasks as $schedule) {
+                $start = \Carbon\Carbon::parse($schedule->scheduled_start);
+                
+                $slots[] = [
+                    'date' => $start->format('Y-m-d'),
+                    'hour' => $start->hour,
+                    'type' => 'task',
+                    'title' => $schedule->task->taskTitle ?? 'Task',
+                    'duration' => $schedule->getDurationInHours() . 'h',
+                    'is_synced' => $schedule->isSynced()
+                ];
+            }
+            
+            // Fetch Google Calendar events if connected
+            $calendarIntegration = \App\Models\AdiutorCalendarIntegration::where('adiutor_id', $id)
+                ->where('is_connected', true)
+                ->first();
+            
+            if ($calendarIntegration) {
+                try {
+                    $calendarService = app(\App\Services\GoogleCalendarService::class);
+                    $calendarEvents = $calendarService->getEvents($user, $weekStart, $weekEnd);
+                    
+                    \Log::info('Fetched calendar events', [
+                        'adiutor_id' => $id,
+                        'event_count' => count($calendarEvents),
+                        'events' => $calendarEvents
+                    ]);
+                    
+                    // Add calendar events to slots
+                    foreach ($calendarEvents as $event) {
+                        $start = \Carbon\Carbon::parse($event['start']);
+                        $end = \Carbon\Carbon::parse($event['end']);
+                        
+                        // Calculate duration in hours
+                        $durationMinutes = $start->diffInMinutes($end);
+                        $durationHours = round($durationMinutes / 60, 1);
+                        
+                        $slot = [
+                            'date' => $start->format('Y-m-d'),
+                            'hour' => $start->hour,
+                            'type' => 'calendar',
+                            'title' => $event['title'] ?? 'Calendar Event',
+                            'duration' => $durationHours . 'h',
+                            'is_synced' => true
+                        ];
+                        
+                        \Log::info('Adding calendar slot', $slot);
+                        $slots[] = $slot;
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Failed to fetch calendar events: ' . $e->getMessage());
+                    // Continue without calendar events if there's an error
+                }
+            }
+            
+            return response()->json([
+                'slots' => $slots,
+                'calendar_connected' => (bool) $calendarIntegration
+            ]);
+        })->name('api.schedule.timeline');
+        
+        // Project schedule timeline endpoint (all adiutors)
+        Route::get('/schedule/project/{id}/timeline', function($id, \Illuminate\Http\Request $request) {
+            $project = \App\Models\Project::findOrFail($id);
+            $startDate = $request->query('start_date', now()->startOfWeek()->format('Y-m-d'));
+            
+            // Parse start date
+            $weekStart = \Carbon\Carbon::parse($startDate);
+            $weekEnd = $weekStart->copy()->addDays(4)->endOfDay(); // Monday to Friday
+            
+            // Get all scheduled tasks for this project
+            $scheduledTasks = \App\Models\TaskSchedule::whereBetween('scheduled_start', [$weekStart, $weekEnd])
+                ->with(['task', 'adiutor'])
+                ->whereHas('task', function($query) use ($id) {
+                    $query->where('project_id', $id);
+                })
+                ->get();
+            
+            // Build slots array from scheduled tasks
+            $slots = [];
+            
+            foreach ($scheduledTasks as $schedule) {
+                $start = \Carbon\Carbon::parse($schedule->scheduled_start);
+                
+                $slots[] = [
+                    'date' => $start->format('Y-m-d'),
+                    'hour' => $start->hour,
+                    'type' => 'task',
+                    'title' => ($schedule->task->taskTitle ?? 'Task') . ' - ' . ($schedule->adiutor->fullName ?? 'Unknown'),
+                    'duration' => $schedule->getDurationInHours() . 'h',
+                    'is_synced' => $schedule->isSynced(),
+                    'adiutor' => $schedule->adiutor->fullName ?? 'Unknown'
+                ];
+            }
+            
+            return response()->json([
+                'slots' => $slots
+            ]);
+        })->name('api.schedule.project.timeline');
+        
+        // Test Google Calendar fetch
+        Route::get('/test-calendar/{id}', function($id) {
+            $user = \App\Models\User::findOrFail($id);
+            $integration = $user->calendarIntegration;
+            
+            if (!$integration) {
+                return response()->json(['error' => 'No calendar integration found']);
+            }
+            
+            if (!$integration->is_connected) {
+                return response()->json(['error' => 'Calendar not connected']);
+            }
+            
+            try {
+                $service = app(\App\Services\GoogleCalendarService::class);
+                $start = \Carbon\Carbon::now()->startOfWeek();
+                $end = $start->copy()->addDays(6);
+                
+                $events = $service->getEvents($user, $start, $end);
+                
+                return response()->json([
+                    'success' => true,
+                    'integration' => [
+                        'id' => $integration->id,
+                        'provider' => $integration->provider,
+                        'calendar_id' => $integration->calendar_id,
+                        'is_connected' => $integration->is_connected,
+                        'token_expires_at' => $integration->token_expires_at,
+                    ],
+                    'date_range' => [
+                        'start' => $start->toDateTimeString(),
+                        'end' => $end->toDateTimeString(),
+                    ],
+                    'event_count' => count($events),
+                    'events' => $events
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+        });
+        
+        // Test workload count
+        Route::get('/test-workload/{name}', function($name) {
+            $user = \App\Models\User::where('fullName', 'LIKE', '%' . $name . '%')
+                ->where('role', 'adiutor')
+                ->with(['assignedProjects' => function($query) {
+                    $query->whereIn('project_assignments.status', ['active', 'in_progress']);
+                }])
+                ->first();
+            
+            if (!$user) {
+                return response()->json(['error' => 'User not found']);
+            }
+            
+            $allAssignments = \DB::table('project_assignments')
+                ->where('adiutor_id', $user->id)
+                ->get();
+            
+            return response()->json([
+                'user_id' => $user->id,
+                'full_name' => $user->fullName,
+                'filtered_count' => $user->assignedProjects->count(),
+                'filtered_projects' => $user->assignedProjects->pluck('id'),
+                'all_assignments_count' => $allAssignments->count(),
+                'all_assignments' => $allAssignments
+            ]);
+        });
+        
+        // Get adiutor standard rate
+        Route::get('/adiutors/{id}/standard-rate', function($id) {
+            $user = \App\Models\User::with('adiutorProfile')->findOrFail($id);
+            
+            if ($user->role !== 'adiutor') {
+                return response()->json(['error' => 'User is not an adiutor'], 400);
+            }
+            
+            $standardRate = $user->adiutorProfile->standard_hourly_rate ?? null;
+            
+            return response()->json([
+                'standard_rate' => $standardRate,
+                'adiutor_id' => $user->id,
+                'adiutor_name' => $user->fullName
+            ]);
+        });
+        
+        // Schedule Task API
+        Route::post('/schedule/task', function(\Illuminate\Http\Request $request) {
+            try {
+                $validated = $request->validate([
+                    'task_id' => 'required|exists:tasks,taskID',
+                    'adiutor_id' => 'required|exists:users,id',
+                    'scheduled_start' => 'required|date',
+                    'scheduled_end' => 'required|date|after:scheduled_start',
+                ]);
+                
+                $task = \App\Models\Task::find($validated['task_id']);
+                $adiutor = \App\Models\User::find($validated['adiutor_id']);
+                
+                // Calculate duration in minutes
+                $start = \Carbon\Carbon::parse($validated['scheduled_start']);
+                $end = \Carbon\Carbon::parse($validated['scheduled_end']);
+                $durationMinutes = $start->diffInMinutes($end);
+                
+                // Create schedule entry
+                $schedule = \App\Models\TaskSchedule::create([
+                    'task_id' => $validated['task_id'],
+                    'adiutor_id' => $validated['adiutor_id'],
+                    'scheduled_start' => $validated['scheduled_start'],
+                    'scheduled_end' => $validated['scheduled_end'],
+                    'estimated_duration_minutes' => $durationMinutes,
+                    'schedule_type' => 'manual',
+                ]);
+                
+                // If adiutor has Google Calendar connected, create event
+                \Log::info('Checking calendar integration', [
+                    'adiutor_id' => $adiutor->id,
+                    'has_integration' => $adiutor->calendarIntegration ? 'yes' : 'no',
+                    'is_connected' => $adiutor->calendarIntegration ? $adiutor->calendarIntegration->is_connected : 'N/A'
+                ]);
+                
+                if ($adiutor->calendarIntegration && $adiutor->calendarIntegration->is_connected) {
+                    try {
+                        \Log::info('Creating Google Calendar event', ['task_id' => $task->taskID]);
+                        
+                        $calendarService = app(\App\Services\GoogleCalendarService::class);
+                        $eventId = $calendarService->createTaskEvent($adiutor, [
+                            'title' => $task->taskTitle,
+                            'description' => $task->taskDescription,
+                            'project' => $task->project->title ?? 'N/A',
+                            'priority' => $task->priority ?? 'medium',
+                            'start' => \Carbon\Carbon::parse($validated['scheduled_start']),
+                            'end' => \Carbon\Carbon::parse($validated['scheduled_end']),
+                            'url' => route('adiutor.tasks.show', $task->taskID)
+                        ]);
+                        
+                        \Log::info('Google Calendar event created', [
+                            'task_id' => $task->taskID,
+                            'event_id' => $eventId
+                        ]);
+                        
+                        $schedule->update(['google_calendar_event_id' => $eventId]);
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to create Google Calendar event', [
+                            'task_id' => $validated['task_id'],
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                    }
+                } else {
+                    \Log::warning('Adiutor does not have Google Calendar connected', [
+                        'adiutor_id' => $adiutor->id
+                    ]);
+                }
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Task scheduled successfully',
+                    'schedule' => $schedule
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                \Log::error('Validation failed for task scheduling', [
+                    'errors' => $e->errors(),
+                    'request' => $request->all()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            } catch (\Exception $e) {
+                \Log::error('Failed to schedule task', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'request' => $request->all()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        })->name('api.schedule.task');
+        
+        // Google Calendar Integration routes
+        Route::prefix('calendar')->name('calendar.')->middleware('auth')->group(function () {
+            Route::get('/', [\App\Http\Controllers\CalendarController::class, 'index'])->name('index');
+            Route::get('/connection', [\App\Http\Controllers\CalendarController::class, 'connection'])->name('connection');
+            Route::get('/connect', [\App\Http\Controllers\CalendarController::class, 'connect'])->name('connect');
+            Route::get('/callback', [\App\Http\Controllers\CalendarController::class, 'callback'])->name('callback');
+            Route::post('/disconnect', [\App\Http\Controllers\CalendarController::class, 'disconnect'])->name('disconnect');
+            Route::get('/test-connection', [\App\Http\Controllers\CalendarController::class, 'testConnection'])->name('test');
+        });
+        
         Route::prefix('messages')->name('api.messages.')->group(function () {
             Route::get('/conversations', [\App\Http\Controllers\Api\MessageController::class, 'index'])->name('conversations');
             Route::get('/unread-count', [\App\Http\Controllers\Api\MessageController::class, 'unreadCount'])->name('unread-count');
@@ -426,6 +749,11 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::post('/{revision}/reassign', [\App\Http\Controllers\Admin\RevisionController::class, 'reassign'])->name('reassign');
     });
     
+    // Calendar Management
+    Route::prefix('calendar')->name('calendar.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\CalendarController::class, 'index'])->name('index');
+    });
+    
     // Feedback Management
     Route::resource('feedback', \App\Http\Controllers\Admin\FeedbackManagementController::class, ['only' => ['index', 'show']]);
     Route::post('/feedback/{feedback}/respond', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'respond'])->name('feedback.respond');
@@ -448,6 +776,7 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
 
     // Project Management (NEW)
     Route::resource('projects', \App\Http\Controllers\Admin\ProjectManagementController::class);
+    Route::get('/projects/{project}/schedule', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'schedule'])->name('projects.schedule');
     Route::post('/projects/{project}/notes', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'addNote'])->name('projects.notes.store');
     Route::patch('/projects/{project}/status', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'updateStatus'])->name('projects.update-status');
     Route::patch('/projects/{project}/complete', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'complete'])->name('projects.complete');
@@ -666,4 +995,14 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
         Route::get('/{revision}/upload', [\App\Http\Controllers\Adiutor\RevisionController::class, 'uploadForm'])->name('upload');
         Route::post('/{revision}/complete', [\App\Http\Controllers\Adiutor\RevisionController::class, 'complete'])->name('complete');
     });
+});
+
+// Calendar Integration Routes (Adiutors only)
+Route::middleware(['auth', 'role:adiutor'])->prefix('calendar')->name('calendar.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\CalendarController::class, 'index'])->name('index');
+    Route::get('/connect', [\App\Http\Controllers\CalendarController::class, 'connect'])->name('connect');
+    Route::get('/callback', [\App\Http\Controllers\CalendarController::class, 'callback'])->name('callback');
+    Route::post('/disconnect', [\App\Http\Controllers\CalendarController::class, 'disconnect'])->name('disconnect');
+    Route::get('/test', [\App\Http\Controllers\CalendarController::class, 'testConnection'])->name('test');
+    Route::get('/preview-connected', [\App\Http\Controllers\CalendarController::class, 'previewConnected'])->name('preview');
 });

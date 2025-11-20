@@ -89,6 +89,10 @@ class ProfileController extends Controller
             'location' => 'nullable|string|max:255',
             'languages' => 'nullable|array',
             'availability' => 'nullable|array',
+            'skills' => 'nullable|array',
+            'skills.*.skill_id' => 'required|exists:skills,id',
+            'skills.*.proficiency' => 'required|in:beginner,intermediate,advanced,expert',
+            'skills.*.years_experience' => 'nullable|integer|min:0|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -116,10 +120,31 @@ class ProfileController extends Controller
             DB::table('adiutor_profiles')
                 ->where('user_id', $user->id)
                 ->update($profileData);
+            $profileId = $existingProfile->id;
         } else {
             $profileData['user_id'] = $user->id;
             $profileData['created_at'] = now();
-            DB::table('adiutor_profiles')->insert($profileData);
+            $profileId = DB::table('adiutor_profiles')->insertGetId($profileData);
+        }
+
+        // Update skills (use profile ID, not user ID)
+        if ($request->has('skills')) {
+            // Remove existing skills
+            DB::table('adiutor_skills')->where('adiutor_id', $profileId)->delete();
+
+            // Add new skills
+            if ($request->skills) {
+                foreach ($request->skills as $skill) {
+                    DB::table('adiutor_skills')->insert([
+                        'adiutor_id' => $profileId,
+                        'skill_id' => $skill['skill_id'],
+                        'proficiency_level' => $skill['proficiency'],
+                        'years_experience' => $skill['years_experience'] ?? null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
         }
 
         return redirect()->route('adiutor.profile.show')->with('success', 'Profile updated successfully!');
@@ -143,14 +168,21 @@ class ProfileController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Remove existing skills
-        DB::table('adiutor_skills')->where('adiutor_id', $user->id)->delete();
+        // Get adiutor profile ID (not user ID!)
+        $profile = DB::table('adiutor_profiles')->where('user_id', $user->id)->first();
+        
+        if (!$profile) {
+            return redirect()->back()->with('error', 'Profile not found. Please complete your profile first.');
+        }
+
+        // Remove existing skills (use profile ID, not user ID)
+        DB::table('adiutor_skills')->where('adiutor_id', $profile->id)->delete();
 
         // Add new skills
         if ($request->skills) {
             foreach ($request->skills as $skill) {
                 DB::table('adiutor_skills')->insert([
-                    'adiutor_id' => $user->id,
+                    'adiutor_id' => $profile->id,  // Use profile ID
                     'skill_id' => $skill['skill_id'],
                     'proficiency_level' => $skill['proficiency'],
                     'years_experience' => $skill['years_experience'] ?? null,

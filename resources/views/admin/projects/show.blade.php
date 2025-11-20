@@ -484,10 +484,11 @@
 
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 
-            <div class="modal-content inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
+            <div class="modal-content inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full relative z-50">
                 
-                <form action="{{ route('admin.projects.assign-adiutor', $project->id) }}" method="POST">
+                <form action="{{ route('admin.projects.assign-adiutor', $project->id) }}" method="POST" id="assignAdiutorForm">
                     @csrf
+                    <input type="hidden" name="adiutor_id" id="adiutor_id" required>
                     
                     <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4 flex justify-between items-center">
                         <h5 class="text-lg font-semibold text-neutral-800">Assign Adiutor to Project</h5>
@@ -498,29 +499,144 @@
                     
                     <div class="p-6 space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-2">
-                                Select Adiutor <span class="text-error-500">*</span>
-                            </label>
-                            <select name="adiutor_id" id="adiutor_select" required
-                                    class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
-                                <option value="">-- Select Adiutor --</option>
-                                @foreach($availableAdiutors as $adiutor)
-                                    <option value="{{ $adiutor->id }}">{{ $adiutor->fullName }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 mb-2">
-                                Hourly Rate (₱)
-                            </label>
-                            <input type="number" name="hourly_rate" id="hourly_rate_input" step="0.01" min="0"
-                                   class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-                                   placeholder="Leave empty to use adiutor's standard rate">
-                            <p class="text-xs text-neutral-500 mt-1">
-                                <span id="standard_rate_display" class="font-medium text-primary-600"></span>
-                                Override the adiutor's standard rate for this project
-                            </p>
+                            <h3 class="text-sm font-medium text-neutral-700 mb-4">Select Adiutor <span class="text-error-500">*</span></h3>
+                            
+                            <!-- Adiutors Table -->
+                            <div class="overflow-x-auto border border-neutral-200 rounded-lg">
+                                <table class="min-w-full divide-y divide-neutral-200">
+                                    <thead class="bg-neutral-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Select</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Adiutor Name</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Calendar</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Skills</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Workload</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-neutral-200">
+                                        @forelse($availableAdiutors as $adiutor)
+                                        <tr class="hover:bg-neutral-50 cursor-pointer adiutor-row" 
+                                            data-adiutor-id="{{ $adiutor['id'] }}"
+                                            data-adiutor-name="{{ $adiutor['fullName'] }}"
+                                            onclick="selectAdiutor({{ $adiutor['id'] }}, '{{ $adiutor['fullName'] }}', {{ $adiutor['rating'] ?? 0 }})">
+                                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                                <input type="radio" 
+                                                       name="adiutor_radio" 
+                                                       value="{{ $adiutor['id'] }}"
+                                                       class="w-4 h-4 text-primary-600 focus:ring-primary-500 border-neutral-300">
+                                            </td>
+                                            <td class="px-4 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                                                        {{ substr($adiutor['fullName'], 0, 1) }}
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-sm font-medium text-neutral-900">{{ $adiutor['fullName'] }}</div>
+                                                        <div class="text-xs text-neutral-500">
+                                                            @for($i = 0; $i < 5; $i++)
+                                                                @if($i < floor($adiutor['rating']))
+                                                                    <i class="fas fa-star text-yellow-400"></i>
+                                                                @elseif($i < $adiutor['rating'])
+                                                                    <i class="fas fa-star-half-alt text-yellow-400"></i>
+                                                                @else
+                                                                    <i class="far fa-star text-neutral-300"></i>
+                                                                @endif
+                                                            @endfor
+                                                            <span class="ml-1">{{ number_format($adiutor['rating'], 1) }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                                @if($adiutor['calendar_connected'])
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
+                                                        <i class="fas fa-check-circle mr-1"></i>
+                                                        Connected
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600">
+                                                        <i class="fas fa-times-circle mr-1"></i>
+                                                        Not Connected
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-4 py-4">
+                                                <div class="flex flex-wrap gap-1">
+                                                    @if($adiutor['skills'] && $adiutor['skills']->count() > 0)
+                                                        @foreach($adiutor['skills']->take(3) as $skill)
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800">
+                                                                {{ $skill->name }}
+                                                            </span>
+                                                        @endforeach
+                                                        @if($adiutor['skills']->count() > 3)
+                                                            @php
+                                                                $remainingSkills = $adiutor['skills']->slice(3)->pluck('name')->implode(', ');
+                                                            @endphp
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600 cursor-help relative group"
+                                                                  title="{{ $remainingSkills }}">
+                                                                +{{ $adiutor['skills']->count() - 3 }} more
+                                                                <!-- Tooltip -->
+                                                                <span class="invisible group-hover:visible absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-neutral-800 text-white text-xs rounded-lg shadow-lg whitespace-nowrap z-50 max-w-xs">
+                                                                    {{ $remainingSkills }}
+                                                                    <span class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-neutral-800"></span>
+                                                                </span>
+                                                            </span>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-xs text-neutral-400 italic">No skills listed</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                                @php
+                                                    $projectCount = $adiutor['active_projects_count'];
+                                                    if ($projectCount == 0) {
+                                                        $workloadClass = 'bg-success-100 text-success-800';
+                                                        $workloadIcon = 'fa-circle';
+                                                    } elseif ($projectCount <= 3) {
+                                                        $workloadClass = 'bg-warning-100 text-warning-800';
+                                                        $workloadIcon = 'fa-circle';
+                                                    } else {
+                                                        $workloadClass = 'bg-error-100 text-error-800';
+                                                        $workloadIcon = 'fa-circle';
+                                                    }
+                                                @endphp
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $workloadClass }}">
+                                                    <i class="fas {{ $workloadIcon }} mr-1.5 text-xs"></i>
+                                                    {{ $projectCount }} {{ Str::plural('project', $projectCount) }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                                <button type="button" 
+                                                        onclick="event.stopPropagation(); viewAdiutorSchedule({{ $adiutor['id'] }}, '{{ addslashes($adiutor['fullName']) }}')"
+                                                        class="inline-flex items-center px-3 py-1.5 border border-primary-300 rounded-md text-xs font-medium text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                                                    <i class="far fa-calendar-alt mr-1.5"></i>
+                                                    View Schedule
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="6" class="px-4 py-8 text-center text-neutral-500">
+                                                <i class="fas fa-users text-3xl mb-2"></i>
+                                                <p>No adiutors available</p>
+                                            </td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div id="selected_adiutor_info" class="mt-4 hidden">
+                                <div class="bg-primary-50 border border-primary-200 rounded-lg p-4">
+                                    <p class="text-sm text-primary-800">
+                                        <i class="fas fa-check-circle mr-2"></i>
+                                        <strong>Selected:</strong> <span id="selected_name"></span>
+                                        <span id="selected_rating" class="ml-2"></span>
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                         
                         <div>
@@ -532,7 +648,26 @@
                             <p class="text-xs text-neutral-500 mt-1 ml-6">Adiutor must log time entries for hourly payment</p>
                         </div>
                         
-                        <div>
+                        <div id="hourly_rate_container">
+                            <label class="block text-sm font-medium text-neutral-700 mb-2">
+                                Hourly Rate (₱)
+                            </label>
+                            <input type="number" name="hourly_rate" id="hourly_rate_input" step="0.01" min="0"
+                                   class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                   placeholder="Leave empty to use adiutor's standard rate">
+                            <p class="text-xs text-neutral-500 mt-1">
+                                <span id="standard_rate_display" class="font-medium text-primary-600"></span>
+                                Override the adiutor's standard rate for this project
+                            </p>
+                            <div id="hourly_rate_warning" class="hidden mt-2 p-2 bg-warning-50 border border-warning-300 rounded-lg">
+                                <p class="text-xs text-warning-700 flex items-start">
+                                    <i class="fas fa-exclamation-triangle mr-2 mt-0.5"></i>
+                                    <span>Warning: The overridden hourly rate is below the adiutor's standard rate.</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div id="agreed_rate_container">
                             <label class="block text-sm font-medium text-neutral-700 mb-2">
                                 Agreed Rate (₱)
                             </label>
@@ -577,6 +712,83 @@
     </div>
 </div>
 
+<!-- Schedule View Modal -->
+<div id="scheduleModal" class="modal-overlay fixed inset-0 bg-neutral-900 bg-opacity-50 hidden flex items-center justify-center z-50" onclick="hideScheduleModal()">
+    <div class="modal-content bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden" onclick="event.stopPropagation()">
+        <div class="sticky top-0 bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between z-10">
+            <div>
+                <h2 class="text-xl font-bold text-neutral-900">
+                    <i class="far fa-calendar-alt mr-2 text-primary-600"></i>
+                    Schedule: <span id="schedule_adiutor_name" class="text-primary-600"></span>
+                </h2>
+                <p class="text-sm text-neutral-500 mt-1">
+                    Week: <span id="schedule_week_range"></span>
+                </p>
+            </div>
+            <button onclick="hideScheduleModal()" class="text-neutral-400 hover:text-neutral-600 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="p-6">
+            <!-- Week Navigation -->
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="navigateWeek('prev')" class="px-4 py-2 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors">
+                    <i class="fas fa-chevron-left mr-2"></i>
+                    Previous Week
+                </button>
+                <button onclick="navigateWeek('today')" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                    <i class="fas fa-calendar-day mr-2"></i>
+                    Today
+                </button>
+                <button onclick="navigateWeek('next')" class="px-4 py-2 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors">
+                    Next Week
+                    <i class="fas fa-chevron-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="overflow-x-auto border border-neutral-200 rounded-lg">
+                <table class="min-w-full divide-y divide-neutral-200">
+                    <thead class="bg-neutral-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider w-20">Time</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider" id="day_0_header">Mon</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider" id="day_1_header">Tue</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider" id="day_2_header">Wed</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider" id="day_3_header">Thu</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider" id="day_4_header">Fri</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule_calendar_body" class="bg-white divide-y divide-neutral-200">
+                        <!-- Time slots will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary -->
+            <div class="mt-6 bg-neutral-50 border border-neutral-200 rounded-lg p-4">
+                <div class="flex items-center justify-center gap-6 text-sm">
+                    <div class="flex items-center">
+                        <span class="w-4 h-4 bg-primary-100 border border-primary-300 rounded mr-2"></span>
+                        <span class="text-neutral-600">CMS Task</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-4 h-4 bg-purple-100 border border-purple-300 rounded mr-2"></span>
+                        <span class="text-neutral-600">Calendar Event</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sticky bottom-0 bg-neutral-50 border-t border-neutral-200 px-6 py-4 flex justify-end gap-3">
+            <button onclick="hideScheduleModal()" class="px-4 py-2 bg-white border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
 /* Modal CSS */
 .modal-overlay {
@@ -606,6 +818,9 @@
 </style>
 
 <script>
+// Global variable for standard rate validation
+let adiutorStandardRate = 0;
+
 // Modal JavaScript Functions
 function showCompleteModal() {
     const modal = document.getElementById('completeModal');
@@ -634,54 +849,246 @@ function hideAssignModal() {
     const modal = document.getElementById('assignModal');
     modal.classList.add('hidden');
     // Reset form
+    document.getElementById('assignAdiutorForm').reset();
+    document.getElementById('adiutor_id').value = '';
+    document.getElementById('selected_adiutor_info').classList.add('hidden');
     document.getElementById('hourly_rate_input').value = '';
     document.getElementById('standard_rate_display').textContent = '';
+    
+    // Uncheck all radio buttons
+    document.querySelectorAll('input[name="adiutor_radio"]').forEach(radio => {
+        radio.checked = false;
+    });
+    
+    // Remove selected styling from rows
+    document.querySelectorAll('.adiutor-row').forEach(row => {
+        row.classList.remove('bg-primary-50', 'border-l-4', 'border-primary-500');
+    });
 }
 
-// Auto-fill hourly rate when adiutor is selected
-document.addEventListener('DOMContentLoaded', function() {
-    const adiutorSelect = document.getElementById('adiutor_select');
-    const hourlyRateInput = document.getElementById('hourly_rate_input');
-    const standardRateDisplay = document.getElementById('standard_rate_display');
+// Select adiutor from table
+function selectAdiutor(adiutorId, adiutorName, rating) {
+    // Update hidden input
+    document.getElementById('adiutor_id').value = adiutorId;
     
-    if (adiutorSelect) {
-        adiutorSelect.addEventListener('change', function() {
-            const adiutorId = this.value;
-            
-            if (adiutorId) {
-                // Fetch adiutor's standard rate
-                fetch(`/api/adiutor/${adiutorId}/rate`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.rate && data.rate > 0) {
-                            standardRateDisplay.textContent = `Standard Rate: ₱${parseFloat(data.rate).toFixed(2)}/hr - `;
-                            
-                            // Auto-fill if field is empty
-                            if (!hourlyRateInput.value) {
-                                hourlyRateInput.value = data.rate;
-                            }
-                        } else {
-                            standardRateDisplay.textContent = 'No standard rate set - ';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching rate:', error);
-                        standardRateDisplay.textContent = '';
-                    });
-            } else {
-                standardRateDisplay.textContent = '';
-                hourlyRateInput.value = '';
-            }
-        });
+    // Update selected info display
+    document.getElementById('selected_name').textContent = adiutorName;
+    
+    // Build rating stars
+    let ratingHtml = '';
+    for (let i = 0; i < 5; i++) {
+        if (i < Math.floor(rating)) {
+            ratingHtml += '<i class="fas fa-star text-yellow-400"></i>';
+        } else if (i < rating) {
+            ratingHtml += '<i class="fas fa-star-half-alt text-yellow-400"></i>';
+        } else {
+            ratingHtml += '<i class="far fa-star text-neutral-300"></i>';
+        }
     }
-});
+    ratingHtml += ` <span class="ml-1">${rating.toFixed(1)}</span>`;
+    document.getElementById('selected_rating').innerHTML = ratingHtml;
+    
+    // Show selected info
+    document.getElementById('selected_adiutor_info').classList.remove('hidden');
+    
+    // Remove previous selection styling
+    document.querySelectorAll('.adiutor-row').forEach(row => {
+        row.classList.remove('bg-primary-50', 'border-l-4', 'border-primary-500');
+    });
+    
+    // Add selection styling to current row
+    const selectedRow = document.querySelector(`.adiutor-row[data-adiutor-id="${adiutorId}"]`);
+    if (selectedRow) {
+        selectedRow.classList.add('bg-primary-50', 'border-l-4', 'border-primary-500');
+    }
+    
+    // Check the radio button
+    const radioButton = document.querySelector(`input[name="adiutor_radio"][value="${adiutorId}"]`);
+    if (radioButton) {
+        radioButton.checked = true;
+    }
+    
+    // Fetch adiutor's standard rate
+    fetch(`/api/adiutor/${adiutorId}/rate`)
+        .then(response => response.json())
+        .then(data => {
+            const standardRateDisplay = document.getElementById('standard_rate_display');
+            const hourlyRateInput = document.getElementById('hourly_rate_input');
+            
+            if (data.rate && data.rate > 0) {
+                adiutorStandardRate = parseFloat(data.rate);
+                standardRateDisplay.textContent = `Standard rate: ₱${parseFloat(data.rate).toFixed(2)}/hour. `;
+                
+                // Auto-fill if field is empty
+                if (!hourlyRateInput.value) {
+                    hourlyRateInput.value = data.rate;
+                }
+            } else {
+                adiutorStandardRate = 0;
+                standardRateDisplay.textContent = 'No standard rate set. ';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching rate:', error);
+            adiutorStandardRate = 0;
+            document.getElementById('standard_rate_display').textContent = '';
+        });
+}
 
+// Old dropdown logic removed - no longer needed
+
+// Schedule View Modal
+let currentAdiutorId = null;
+let currentWeekStart = null;
+
+// View adiutor's schedule
+function viewAdiutorSchedule(adiutorId, adiutorName) {
+    currentAdiutorId = adiutorId;
+    currentWeekStart = getStartOfWeek(new Date());
+    
+    // Set adiutor name
+    document.getElementById('schedule_adiutor_name').textContent = adiutorName;
+    
+    // Show modal
+    const modal = document.getElementById('scheduleModal');
+    modal.classList.remove('hidden');
+    
+    // Load schedule
+    loadSchedule();
+}
+
+function hideScheduleModal() {
+    const modal = document.getElementById('scheduleModal');
+    modal.classList.add('hidden');
+    currentAdiutorId = null;
+    currentWeekStart = null;
+}
+
+function navigateWeek(direction) {
+    if (direction === 'today') {
+        currentWeekStart = getStartOfWeek(new Date());
+    } else if (direction === 'prev') {
+        currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+    } else if (direction === 'next') {
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    }
+    
+    loadSchedule();
+}
+
+function getStartOfWeek(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+    return new Date(d.setDate(diff));
+}
+
+function formatDate(date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[date.getMonth()]} ${date.getDate()}`;
+}
+
+function loadSchedule() {
+    // Update week range display
+    const weekEnd = new Date(currentWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 4); // Friday
+    document.getElementById('schedule_week_range').textContent = 
+        `${formatDate(currentWeekStart)} - ${formatDate(weekEnd)}, ${currentWeekStart.getFullYear()}`;
+    
+    // Update day headers
+    for (let i = 0; i < 5; i++) {
+        const dayDate = new Date(currentWeekStart);
+        dayDate.setDate(dayDate.getDate() + i);
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        document.getElementById(`day_${i}_header`).innerHTML = 
+            `${dayNames[i]}<br><span class="text-neutral-400 font-normal">${dayDate.getMonth() + 1}/${dayDate.getDate()}</span>`;
+    }
+    
+    // Fetch schedule data from server
+    const startDate = currentWeekStart.toISOString().split('T')[0];
+    fetch(`/api/schedule/adiutor/${currentAdiutorId}/timeline?start_date=${startDate}`)
+        .then(response => response.json())
+        .then(data => {
+            renderSchedule(data);
+        })
+        .catch(error => {
+            console.error('Error loading schedule:', error);
+            // Render empty schedule as fallback
+            renderSchedule({ slots: [], summary: { scheduled: 0, available: 0 } });
+        });
+}
+
+function renderSchedule(data) {
+    const tbody = document.getElementById('schedule_calendar_body');
+    tbody.innerHTML = '';
+    
+    // Working hours: 8 AM to 6 PM
+    const startHour = 8;
+    const endHour = 18;
+    
+    for (let hour = startHour; hour < endHour; hour++) {
+        const row = document.createElement('tr');
+        
+        // Time column
+        const timeCell = document.createElement('td');
+        timeCell.className = 'px-4 py-3 text-sm text-neutral-500 font-medium border-r border-neutral-200';
+        timeCell.textContent = `${hour.toString().padStart(2, '0')}:00`;
+        row.appendChild(timeCell);
+        
+        // Day columns (Mon-Fri)
+        for (let day = 0; day < 5; day++) {
+            const cell = document.createElement('td');
+            cell.className = 'px-2 py-3 text-center text-xs border-r border-neutral-200 min-w-[120px]';
+            
+            // Find events for this time slot
+            const dayDate = new Date(currentWeekStart);
+            dayDate.setDate(dayDate.getDate() + day);
+            const dateStr = dayDate.toISOString().split('T')[0];
+            const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+            
+            const events = (data.slots || []).filter(slot => 
+                slot.date === dateStr && slot.hour === hour
+            );
+            
+            if (events.length > 0) {
+                events.forEach(event => {
+                    const eventDiv = document.createElement('div');
+                    if (event.type === 'task') {
+                        eventDiv.className = 'bg-primary-100 border border-primary-300 text-primary-800 rounded px-2 py-1 mb-1 text-left';
+                        eventDiv.innerHTML = `
+                            <div class="font-medium">📋 ${event.title}</div>
+                            <div class="text-xs">${event.duration}</div>
+                        `;
+                    } else if (event.type === 'calendar') {
+                        eventDiv.className = 'bg-purple-100 border border-purple-300 text-purple-800 rounded px-2 py-1 mb-1 text-left';
+                        eventDiv.innerHTML = `
+                            <div class="font-medium">⚫ ${event.title}</div>
+                            <div class="text-xs">${event.duration}</div>
+                        `;
+                    }
+                    cell.appendChild(eventDiv);
+                });
+            } else {
+                // Empty slot - check if it's lunch time
+                if (hour === 12) {
+                    cell.innerHTML = '<span class="text-neutral-400 italic">Lunch</span>';
+                    cell.className += ' bg-neutral-50';
+                }
+            }
+            
+            row.appendChild(cell);
+        }
+        
+        tbody.appendChild(row);
+    }
+}
 
 // Close modal when pressing Escape key
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         hideCompleteModal();
         hideAssignModal();
+        hideScheduleModal();
     }
 });
 
@@ -693,6 +1100,48 @@ document.addEventListener('DOMContentLoaded', function() {
             event.stopPropagation();
         });
     });
+    
+    // Toggle between Hourly Rate and Agreed Rate based on time tracking checkbox
+    const timeTrackingCheckbox = document.querySelector('input[name="requires_time_tracking"]');
+    const hourlyRateDiv = document.getElementById('hourly_rate_container');
+    const agreedRateDiv = document.getElementById('agreed_rate_container');
+    
+    if (timeTrackingCheckbox && hourlyRateDiv && agreedRateDiv) {
+        function toggleRateFields() {
+            if (timeTrackingCheckbox.checked) {
+                // Show Hourly Rate, hide Agreed Rate
+                hourlyRateDiv.style.display = 'block';
+                agreedRateDiv.style.display = 'none';
+            } else {
+                // Hide Hourly Rate, show Agreed Rate
+                hourlyRateDiv.style.display = 'none';
+                agreedRateDiv.style.display = 'block';
+            }
+        }
+        
+        // Initial state
+        toggleRateFields();
+        
+        // Listen for changes
+        timeTrackingCheckbox.addEventListener('change', toggleRateFields);
+    }
+    
+    // Validate hourly rate against standard rate
+    const hourlyRateInput = document.getElementById('hourly_rate_input');
+    const hourlyRateWarning = document.getElementById('hourly_rate_warning');
+    
+    if (hourlyRateInput && hourlyRateWarning) {
+        hourlyRateInput.addEventListener('input', function() {
+            const overriddenRate = parseFloat(this.value);
+            
+            // Only show warning if a value was entered and it's below standard rate
+            if (this.value && overriddenRate && adiutorStandardRate && overriddenRate < adiutorStandardRate) {
+                hourlyRateWarning.classList.remove('hidden');
+            } else {
+                hourlyRateWarning.classList.add('hidden');
+            }
+        });
+    }
 });
 </script>
 

@@ -257,13 +257,24 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the skills for this adiutor user
+     * Get the skills for this adiutor user (through adiutor_profile)
      */
     public function skills()
     {
-        return $this->belongsToMany(Skill::class, 'adiutor_skills', 'adiutor_id', 'skill_id')
-                    ->withPivot('proficiency_level', 'years_experience')
-                    ->withTimestamps();
+        // Use a hasMany through the adiutor profile
+        return $this->hasManyThrough(
+            Skill::class,
+            AdiutorProfile::class,
+            'user_id',     // Foreign key on adiutor_profiles
+            'id',          // Foreign key on skills
+            'id',          // Local key on users
+            'id'           // Local key on adiutor_profiles
+        )
+        ->join('adiutor_skills', function($join) {
+            $join->on('skills.id', '=', 'adiutor_skills.skill_id')
+                 ->on('adiutor_profiles.id', '=', 'adiutor_skills.adiutor_id');
+        })
+        ->select('skills.*', 'adiutor_skills.proficiency_level', 'adiutor_skills.years_experience');
     }
 
     /**
@@ -356,6 +367,14 @@ class User extends Authenticatable
     public function receivedFeedback()
     {
         return $this->hasMany(Feedback::class, 'adiutor_id');
+    }
+
+    /**
+     * Get calendar integration for this adiutor
+     */
+    public function calendarIntegration(): HasOne
+    {
+        return $this->hasOne(AdiutorCalendarIntegration::class, 'adiutor_id');
     }
 
     /**
