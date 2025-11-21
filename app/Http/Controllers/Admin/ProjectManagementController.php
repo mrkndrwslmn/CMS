@@ -731,39 +731,35 @@ class ProjectManagementController extends Controller
 
         // Auto-schedule assigned tasks that don't have a schedule yet
         foreach ($project->tasks as $task) {
-            // If task is assigned to an adiutor but not scheduled yet, auto-create schedule
-            if ($task->assigned_to && 
+            // If task has a deadline and is assigned to an adiutor but not scheduled yet, auto-create schedule
+            if ($task->deadline &&
+                $task->assignedTo && 
                 $task->assignedUser && 
                 $task->assignedUser->role === 'adiutor' && 
                 !in_array($task->taskID, $scheduledTaskIds)) {
                 
-                // Calculate schedule times based on deadline or default to tomorrow
-                if ($task->deadline) {
-                    $deadline = \Carbon\Carbon::parse($task->deadline);
-                    $endTime = $deadline->copy()->setTime(17, 0, 0); // 5 PM on deadline
-                    
-                    // Calculate start time (8 hours before, or 9 AM same day, whichever is later)
-                    $estimatedHours = min($task->estimated_hours ?? 8, 8); // Cap at 8 hours per day
-                    $startTime = $endTime->copy()->subHours($estimatedHours);
-                    
-                    // If start time is before 9 AM, set it to 9 AM same day
-                    if ($startTime->hour < 9) {
-                        $startTime = $endTime->copy()->setTime(9, 0, 0);
-                    }
-                } else {
-                    // No deadline: schedule for tomorrow 9 AM - 5 PM
-                    $startTime = \Carbon\Carbon::tomorrow()->setTime(9, 0, 0);
-                    $endTime = \Carbon\Carbon::tomorrow()->setTime(17, 0, 0);
+                // Calculate schedule times based on deadline
+                $deadline = \Carbon\Carbon::parse($task->deadline);
+                $endTime = $deadline->copy()->setTime(17, 0, 0); // 5 PM on deadline
+                
+                // Calculate start time (max_hours before, or 9 AM same day, whichever is later)
+                $estimatedHours = min($task->max_hours ?? $task->estimated_hours ?? 8, 8); // Cap at 8 hours per day
+                $startTime = $endTime->copy()->subHours($estimatedHours);
+                
+                // If start time is before 9 AM, set it to 9 AM same day
+                if ($startTime->hour < 9) {
+                    $startTime = $endTime->copy()->setTime(9, 0, 0);
                 }
                 
                 // Create the schedule entry
                 \App\Models\TaskSchedule::create([
                     'task_id' => $task->taskID,
-                    'adiutor_id' => $task->assigned_to,
+                    'adiutor_id' => $task->assignedTo,
                     'scheduled_start' => $startTime,
                     'scheduled_end' => $endTime,
+                    'estimated_duration_minutes' => $estimatedHours * 60,
                     'schedule_type' => 'auto',
-                    'notes' => 'Automatically scheduled based on task assignment',
+                    'notes' => 'Automatically scheduled based on task deadline',
                 ]);
                 
                 // Add to scheduled list so it won't appear in unscheduled
@@ -771,10 +767,46 @@ class ProjectManagementController extends Controller
             }
         }
 
-        // Filter out scheduled tasks to get only unscheduled ones
-        $unscheduledTasks = $project->tasks->filter(function($task) use ($scheduledTaskIds) {
-            return !in_array($task->taskID, $scheduledTaskIds);
-        })->map(function($task) {
+        // Detect deadline conflicts: tasks with same deadline for same adiutor
+        $deadlineConflicts = [];
+        $tasksByAdiutorAndDeadline = $project->tasks
+            ->filter(fn($t) => $t->deadline && $t->assignedTo)
+            ->groupBy(function($task) {
+                return $task->assignedTo . '_' . \Carbon\Carbon::parse($task->deadline)->format('Y-m-d');
+            });
+        
+        foreach ($tasksByAdiutorAndDeadline as $group) {
+            if ($group->count() > 1) {
+                // Multiple tasks with same deadline for same adiutor = conflict
+                // Sort by creation date (taskID as proxy) and skip the first one
+                $sortedGroup = $group->sortBy('taskID');
+                $sortedGroup->shift(); // Remove first task (earliest assigned)
+                
+                foreach ($sortedGroup as $conflictingTask) {
+                    $deadlineConflicts[] = $conflictingTask->taskID;
+                }
+            }
+        }
+
+        // Filter unscheduled tasks: include tasks without deadlines OR tasks with deadline conflicts
+        $unscheduledTasks = $project->tasks->filter(function($task) use ($scheduledTaskIds, $deadlineConflicts) {
+            // Exclude if manually scheduled (not auto-scheduled)
+            if (in_array($task->taskID, $scheduledTaskIds)) {
+                return false;
+            }
+            
+            // Include if no deadline (truly unscheduled)
+            if (!$task->deadline) {
+                return true;
+            }
+            
+            // Include if has deadline conflict
+            if (in_array($task->taskID, $deadlineConflicts)) {
+                return true;
+            }
+            
+            return false;
+        })->map(function($task) use ($deadlineConflicts) {
             return [
                 'id' => $task->taskID,
                 'title' => $task->taskTitle,
@@ -783,7 +815,8 @@ class ProjectManagementController extends Controller
                 'priority' => $task->priority,
                 'deadline' => $task->deadline,
                 'assigned_to' => $task->assignedUser ? $task->assignedUser->fullName : 'Unassigned',
-                'assigned_to_id' => $task->assigned_to,
+                'assigned_to_id' => $task->assignedTo,
+                'has_conflict' => in_array($task->taskID, $deadlineConflicts),
             ];
         });
 

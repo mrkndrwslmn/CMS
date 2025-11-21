@@ -117,130 +117,297 @@ Route::prefix('api')->group(function () {
         
         // Adiutor schedule timeline endpoint
         Route::get('/schedule/adiutor/{id}/timeline', function($id, \Illuminate\Http\Request $request) {
-            $user = \App\Models\User::findOrFail($id);
-            $startDate = $request->query('start_date', now()->startOfWeek()->format('Y-m-d'));
-            $projectId = $request->query('project_id'); // Get project filter
-            
-            // Parse start date
-            $weekStart = \Carbon\Carbon::parse($startDate);
-            $weekEnd = $weekStart->copy()->addDays(4)->endOfDay(); // Monday to Friday
-            
-            // Get scheduled tasks from task_schedules table
-            $scheduledTasks = \App\Models\TaskSchedule::where('adiutor_id', $id)
-                ->whereBetween('scheduled_start', [$weekStart, $weekEnd])
-                ->with('task');
-            
-            // Apply project filter if provided
-            if ($projectId) {
-                $scheduledTasks = $scheduledTasks->whereHas('task', function($query) use ($projectId) {
-                    $query->where('project_id', $projectId);
-                });
-            }
-            
-            $scheduledTasks = $scheduledTasks->get();
-            
-            // Build slots array from scheduled tasks
-            $slots = [];
-            
-            foreach ($scheduledTasks as $schedule) {
-                $start = \Carbon\Carbon::parse($schedule->scheduled_start);
+            try {
+                $user = \App\Models\User::findOrFail($id);
+                $startDate = $request->query('start_date', now()->startOfWeek()->format('Y-m-d'));
+                $projectId = $request->query('project_id'); // Get project filter
                 
-                $slots[] = [
-                    'date' => $start->format('Y-m-d'),
-                    'hour' => $start->hour,
-                    'type' => 'task',
-                    'title' => $schedule->task->taskTitle ?? 'Task',
-                    'duration' => $schedule->getDurationInHours() . 'h',
-                    'is_synced' => $schedule->isSynced()
-                ];
-            }
-            
-            // Fetch Google Calendar events if connected
-            $calendarIntegration = \App\Models\AdiutorCalendarIntegration::where('adiutor_id', $id)
-                ->where('is_connected', true)
-                ->first();
-            
-            if ($calendarIntegration) {
-                try {
-                    $calendarService = app(\App\Services\GoogleCalendarService::class);
-                    $calendarEvents = $calendarService->getEvents($user, $weekStart, $weekEnd);
-                    
-                    \Log::info('Fetched calendar events', [
-                        'adiutor_id' => $id,
-                        'event_count' => count($calendarEvents),
-                        'events' => $calendarEvents
-                    ]);
-                    
-                    // Add calendar events to slots
-                    foreach ($calendarEvents as $event) {
-                        $start = \Carbon\Carbon::parse($event['start']);
-                        $end = \Carbon\Carbon::parse($event['end']);
-                        
-                        // Calculate duration in hours
-                        $durationMinutes = $start->diffInMinutes($end);
-                        $durationHours = round($durationMinutes / 60, 1);
-                        
-                        $slot = [
-                            'date' => $start->format('Y-m-d'),
-                            'hour' => $start->hour,
-                            'type' => 'calendar',
-                            'title' => $event['title'] ?? 'Calendar Event',
-                            'duration' => $durationHours . 'h',
-                            'is_synced' => true
-                        ];
-                        
-                        \Log::info('Adding calendar slot', $slot);
-                        $slots[] = $slot;
-                    }
-                } catch (\Exception $e) {
-                    \Log::error('Failed to fetch calendar events: ' . $e->getMessage());
-                    // Continue without calendar events if there's an error
+                // Parse start date
+                $weekStart = \Carbon\Carbon::parse($startDate);
+                $weekEnd = $weekStart->copy()->addDays(6)->endOfDay(); // Monday to Sunday
+                
+                // Build slots array
+                $slots = [];
+                
+                // 1. Get scheduled tasks from task_schedules table (manually scheduled by admin)
+                $scheduledTasksQuery = \App\Models\TaskSchedule::where('adiutor_id', $id)
+                    ->whereBetween('scheduled_start', [$weekStart, $weekEnd])
+                    ->with('task');
+                
+                // Apply project filter if provided
+                if ($projectId) {
+                    $scheduledTasksQuery->whereHas('task', function($query) use ($projectId) {
+                        $query->where('project_id', $projectId);
+                    });
                 }
+                
+                $scheduledTasks = $scheduledTasksQuery->get();
+                
+                foreach ($scheduledTasks as $schedule) {
+                    $start = \Carbon\Carbon::parse($schedule->scheduled_start);
+                    
+                    // Calculate days until deadline
+                    $daysUntil = 'N/A';
+                    if ($schedule->task && $schedule->task->deadline) {
+                        $deadline = \Carbon\Carbon::parse($schedule->task->deadline);
+                        $now = \Carbon\Carbon::now();
+                        $daysUntil = (int) $now->diffInDays($deadline, false);
+                    }
+                    
+                    $slots[] = [
+                        'date' => $start->format('Y-m-d'),
+                        'hour' => $start->hour,
+                        'type' => 'task',
+                        'title' => $schedule->task->taskTitle ?? 'Task',
+                        'duration' => $daysUntil,
+                        'is_synced' => $schedule->isSynced()
+                    ];
+                }
+                
+                // 2. Get assigned tasks with deadlines (show on calendar even if not manually scheduled)
+                $assignedTasksQuery = \App\Models\Task::where('assignedTo', $id)
+                    ->whereNotNull('deadline')
+                    ->whereBetween('deadline', [$weekStart, $weekEnd])
+                    ->where('status', '!=', 'completed'); // Only exclude completed tasks
+                
+                // Apply project filter if provided
+                if ($projectId) {
+                    $assignedTasksQuery->where('project_id', $projectId);
+                }
+                
+                $assignedTasks = $assignedTasksQuery->get();
+                
+                // Detect deadline conflicts for this adiutor
+                $deadlineConflicts = [];
+                $tasksByDeadline = $assignedTasks->groupBy(function($task) {
+                    return \Carbon\Carbon::parse($task->deadline)->format('Y-m-d');
+                });
+                
+                foreach ($tasksByDeadline as $group) {
+                    if ($group->count() > 1) {
+                        // Multiple tasks with same deadline = conflict
+                        // Sort by taskID and skip the first one (earliest assigned)
+                        $sortedGroup = $group->sortBy('taskID');
+                        $sortedGroup->shift(); // Remove first task
+                        
+                        foreach ($sortedGroup as $conflictingTask) {
+                            $deadlineConflicts[] = $conflictingTask->taskID;
+                        }
+                    }
+                }
+                
+                // Get task IDs that are already in scheduled tasks to avoid duplicates
+                $scheduledTaskIds = $scheduledTasks->pluck('task_id')->toArray();
+                
+                foreach ($assignedTasks as $task) {
+                    // Skip if already scheduled
+                    if (in_array($task->taskID, $scheduledTaskIds)) {
+                        continue;
+                    }
+                    
+                    // Skip if has deadline conflict (should only appear in Unscheduled Tasks)
+                    if (in_array($task->taskID, $deadlineConflicts)) {
+                        continue;
+                    }
+                    
+                    $deadline = \Carbon\Carbon::parse($task->deadline);
+                    
+                    // Calculate days until deadline
+                    $now = \Carbon\Carbon::now();
+                    $daysUntil = (int) $now->diffInDays($deadline, false);
+                    
+                    // Show task at 5 PM on deadline date (default time if not scheduled)
+                    $slots[] = [
+                        'date' => $deadline->format('Y-m-d'),
+                        'hour' => 17, // 5 PM
+                        'type' => 'task',
+                        'title' => $task->taskTitle ?? 'Task',
+                        'duration' => $daysUntil,
+                        'is_synced' => false,
+                        'is_deadline' => true
+                    ];
+                }
+                
+                // 3. Fetch Google Calendar events if connected
+                $calendarIntegration = \App\Models\AdiutorCalendarIntegration::where('adiutor_id', $id)
+                    ->where('is_connected', true)
+                    ->first();
+                
+                if ($calendarIntegration) {
+                    try {
+                        $calendarService = app(\App\Services\GoogleCalendarService::class);
+                        $calendarEvents = $calendarService->getEvents($user, $weekStart, $weekEnd);
+                        
+                        // Add calendar events to slots
+                        foreach ($calendarEvents as $event) {
+                            $start = \Carbon\Carbon::parse($event['start']);
+                            $end = \Carbon\Carbon::parse($event['end']);
+                            
+                            // Calculate duration in hours
+                            $durationMinutes = $start->diffInMinutes($end);
+                            $durationHours = round($durationMinutes / 60, 1);
+                            
+                            $slots[] = [
+                                'date' => $start->format('Y-m-d'),
+                                'hour' => $start->hour,
+                                'type' => 'calendar',
+                                'title' => $event['title'] ?? 'Calendar Event',
+                                'duration' => $durationHours . 'h',
+                                'is_synced' => true
+                            ];
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to fetch calendar events: ' . $e->getMessage());
+                        // Continue without calendar events if there's an error
+                    }
+                }
+                
+                return response()->json([
+                    'slots' => $slots,
+                    'calendar_connected' => (bool) $calendarIntegration
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Calendar timeline error: ' . $e->getMessage());
+                return response()->json([
+                    'error' => $e->getMessage(),
+                    'slots' => []
+                ], 500);
             }
-            
-            return response()->json([
-                'slots' => $slots,
-                'calendar_connected' => (bool) $calendarIntegration
-            ]);
         })->name('api.schedule.timeline');
         
         // Project schedule timeline endpoint (all adiutors)
         Route::get('/schedule/project/{id}/timeline', function($id, \Illuminate\Http\Request $request) {
-            $project = \App\Models\Project::findOrFail($id);
-            $startDate = $request->query('start_date', now()->startOfWeek()->format('Y-m-d'));
-            
-            // Parse start date
-            $weekStart = \Carbon\Carbon::parse($startDate);
-            $weekEnd = $weekStart->copy()->addDays(4)->endOfDay(); // Monday to Friday
-            
-            // Get all scheduled tasks for this project
-            $scheduledTasks = \App\Models\TaskSchedule::whereBetween('scheduled_start', [$weekStart, $weekEnd])
-                ->with(['task', 'adiutor'])
-                ->whereHas('task', function($query) use ($id) {
-                    $query->where('project_id', $id);
-                })
-                ->get();
-            
-            // Build slots array from scheduled tasks
-            $slots = [];
-            
-            foreach ($scheduledTasks as $schedule) {
-                $start = \Carbon\Carbon::parse($schedule->scheduled_start);
+            try {
+                $project = \App\Models\Project::findOrFail($id);
+                $startDate = $request->query('start_date', now()->startOfWeek()->format('Y-m-d'));
                 
-                $slots[] = [
-                    'date' => $start->format('Y-m-d'),
-                    'hour' => $start->hour,
-                    'type' => 'task',
-                    'title' => ($schedule->task->taskTitle ?? 'Task') . ' - ' . ($schedule->adiutor->fullName ?? 'Unknown'),
-                    'duration' => $schedule->getDurationInHours() . 'h',
-                    'is_synced' => $schedule->isSynced(),
-                    'adiutor' => $schedule->adiutor->fullName ?? 'Unknown'
-                ];
+                // Parse start date
+                $weekStart = \Carbon\Carbon::parse($startDate);
+                $weekEnd = $weekStart->copy()->addDays(6)->endOfDay(); // Monday to Sunday
+                
+                // Build slots array
+                $slots = [];
+                
+                // 1. Get scheduled tasks from task_schedules table (manually scheduled)
+                $scheduledTasks = \App\Models\TaskSchedule::whereBetween('scheduled_start', [$weekStart, $weekEnd])
+                    ->with(['task', 'adiutor'])
+                    ->whereHas('task', function($query) use ($id) {
+                        $query->where('project_id', $id);
+                    })
+                    ->get();
+                
+                foreach ($scheduledTasks as $schedule) {
+                    $start = \Carbon\Carbon::parse($schedule->scheduled_start);
+                    
+                    // Calculate days until deadline
+                    $daysUntil = 'N/A';
+                    if ($schedule->task && $schedule->task->deadline) {
+                        $deadline = \Carbon\Carbon::parse($schedule->task->deadline);
+                        $now = \Carbon\Carbon::now();
+                        $daysUntil = (int) $now->diffInDays($deadline, false);
+                    }
+                    
+                    $slots[] = [
+                        'date' => $start->format('Y-m-d'),
+                        'hour' => $start->hour,
+                        'type' => 'task',
+                        'title' => ($schedule->task->taskTitle ?? 'Task') . ' - ' . ($schedule->adiutor->fullName ?? 'Unknown'),
+                        'duration' => $daysUntil,
+                        'is_synced' => $schedule->isSynced(),
+                        'adiutor' => $schedule->adiutor->fullName ?? 'Unknown'
+                    ];
+                }
+                
+                // 2. Get assigned tasks with deadlines (show on calendar even if not manually scheduled)
+                $assignedTasks = \App\Models\Task::where('project_id', $id)
+                    ->whereNotNull('deadline')
+                    ->whereNotNull('assignedTo')
+                    ->whereBetween('deadline', [$weekStart, $weekEnd])
+                    ->where('status', '!=', 'completed') // Only exclude completed tasks
+                    ->with('assignedUser')
+                    ->get();
+                
+                \Log::info('Project timeline - assigned tasks with deadlines', [
+                    'project_id' => $id,
+                    'week_start' => $weekStart->format('Y-m-d'),
+                    'week_end' => $weekEnd->format('Y-m-d'),
+                    'tasks_count' => $assignedTasks->count(),
+                    'tasks' => $assignedTasks->map(function($t) {
+                        return [
+                            'id' => $t->taskID,
+                            'title' => $t->taskTitle,
+                            'deadline' => $t->deadline,
+                            'assigned_to' => $t->assignedTo,
+                            'status' => $t->status
+                        ];
+                    })
+                ]);
+                
+                // Detect deadline conflicts for tasks in this project
+                $deadlineConflicts = [];
+                $tasksByAdiutorAndDeadline = $assignedTasks->groupBy(function($task) {
+                    return $task->assignedTo . '_' . \Carbon\Carbon::parse($task->deadline)->format('Y-m-d');
+                });
+                
+                foreach ($tasksByAdiutorAndDeadline as $group) {
+                    if ($group->count() > 1) {
+                        // Multiple tasks with same deadline for same adiutor = conflict
+                        // Sort by taskID and skip the first one (earliest assigned)
+                        $sortedGroup = $group->sortBy('taskID');
+                        $sortedGroup->shift(); // Remove first task
+                        
+                        foreach ($sortedGroup as $conflictingTask) {
+                            $deadlineConflicts[] = $conflictingTask->taskID;
+                        }
+                    }
+                }
+                
+                // Get task IDs that are already scheduled to avoid duplicates
+                $scheduledTaskIds = $scheduledTasks->pluck('task_id')->toArray();
+                
+                foreach ($assignedTasks as $task) {
+                    // Skip if already scheduled
+                    if (in_array($task->taskID, $scheduledTaskIds)) {
+                        continue;
+                    }
+                    
+                    // Skip if has deadline conflict (should only appear in Unscheduled Tasks)
+                    if (in_array($task->taskID, $deadlineConflicts)) {
+                        continue;
+                    }
+                    
+                    $deadline = \Carbon\Carbon::parse($task->deadline);
+                    
+                    // Calculate days until deadline
+                    $now = \Carbon\Carbon::now();
+                    $daysUntil = (int) $now->diffInDays($deadline, false);
+                    
+                    // Get assigned adiutor name
+                    $adiutorName = $task->assignedUser ? $task->assignedUser->fullName : 'Unassigned';
+                    
+                    // Show task at 5 PM on deadline date (default time if not scheduled)
+                    $slots[] = [
+                        'date' => $deadline->format('Y-m-d'),
+                        'hour' => 17, // 5 PM
+                        'type' => 'task',
+                        'title' => ($task->taskTitle ?? 'Task') . ' - ' . $adiutorName,
+                        'duration' => $daysUntil,
+                        'is_synced' => false,
+                        'adiutor' => $adiutorName,
+                        'is_deadline' => true
+                    ];
+                }
+                
+                return response()->json([
+                    'slots' => $slots
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Project timeline error: ' . $e->getMessage());
+                return response()->json([
+                    'error' => $e->getMessage(),
+                    'slots' => []
+                ], 500);
             }
-            
-            return response()->json([
-                'slots' => $slots
-            ]);
         })->name('api.schedule.project.timeline');
         
         // Test Google Calendar fetch

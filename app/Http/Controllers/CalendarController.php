@@ -59,15 +59,52 @@ class CalendarController extends Controller
             ->whereIn('status', ['pending', 'in_progress'])
             ->get();
 
-        // Get scheduled task IDs from task_schedules table
+        // Get scheduled task IDs from task_schedules table (for this adiutor)
         $scheduledTaskIds = \App\Models\TaskSchedule::whereIn('task_id', $allTasks->pluck('taskID'))
+            ->where('adiutor_id', $user->id)
             ->pluck('task_id')
             ->toArray();
 
-        // Filter to get unscheduled tasks
-        $unscheduledTasks = $allTasks->filter(function($task) use ($scheduledTaskIds) {
-            return !in_array($task->taskID, $scheduledTaskIds);
-        })->map(function($task) {
+        // Detect deadline conflicts: tasks with same deadline for this adiutor
+        $deadlineConflicts = [];
+        $tasksByDeadline = $allTasks
+            ->filter(fn($t) => $t->deadline)
+            ->groupBy(function($task) {
+                return \Carbon\Carbon::parse($task->deadline)->format('Y-m-d');
+            });
+        
+        foreach ($tasksByDeadline as $group) {
+            if ($group->count() > 1) {
+                // Multiple tasks with same deadline = conflict
+                // Sort by creation date (taskID as proxy) and skip the first one
+                $sortedGroup = $group->sortBy('taskID');
+                $sortedGroup->shift(); // Remove first task (earliest assigned)
+                
+                foreach ($sortedGroup as $conflictingTask) {
+                    $deadlineConflicts[] = $conflictingTask->taskID;
+                }
+            }
+        }
+
+        // Filter to get unscheduled tasks (exclude scheduled tasks, but include deadline conflicts)
+        $unscheduledTasks = $allTasks->filter(function($task) use ($scheduledTaskIds, $deadlineConflicts) {
+            // Exclude if manually scheduled
+            if (in_array($task->taskID, $scheduledTaskIds)) {
+                return false;
+            }
+            
+            // Include if no deadline
+            if (!$task->deadline) {
+                return true;
+            }
+            
+            // Include if has deadline conflict
+            if (in_array($task->taskID, $deadlineConflicts)) {
+                return true;
+            }
+            
+            return false;
+        })->map(function($task) use ($deadlineConflicts) {
             return [
                 'id' => $task->taskID,
                 'title' => $task->taskTitle,
@@ -77,6 +114,7 @@ class CalendarController extends Controller
                 'project_name' => $task->project->title ?? 'N/A',
                 'estimated_hours' => $task->total_hours_tracked ?? 0,
                 'deadline' => $task->deadline,
+                'has_conflict' => in_array($task->taskID, $deadlineConflicts),
             ];
         });
 

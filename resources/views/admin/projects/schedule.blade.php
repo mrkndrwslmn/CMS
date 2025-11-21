@@ -41,11 +41,19 @@
                 
                 <div id="unscheduledTasksList" class="space-y-3">
                     @forelse($unscheduledTasks as $task)
-                        <div class="task-card border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" 
+                        <div class="task-card border rounded-lg p-4 hover:shadow-md transition-shadow {{ $task['has_conflict'] ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200' }}" 
                              data-task-id="{{ $task['id'] }}"
                              data-assigned-to="{{ $task['assigned_to_id'] ?? '' }}"
                              data-deadline="{{ $task['deadline'] ?? '' }}"
                              data-estimated-hours="{{ $task['estimated_hours'] ?? 8 }}">
+                            
+                            @if($task['has_conflict'])
+                                <div class="mb-3 flex items-center gap-2 text-yellow-700 bg-yellow-100 px-3 py-2 rounded-lg">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span class="text-xs font-semibold">Deadline Conflict Detected</span>
+                                </div>
+                            @endif
+                            
                             <div class="flex items-start justify-between mb-2">
                                 <h4 class="font-semibold text-gray-900">{{ $task['title'] }}</h4>
                                 <span class="text-xs px-2 py-1 rounded-full 
@@ -318,10 +326,10 @@ function loadCalendar() {
 }
 
 function renderCalendar(slots) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const hours = Array.from({length: 17}, (_, i) => i + 6); // 6 AM to 10 PM
     
-    let html = '<div class="grid grid-cols-6 border-b border-gray-200">';
+    let html = '<div class="grid grid-cols-8 border-b border-gray-200">';
     
     // Header row
     html += '<div class="p-3 bg-gray-50 font-medium text-gray-700 text-sm border-r border-gray-200 sticky top-0">Time</div>';
@@ -337,7 +345,7 @@ function renderCalendar(slots) {
     
     // Time slots
     hours.forEach(hour => {
-        html += '<div class="grid grid-cols-6 border-b border-gray-200 last:border-b-0">';
+        html += '<div class="grid grid-cols-8 border-b border-gray-200 last:border-b-0">';
         
         // Hour label
         const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -363,8 +371,17 @@ function renderCalendar(slots) {
                     const colorClass = slot.type === 'task' 
                         ? 'bg-blue-100 border-blue-300 text-blue-800' 
                         : 'bg-purple-100 border-purple-300 text-purple-800';
-                    html += `<div class="${colorClass} border rounded px-2 py-1 text-xs mb-1">
-                        <div class="font-semibold truncate">${slot.title}</div>
+                    
+                    // Show full title (with adiutor name) if viewing all adiutors
+                    const displayTitle = selectedAdiutorId ? slot.title.split(' - ')[0] : slot.title;
+                    
+                    // Extract task name and adiutor for tooltip
+                    const fullTaskTitle = slot.title.includes(' - ') ? slot.title.split(' - ')[0] : slot.title;
+                    const adiutorName = slot.adiutor || (slot.title.includes(' - ') ? slot.title.split(' - ')[1] : 'N/A');
+                    
+                    html += `<div class="${colorClass} border rounded px-2 py-1 text-xs mb-1 cursor-pointer hover:shadow-md transition-shadow" 
+                                  title="Task: ${fullTaskTitle}&#10;Assigned to: ${adiutorName}&#10;Days: ${slot.duration}">
+                        <div class="font-semibold truncate">${displayTitle}</div>
                         <div class="text-xs opacity-75">${slot.duration}</div>
                     </div>`;
                 });

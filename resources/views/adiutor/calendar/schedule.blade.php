@@ -44,9 +44,17 @@
                 
                 <div id="unscheduledTasksList" class="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
                     @forelse($unscheduledTasks as $task)
-                        <div class="task-card border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" 
+                        <div class="task-card border rounded-lg p-4 hover:shadow-md transition-shadow {{ $task['has_conflict'] ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200' }}" 
                              data-task-id="{{ $task['id'] }}"
                              data-project-id="{{ $task['project_id'] }}">
+                            
+                            @if($task['has_conflict'])
+                                <div class="mb-3 flex items-center gap-2 text-yellow-700 bg-yellow-100 px-3 py-2 rounded-lg">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span class="text-xs font-semibold">Deadline Conflict Detected</span>
+                                </div>
+                            @endif
+                            
                             <div class="flex items-start justify-between mb-2">
                                 <h4 class="font-semibold text-gray-900">{{ $task['title'] }}</h4>
                                 <span class="text-xs px-2 py-1 rounded-full 
@@ -120,6 +128,28 @@
                 <p class="text-sm text-gray-600 mb-4">
                     Week of <span id="currentWeek"></span>
                 </p>
+                
+                @if(!$integration || !$integration->is_connected)
+                <!-- Calendar Not Connected Banner -->
+                <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0">
+                            <i class="fab fa-google text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-semibold text-blue-900 mb-1">Google Calendar Not Connected</h4>
+                            <p class="text-sm text-blue-700 mb-3">You're viewing only your in-app tasks. Connect your Google Calendar to see all your events in one place.</p>
+                            <a href="{{ route('calendar.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                                <i class="fab fa-google"></i>
+                                Connect Google Calendar
+                            </a>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 text-blue-400 hover:text-blue-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                @endif
 
                 <!-- Legend -->
                 <div class="flex items-center gap-6 mb-4 text-sm">
@@ -138,29 +168,12 @@
                 </div>
 
                 <!-- Calendar Grid -->
-                <div class="relative">
-                    <div id="calendarGrid" class="bg-white border border-gray-200 rounded-lg overflow-hidden {{ !$integration || !$integration->is_connected ? 'blur-sm' : '' }}">
-                        <!-- Calendar will be rendered here by JavaScript -->
-                        <div class="flex items-center justify-center py-12 text-gray-500">
-                            <i class="fas fa-spinner fa-spin mr-2"></i>
-                            Loading calendar...
-                        </div>
+                <div id="calendarGrid" class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <!-- Calendar will be rendered here by JavaScript -->
+                    <div class="flex items-center justify-center py-12 text-gray-500">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                        Loading calendar...
                     </div>
-                    
-                    @if(!$integration || !$integration->is_connected)
-                    <!-- Overlay for non-connected calendar -->
-                    <div class="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-sm">
-                        <div class="text-center">
-                            <i class="fas fa-calendar-times text-6xl text-gray-400 mb-4"></i>
-                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Connect Your Google Calendar</h3>
-                            <p class="text-gray-600 mb-6 max-w-md">Sync your schedule with Google Calendar to see all your events and manage your time efficiently.</p>
-                            <button onclick="showCalendarModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow-lg">
-                                <i class="fab fa-google"></i>
-                                Connect to Google Calendar
-                            </button>
-                        </div>
-                    </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -257,10 +270,10 @@ function loadCalendar() {
 }
 
 function renderCalendar(slots) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const hours = Array.from({length: 17}, (_, i) => i + 6); // 6 AM to 10 PM
     
-    let html = '<div class="grid grid-cols-6 border-b border-gray-200">';
+    let html = '<div class="grid grid-cols-8 border-b border-gray-200">';
     
     // Header row
     html += '<div class="p-3 bg-gray-50 font-medium text-gray-700 text-sm border-r border-gray-200 sticky top-0">Time</div>';
@@ -276,7 +289,7 @@ function renderCalendar(slots) {
     
     // Time slots
     hours.forEach(hour => {
-        html += '<div class="grid grid-cols-6 border-b border-gray-200 last:border-b-0">';
+        html += '<div class="grid grid-cols-8 border-b border-gray-200 last:border-b-0">';
         
         // Hour label
         const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -303,7 +316,12 @@ function renderCalendar(slots) {
                         ? 'bg-blue-100 border-blue-300 text-blue-800' 
                         : 'bg-purple-100 border-purple-300 text-purple-800';
                     const syncIcon = slot.is_synced ? '<i class="fas fa-sync-alt text-xs ml-1"></i>' : '';
-                    html += `<div class="${colorClass} border rounded px-2 py-1 text-xs mb-1">
+                    
+                    // Create tooltip with full task details
+                    const tooltipText = `Task: ${slot.title}&#10;Days: ${slot.duration}${slot.is_synced ? '&#10;Synced with Google Calendar' : ''}`;
+                    
+                    html += `<div class="${colorClass} border rounded px-2 py-1 text-xs mb-1 cursor-pointer hover:shadow-md transition-shadow" 
+                                  title="${tooltipText}">
                         <div class="font-semibold truncate">${slot.title} ${syncIcon}</div>
                         <div class="text-xs opacity-75">${slot.duration}</div>
                     </div>`;
