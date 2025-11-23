@@ -839,6 +839,15 @@ function hideCompleteModal() {
 function showAssignModal() {
     const modal = document.getElementById('assignModal');
     modal.classList.remove('hidden');
+    
+    // Auto-fill Expected Completion Date from project deadline
+    @if($project->deadline)
+        const expectedCompletionInput = document.querySelector('input[name="expected_completion"]');
+        if (expectedCompletionInput) {
+            expectedCompletionInput.value = '{{ $project->deadline->format('Y-m-d') }}';
+        }
+    @endif
+    
     // Add smooth animation
     setTimeout(() => {
         modal.style.opacity = '1';

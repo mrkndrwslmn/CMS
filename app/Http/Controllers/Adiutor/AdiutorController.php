@@ -150,7 +150,10 @@ class AdiutorController extends Controller
         $announcements = DB::table('announcements')
             ->join('users', 'announcements.created_by', '=', 'users.id')
             ->where('announcements.status', 'active')
-            ->whereIn('announcements.target_audience', ['adiutor', 'all'])
+            ->where(function ($query) {
+                $query->where('announcements.target_audience', 'LIKE', '%adiutor%')
+                      ->orWhere('announcements.target_audience', 'LIKE', '%all%');
+            })
             ->where(function ($query) {
                 $query->whereNull('announcements.expires_at')
                       ->orWhere('announcements.expires_at', '>', now());

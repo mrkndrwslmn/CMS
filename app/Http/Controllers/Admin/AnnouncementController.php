@@ -49,12 +49,14 @@ class AnnouncementController extends Controller
             'content' => 'required|string',
             'priority' => ['required', Rule::in(['low', 'medium', 'high'])],
             'status' => ['required', Rule::in(['active', 'scheduled', 'draft'])],
-            'target_audience' => ['required', Rule::in(['client', 'adiutor', 'public', 'all'])],
+            'target_audience' => 'required|array|min:1',
+            'target_audience.*' => Rule::in(['client', 'adiutor', 'public', 'all']),
             'starts_at' => 'nullable|date|required_if:status,scheduled',
             'expires_at' => 'nullable|date|after:starts_at',
         ]);
 
         $validated['created_by'] = Auth::id();
+        $validated['target_audience'] = implode(',', $validated['target_audience']);
 
         Announcement::create($validated);
 
@@ -72,12 +74,14 @@ class AnnouncementController extends Controller
             'content' => 'required|string',
             'priority' => ['required', Rule::in(['low', 'medium', 'high'])],
             'status' => ['required', Rule::in(['active', 'scheduled', 'draft'])],
-            'target_audience' => ['required', Rule::in(['client', 'adiutor', 'public', 'all'])],
+            'target_audience' => 'required|array|min:1',
+            'target_audience.*' => Rule::in(['client', 'adiutor', 'public', 'all']),
             'starts_at' => 'nullable|date|required_if:status,scheduled',
             'expires_at' => 'nullable|date|after:starts_at',
         ]);
 
         $validated['updated_by'] = Auth::id();
+        $validated['target_audience'] = implode(',', $validated['target_audience']);
 
         $announcement->update($validated);
 

@@ -1,18 +1,18 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Task Scheduling - ' . $project->title)
+@section('page-title', 'Task Scheduling')
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <div class="flex items-center mb-2">
-                <a href="{{ route('admin.calendar.index') }}" class="text-gray-600 hover:text-gray-800 mr-2">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-                <h1 class="text-3xl font-bold text-gray-900">Task Scheduling</h1>
-            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Task Scheduling</h1>
+            <a href="{{ route('admin.calendar.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium mb-2">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Calendar Management
+            </a>
             <p class="text-gray-600">{{ $project->title }}</p>
             <p class="text-sm text-gray-500">Client: {{ $project->client ? $project->client->fullName : 'N/A' }}</p>
         </div>

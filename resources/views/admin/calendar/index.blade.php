@@ -1,6 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Calendar Management')
+@section('page-title', 'Calendar Management')
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
