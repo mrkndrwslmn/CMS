@@ -27,7 +27,7 @@ class PublicServiceRequestController extends Controller
         $user = Auth::user();
         $isLoggedIn = $user !== null;
         
-        return view('get-started', compact('user', 'isLoggedIn'));
+        return view('public.get-started', compact('user', 'isLoggedIn'));
     }
 
     /**
