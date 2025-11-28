@@ -87,7 +87,6 @@ class AuthController extends Controller
             'email' => ['required', 'string', 'email', 'max:100', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'phoneNumber' => ['nullable', 'string', 'max:20'],
-            'role' => ['required', 'in:client,adiutor'], // Admin accounts should be created by existing admins
             'referralCode' => ['nullable', 'string', 'max:20'],
         ]);
 
@@ -96,7 +95,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'phoneNumber' => $request->phoneNumber,
-            'role' => $request->role,
+            'role' => 'client', // All registrations are automatically client accounts
             'status' => 'active',
         ]);
 
