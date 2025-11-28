@@ -95,8 +95,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Announcement Duration</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -120,20 +119,22 @@
                             <tr class="hover:bg-gray-50 {{ $loop->last ? 'last:rounded-b-xl' : '' }}">
                                 <td class="px-6 py-4 {{ $loop->last ? 'rounded-bl-xl' : '' }}">
                                     <div>
-                                        <div class="font-medium text-gray-900 flex items-center">
+                                        <div class="font-medium text-gray-900">
                                             {{ $announcement->title }}
-                                            @if($announcement->updated_at && $announcement->updated_at->gt($announcement->created_at))
-                                                <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                    <i class="fas fa-edit mr-1 text-xs"></i>Edited
-                                                </span>
-                                            @endif
                                         </div>
                                         <div class="text-sm text-gray-500 truncate max-w-xs">{{ $announcement->content }}</div>
                                         @if($announcement->updated_at && $announcement->updated_at->gt($announcement->created_at))
                                             <div class="text-xs text-blue-600 mt-1">
-                                                Last edited: {{ $announcement->updated_at->format('M d, Y H:i') }}
+                                                Last edited: {{ $announcement->updated_at->format('M d, Y h:i A') }}
                                                 @if($announcement->updater)
                                                     by {{ $announcement->updater->fullName }}
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div class="text-xs text-gray-500 mt-1">
+                                                Date created: {{ $announcement->created_at->format('M d, Y h:i A') }}
+                                                @if($announcement->creator)
+                                                    by {{ $announcement->creator->fullName }}
                                                 @endif
                                             </div>
                                         @endif
@@ -157,14 +158,26 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
-                                    @if($announcement->status === 'scheduled' && $announcement->starts_at)
-                                        {{ $announcement->starts_at->format('M d, Y H:i') }}
-                                    @else
-                                        {{ $announcement->created_at->format('M d, Y') }}
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
-                                    {{ $announcement->expires_at ? $announcement->expires_at->format('M d, Y H:i') : 'Never' }}
+                                    <div>
+                                        @if($announcement->status === 'scheduled' && $announcement->starts_at)
+                                            <span class="text-xs text-gray-500">Starts:</span> 
+                                            <span class="font-medium">{{ $announcement->starts_at->format('M d, Y') }}</span>
+                                            <span class="text-xs text-primary-600 font-semibold">at {{ $announcement->starts_at->format('h:i A') }}</span>
+                                        @else
+                                            <span class="text-xs text-gray-500">Created:</span> 
+                                            <span class="font-medium">{{ $announcement->created_at->format('M d, Y') }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="mt-1">
+                                        @if($announcement->expires_at)
+                                            <span class="text-xs text-gray-500">Expires:</span> 
+                                            <span class="font-medium">{{ $announcement->expires_at->format('M d, Y') }}</span>
+                                            <span class="text-xs text-primary-600 font-semibold">at {{ $announcement->expires_at->format('h:i A') }}</span>
+                                        @else
+                                            <span class="text-xs text-gray-500">Expires:</span> 
+                                            <span class="font-medium text-green-600">Never</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium space-x-2 {{ $loop->last ? 'rounded-br-xl' : '' }}">
                                     <button @click="editAnnouncement({{ $announcement }})" 
@@ -180,7 +193,7 @@
                         @endforeach
                     @else
                         <tr>
-                            <td colspan="6" class="px-6 py-8 text-center text-gray-500 rounded-b-xl">
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500 rounded-b-xl">
                                 <i class="fas fa-bullhorn text-3xl mb-3 block"></i>
                                 No announcements found. Create your first announcement above.
                             </td>
@@ -194,7 +207,7 @@
     <!-- Create/Edit Announcement Modal -->
     <div x-show="showCreateForm || editingAnnouncement" 
          x-cloak 
-         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+         class="fixed inset-0 backdrop-blur-md bg-white/30 overflow-y-auto h-full w-full z-50"
          @click.self="closeModal()">
         <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
             <div class="mb-4">
@@ -245,10 +258,9 @@
                             <select x-model="form.status"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                                     required>
-                                <option value="">Select Status</option>
+                                <option value="" disabled>Select Status</option>
                                 <option value="active">Active</option>
                                 <option value="scheduled">Scheduled</option>
-                                <option value="draft">Draft</option>
                             </select>
                         </div>
                     </div>
@@ -256,16 +268,40 @@
                     <!-- Target Audience -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Target Audience *</label>
-                        <select x-model="form.target_audience"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                                required>
-                            <option value="">Select Audience</option>
-                            <option value="client">Clients Only</option>
-                            <option value="adiutor">Adiutors Only</option>
-                            <option value="public">Public (Landing Page)</option>
-                            <option value="all">All (Clients, Adiutors & Public)</option>
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">Choose who will see this announcement</p>
+                        <div class="space-y-2 p-3 border border-gray-300 rounded-md">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" value="all" 
+                                       x-model="form.target_audience"
+                                       @change="if (form.target_audience.includes('all')) { form.target_audience = ['all']; }"
+                                       class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                <span class="text-sm font-semibold text-gray-900">All (Clients, Adiutors & Public)</span>
+                            </label>
+                            <div class="border-t border-gray-200 my-2"></div>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" value="client" 
+                                       x-model="form.target_audience"
+                                       :disabled="form.target_audience.includes('all')"
+                                       @change="if (form.target_audience.includes('client')) { form.target_audience = form.target_audience.filter(v => v !== 'all'); }"
+                                       class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="text-sm text-gray-700" :class="{'opacity-50': form.target_audience.includes('all')}">Clients</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" value="adiutor" 
+                                       x-model="form.target_audience"
+                                       :disabled="form.target_audience.includes('all')"
+                                       @change="if (form.target_audience.includes('adiutor')) { form.target_audience = form.target_audience.filter(v => v !== 'all'); }"
+                                       class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="text-sm text-gray-700" :class="{'opacity-50': form.target_audience.includes('all')}">Adiutors</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" value="public" 
+                                       x-model="form.target_audience"
+                                       :disabled="form.target_audience.includes('all')"
+                                       @change="if (form.target_audience.includes('public')) { form.target_audience = form.target_audience.filter(v => v !== 'all'); }"
+                                       class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span class="text-sm text-gray-700" :class="{'opacity-50': form.target_audience.includes('all')}">Public (Landing Page)</span>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Start Date for Scheduled Announcements -->
@@ -304,8 +340,16 @@
                         Cancel
                     </button>
                     <button type="submit" 
-                            class="px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-md transition-colors">
-                        <span x-text="editingAnnouncement ? 'Update Announcement' : 'Create Announcement'"></span>
+                            :disabled="isSubmitting"
+                            class="px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span x-show="!isSubmitting" x-text="editingAnnouncement ? 'Update Announcement' : 'Create Announcement'"></span>
+                        <span x-show="isSubmitting" class="flex items-center">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Saving...
+                        </span>
                     </button>
                 </div>
             </form>
@@ -318,14 +362,15 @@ function announcementManager() {
     return {
         showCreateForm: false,
         editingAnnouncement: null,
+        isSubmitting: false,
         form: {
             title: '',
             content: '',
             priority: '',
-            target_audience: 'all',
+            target_audience: [],
             starts_at: '',
             expires_at: '',
-            status: 'active'
+            status: ''
         },
 
         init() {
@@ -343,7 +388,7 @@ function announcementManager() {
                 title: announcement.title,
                 content: announcement.content,
                 priority: announcement.priority,
-                target_audience: announcement.target_audience || 'all',
+                target_audience: announcement.target_audience ? announcement.target_audience.split(',') : [],
                 starts_at: announcement.starts_at ? announcement.starts_at.slice(0, 16) : '',
                 expires_at: announcement.expires_at ? announcement.expires_at.slice(0, 16) : '',
                 status: announcement.status
@@ -362,14 +407,18 @@ function announcementManager() {
                 title: '',
                 content: '',
                 priority: '',
-                target_audience: 'all',
+                target_audience: [],
                 starts_at: '',
                 expires_at: '',
-                status: 'active'
+                status: ''
             };
         },
 
         async saveAnnouncement() {
+            if (this.isSubmitting) return;
+            
+            this.isSubmitting = true;
+            
             try {
                 const url = this.editingAnnouncement 
                     ? `/admin/announcements/${this.editingAnnouncement.id}`
@@ -379,7 +428,14 @@ function announcementManager() {
 
                 const formData = new FormData();
                 Object.keys(this.form).forEach(key => {
-                    if (this.form[key]) {
+                    if (key === 'target_audience') {
+                        // Handle array fields
+                        if (Array.isArray(this.form[key]) && this.form[key].length > 0) {
+                            this.form[key].forEach(value => {
+                                formData.append('target_audience[]', value);
+                            });
+                        }
+                    } else if (this.form[key]) {
                         formData.append(key, this.form[key]);
                     }
                 });
@@ -395,12 +451,18 @@ function announcementManager() {
                 });
 
                 if (response.ok) {
-                    location.reload();
+                    // Use window.location.href for faster redirect
+                    window.location.href = '/admin/announcements';
                 } else {
-                    alert('Error saving announcement. Please try again.');
+                    this.isSubmitting = false;
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    alert('Error saving announcement. Please check the console for details.');
                 }
             } catch (error) {
-                alert('Error saving announcement. Please try again.');
+                this.isSubmitting = false;
+                console.error('Fetch error:', error);
+                alert('Error saving announcement: ' + error.message);
             }
         },
 

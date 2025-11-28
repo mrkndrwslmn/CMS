@@ -99,9 +99,9 @@
                 <div class="space-y-3">
                     @foreach($urgentTasks->take(3) as $task)
                         <div class="p-3 bg-red-50 rounded-lg border border-red-200">
-                            <h4 class="font-medium text-red-900 text-sm">{{ $task->title }}</h4>
-                            <p class="text-xs text-red-700 mt-1">Due: {{ \Carbon\Carbon::parse($task->due_date)->format('M j, Y') }}</p>
-                            <p class="text-xs text-red-600">{{ \Carbon\Carbon::parse($task->due_date)->diffForHumans() }}</p>
+                            <h4 class="font-medium text-red-900 text-sm">{{ $task->taskTitle }}</h4>
+                            <p class="text-xs text-red-700 mt-1">Due: {{ \Carbon\Carbon::parse($task->deadline)->format('M j, Y') }}</p>
+                            <p class="text-xs text-red-600">{{ \Carbon\Carbon::parse($task->deadline)->diffForHumans() }}</p>
                         </div>
                     @endforeach
                     @if($urgentTasks->count() > 3)

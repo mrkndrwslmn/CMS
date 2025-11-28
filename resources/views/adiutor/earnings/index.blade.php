@@ -9,7 +9,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900">My Earnings</h1>
-                <p class="text-sm text-gray-500 mt-1">Track your earnings and time entries</p>
+                <p class="text-sm text-gray-500 mt-1">Track your earnings and work history</p>
             </div>
             <div class="mt-4 sm:mt-0 flex items-center gap-3">
                 <a href="{{ route('adiutor.earnings.payouts') }}" 
@@ -131,11 +131,11 @@
     </div>
     @endif
 
-    <!-- Filters and Time Entries -->
+    <!-- Filters and Earnings -->
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h2 class="text-lg font-semibold text-gray-900">Time Entries</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Earnings</h2>
                 
                 <!-- Filters -->
                 <form method="GET" action="{{ route('adiutor.earnings.index') }}" class="flex items-center gap-3">
@@ -157,14 +157,14 @@
             </div>
         </div>
 
-        <!-- Time Entries Table -->
+        <!-- Earnings Table -->
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project / Task</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type of Payment</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -222,7 +222,7 @@
                                 <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <p class="text-gray-500 font-medium mb-2">No time entries found</p>
+                                <p class="text-gray-500 font-medium mb-2">No earnings found</p>
                                 <p class="text-sm text-gray-400">Start tracking your time to see earnings here</p>
                             </div>
                         </td>

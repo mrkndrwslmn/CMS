@@ -105,8 +105,141 @@ class ProjectManagementController extends Controller
             'budget_utilization_percentage' => $project->budget > 0 ? round(($totalAllocated / $project->budget) * 100, 2) : 0
         ];
 
-        // Get available adiutors for assignment
-        $availableAdiutors = User::where('role', 'adiutor')->select('id', 'fullName')->get();
+        // Get available adiutors for assignment with detailed information
+        // Get project's required service type for skill matching
+        $projectServiceType = $project->serviceRequest ? $project->serviceRequest->service_type : null;
+
+        $availableAdiutors = User::where('role', 'adiutor')
+            ->with([
+                'calendarIntegration',
+                'adiutorProfile.skills',  // Load skills through adiutorProfile
+                'assignedProjects' => function($query) {
+                    $query->whereIn('project_assignments.status', ['assigned', 'active', 'in_progress']);
+                }
+            ])
+            ->get()
+            ->map(function ($adiutor) use ($projectServiceType) {
+                $skills = $adiutor->adiutorProfile ? $adiutor->adiutorProfile->skills : collect();
+                $activeProjectsCount = $adiutor->assignedProjects->count();
+                
+                // Calculate ranking score
+                // New weighting: Skills (70 points) prioritized, Workload (30 points)
+                $skillScore = 0; // up to 70
+                $workloadScore = 0; // up to 30
+
+                // Workload Score (0-30 points)
+                // Lower workload = higher score
+                // 0 projects = 30 points, 1-2 = 24, 3-4 = 18, 5-6 = 12, 7+ = 6
+                if ($activeProjectsCount == 0) {
+                    $workloadScore = 30;
+                } elseif ($activeProjectsCount <= 2) {
+                    $workloadScore = 24;
+                } elseif ($activeProjectsCount <= 4) {
+                    $workloadScore = 18;
+                } elseif ($activeProjectsCount <= 6) {
+                    $workloadScore = 12;
+                } else {
+                    $workloadScore = 6;
+                }
+
+                // Skill Match Score (0-70 points)
+                // Use category-based matching for better service type to skill matching
+                $contrib = 0.0;
+                if ($projectServiceType && $skills->isNotEmpty()) {
+                    // Define skill categories for better matching
+                    $skillCategories = [
+                        'programming' => ['php', 'javascript', 'python', 'java', 'c#', 'ruby', 'typescript', 'node', 'laravel', 'django', 'react', 'vue', 'angular', 'flutter', 'swift', 'kotlin', 'api'],
+                        'design' => ['ui', 'ux', 'figma', 'photoshop', 'illustrator', 'graphic', 'logo', 'responsive', 'prototyp', 'adobe', 'web design'],
+                        'marketing' => ['seo', 'google ads', 'social media', 'content', 'email', 'copywriting'],
+                        'database' => ['mysql', 'mongodb', 'postgresql', 'sql', 'oracle', 'sqlite', 'database'],
+                        'mobile' => ['ios', 'android', 'mobile', 'swift', 'kotlin'],
+                        'devops' => ['docker', 'kubernetes', 'aws', 'azure', 'cloud', 'linux'],
+                        'web' => ['html', 'css', 'javascript', 'react', 'vue', 'angular', 'node', 'laravel', 'php', 'web'],
+                    ];
+                    
+                    $normalizedServiceType = strtolower(trim($projectServiceType));
+                    
+                    // Get relevant keywords for the service type
+                    $relevantKeywords = [];
+                    foreach ($skillCategories as $category => $keywords) {
+                        if (str_contains($normalizedServiceType, $category) || $category === $normalizedServiceType) {
+                            $relevantKeywords = array_merge($relevantKeywords, $keywords);
+                        }
+                    }
+                    
+                    // If no category match, use the service type itself
+                    if (empty($relevantKeywords)) {
+                        $relevantKeywords[] = str_replace(['-', '_', ' '], '', $normalizedServiceType);
+                    }
+                    
+                    // Check each skill against relevant keywords
+                    foreach ($skills as $skill) {
+                        $skillName = strtolower(str_replace(['-', '_', ' ', '/'], '', $skill->name));
+                        $isMatch = false;
+                        
+                        foreach ($relevantKeywords as $keyword) {
+                            $normalizedKeyword = str_replace(['-', '_', ' ', '/'], '', $keyword);
+                            if (str_contains($skillName, $normalizedKeyword) || str_contains($normalizedKeyword, $skillName)) {
+                                $isMatch = true;
+                                break;
+                            }
+                        }
+                        
+                        if ($isMatch) {
+                            // get proficiency (1-5) if available, else default to 3
+                            $prof = 3;
+                            if (isset($skill->pivot) && isset($skill->pivot->proficiency_level)) {
+                                $p = $skill->pivot->proficiency_level;
+                                if (is_numeric($p)) {
+                                    $prof = max(1, min(5, (int)$p));
+                                } else {
+                                    // map common strings
+                                    $pl = strtolower(trim($p));
+                                    if (in_array($pl, ['beginner','junior'])) $prof = 2;
+                                    elseif (in_array($pl, ['intermediate','mid'])) $prof = 3;
+                                    elseif (in_array($pl, ['advanced','senior','expert'])) $prof = 5;
+                                }
+                            }
+
+                            $years = 0;
+                            if (isset($skill->pivot) && isset($skill->pivot->years_experience) && is_numeric($skill->pivot->years_experience)) {
+                                $years = max(0, min(20, (float)$skill->pivot->years_experience));
+                            }
+
+                            // Contribution formula: (proficiency/5) * (1 + years/10)
+                            // Max per-match contribution ~= 2 (when prof=5 and years>=10)
+                            $contrib += ($prof / 5) * (1 + ($years / 10));
+                        }
+                    }
+
+                    // Scale contribution to skillScore cap (70). Each unit of contrib ≈ 20 points, but we cap at 70.
+                    $skillScore = min($contrib * 20, 70);
+                } elseif ($skills->isNotEmpty()) {
+                    // No explicit service type match, but adiutor has skills: give a small baseline
+                    $skillScore = 20;
+                } else {
+                    $skillScore = 0;
+                }
+
+                // Final aggregated score (0-100)
+                $score = round($skillScore + $workloadScore, 2);
+                
+                return [
+                    'id' => $adiutor->id,
+                    'fullName' => $adiutor->fullName,
+                    'email' => $adiutor->email,
+                    'calendar_connected' => $adiutor->calendarIntegration && $adiutor->calendarIntegration->is_connected,
+                    'skills' => $skills,
+                    'rating' => $adiutor->adiutorProfile->rating ?? 0,
+                    'active_projects_count' => $activeProjectsCount,
+                    'rank_score' => $score,
+                    'skill_score' => $skillScore,
+                    'workload_score' => $workloadScore,
+                    'has_matching_skill' => ($contrib > 0),
+                ];
+            })
+            ->sortByDesc('rank_score') // Sort by rank score (highest first)
+            ->values(); // Reset array keys
 
         return view('admin.projects.show', compact('project', 'budgetOverview', 'availableAdiutors'));
     }
@@ -536,5 +669,157 @@ class ProjectManagementController extends Controller
             default:
                 return redirect()->back()->with('error', 'Invalid action.');
         }
+    }
+
+    /**
+     * Show task scheduling page for a project
+     */
+    public function schedule($id)
+    {
+        $project = Project::with([
+            'client',
+            'tasks' => function($query) {
+                $query->with('assignedUser');
+            },
+            'assignments' => function($query) {
+                $query->whereIn('status', ['active', 'in_progress'])
+                      ->with(['adiutor.adiutorProfile', 'adiutor.calendarIntegration']);
+            }
+        ])->findOrFail($id);
+
+        // Prevent access to completed/archived projects
+        if (!in_array($project->status, ['active', 'in_progress'])) {
+            return redirect()->route('admin.calendar.index')
+                ->with('error', 'Cannot schedule tasks for completed or archived projects.');
+        }
+
+        // Get assigned adiutors from both project assignments AND task assignments
+        $adiutorsFromAssignments = $project->assignments->map(function($assignment) {
+            return [
+                'id' => $assignment->adiutor->id,
+                'name' => $assignment->adiutor->fullName,
+                'avatar' => $assignment->adiutor->avatar ?? '/images/default-avatar.png',
+                'calendar_connected' => $assignment->adiutor->calendarIntegration && $assignment->adiutor->calendarIntegration->is_connected,
+            ];
+        });
+
+        // Get adiutors assigned to tasks
+        $adiutorsFromTasks = collect($project->tasks)
+            ->filter(function($task) {
+                return $task->assignedUser && $task->assignedUser->role === 'adiutor';
+            })
+            ->map(function($task) {
+                return [
+                    'id' => $task->assignedUser->id,
+                    'name' => $task->assignedUser->fullName,
+                    'avatar' => $task->assignedUser->avatar ?? '/images/default-avatar.png',
+                    'calendar_connected' => $task->assignedUser->calendarIntegration && $task->assignedUser->calendarIntegration->is_connected,
+                ];
+            });
+
+        // Merge both collections and remove duplicates by id
+        $assignedAdiutors = collect($adiutorsFromAssignments)->concat($adiutorsFromTasks)
+            ->unique(function($adiutor) {
+                return $adiutor['id'];
+            })
+            ->values();
+
+        // Get task IDs that are already scheduled
+        $scheduledTaskIds = \App\Models\TaskSchedule::whereIn('task_id', $project->tasks->pluck('taskID'))
+            ->pluck('task_id')
+            ->toArray();
+
+        // Auto-schedule assigned tasks that don't have a schedule yet
+        foreach ($project->tasks as $task) {
+            // If task has a deadline and is assigned to an adiutor but not scheduled yet, auto-create schedule
+            if ($task->deadline &&
+                $task->assignedTo && 
+                $task->assignedUser && 
+                $task->assignedUser->role === 'adiutor' && 
+                !in_array($task->taskID, $scheduledTaskIds)) {
+                
+                // Calculate schedule times based on deadline
+                $deadline = \Carbon\Carbon::parse($task->deadline);
+                $endTime = $deadline->copy()->setTime(17, 0, 0); // 5 PM on deadline
+                
+                // Calculate start time (max_hours before, or 9 AM same day, whichever is later)
+                $estimatedHours = min($task->max_hours ?? $task->estimated_hours ?? 8, 8); // Cap at 8 hours per day
+                $startTime = $endTime->copy()->subHours($estimatedHours);
+                
+                // If start time is before 9 AM, set it to 9 AM same day
+                if ($startTime->hour < 9) {
+                    $startTime = $endTime->copy()->setTime(9, 0, 0);
+                }
+                
+                // Create the schedule entry
+                \App\Models\TaskSchedule::create([
+                    'task_id' => $task->taskID,
+                    'adiutor_id' => $task->assignedTo,
+                    'scheduled_start' => $startTime,
+                    'scheduled_end' => $endTime,
+                    'estimated_duration_minutes' => $estimatedHours * 60,
+                    'schedule_type' => 'auto',
+                    'notes' => 'Automatically scheduled based on task deadline',
+                ]);
+                
+                // Add to scheduled list so it won't appear in unscheduled
+                $scheduledTaskIds[] = $task->taskID;
+            }
+        }
+
+        // Detect deadline conflicts: tasks with same deadline for same adiutor
+        $deadlineConflicts = [];
+        $tasksByAdiutorAndDeadline = $project->tasks
+            ->filter(fn($t) => $t->deadline && $t->assignedTo)
+            ->groupBy(function($task) {
+                return $task->assignedTo . '_' . \Carbon\Carbon::parse($task->deadline)->format('Y-m-d');
+            });
+        
+        foreach ($tasksByAdiutorAndDeadline as $group) {
+            if ($group->count() > 1) {
+                // Multiple tasks with same deadline for same adiutor = conflict
+                // Sort by creation date (taskID as proxy) and skip the first one
+                $sortedGroup = $group->sortBy('taskID');
+                $sortedGroup->shift(); // Remove first task (earliest assigned)
+                
+                foreach ($sortedGroup as $conflictingTask) {
+                    $deadlineConflicts[] = $conflictingTask->taskID;
+                }
+            }
+        }
+
+        // Filter unscheduled tasks: include tasks without deadlines OR tasks with deadline conflicts
+        $unscheduledTasks = $project->tasks->filter(function($task) use ($scheduledTaskIds, $deadlineConflicts) {
+            // Exclude if manually scheduled (not auto-scheduled)
+            if (in_array($task->taskID, $scheduledTaskIds)) {
+                return false;
+            }
+            
+            // Include if no deadline (truly unscheduled)
+            if (!$task->deadline) {
+                return true;
+            }
+            
+            // Include if has deadline conflict
+            if (in_array($task->taskID, $deadlineConflicts)) {
+                return true;
+            }
+            
+            return false;
+        })->map(function($task) use ($deadlineConflicts) {
+            return [
+                'id' => $task->taskID,
+                'title' => $task->taskTitle,
+                'description' => $task->description,
+                'estimated_hours' => $task->estimated_hours ?? 0,
+                'priority' => $task->priority,
+                'deadline' => $task->deadline,
+                'assigned_to' => $task->assignedUser ? $task->assignedUser->fullName : 'Unassigned',
+                'assigned_to_id' => $task->assignedTo,
+                'has_conflict' => in_array($task->taskID, $deadlineConflicts),
+            ];
+        });
+
+        return view('admin.projects.schedule', compact('project', 'assignedAdiutors', 'unscheduledTasks'));
     }
 }

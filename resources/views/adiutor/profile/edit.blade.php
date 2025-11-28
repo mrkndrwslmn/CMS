@@ -176,12 +176,23 @@
                                 <div class="skill-item p-4 bg-gray-50 rounded-lg border border-gray-200">
                                     <div class="flex items-start justify-between">
                                         <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Skill Name</label>
-                                                <input type="text" name="skills[{{ $index }}][name]" value="{{ $skill->name }}" 
-                                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm" 
-                                                       placeholder="e.g. JavaScript">
-                                                <input type="hidden" name="skills[{{ $index }}][skill_id]" value="{{ $skill->id }}">
+                                            <div class="relative">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Skill</label>
+                                                <select name="skills[{{ $index }}][skill_id]" 
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm appearance-none bg-white" 
+                                                        style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.5em 1.5em; padding-right: 2.5rem;" 
+                                                        required>
+                                                    <option value="">Select a skill...</option>
+                                                    @foreach($availableSkills as $category => $categorySkills)
+                                                        <optgroup label="{{ ucfirst($category) }}">
+                                                            @foreach($categorySkills as $availableSkill)
+                                                                <option value="{{ $availableSkill->id }}" {{ $skill->id == $availableSkill->id ? 'selected' : '' }}>
+                                                                    {{ $availableSkill->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                             
                                             <div>
@@ -313,11 +324,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="skill-item p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div class="flex items-start justify-between">
                         <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Skill Name</label>
-                                <input type="text" name="skills[${skillIndex}][name]" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm" 
-                                       placeholder="e.g. JavaScript">
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Skill</label>
+                                <select name="skills[${skillIndex}][skill_id]" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-sm appearance-none bg-white" 
+                                        style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.5em 1.5em; padding-right: 2.5rem;" 
+                                        required>
+                                    <option value="">Select a skill...</option>
+                                    @foreach($availableSkills as $category => $categorySkills)
+                                        <optgroup label="{{ ucfirst($category) }}">
+                                            @foreach($categorySkills as $availableSkill)
+                                                <option value="{{ $availableSkill->id }}">{{ $availableSkill->name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Proficiency</label>

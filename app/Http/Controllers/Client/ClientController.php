@@ -151,7 +151,10 @@ class ClientController extends Controller
         $announcements = DB::table('announcements')
             ->join('users', 'announcements.created_by', '=', 'users.id')
             ->where('announcements.status', 'active')
-            ->whereIn('announcements.target_audience', ['client', 'all'])
+            ->where(function ($query) {
+                $query->where('announcements.target_audience', 'LIKE', '%client%')
+                      ->orWhere('announcements.target_audience', 'LIKE', '%all%');
+            })
             ->where(function ($query) {
                 $query->whereNull('announcements.expires_at')
                       ->orWhere('announcements.expires_at', '>', now());
