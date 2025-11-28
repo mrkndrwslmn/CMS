@@ -508,40 +508,106 @@
 </section>
 
 <!-- CTA Section -->
-<section class="py-32 relative">
-    <div class="max-w-7xl mx-auto px-6">
-        <div class="rounded-3xl overflow-hidden relative">
-            <div class="absolute inset-0 bg-gradient-to-r from-primary-600/20 to-accent-600/20 backdrop-blur-xl"></div>
-            <div class="absolute inset-0 bg-primary-600/10"></div>
-            
-            <div class="absolute top-0 left-0 w-40 h-40 bg-primary-300/20 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-0 right-0 w-40 h-40 bg-accent-300/20 rounded-full blur-3xl"></div>
-            
-            <div class="relative p-12 md:p-20 z-10">
-                <div class="text-center max-w-3xl mx-auto">
-                    <h2 class="text-4xl md:text-5xl heading-serif text-neutral-800 mb-6" data-aos="fade-up">
-                        Ready to Start <span class="gradient-text">Earning</span>?
-                    </h2>
-                    <p class="text-xl text-neutral-600 mb-8" data-aos="fade-up" data-aos-delay="100">
-                        Join thousands of users who are already earning rewards by sharing Treis Adiutor with their friends!
-                    </p>
-                    
-                    <div class="flex flex-col sm:flex-row gap-6 justify-center" data-aos="fade-up" data-aos-delay="200">
-                        @auth
-                            <a href="{{ route('client.referrals.dashboard') }}" class="btn-primary inline-flex items-center justify-center group py-5 px-8 text-base relative shine-effect">
-                                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shine"></span>
-                                <span>View My Referral Dashboard</span>
-                            </a>
-                        @else
-                            <a href="{{ route('register') }}" class="btn-primary inline-flex items-center justify-center group py-5 px-8 text-base relative shine-effect">
-                                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shine"></span>
-                                <span>Get Started Now</span>
-                            </a>
-                            <a href="{{ route('login') }}" class="border-2 border-primary-500 text-primary-500 rounded-xl inline-flex items-center justify-center py-5 px-8 text-base group">
-                                <span>Already Have an Account?</span>
-                            </a>
-                        @endauth
+<section class="py-20 md:py-28 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-primary-50/30 to-white -z-10"></div>
+
+    <div class="max-w-7xl mx-auto px-6 relative">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-12" data-aos="fade-up">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-neutral-200 mb-8">
+                    <div class="flex -space-x-2">
+                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 border-2 border-white"></div>
+                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-accent-400 to-accent-600 border-2 border-white"></div>
+                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 border-2 border-white"></div>
                     </div>
+                    <span class="text-sm font-medium text-neutral-700">Join our growing community</span>
+                </div>
+
+                <h2 class="heading-serif text-4xl md:text-5xl lg:text-6xl mb-6 text-neutral-900">
+                    Ready to start <br class="hidden md:block"/>
+                    <span class="gradient-text">earning rewards?</span>
+                </h2>
+
+                <p class="text-lg md:text-xl text-neutral-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+                    Join thousands of users who are already earning rewards by sharing Treis Adiutor with their friends!
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+                    @auth
+                        <a href="{{ route('client.referrals.dashboard') }}" class="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-semibold shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transition-all duration-300 hover:-translate-y-0.5">
+                            <span class="relative">View My Dashboard</span>
+                            <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </a>
+                    @else
+                        <a href="{{ route('register') }}" class="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-semibold shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transition-all duration-300 hover:-translate-y-0.5">
+                            <span class="relative">Get Started Now</span>
+                            <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </a>
+                        <a href="{{ route('login') }}" class="group inline-flex items-center justify-center px-8 py-4 bg-white text-neutral-700 rounded-xl font-semibold border-2 border-neutral-200 hover:border-neutral-300 shadow-sm hover:shadow-md transition-all duration-300">
+                            <span>Already Have an Account?</span>
+                            <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    @endauth
+                </div>
+
+                <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-500">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="font-medium">Unlimited referrals</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="font-medium">Instant rewards</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="font-medium">Easy to share</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-neutral-900 mb-2">Earn Points</h3>
+                    <p class="text-sm text-neutral-600">Get {{ number_format(config('referral.rewards.referrer.completion_points', 1000)) }} loyalty points for each successful referral</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-accent-100 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-neutral-900 mb-2">Get Discounts</h3>
+                    <p class="text-sm text-neutral-600">Receive {{ config('referral.rewards.referrer.coupon_discount', 15) }}% discount coupons for your next purchase</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-neutral-900 mb-2">Help Friends</h3>
+                    <p class="text-sm text-neutral-600">Your friends get {{ config('referral.rewards.referred.signup_points', 500) }} welcome bonus points</p>
                 </div>
             </div>
         </div>

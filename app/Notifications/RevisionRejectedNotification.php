@@ -44,10 +44,10 @@ class RevisionRejectedNotification extends Notification
             'type' => 'revision_rejected',
             'revision_request_id' => $this->revisionRequest->id,
             'document_id' => $this->revisionRequest->document_id,
-            'document_name' => $document->fileName,
+            'document_name' => $document ? $document->fileName : 'N/A',
             'source_description' => $this->revisionRequest->getSourceDescription(),
             'admin_notes' => $this->revisionRequest->admin_notes,
-            'message' => 'Your revision request was not approved for: ' . $document->fileName,
+            'message' => 'Your revision request was not approved for: ' . $this->revisionRequest->getSourceDescription(),
             'action_url' => route('client.revisions.show', $this->revisionRequest->id)
         ];
     }

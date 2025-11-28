@@ -282,7 +282,7 @@ class RevisionController extends Controller
             ]);
 
             // Also reopen all completed tasks in the project
-            $completedTasks = Task::where('projectID', $project->id)
+            $completedTasks = Task::where('project_id', $project->id)
                 ->where('status', 'completed')
                 ->get();
 

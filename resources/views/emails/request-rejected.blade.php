@@ -1,177 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Request Update - TREIS ADIUTOR</title>
-</head>
+@extends('layouts.email')
 
-<body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #334155;">
+@section('content')
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #1F2937; max-width: 600px; margin: 0 auto; background: white;">
     
-    <!-- Email Container -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #F8FAFC;">
-        <tr>
-            <td align="center" style="padding: 40px 20px;">
-                
-                <!-- Main Content Card -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); overflow: hidden;">
-                    
-                    <!-- Header -->
+    <!-- Header -->
+    <div style="background: #DC2626; padding: 40px 30px; text-align: center;">
+        <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: white; letter-spacing: -0.5px;">Project Request Status Update</h1>
+    </div>
+    
+    <!-- Main Content -->
+    <div style="padding: 40px 30px;">
+        <p style="margin: 0 0 30px 0; font-size: 15px; color: #4B5563; line-height: 1.7;">Thank you for submitting your project request. After careful review, we regret to inform you that we are unable to proceed with your request at this time.</p>
+        
+        <!-- Request Details Section -->
+        <div style="margin: 0 0 24px 0;">
+            <p style="margin: 0 0 16px 0; font-size: 13px; font-weight: 600; color: #1F2937; text-transform: uppercase; letter-spacing: 0.5px;">Request Details</p>
+            
+            <div style="background: #F9FAFB; border: 1px solid #E5E7EB; padding: 24px;">
+                <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="background-color: #EF4444; padding: 48px 40px; text-align: center;">
-                            <h1 style="margin: 0 0 8px; font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em;">
-                                TREIS ADIUTOR
-                            </h1>
+                        <td style="padding: 8px 0; font-size: 14px; color: #6B7280; width: 50%;">
+                            <strong style="color: #1F2937;">Project Name:</strong>
+                        </td>
+                        <td style="padding: 8px 0; font-size: 14px; color: #1F2937; text-align: right;">
+                            {{ $serviceRequest->project_name ?? 'N/A' }}
                         </td>
                     </tr>
-                    
-                    <!-- Main Message -->
                     <tr>
-                        <td style="padding: 40px 40px 32px;">
-                            <h2 style="margin: 0 0 12px; font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 600; color: #0F172A; letter-spacing: -0.01em;">
-                                Project Request Status Update
-                            </h2>
-                            <p style="margin: 0; font-size: 15px; color: #64748B; line-height: 1.6;">
-                                Thank you for submitting your project request. After careful review, we regret to inform you that we are unable to proceed with your request at this time.
-                            </p>
+                        <td style="padding: 8px 0; font-size: 14px; color: #6B7280; border-top: 1px solid #E5E7EB;">
+                            <strong style="color: #1F2937;">Service Type:</strong>
+                        </td>
+                        <td style="padding: 8px 0; font-size: 14px; color: #1F2937; text-align: right; border-top: 1px solid #E5E7EB;">
+                            {{ ucfirst(str_replace('_', ' ', $serviceRequest->service_type ?? 'N/A')) }}
                         </td>
                     </tr>
-                    
-                    <!-- Divider -->
                     <tr>
-                        <td style="padding: 0 40px;">
-                            <div style="border-top: 1px solid #E2E8F0;"></div>
+                        <td style="padding: 8px 0; font-size: 14px; color: #6B7280; border-top: 1px solid #E5E7EB;">
+                            <strong style="color: #1F2937;">Requested Date:</strong>
+                        </td>
+                        <td style="padding: 8px 0; font-size: 14px; color: #1F2937; text-align: right; border-top: 1px solid #E5E7EB;">
+                            {{ \Carbon\Carbon::parse($serviceRequest->created_at)->format('F d, Y') }}
                         </td>
                     </tr>
-                    
-                    <!-- Request Details -->
-                    <tr>
-                        <td style="padding: 32px 40px;">
-                            <h3 style="margin: 0 0 16px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
-                                Request Details
-                            </h3>
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                                <tr>
-                                    <td style="padding: 8px 0; font-size: 14px; color: #64748B;">
-                                        <strong style="color: #475569;">Project Name:</strong>
-                                    </td>
-                                    <td style="padding: 8px 0; font-size: 14px; color: #0F172A; text-align: right;">
-                                        {{ $serviceRequest->project_name ?? 'N/A' }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; font-size: 14px; color: #64748B;">
-                                        <strong style="color: #475569;">Service Type:</strong>
-                                    </td>
-                                    <td style="padding: 8px 0; font-size: 14px; color: #0F172A; text-align: right;">
-                                        {{ ucfirst(str_replace('_', ' ', $serviceRequest->service_type ?? 'N/A')) }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; font-size: 14px; color: #64748B;">
-                                        <strong style="color: #475569;">Requested Date:</strong>
-                                    </td>
-                                    <td style="padding: 8px 0; font-size: 14px; color: #0F172A; text-align: right;">
-                                        {{ \Carbon\Carbon::parse($serviceRequest->created_at)->format('F d, Y') }}
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                    
-                    <!-- Divider -->
-                    <tr>
-                        <td style="padding: 0 40px;">
-                            <div style="border-top: 1px solid #E2E8F0;"></div>
-                        </td>
-                    </tr>
-                    
-                    <!-- Reason Box -->
-                    <tr>
-                        <td style="padding: 32px 40px;">
-                            <h3 style="margin: 0 0 16px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
-                                Reason for Decision
-                            </h3>
-                            <div style="background-color: #FEF2F2; border-left: 4px solid #EF4444; padding: 16px; border-radius: 4px;">
-                                <p style="margin: 0; font-size: 14px; color: #7F1D1D; line-height: 1.6;">
-                                    {{ $rejectionReason }}
-                                </p>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <!-- Divider -->
-                    <tr>
-                        <td style="padding: 0 40px;">
-                            <div style="border-top: 1px solid #E2E8F0;"></div>
-                        </td>
-                    </tr>
-                    
-                    <!-- Next Steps -->
-                    <tr>
-                        <td style="padding: 32px 40px;">
-                            <h3 style="margin: 0 0 16px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
-                                What's Next?
-                            </h3>
-                            <ul style="margin: 0; padding-left: 20px; color: #64748B; font-size: 14px; line-height: 1.8;">
-                                <li style="margin-bottom: 8px;">If you have questions about this decision, please don't hesitate to contact us</li>
-                                <li style="margin-bottom: 8px;">You're welcome to submit a revised request addressing the concerns mentioned above</li>
-                                <li style="margin-bottom: 8px;">We may be able to provide alternative solutions that better fit your needs</li>
-                            </ul>
-                        </td>
-                    </tr>
-                    
-                    <!-- CTA Button -->
-                    <tr>
-                        <td style="padding: 0 40px 32px; text-align: center;">
-                            <a href="{{ config('app.url') }}/client/requests" style="display: inline-block; padding: 14px 32px; background-color: #3B82F6; color: #FFFFFF; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; letter-spacing: 0.025em;">
-                                View All Requests
-                            </a>
-                        </td>
-                    </tr>
-                    
-                    <!-- Divider -->
-                    <tr>
-                        <td style="padding: 0 40px;">
-                            <div style="border-top: 1px solid #E2E8F0;"></div>
-                        </td>
-                    </tr>
-                    
-                    <!-- Support Section -->
-                    <tr>
-                        <td style="padding: 32px 40px; background-color: #F8FAFC;">
-                            <h3 style="margin: 0 0 12px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; color: #475569;">
-                                Need Help?
-                            </h3>
-                            <p style="margin: 0; font-size: 13px; color: #64748B; line-height: 1.6;">
-                                If you have any questions or would like to discuss this further, our team is here to help.
-                            </p>
-                            <p style="margin: 12px 0 0; font-size: 13px; color: #64748B;">
-                                <strong style="color: #475569;">Contact Support:</strong><br>
-                                <a href="mailto:{{ config('mail.support_email', 'support@treisadiutor.com') }}" style="color: #3B82F6; text-decoration: none;">
-                                    {{ config('mail.support_email', 'support@treisadiutor.com') }}
-                                </a>
-                            </p>
-                        </td>
-                    </tr>
-                    
-                    <!-- Footer -->
-                    <tr>
-                        <td style="padding: 24px 40px; text-align: center; background-color: #0F172A;">
-                            <p style="margin: 0 0 8px; font-size: 13px; color: #94A3B8;">
-                                © {{ date('Y') }} TREIS ADIUTOR. All rights reserved.
-                            </p>
-                            <p style="margin: 0; font-size: 12px; color: #64748B;">
-                                This is an automated message. Please do not reply directly to this email.
-                            </p>
-                        </td>
-                    </tr>
-                    
                 </table>
-                
-            </td>
-        </tr>
-    </table>
+            </div>
+        </div>
+        
+        <!-- Reason for Decision Section -->
+        <div style="padding: 32px 0 0 0; border-top: 1px solid #E5E7EB;">
+            <p style="margin: 0 0 16px 0; font-size: 13px; font-weight: 600; color: #1F2937; text-transform: uppercase; letter-spacing: 0.5px;">Reason for Decision</p>
+            
+            <div style="background: #FEF2F2; border-left: 3px solid #DC2626; padding: 16px 20px;">
+                <p style="margin: 0; font-size: 14px; color: #991B1B; line-height: 1.7;">{{ $rejectionReason }}</p>
+            </div>
+        </div>
+        
+        <!-- What's Next Section -->
+        <div style="padding: 32px 0 0 0; border-top: 1px solid #E5E7EB; margin-top: 32px;">
+            <p style="margin: 0 0 16px 0; font-size: 13px; font-weight: 600; color: #1F2937; text-transform: uppercase; letter-spacing: 0.5px;">What's Next?</p>
+            
+            <ul style="margin: 0; padding-left: 20px; color: #6B7280; font-size: 14px; line-height: 1.8;">
+                <li style="margin-bottom: 8px;">If you have questions about this decision, please don't hesitate to contact us</li>
+                <li style="margin-bottom: 8px;">You're welcome to submit a revised request addressing the concerns mentioned above</li>
+                <li style="margin-bottom: 0;">We may be able to provide alternative solutions that better fit your needs</li>
+            </ul>
+        </div>
+        
+        <!-- CTA Button -->
+        <div style="text-align: center; margin: 32px 0; padding: 32px 0 0 0; border-top: 1px solid #E5E7EB;">
+            <a href="{{ config('app.url') }}/client/requests" style="display: inline-block; background: #3B82F6; color: white; padding: 14px 32px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 0;">View All Requests</a>
+        </div>
+        
+        <!-- Support Section -->
+        <div style="padding: 24px 0 0 0; border-top: 1px solid #E5E7EB;">
+            <p style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: #1F2937; text-transform: uppercase; letter-spacing: 0.5px;">Need Help?</p>
+            <p style="margin: 0 0 12px 0; font-size: 14px; color: #6B7280; line-height: 1.7;">If you have any questions or would like to discuss this further, our team is here to help.</p>
+            <p style="margin: 0; font-size: 14px; color: #6B7280;">
+                <strong style="color: #1F2937;">Contact Support:</strong><br>
+                <a href="mailto:{{ config('mail.support_email', 'support@treisadiutor.com') }}" style="color: #3B82F6; text-decoration: none; font-weight: 500;">{{ config('mail.support_email', 'support@treisadiutor.com') }}</a>
+            </p>
+        </div>
+    </div>
     
-</body>
-</html>
+    <!-- Footer -->
+    <div style="background: #F9FAFB; border-top: 1px solid #E5E7EB; padding: 24px 30px; text-align: center;">
+        <p style="margin: 0 0 8px 0; font-size: 13px; color: #6B7280;">&copy; {{ date('Y') }} TREIS ADIUTOR. All rights reserved.</p>
+        <p style="margin: 0; font-size: 12px; color: #9CA3AF;">This is an automated message. Please do not reply directly to this email.</p>
+    </div>
+</div>
+@endsection

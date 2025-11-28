@@ -43,10 +43,10 @@ class RevisionApprovedNotification extends Notification
         
         // Different messages for adiutor vs client
         if ($notifiable->role === 'adiutor') {
-            $message = 'Revision request approved for: ' . $document->fileName;
+            $message = 'Revision request approved for: ' . $sourceDescription;
             $actionUrl = route('adiutor.revisions.show', $this->revisionRequest->id);
         } else {
-            $message = 'Your revision request has been approved for: ' . $document->fileName;
+            $message = 'Your revision request has been approved for: ' . $sourceDescription;
             $actionUrl = route('client.revisions.show', $this->revisionRequest->id);
         }
 
@@ -54,7 +54,7 @@ class RevisionApprovedNotification extends Notification
             'type' => 'revision_approved',
             'revision_request_id' => $this->revisionRequest->id,
             'document_id' => $this->revisionRequest->document_id,
-            'document_name' => $document->fileName,
+            'document_name' => $document ? $document->fileName : 'N/A',
             'source_type' => $this->revisionRequest->source_type,
             'source_description' => $sourceDescription,
             'task_id' => $this->revisionRequest->task_id,

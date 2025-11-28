@@ -28,7 +28,7 @@
         <div class="max-w-7xl mx-auto px-6">
             <div class="grid md:grid-cols-2 gap-12 lg:gap-24 items-center">
                 <div data-aos="fade-right">
-                    <div class="relative z-10 p-3 bg-gradient-to-br from-white via-neutral-50 to-neutral-100 rounded-3xl shadow-xl">
+                    <div class="relative z-10 p-3">
                         <img src="https://qzdtlrbpjudrvffrnory.supabase.co/storage/v1/object/public/Treis%20Adiutor/pictures/hero-image.png" alt="Team working on a project" class="rounded-2xl shadow-inner object-cover w-full border border-neutral-100"/>
                     </div>
                 </div>
@@ -125,24 +125,94 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="section-padding">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="rounded-3xl overflow-hidden relative glass-dark border border-neutral-100 shadow-soft" data-aos="fade-up">
-                <div class="absolute inset-0 bg-gradient-to-r from-primary-400/10 to-accent-400/10 opacity-50"></div>
-                <div class="relative p-12 md:p-20 z-10">
-                    <div class="max-w-3xl mx-auto text-center">
-                        <h2 class="heading-serif text-3xl md:text-4xl mb-6">Ready to Partner With Us?</h2>
-                        <p class="text-lg text-neutral-700 mb-8 max-w-2xl mx-auto">When you work with Treis Adiutor, you’re not just hiring a service—you’re partnering with a dedicated team committed to your success. Let's build something great together.</p>
-                        <a href="/contact" class="btn-primary inline-flex items-center justify-center py-4 px-8 text-base">
-                            <span>Start Your Project</span>
-                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+    <section class="py-20 md:py-28 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-primary-50/30 to-white -z-10"></div>
+
+        <div class="max-w-7xl mx-auto px-6 relative">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-12" data-aos="fade-up">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-neutral-200 mb-8">
+                        <div class="flex -space-x-2">
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 border-2 border-white"></div>
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-accent-400 to-accent-600 border-2 border-white"></div>
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 border-2 border-white"></div>
+                        </div>
+                        <span class="text-sm font-medium text-neutral-700">Trusted by 500+ companies</span>
+                    </div>
+
+                        <h2 class="heading-serif text-4xl md:text-5xl lg:text-6xl mb-6 text-neutral-900">Ready to partner <br class="hidden md:block"/><span class="gradient-text">with us?</span></h2>
+                        <p class="text-lg md:text-xl text-neutral-600 mb-12 max-w-3xl mx-auto leading-relaxed">When you work with Treis Adiutor, you're not just hiring a service—you're partnering with a dedicated team committed to your success. Let's build something great together.</p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+                        <a href="/contact" class="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-semibold shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30 transition-all duration-300 hover:-translate-y-0.5">
+                            <span class="relative">Start Your Project</span>
+                            <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
                         </a>
+                        <a href="/services" class="group inline-flex items-center justify-center px-8 py-4 bg-white text-neutral-700 rounded-xl font-semibold border-2 border-neutral-200 hover:border-neutral-300 shadow-sm hover:shadow-md transition-all duration-300">
+                            <span>View Services</span>
+                            <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-500">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">Fast turnaround</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">Quality guaranteed</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">100% secure</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-neutral-900 mb-2">Quick Response</h3>
+                        <p class="text-sm text-neutral-600">Get a personalized quote within 2 hours of your inquiry</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-accent-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-neutral-900 mb-2">Expert Team</h3>
+                        <p class="text-sm text-neutral-600">Dedicated professionals committed to your success</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-neutral-900 mb-2">Full Confidentiality</h3>
+                        <p class="text-sm text-neutral-600">Your data and projects are always protected</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-  </main>
 
     @endsection
 

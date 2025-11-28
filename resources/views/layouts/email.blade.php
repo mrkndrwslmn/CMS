@@ -8,17 +8,18 @@
         body {
             margin: 0;
             padding: 0;
-            background: #f4f4f4;
-            font-family: Arial, sans-serif;
+            background: #F9FAFB;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             line-height: 1.6;
+            color: #1F2937;
         }
         .email-container {
             max-width: 600px;
-            margin: 20px auto;
+            margin: 40px auto;
             background: white;
-            border-radius: 8px;
+            border-radius: 0;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         .preheader {
             display: none;
@@ -39,7 +40,7 @@
 </head>
 <body>
     <div class="preheader">
-        {{ $preheaderText ?? 'Treis Adiutor - Professional Services Platform' }}
+        {{ $preheaderText ?? 'Treis Adiutor' }}
     </div>
     
     <div class="email-container">
