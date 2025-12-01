@@ -724,10 +724,12 @@ class ProjectManagementController extends Controller
             })
             ->values();
 
-        // Get task IDs that are already scheduled
-        $scheduledTaskIds = \App\Models\TaskSchedule::whereIn('task_id', $project->tasks->pluck('taskID'))
-            ->pluck('task_id')
-            ->toArray();
+        // Get task IDs that are already scheduled (separate auto vs manual)
+        $allSchedules = \App\Models\TaskSchedule::whereIn('task_id', $project->tasks->pluck('taskID'))
+            ->get();
+        
+        $scheduledTaskIds = $allSchedules->pluck('task_id')->toArray();
+        $manuallyScheduledTaskIds = $allSchedules->where('schedule_type', 'manual')->pluck('task_id')->toArray();
 
         // Detect deadline conflicts BEFORE auto-scheduling
         $deadlineConflicts = [];
@@ -804,9 +806,14 @@ class ProjectManagementController extends Controller
             }
         }
 
-        // Filter unscheduled tasks: include tasks without deadlines OR tasks with deadline conflicts
-        $unscheduledTasks = $project->tasks->filter(function($task) use ($scheduledTaskIds, $deadlineConflicts) {
-            // ALWAYS include if has deadline conflict (most important check first)
+        // Filter unscheduled tasks: include tasks without deadlines OR tasks with deadline conflicts (unless manually scheduled)
+        $unscheduledTasks = $project->tasks->filter(function($task) use ($scheduledTaskIds, $deadlineConflicts, $manuallyScheduledTaskIds) {
+            // If manually scheduled, NEVER show in unscheduled (manual scheduling overrides conflicts)
+            if (in_array($task->taskID, $manuallyScheduledTaskIds)) {
+                return false;
+            }
+            
+            // Include if has deadline conflict (not yet manually resolved)
             if (in_array($task->taskID, $deadlineConflicts)) {
                 return true;
             }

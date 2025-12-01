@@ -561,7 +561,7 @@ function closeScheduleModal() {
 }
 
 function confirmSchedule() {
-    console.log('confirmSchedule called');
+    console.log('===== confirmSchedule called =====');
     
     const modal = document.getElementById('scheduleTaskModal');
     const taskId = modal.dataset.taskId;
@@ -569,7 +569,12 @@ function confirmSchedule() {
     const startTime = document.getElementById('scheduledStart').value;
     const endTime = document.getElementById('scheduledEnd').value;
     
-    console.log('Data:', { taskId, selectedAdiutor, startTime, endTime });
+    console.log('Modal:', modal);
+    console.log('Task ID:', taskId);
+    console.log('Selected Adiutor:', selectedAdiutor);
+    console.log('Selected Adiutor Value:', selectedAdiutor ? selectedAdiutor.value : 'NONE');
+    console.log('Start Time:', startTime);
+    console.log('End Time:', endTime);
     
     if (!selectedAdiutor) {
         alert('Please select an adiutor');
