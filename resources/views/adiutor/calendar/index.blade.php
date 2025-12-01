@@ -86,7 +86,7 @@
                             Test Connection
                         </button>
                         
-                        <form action="{{ route('calendar.disconnect') }}" method="POST" onsubmit="return confirm('Are you sure you want to disconnect your calendar? Scheduled tasks will not sync anymore.');">
+                        <form action="{{ url('/calendar/disconnect') }}" method="POST" onsubmit="return confirm('Are you sure you want to disconnect your calendar? Scheduled tasks will not sync anymore.');">
                             @csrf
                             <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                                 <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +136,7 @@
                         </p>
                     </div>
 
-                    <a href="{{ route('calendar.connect') }}" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                    <a href="/calendar/connect" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
                         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z"/>
                         </svg>
@@ -194,7 +194,7 @@
 
 <script>
 function testConnection() {
-    fetch('{{ route('calendar.test') }}', {
+    fetch('{{ url('/calendar/test') }}', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

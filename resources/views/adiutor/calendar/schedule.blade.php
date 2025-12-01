@@ -20,15 +20,31 @@
             <p class="text-gray-600">View and manage your tasks across all active projects</p>
         </div>
         
-        <!-- Project Filter -->
+        <!-- Right Side Actions -->
         <div class="flex items-center gap-3">
-            <label class="text-sm font-medium text-gray-700">Filter by Project:</label>
-            <select id="projectFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option value="">All Projects</option>
-                @foreach($activeProjects as $project)
-                    <option value="{{ $project->id }}">{{ $project->title }}</option>
-                @endforeach
-            </select>
+            <!-- Google Calendar Button -->
+            @if($integration && $integration->is_connected)
+                <button onclick="showCalendarModal()" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    <i class="fab fa-google"></i>
+                    <span class="font-medium">Google Calendar</span>
+                </button>
+            @else
+                <button onclick="showCalendarModal()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <i class="fab fa-google"></i>
+                    <span class="font-medium">Connect Calendar</span>
+                </button>
+            @endif
+            
+            <!-- Project Filter -->
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700">Filter:</label>
+                <select id="projectFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">All Projects</option>
+                    @foreach($activeProjects as $project)
+                        <option value="{{ $project->id }}">{{ $project->title }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
     </div>
 
@@ -46,7 +62,8 @@
                     @forelse($unscheduledTasks as $task)
                         <div class="task-card border rounded-lg p-4 hover:shadow-md transition-shadow {{ $task['has_conflict'] ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200' }}" 
                              data-task-id="{{ $task['id'] }}"
-                             data-project-id="{{ $task['project_id'] }}">
+                             data-project-id="{{ $task['project_id'] }}"
+                             data-conflicting-with="{{ $task['conflicting_with'] ?? '' }}">
                             
                             @if($task['has_conflict'])
                                 <div class="mb-3 flex items-center gap-2 text-yellow-700 bg-yellow-100 px-3 py-2 rounded-lg">
@@ -89,7 +106,7 @@
                                 </p>
                             </div>
                             
-                            <button onclick="scheduleTask({{ $task['id'] }})" class="mt-3 w-full px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
+                            <button onclick="scheduleTask({{ $task['id'] }}, {{ $task['has_conflict'] ? 'true' : 'false' }})" class="mt-3 w-full px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
                                 <i class="fas fa-calendar-plus mr-2"></i>
                                 Schedule Task
                             </button>
@@ -139,7 +156,7 @@
                         <div class="flex-1">
                             <h4 class="text-sm font-semibold text-blue-900 mb-1">Google Calendar Not Connected</h4>
                             <p class="text-sm text-blue-700 mb-3">You're viewing only your in-app tasks. Connect your Google Calendar to see all your events in one place.</p>
-                            <a href="{{ route('calendar.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                            <a href="{{ url('/calendar/connect') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
                                 <i class="fab fa-google"></i>
                                 Connect Google Calendar
                             </a>
@@ -318,12 +335,13 @@ function renderCalendar(slots) {
                     const syncIcon = slot.is_synced ? '<i class="fas fa-sync-alt text-xs ml-1"></i>' : '';
                     
                     // Create tooltip with full task details
-                    const tooltipText = `Task: ${slot.title}&#10;Days: ${slot.duration}${slot.is_synced ? '&#10;Synced with Google Calendar' : ''}`;
+                    const description = slot.description || 'No description';
+                    const tooltipText = `Task: ${slot.title}&#10;Description: ${description}&#10;Days: ${slot.duration}${slot.is_synced ? '&#10;Synced with Google Calendar' : ''}`;
                     
                     html += `<div class="${colorClass} border rounded px-2 py-1 text-xs mb-1 cursor-pointer hover:shadow-md transition-shadow" 
                                   title="${tooltipText}">
                         <div class="font-semibold truncate">${slot.title} ${syncIcon}</div>
-                        <div class="text-xs opacity-75">${slot.duration}</div>
+                        <div class="text-xs opacity-75">${slot.duration} day/s</div>
                     </div>`;
                 });
             }
@@ -337,61 +355,40 @@ function renderCalendar(slots) {
     document.getElementById('calendarGrid').innerHTML = html;
 }
 
-function scheduleTask(taskId) {
-    console.log('scheduleTask called with taskId:', taskId);
-    
-    // Get task details
+function scheduleTask(taskId, hasConflict) {
+    // Get task details from the task card
     const taskCard = document.querySelector(`.task-card[data-task-id="${taskId}"]`);
-    console.log('Found task card:', taskCard);
+    if (!taskCard) return;
     
-    if (!taskCard) {
-        console.error('Task card not found for ID:', taskId);
+    const title = taskCard.querySelector('h4').textContent;
+    const hours = taskCard.querySelector('.fa-clock').parentElement.textContent.trim();
+    const deadline = taskCard.querySelector('.fa-calendar')?.parentElement.textContent.trim() || 'N/A';
+    const project = taskCard.querySelector('.fa-project-diagram').parentElement.querySelector('.font-medium')?.textContent || 'N/A';
+    const conflictingWith = taskCard.dataset.conflictingWith || 'Unknown Task';
+    
+    // If task has a conflict, show conflict modal
+    if (hasConflict) {
+        // Fill conflict modal with task details
+        document.getElementById('conflictTaskTitle').textContent = title;
+        document.getElementById('conflictDeadline').textContent = deadline.replace('', '').trim();
+        document.getElementById('conflictHours').textContent = hours.replace(/[^\d]/g, '');
+        document.getElementById('conflictProject').textContent = project;
+        document.getElementById('conflictingTaskName').textContent = conflictingWith;
+        
+        // Store task ID for later use
+        document.getElementById('scheduleConflictModal').dataset.taskId = taskId;
+        
+        // Show conflict modal
+        document.getElementById('scheduleConflictModal').classList.remove('hidden');
         return;
     }
     
-    const taskTitle = taskCard.querySelector('h4').textContent;
-    // Find the duration from the first div with clock icon
-    const durationText = taskCard.querySelector('.flex.items-center.justify-between .text-gray-600')?.textContent || '4 hours';
-    const estimatedHours = durationText.match(/\d+/)?.[0] || '4';
-    
-    console.log('Task title:', taskTitle, 'Duration:', estimatedHours);
-    
-    // For demo: show conflict modal
-    showConflictModal(taskTitle, estimatedHours);
-}
-
-function showConflictModal(taskTitle, estimatedHours) {
-    console.log('showConflictModal called');
-    const modal = document.getElementById('scheduleConflictModal');
-    console.log('Modal element:', modal);
-    
-    if (!modal) {
-        console.error('Modal not found!');
-        return;
-    }
-    
-    document.getElementById('conflictModalTaskTitle').textContent = taskTitle;
-    document.getElementById('conflictModalDuration').textContent = estimatedHours;
-    modal.classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
-    console.log('Modal should now be visible');
+    // Otherwise, handle regular task scheduling
+    alert('Regular task scheduling functionality to be implemented');
 }
 
 function closeConflictModal() {
     document.getElementById('scheduleConflictModal').classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
-}
-
-function applySuggestion() {
-    // TODO: Apply the suggested time slot
-    alert('Suggestion applied! Task will be scheduled after the meeting.');
-    closeConflictModal();
-}
-
-function chooseManually() {
-    // TODO: Open time picker
-    alert('Manual time selection will open here');
-    closeConflictModal();
 }
 
 function formatDate(date) {
@@ -432,6 +429,51 @@ function closeConnectedModal() {
     const modal = document.getElementById('calendarConnectedModal');
     modal.classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
+}
+
+function syncAllTasks() {
+    const button = event.target;
+    const statusEl = document.getElementById('syncStatus');
+    
+    // Disable button and show loading
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Syncing...';
+    statusEl.classList.add('hidden');
+    
+    fetch('{{ url('/calendar/sync-all') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-calendar-plus mr-2"></i>Sync Timeline Tasks to Google Calendar';
+        
+        if (data.success) {
+            statusEl.textContent = `✓ Successfully synced ${data.synced_count} timeline task(s)`;
+            statusEl.className = 'mt-2 text-sm text-center text-green-600';
+            statusEl.classList.remove('hidden');
+            
+            // Reload calendar timeline to show synced tasks
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            statusEl.textContent = `✗ Error: ${data.error}`;
+            statusEl.className = 'mt-2 text-sm text-center text-red-600';
+            statusEl.classList.remove('hidden');
+        }
+    })
+    .catch(error => {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-calendar-plus mr-2"></i>Sync Timeline Tasks to Google Calendar';
+        statusEl.textContent = `✗ Failed to sync: ${error.message}`;
+        statusEl.className = 'mt-2 text-sm text-center text-red-600';
+        statusEl.classList.remove('hidden');
+    });
 }
 </script>
 
@@ -494,7 +536,7 @@ function closeConnectedModal() {
             
             <!-- Connect Button -->
             <div class="text-center mb-4">
-                <a href="{{ route('calendar.connect') }}" class="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white font-semibold text-lg rounded-lg hover:bg-blue-700 transition shadow-lg">
+                <a href="{{ url('/calendar/connect') }}" class="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white font-semibold text-lg rounded-lg hover:bg-blue-700 transition shadow-lg">
                     <i class="fab fa-google text-2xl"></i>
                     Connect Google Calendar
                 </a>
@@ -504,7 +546,7 @@ function closeConnectedModal() {
             <div class="text-center">
                 <p class="text-sm text-gray-600">
                     Already connected? 
-                    <a href="{{ route('calendar.connection') }}" class="text-blue-600 hover:text-blue-700 font-medium">View Settings</a>
+                    <a href="{{ url('/calendar/connection') }}" class="text-blue-600 hover:text-blue-700 font-medium">View Settings</a>
                 </p>
             </div>
         </div>
@@ -560,13 +602,40 @@ function closeConnectedModal() {
                 <p class="text-gray-700"><strong>Timezone:</strong> Asia/Manila (GMT+8)</p>
             </div>
             
+            <!-- Sync Info -->
+            <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <i class="fas fa-sync-alt text-green-600"></i>
+                    Auto-Sync Features
+                </h3>
+                <ul class="space-y-2 text-sm text-gray-700">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check text-green-600 mt-0.5"></i>
+                        <span>New tasks are automatically synced when placed on timeline</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
+                        <span>Tasks in "Unscheduled" section will NOT be synced</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
+                        <span>Click below to sync timeline tasks added before connecting</span>
+                    </li>
+                </ul>
+                <button onclick="syncAllTasks()" class="mt-3 w-full px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-calendar-plus mr-2"></i>
+                    Sync Timeline Tasks to Google Calendar
+                </button>
+                <p id="syncStatus" class="mt-2 text-sm text-center hidden"></p>
+            </div>
+            
             <!-- Action Buttons -->
             <div class="flex gap-3">
-                <button onclick="window.location.href='{{ route('calendar.connection') }}'" class="flex-1 px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition">
+                <button onclick="window.location.href='{{ url('/calendar/connection') }}'" class="flex-1 px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-cog mr-2"></i>
                     Edit Working Hours
                 </button>
-                <form action="{{ route('calendar.disconnect') }}" method="POST" class="flex-1" onsubmit="return confirm('Are you sure you want to disconnect your calendar?');">
+                <form action="{{ url('/calendar/disconnect') }}" method="POST" class="flex-1" onsubmit="return confirm('Are you sure you want to disconnect your calendar?');">
                     @csrf
                     <button type="submit" class="w-full px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition">
                         <i class="fas fa-unlink mr-2"></i>
@@ -578,87 +647,60 @@ function closeConnectedModal() {
     </div>
 </div>
 
-<!-- Scheduling Conflict Detection Modal -->
+<!-- Schedule Conflict Modal -->
 <div id="scheduleConflictModal" class="hidden fixed inset-0 backdrop-blur-md bg-white/30 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
         <!-- Modal Header -->
-        <div class="border-b border-gray-200 px-6 py-4 flex items-center justify-between bg-yellow-50">
-            <div class="flex items-center gap-3">
-                <i class="fas fa-exclamation-triangle text-yellow-600 text-3xl"></i>
-                <h2 class="text-2xl font-bold text-gray-900">⚠️ Scheduling Conflict Detected</h2>
+        <div class="bg-yellow-50 border-b border-yellow-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                <h2 class="text-xl font-bold text-yellow-800">Schedule Conflict</h2>
             </div>
-            <button onclick="closeConflictModal()" class="text-gray-400 hover:text-gray-600 transition">
+            <button onclick="closeConflictModal()" class="text-gray-400 hover:text-gray-600">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
-        
+
         <!-- Modal Body -->
-        <div class="px-6 py-6">
-            <!-- Task Info -->
-            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p class="text-sm text-gray-600 mb-2">Task:</p>
-                <p class="text-lg font-semibold text-gray-900" id="conflictModalTaskTitle">API Setup</p>
-                <p class="text-sm text-gray-600 mt-2">
-                    Duration: <span id="conflictModalDuration" class="font-medium">4</span> hours
-                </p>
-                <p class="text-sm text-gray-600">
-                    Attempted Time: <span class="font-medium">Tue, Nov 2, 9:00 AM - 1:00 PM</span>
+        <div class="p-6">
+            <div class="mb-4">
+                <h3 class="font-semibold text-gray-900 mb-2" id="conflictTaskTitle">Task Title</h3>
+                <p class="text-sm text-gray-600 mb-3">
+                    This task has the same deadline as another task assigned to you.
                 </p>
             </div>
-            
-            <!-- Conflict Details -->
-            <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded">
-                <h3 class="text-lg font-semibold text-red-900 mb-3 flex items-center gap-2">
-                    <i class="fas fa-calendar-times"></i>
-                    Conflict:
-                </h3>
-                <div class="ml-6">
-                    <p class="text-red-800 mb-1">
-                        <strong>⚫ Google Calendar Event:</strong> "Client Meeting"
-                    </p>
-                    <p class="text-red-700 text-sm">
-                        Time: 9:00 AM - 10:00 AM
-                    </p>
+
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <p class="text-sm text-yellow-800 font-medium mb-2">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Deadline Conflict Details:
+                </p>
+                <div class="text-sm text-gray-700 space-y-1">
+                    <p><strong>Deadline:</strong> <span id="conflictDeadline">-</span></p>
+                    <p><strong>Estimated Hours:</strong> <span id="conflictHours">-</span> hours</p>
+                    <p><strong>Project:</strong> <span id="conflictProject">-</span></p>
                 </div>
             </div>
-            
-            <!-- Suggestions -->
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Suggestions:</h3>
-                <div class="space-y-3">
-                    <div class="p-4 bg-green-50 border-l-4 border-green-500 rounded cursor-pointer hover:bg-green-100 transition" onclick="applySuggestion()">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="font-medium text-gray-900">○ Schedule after meeting: 10:00 AM - 2:00 PM</p>
-                                <p class="text-sm text-gray-600 mt-1">Best option - Full 4-hour block available</p>
-                            </div>
-                            <span class="text-green-600 text-xl">✅</span>
-                        </div>
-                    </div>
-                    
-                    <div class="p-4 bg-gray-50 border-l-4 border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
-                        <p class="font-medium text-gray-900">○ Split into 2 sessions: 10-12 AM + 1-3 PM</p>
-                        <p class="text-sm text-gray-600 mt-1">Includes lunch break in between</p>
-                    </div>
-                    
-                    <div class="p-4 bg-gray-50 border-l-4 border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition">
-                        <p class="font-medium text-gray-900">○ Choose different day (Wednesday 9 AM is free)</p>
-                        <p class="text-sm text-gray-600 mt-1">Postpone to next available day</p>
-                    </div>
-                </div>
+
+            <div class="bg-red-50 border-l-4 border-red-500 rounded p-4 mb-6">
+                <p class="text-sm text-red-800 font-medium mb-1">
+                    <i class="fas fa-calendar-times mr-1"></i>
+                    Conflicts with:
+                </p>
+                <p class="text-sm text-red-900 font-semibold" id="conflictingTaskName">-</p>
             </div>
-            
+
+            <p class="text-sm text-gray-600 mb-6">
+                You have multiple tasks due on the same day. Please contact your admin to reschedule or adjust the deadline.
+            </p>
+
             <!-- Action Buttons -->
-            <div class="flex gap-3">
-                <button onclick="applySuggestion()" class="flex-1 px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition">
+            <div class="space-y-3">
+                <button onclick="closeConflictModal()" class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center">
                     <i class="fas fa-check mr-2"></i>
-                    Apply Suggestion
+                    Understood
                 </button>
-                <button onclick="chooseManually()" class="flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
-                    <i class="fas fa-calendar-alt mr-2"></i>
-                    Choose Manually
-                </button>
-                <button onclick="closeConflictModal()" class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition">
+                <button onclick="closeConflictModal()" class="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
                     Cancel
                 </button>
             </div>

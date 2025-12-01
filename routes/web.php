@@ -159,6 +159,7 @@ Route::prefix('api')->group(function () {
                         'hour' => $start->hour,
                         'type' => 'task',
                         'title' => $schedule->task->taskTitle ?? 'Task',
+                        'description' => $schedule->task->taskDescription ?? '',
                         'duration' => $daysUntil,
                         'is_synced' => $schedule->isSynced()
                     ];
@@ -222,6 +223,7 @@ Route::prefix('api')->group(function () {
                         'hour' => 17, // 5 PM
                         'type' => 'task',
                         'title' => $task->taskTitle ?? 'Task',
+                        'description' => $task->taskDescription ?? '',
                         'duration' => $daysUntil,
                         'is_synced' => false,
                         'is_deadline' => true
@@ -312,6 +314,7 @@ Route::prefix('api')->group(function () {
                         'hour' => $start->hour,
                         'type' => 'task',
                         'title' => ($schedule->task->taskTitle ?? 'Task') . ' - ' . ($schedule->adiutor->fullName ?? 'Unknown'),
+                        'description' => $schedule->task->taskDescription ?? '',
                         'duration' => $daysUntil,
                         'is_synced' => $schedule->isSynced(),
                         'adiutor' => $schedule->adiutor->fullName ?? 'Unknown'
@@ -391,6 +394,7 @@ Route::prefix('api')->group(function () {
                         'hour' => 17, // 5 PM
                         'type' => 'task',
                         'title' => ($task->taskTitle ?? 'Task') . ' - ' . $adiutorName,
+                        'description' => $task->taskDescription ?? '',
                         'duration' => $daysUntil,
                         'is_synced' => false,
                         'adiutor' => $adiutorName,
@@ -516,14 +520,25 @@ Route::prefix('api')->group(function () {
                 $end = \Carbon\Carbon::parse($validated['scheduled_end']);
                 $durationMinutes = $start->diffInMinutes($end);
                 
-                // Create schedule entry
-                $schedule = \App\Models\TaskSchedule::create([
+                // Check if already scheduled and update, or create new
+                $schedule = \App\Models\TaskSchedule::updateOrCreate(
+                    [
+                        'task_id' => $validated['task_id'],
+                        'adiutor_id' => $validated['adiutor_id'],
+                    ],
+                    [
+                        'scheduled_start' => $validated['scheduled_start'],
+                        'scheduled_end' => $validated['scheduled_end'],
+                        'estimated_duration_minutes' => $durationMinutes,
+                        'schedule_type' => 'manual',
+                    ]
+                );
+                
+                \Log::info('Task schedule created/updated', [
+                    'schedule_id' => $schedule->id,
                     'task_id' => $validated['task_id'],
                     'adiutor_id' => $validated['adiutor_id'],
-                    'scheduled_start' => $validated['scheduled_start'],
-                    'scheduled_end' => $validated['scheduled_end'],
-                    'estimated_duration_minutes' => $durationMinutes,
-                    'schedule_type' => 'manual',
+                    'was_recently_created' => $schedule->wasRecentlyCreated,
                 ]);
                 
                 // If adiutor has Google Calendar connected, create event
@@ -595,8 +610,8 @@ Route::prefix('api')->group(function () {
             }
         })->name('api.schedule.task');
         
-        // Google Calendar Integration routes
-        Route::prefix('calendar')->name('calendar.')->middleware('auth')->group(function () {
+        // Google Calendar Integration routes (API - with different names to avoid conflicts)
+        Route::prefix('calendar')->name('api.calendar.')->middleware('auth')->group(function () {
             Route::get('/', [\App\Http\Controllers\CalendarController::class, 'index'])->name('index');
             Route::get('/connection', [\App\Http\Controllers\CalendarController::class, 'connection'])->name('connection');
             Route::get('/connect', [\App\Http\Controllers\CalendarController::class, 'connect'])->name('connect');
@@ -1173,9 +1188,12 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
 // Calendar Integration Routes (Adiutors only)
 Route::middleware(['auth', 'role:adiutor'])->prefix('calendar')->name('calendar.')->group(function () {
     Route::get('/', [\App\Http\Controllers\CalendarController::class, 'index'])->name('index');
+    Route::get('/connection', [\App\Http\Controllers\CalendarController::class, 'connection'])->name('connection');
     Route::get('/connect', [\App\Http\Controllers\CalendarController::class, 'connect'])->name('connect');
     Route::get('/callback', [\App\Http\Controllers\CalendarController::class, 'callback'])->name('callback');
     Route::post('/disconnect', [\App\Http\Controllers\CalendarController::class, 'disconnect'])->name('disconnect');
     Route::get('/test', [\App\Http\Controllers\CalendarController::class, 'testConnection'])->name('test');
+    Route::post('/sync-deadlines', [\App\Http\Controllers\CalendarController::class, 'syncDeadlineTasks'])->name('sync.deadlines');
+    Route::post('/sync-all', [\App\Http\Controllers\CalendarController::class, 'syncAllTasks'])->name('sync.all');
     Route::get('/preview-connected', [\App\Http\Controllers\CalendarController::class, 'previewConnected'])->name('preview');
 });
