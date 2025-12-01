@@ -915,6 +915,13 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::get('/{referral}', [\App\Http\Controllers\Admin\ReferralController::class, 'show'])->name('show');
         Route::post('/{referral}/process', [\App\Http\Controllers\Admin\ReferralController::class, 'processPending'])->name('process');
         Route::patch('/codes/{code}/toggle', [\App\Http\Controllers\Admin\ReferralController::class, 'toggleCodeStatus'])->name('codes.toggle');
+        
+        // Referral Credit Withdrawals Management
+        Route::get('/withdrawals/pending', [\App\Http\Controllers\Admin\ReferralController::class, 'withdrawalsPending'])->name('withdrawals.pending');
+        Route::get('/withdrawals/{withdrawal}', [\App\Http\Controllers\Admin\ReferralController::class, 'showWithdrawal'])->name('withdrawals.show');
+        Route::post('/withdrawals/{withdrawal}/process', [\App\Http\Controllers\Admin\ReferralController::class, 'processWithdrawal'])->name('withdrawals.process');
+        Route::post('/withdrawals/{withdrawal}/complete', [\App\Http\Controllers\Admin\ReferralController::class, 'completeWithdrawal'])->name('withdrawals.complete');
+        Route::post('/withdrawals/{withdrawal}/reject', [\App\Http\Controllers\Admin\ReferralController::class, 'rejectWithdrawal'])->name('withdrawals.reject');
     });
     
     // Document Management
@@ -1084,6 +1091,12 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
         Route::post('/validate', [\App\Http\Controllers\Client\ReferralController::class, 'validateCode'])->name('validate');
         Route::post('/invite', [\App\Http\Controllers\Client\ReferralController::class, 'sendInvitation'])->name('invite');
         Route::post('/generate-link', [\App\Http\Controllers\Client\ReferralController::class, 'generateLink'])->name('generate-link');
+        
+        // Referral Credits & Withdrawals
+        Route::get('/credits', [\App\Http\Controllers\Client\ReferralController::class, 'credits'])->name('credits');
+        Route::post('/withdrawals', [\App\Http\Controllers\Client\ReferralController::class, 'requestWithdrawal'])->name('withdrawals.request');
+        Route::get('/withdrawals/{id}', [\App\Http\Controllers\Client\ReferralController::class, 'showWithdrawal'])->name('withdrawals.show');
+        Route::post('/withdrawals/{id}/cancel', [\App\Http\Controllers\Client\ReferralController::class, 'cancelWithdrawal'])->name('withdrawals.cancel');
     });
     
     // Revision Request routes

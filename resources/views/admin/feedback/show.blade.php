@@ -182,32 +182,34 @@
                 </div>
             </div>
 
-            <!-- Adiutor Info Card -->
-            @if($feedback->adiutor)
+            <!-- Project Team Info Card -->
+            @if($feedback->project)
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b border-gray-200">
-                        <h3 class="text-sm font-semibold text-gray-800">Assigned Adiutor</h3>
+                        <h3 class="text-sm font-semibold text-gray-800">Project Team</h3>
                     </div>
                     <div class="p-4">
-                        <div class="flex items-center mb-4">
-                            @if($feedback->adiutor->profilePic)
-                                <img src="{{ $feedback->adiutor->getProfilePictureUrl() }}" class="w-12 h-12 rounded-full object-cover mr-3">
-                            @else
-                                <div class="w-12 h-12 rounded-full bg-accent-500 flex items-center justify-center text-white font-bold mr-3">
-                                    {{ substr($feedback->adiutor->fullName, 0, 1) }}
-                                </div>
-                            @endif
-                            <div>
-                                <p class="font-semibold text-gray-900">{{ $feedback->adiutor->fullName }}</p>
-                                <p class="text-sm text-gray-500">Adiutor</p>
+                        @if($feedback->project->assignments && $feedback->project->assignments->count() > 0)
+                            <div class="space-y-3">
+                                @foreach($feedback->project->assignments as $assignment)
+                                    <div class="flex items-center">
+                                        @if($assignment->adiutor->profilePic)
+                                            <img src="{{ $assignment->adiutor->getProfilePictureUrl() }}" class="w-10 h-10 rounded-full object-cover mr-3">
+                                        @else
+                                            <div class="w-10 h-10 rounded-full bg-accent-500 flex items-center justify-center text-white font-bold mr-3">
+                                                {{ substr($assignment->adiutor->fullName, 0, 1) }}
+                                            </div>
+                                        @endif
+                                        <div class="flex-1">
+                                            <p class="font-medium text-gray-900 text-sm">{{ $assignment->adiutor->fullName }}</p>
+                                            <p class="text-xs text-gray-500">{{ $assignment->adiutor->email }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
-                        </div>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-envelope w-5 mr-2 text-gray-400"></i>
-                                <a href="mailto:{{ $feedback->adiutor->email }}" class="hover:text-accent-500">{{ $feedback->adiutor->email }}</a>
-                            </div>
-                        </div>
+                        @else
+                            <p class="text-gray-500 text-sm italic">No team members assigned</p>
+                        @endif
                     </div>
                 </div>
             @endif

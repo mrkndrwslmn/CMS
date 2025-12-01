@@ -88,7 +88,7 @@ class FeedbackManagementController extends Controller
     
     public function show($id)
     {
-        $feedback = Feedback::with(['client', 'adiutor', 'task', 'project'])->findOrFail($id);
+        $feedback = Feedback::with(['client', 'project.assignments.adiutor', 'task'])->findOrFail($id);
         
         return view('admin.feedback.show', compact('feedback'));
     }
@@ -258,15 +258,21 @@ class FeedbackManagementController extends Controller
             ->orderBy('count', 'desc')
             ->get();
             
-        // Adiutor Performance
-        $adiutorPerformance = User::where('role', 'adiutor')
-            ->withCount([
-                'receivedFeedback',
-                'receivedFeedback as positive_feedback_count' => function($query) {
-                    $query->where('rating', '>=', 4);
-                }
-            ])
-            ->withAvg('receivedFeedback', 'rating')
+        // Adiutor Performance (derived from project feedback)
+        $adiutorPerformance = DB::table('users')
+            ->join('project_assignments', 'users.id', '=', 'project_assignments.adiutor_id')
+            ->join('feedbacks', 'project_assignments.project_id', '=', 'feedbacks.project_id')
+            ->where('users.role', 'adiutor')
+            ->whereNotNull('feedbacks.rating')
+            ->select(
+                'users.id',
+                'users.fullName',
+                'users.email',
+                DB::raw('COUNT(DISTINCT feedbacks.id) as received_feedback_count'),
+                DB::raw('COUNT(DISTINCT CASE WHEN feedbacks.rating >= 4 THEN feedbacks.id END) as positive_feedback_count'),
+                DB::raw('AVG(feedbacks.rating) as received_feedback_avg_rating')
+            )
+            ->groupBy('users.id', 'users.fullName', 'users.email')
             ->having('received_feedback_count', '>', 0)
             ->orderBy('received_feedback_avg_rating', 'desc')
             ->get();

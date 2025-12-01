@@ -261,29 +261,28 @@ class AdiutorController extends Controller
     }
 
     /**
-     * Show feedback and reviews
+     * Show feedback and reviews (derived from projects this adiutor worked on)
      */
     public function feedback()
     {
         $user = Auth::user();
         
-        // Get feedback from clients about this adiutor's work
+        // Get feedback from projects this adiutor worked on
         $feedback = DB::table('feedbacks')
+            ->join('project_assignments', 'feedbacks.project_id', '=', 'project_assignments.project_id')
             ->join('users as clients', 'feedbacks.client_id', '=', 'clients.id')
-            ->leftJoin('projects', 'feedbacks.project_id', '=', 'projects.id')
-            ->leftJoin('tasks', 'feedbacks.task_id', '=', 'tasks.taskID')
-            ->where('feedbacks.adiutor_id', $user->id)
+            ->join('projects', 'feedbacks.project_id', '=', 'projects.id')
+            ->where('project_assignments.adiutor_id', $user->id)
             ->select(
                 'feedbacks.*',
                 'clients.fullName as client_name',
                 'clients.profilePic as client_photo',
-                'projects.title as project_title',
-                'tasks.taskTitle as task_title'
+                'projects.title as project_title'
             )
             ->orderBy('feedbacks.created_at', 'desc')
             ->get();
 
-        // Get feedback statistics
+        // Get feedback statistics (derived from projects)
         $feedbackStats = [
             'total_feedback' => $feedback->count(),
             'average_rating' => $feedback->where('rating', '>', 0)->avg('rating') ?? 0,

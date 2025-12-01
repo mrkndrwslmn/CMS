@@ -20,7 +20,7 @@ class ReferralController extends Controller
     {
         $this->referralService = $referralService;
         $this->middleware('auth');
-        $this->middleware('role:client');
+        $this->middleware('role:client,adiutor'); // Allow both clients and adiutors
     }
 
     /**
@@ -234,5 +234,147 @@ class ReferralController extends Controller
             'url' => $url,
             'code' => $referralCode->code,
         ]);
+    }
+
+    /**
+     * Display referral credits and withdrawal page
+     */
+    public function credits(): View
+    {
+        $user = Auth::user();
+        
+        // Get credits info
+        $availableCredits = $user->referral_credits ?? 0;
+        $pendingCredits = $user->referral_credits_pending ?? 0;
+        $withdrawnCredits = $user->referral_credits_withdrawn ?? 0;
+        
+        // Get withdrawal history
+        $withdrawals = $user->referralCreditWithdrawals()
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+        
+        // Get credit transactions
+        $transactions = $user->referralCreditTransactions()
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+        
+        // Get withdrawal config
+        $minWithdrawal = config('referral.benefits.credits.minimum_withdrawal', 1000);
+        $withdrawalMethods = config('referral.benefits.credits.withdrawal_methods', []);
+        
+        return view('client.referrals.credits', compact(
+            'availableCredits',
+            'pendingCredits',
+            'withdrawnCredits',
+            'withdrawals',
+            'transactions',
+            'minWithdrawal',
+            'withdrawalMethods'
+        ));
+    }
+
+    /**
+     * Request withdrawal of referral credits
+     */
+    public function requestWithdrawal(Request $request): JsonResponse
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:100',
+            'withdrawal_method' => 'required|string',
+            'account_name' => 'required|string|max:255',
+            'account_number' => 'required|string|max:255',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $user = Auth::user();
+
+        try {
+            $withdrawalDetails = [
+                'account_name' => $request->account_name,
+                'account_number' => $request->account_number,
+                'method' => $request->withdrawal_method,
+            ];
+
+            // Add bank details if bank transfer
+            if ($request->withdrawal_method === 'bank_transfer') {
+                $request->validate([
+                    'bank_name' => 'required|string|max:255',
+                ]);
+                $withdrawalDetails['bank_name'] = $request->bank_name;
+            }
+
+            $withdrawal = $this->referralService->requestWithdrawal(
+                $user,
+                $request->amount,
+                $request->withdrawal_method,
+                $withdrawalDetails,
+                $request->notes
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Withdrawal request submitted successfully!',
+                'withdrawal' => [
+                    'number' => $withdrawal->withdrawal_number,
+                    'amount' => $withdrawal->amount,
+                    'status' => $withdrawal->status,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * View specific withdrawal details
+     */
+    public function showWithdrawal($id): View
+    {
+        $user = Auth::user();
+        
+        $withdrawal = $user->referralCreditWithdrawals()
+            ->with('transactions')
+            ->findOrFail($id);
+        
+        return view('client.referrals.withdrawal-details', compact('withdrawal'));
+    }
+
+    /**
+     * Cancel pending withdrawal
+     */
+    public function cancelWithdrawal($id): JsonResponse
+    {
+        $user = Auth::user();
+        
+        $withdrawal = $user->referralCreditWithdrawals()->findOrFail($id);
+        
+        if (!$withdrawal->isPending()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only pending withdrawals can be cancelled.',
+            ], 400);
+        }
+
+        try {
+            $this->referralService->rejectWithdrawal(
+                $withdrawal,
+                'Cancelled by user',
+                $user
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Withdrawal cancelled successfully.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to cancel withdrawal.',
+            ], 500);
+        }
     }
 }

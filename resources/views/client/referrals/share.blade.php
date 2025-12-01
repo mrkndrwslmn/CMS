@@ -11,12 +11,42 @@
                 <h1 class="text-3xl font-bold text-neutral-900">🚀 Share & Earn</h1>
                 <p class="text-neutral-600 mt-2">Invite friends and both of you get rewarded!</p>
             </div>
-            <a href="{{ route('client.referrals.dashboard') }}" class="inline-flex items-center px-4 py-2 bg-white border border-neutral-300 rounded-lg text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                Back to Dashboard
-            </a>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="mb-8">
+        <div class="border-b border-neutral-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <a href="{{ route('client.referrals.dashboard') }}" 
+                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="{{ route('client.referrals.credits') }}" 
+                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Credits & Withdrawals
+                </a>
+                <a href="{{ route('client.referrals.history') }}" 
+                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    History
+                </a>
+                <a href="{{ route('client.referrals.share') }}" 
+                   class="border-primary-500 text-primary-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                    </svg>
+                    Share
+                </a>
+            </nav>
         </div>
     </div>
 
@@ -144,31 +174,31 @@
                 </div>
                 
                 <div class="mb-6">
-                    <h3 class="font-semibold text-primary-700 mb-3">For Your Friend:</h3>
+                    <h3 class="font-semibold text-primary-700 mb-3">For Your Friend (Referred):</h3>
                     <ul class="space-y-2">
                         <li class="flex items-start text-success-900">
                             <svg class="w-5 h-5 mr-2 text-success-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
-                            <span><strong>500 points</strong> instantly</span>
+                            <span><strong>500 points</strong> instantly upon signup</span>
                         </li>
                         <li class="flex items-start text-success-900">
                             <svg class="w-5 h-5 mr-2 text-success-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
-                            <span><strong>15% discount coupon</strong></span>
+                            <span><strong>15% discount coupon</strong> for first project</span>
                         </li>
                         <li class="flex items-start text-success-900">
                             <svg class="w-5 h-5 mr-2 text-success-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
-                            <span>Valid for <strong>30 days</strong></span>
+                            <span><strong>5-10% coupon</strong> after completing payment (tier-based)</span>
                         </li>
                     </ul>
                 </div>
 
                 <div class="mb-6">
-                    <h3 class="font-semibold text-accent-700 mb-3">For You:</h3>
+                    <h3 class="font-semibold text-accent-700 mb-3">For You (Referrer):</h3>
                     <ul class="space-y-2">
                         <li class="flex items-start text-success-900">
                             <svg class="w-5 h-5 mr-2 text-warning-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -180,13 +210,27 @@
                             <svg class="w-5 h-5 mr-2 text-warning-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                             </svg>
-                            <span><strong>20% discount coupon</strong></span>
+                            <span><strong>20% discount coupon</strong> for your next project</span>
                         </li>
                         <li class="flex items-start text-success-900">
-                            <svg class="w-5 h-5 mr-2 text-warning-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            <svg class="w-5 h-5 mr-2 text-accent-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
                             </svg>
-                            <span>Valid for <strong>60 days</strong></span>
+                            <span><strong>💰 1-3% withdrawable credits</strong> based on payment tier</span>
+                        </li>
+                        <li class="flex items-start text-success-900 bg-accent-50 rounded-lg p-2 -mx-2">
+                            <svg class="w-5 h-5 mr-2 text-accent-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <strong>Tiered Credits System:</strong>
+                                <ul class="text-xs mt-1 ml-4 space-y-0.5">
+                                    <li>₱100K-200K: <strong>3%</strong> credits</li>
+                                    <li>₱200K-500K: <strong>2%</strong> credits</li>
+                                    <li>₱500K-1M: <strong>1.5%</strong> credits</li>
+                                    <li>₱1M+: <strong>1%</strong> credits</li>
+                                </ul>
+                            </div>
                         </li>
                     </ul>
                 </div>
@@ -197,7 +241,10 @@
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                         </svg>
                         <p class="text-sm text-success-900">
-                            <strong>Tip:</strong> The more friends you refer, the more rewards you earn. There's no limit!
+                            <strong>💡 Pro Tip:</strong> Higher project payments mean bigger credits! Refer clients with larger budgets to maximize your withdrawable earnings. No limits on referrals!
+                        </p>
+                    </div>
+                </div>
                         </p>
                     </div>
                 </div>

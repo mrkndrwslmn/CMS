@@ -363,10 +363,45 @@ class User extends Authenticatable
 
     /**
      * Get feedback received by this user (for adiutors)
+     * @deprecated Feedback is now project-based. Use calculateAdiutorRating() instead
      */
     public function receivedFeedback()
     {
         return $this->hasMany(Feedback::class, 'adiutor_id');
+    }
+
+    /**
+     * Calculate adiutor's average rating from projects they worked on
+     * This is the new way to get adiutor ratings - derived from project feedback
+     */
+    public function calculateAdiutorRating()
+    {
+        return \DB::table('feedbacks')
+            ->join('project_assignments', 'feedbacks.project_id', '=', 'project_assignments.project_id')
+            ->where('project_assignments.adiutor_id', $this->id)
+            ->whereNotNull('feedbacks.rating')
+            ->avg('feedbacks.rating');
+    }
+
+    /**
+     * Get adiutor's rating rounded to 1 decimal place
+     */
+    public function getAdiutorRatingAttribute()
+    {
+        $rating = $this->calculateAdiutorRating();
+        return $rating ? round($rating, 1) : 0;
+    }
+
+    /**
+     * Get count of project feedbacks this adiutor has received
+     */
+    public function getProjectFeedbackCountAttribute()
+    {
+        return \DB::table('feedbacks')
+            ->join('project_assignments', 'feedbacks.project_id', '=', 'project_assignments.project_id')
+            ->where('project_assignments.adiutor_id', $this->id)
+            ->whereNotNull('feedbacks.rating')
+            ->count();
     }
 
     /**
@@ -585,5 +620,48 @@ class User extends Authenticatable
     public function getSuccessfulReferralsAttribute(): int
     {
         return $this->referralsMade()->where('status', 'rewarded')->count();
+    }
+
+    /**
+     * Get referral credit withdrawals
+     */
+    public function referralCreditWithdrawals(): HasMany
+    {
+        return $this->hasMany(ReferralCreditWithdrawal::class);
+    }
+
+    /**
+     * Get referral credit transactions
+     */
+    public function referralCreditTransactions(): HasMany
+    {
+        return $this->hasMany(ReferralCreditTransaction::class);
+    }
+
+    /**
+     * Get available referral credits balance
+     */
+    public function getAvailableReferralCreditsAttribute(): float
+    {
+        return $this->referral_credits ?? 0;
+    }
+
+    /**
+     * Get total referral credits earned (lifetime)
+     */
+    public function getTotalReferralCreditsEarnedAttribute(): float
+    {
+        return $this->referralCreditTransactions()
+            ->where('transaction_type', 'earned')
+            ->sum('amount');
+    }
+
+    /**
+     * Check if user can withdraw referral credits
+     */
+    public function canWithdrawReferralCredits(float $amount): bool
+    {
+        $minWithdrawal = config('referral.benefits.credits.minimum_withdrawal', 1000);
+        return $this->referral_credits >= $amount && $amount >= $minWithdrawal;
     }
 }
