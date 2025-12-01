@@ -80,7 +80,7 @@
                         <div class="relative group">
                             <div class="w-8 h-8 rounded-full bg-primary-100 border-2 border-white flex items-center justify-center">
                                 <span class="text-primary-700 text-xs font-medium">
-                                    {{ substr($member->firstName, 0, 1) }}{{ substr($member->lastName, 0, 1) }}
+                                    {{ substr($member->fullName, 0, 1) }}
                                 </span>
                             </div>
                             <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
@@ -120,7 +120,7 @@
                                     <div class="flex items-center gap-2 mb-1 px-4">
                                         <div class="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center">
                                             <span class="text-primary-700 text-xs font-medium">
-                                                {{ substr($message->sender->firstName, 0, 1) }}{{ substr($message->sender->lastName, 0, 1) }}
+                                                {{ substr($message->sender->fullName, 0, 1) }}
                                             </span>
                                         </div>
                                         <span class="text-sm font-medium text-neutral-700">{{ $message->sender->fullName }}</span>
@@ -133,7 +133,7 @@
                                 <!-- Message Bubble -->
                                 <div class="relative group">
                                     <div class="px-4 py-3 rounded-2xl {{ $isOwnMessage ? 'bg-primary-600 text-white' : 'bg-white text-neutral-900 border border-neutral-200' }}">
-                                        <p class="text-sm whitespace-pre-wrap break-words">{{ $message->message_text }}</p>
+                                        <p class="text-sm whitespace-pre-wrap break-words">{{ $message->message }}</p>
                                     </div>
                                     <div class="mt-1 px-4 text-xs text-neutral-500">
                                         {{ \Carbon\Carbon::parse($message->created_at)->format('M j, Y g:i A') }}
@@ -253,10 +253,16 @@ function sendMessage(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Reset form
             form.reset();
             updateCharCount();
-            // Reload to show new message
-            window.location.reload();
+            
+            // Append new message to the chat
+            const messagesContainer = document.getElementById('messages-container');
+            const messagesDiv = messagesContainer.querySelector('.space-y-4') || createMessagesDiv();
+            
+            messagesDiv.insertAdjacentHTML('beforeend', createMessageElement(data.message));
+            scrollToBottom();
         } else {
             alert('Failed to send message');
         }
@@ -271,9 +277,113 @@ function sendMessage(event) {
     });
 }
 
+// Create messages div if it doesn't exist
+function createMessagesDiv() {
+    const messagesContainer = document.getElementById('messages-container');
+    messagesContainer.innerHTML = '<div class="space-y-4"></div>';
+    return messagesContainer.querySelector('.space-y-4');
+}
+
+// Create message element
+function createMessageElement(message) {
+    const currentUserId = {{ $user->id }};
+    const isOwnMessage = message.sender_id === currentUserId;
+    const alignClass = isOwnMessage ? 'justify-end' : 'justify-start';
+    const itemsClass = isOwnMessage ? 'items-end' : 'items-start';
+    const bubbleClass = isOwnMessage ? 'bg-primary-600 text-white' : 'bg-white text-neutral-900 border border-neutral-200';
+    
+    let senderInfo = '';
+    if (!isOwnMessage && message.sender) {
+        const initial = message.sender.fullName.substring(0, 1);
+        const roleTag = message.sender.role === 'admin' ? '<span class="text-xs text-primary-600 font-medium">(Admin)</span>' : '';
+        senderInfo = `
+            <div class="flex items-center gap-2 mb-1 px-4">
+                <div class="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center">
+                    <span class="text-primary-700 text-xs font-medium">${initial}</span>
+                </div>
+                <span class="text-sm font-medium text-neutral-700">${escapeHtml(message.sender.fullName)}</span>
+                ${roleTag}
+            </div>
+        `;
+    }
+    
+    const timestamp = formatMessageTime(message.created_at);
+    
+    return `
+        <div class="flex ${alignClass}" data-message-id="${message.id}">
+            <div class="max-w-2xl ${itemsClass} flex flex-col">
+                ${senderInfo}
+                <div class="relative group">
+                    <div class="px-4 py-3 rounded-2xl ${bubbleClass}">
+                        <p class="text-sm whitespace-pre-wrap break-words">${escapeHtml(message.message)}</p>
+                    </div>
+                    <div class="mt-1 px-4 text-xs text-neutral-500">
+                        ${timestamp}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Format message time
+function formatMessageTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const options = { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' };
+    return date.toLocaleString('en-US', options);
+}
+
+// Escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function scrollToBottom() {
     const container = document.getElementById('messages-container');
     container.scrollTop = container.scrollHeight;
 }
+
+// Load messages from API
+async function loadMessages() {
+    try {
+        const response = await fetch(`/api/group-chats/${groupChatId}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.messages && data.messages.data) {
+            const messagesContainer = document.getElementById('messages-container');
+            const messagesDiv = messagesContainer.querySelector('.space-y-4');
+            
+            if (messagesDiv) {
+                // Check if we have new messages
+                const existingMessages = messagesDiv.querySelectorAll('[data-message-id]');
+                const existingIds = Array.from(existingMessages).map(el => el.dataset.messageId);
+                const newMessages = data.messages.data.filter(msg => !existingIds.includes(msg.id.toString()));
+                
+                // Append only new messages
+                if (newMessages.length > 0) {
+                    newMessages.forEach(message => {
+                        messagesDiv.insertAdjacentHTML('beforeend', createMessageElement(message));
+                    });
+                    scrollToBottom();
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error loading messages:', error);
+    }
+}
+
+// Start polling for new messages every 5 seconds
+setInterval(loadMessages, 5000);
+
 </script>
 @endsection

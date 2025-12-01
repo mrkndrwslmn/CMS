@@ -76,6 +76,7 @@ class Project extends Model
     {
         return $this->belongsToMany(User::class, 'project_assignments', 'project_id', 'adiutor_id')
                     ->withPivot('agreed_rate', 'start_date', 'expected_completion', 'status', 'notes', 'progress_percentage')
+                    ->wherePivotNotIn('status', ['removed', 'declined'])
                     ->withTimestamps();
     }
 

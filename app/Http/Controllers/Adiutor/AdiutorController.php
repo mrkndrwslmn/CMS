@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\GroupChat;
+use App\Models\Message;
 use App\Models\Project;
 
 class AdiutorController extends Controller
@@ -307,18 +308,22 @@ class AdiutorController extends Controller
             $query->where('users.id', $user->id);
         })
         ->with(['project', 'lastMessage', 'members'])
-        ->withCount(['messages as unread_count' => function($query) use ($user) {
+        ->get()
+        ->map(function($groupChat) use ($user) {
             $member = \DB::table('group_chat_members')
-                ->where('group_chat_id', \DB::raw('group_chats.id'))
+                ->where('group_chat_id', $groupChat->id)
                 ->where('user_id', $user->id)
                 ->first();
             
-            if ($member && $member->last_read_at) {
-                $query->where('created_at', '>', $member->last_read_at);
-            }
-        }])
-        ->orderBy('last_message_at', 'desc')
-        ->get();
+            $groupChat->unread_count = $groupChat->messages()
+                ->when($member && $member->last_read_at, function($query) use ($member) {
+                    $query->where('created_at', '>', $member->last_read_at);
+                })
+                ->count();
+            
+            return $groupChat;
+        })
+        ->sortByDesc('last_message_at');
 
         return view('adiutor.group-chats.index', compact('user', 'groupChats'));
     }
@@ -342,7 +347,7 @@ class AdiutorController extends Controller
             ->get();
         
         // Mark messages as read
-        $groupChat->resetUnreadForMember($user->id);
+        $groupChat->resetUnreadForMember($user);
         
         return view('adiutor.group-chats.show', compact('user', 'groupChat', 'messages', 'project'));
     }

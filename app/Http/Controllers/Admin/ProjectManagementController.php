@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Models\ProjectAssignment;
+use App\Models\GroupChat;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Models\Task;
@@ -476,29 +478,45 @@ class ProjectManagementController extends Controller
 
         $project = Project::findOrFail($id);
         
-        // Check if adiutor is already assigned
-        $existingAssignment = DB::table('project_assignments')
-            ->where('project_id', $id)
+        // Check if adiutor is already assigned (excluding removed/declined)
+        $existingAssignment = ProjectAssignment::where('project_id', $id)
             ->where('adiutor_id', $request->adiutor_id)
             ->first();
             
-        if ($existingAssignment) {
+        if ($existingAssignment && !in_array($existingAssignment->status, ['removed', 'declined'])) {
             return redirect()->back()->with('error', 'Adiutor is already assigned to this project.');
         }
 
-        DB::table('project_assignments')->insert([
-            'project_id' => $id,
-            'adiutor_id' => $request->adiutor_id,
-            'hourly_rate' => $request->hourly_rate,
-            'requires_time_tracking' => $request->has('requires_time_tracking'),
-            'agreed_rate' => $request->agreed_rate,
-            'start_date' => now(),
-            'expected_completion' => $request->expected_completion,
-            'status' => 'assigned',
-            'notes' => $request->notes,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // If there's a removed/declined assignment, update it; otherwise create new
+        if ($existingAssignment && in_array($existingAssignment->status, ['removed', 'declined'])) {
+            // Update existing assignment
+            $existingAssignment->update([
+                'hourly_rate' => $request->hourly_rate,
+                'requires_time_tracking' => $request->has('requires_time_tracking'),
+                'agreed_rate' => $request->agreed_rate,
+                'start_date' => now(),
+                'expected_completion' => $request->expected_completion,
+                'status' => 'assigned',
+                'notes' => $request->notes,
+            ]);
+            
+            // Manually add to group chat since update doesn't trigger created event
+            $groupChat = GroupChat::getOrCreateForProject($id);
+            $groupChat->addMember($request->adiutor_id);
+        } else {
+            // Create new assignment (will automatically add to group chat via model boot method)
+            ProjectAssignment::create([
+                'project_id' => $id,
+                'adiutor_id' => $request->adiutor_id,
+                'hourly_rate' => $request->hourly_rate,
+                'requires_time_tracking' => $request->has('requires_time_tracking'),
+                'agreed_rate' => $request->agreed_rate,
+                'start_date' => now(),
+                'expected_completion' => $request->expected_completion,
+                'status' => 'assigned',
+                'notes' => $request->notes,
+            ]);
+        }
 
         // Send project assignment email
         try {

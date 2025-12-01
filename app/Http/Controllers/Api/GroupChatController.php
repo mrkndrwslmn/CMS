@@ -187,6 +187,7 @@ class GroupChatController extends Controller
             $message = Message::create([
                 'group_chat_id' => $groupChat->id,
                 'sender_id' => $user->id,
+                'recipient_id' => null, 
                 'project_id' => $groupChat->project_id,
                 'message' => $request->message,
                 'message_type' => 'project',
