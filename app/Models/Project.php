@@ -161,4 +161,13 @@ class Project extends Model
     {
         return $this->hasOne(Conversation::class);
     }
+
+    /**
+     * Get the primary/single assignment for this project
+     * This is a helper relationship for when we treat projects as having a single assignee
+     */
+    public function assignedAdiutor()
+    {
+        return $this->hasOne(ProjectAssignment::class, 'project_id')->latestOfMany();
+    }
 }

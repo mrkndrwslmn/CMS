@@ -131,10 +131,13 @@
                         <div class="space-y-3 mb-6">
                             <div class="flex items-center text-sm">
                                 <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
                                 <span class="text-gray-600">
-                                    Adiutor: <span class="font-medium text-primary-600">{{ $project->assignedAdiutor->user->fullName }}</span>
+                                    <span class="font-medium text-primary-600">{{ $project->adiutor_count }}</span> team member{{ $project->adiutor_count > 1 ? 's' : '' }}
+                                    @if($project->pending_count < $project->adiutor_count)
+                                        ({{ $project->pending_count }} pending feedback)
+                                    @endif
                                 </span>
                             </div>
 
@@ -150,7 +153,7 @@
                                     <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                                     </svg>
-                                    <span class="text-gray-600">Budget: ${{ number_format($project->budget, 2) }}</span>
+                                    <span class="text-gray-600">Budget: ₱{{ number_format($project->budget, 2) }}</span>
                                 </div>
                             @endif
                         </div>
@@ -162,7 +165,7 @@
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
                                 </svg>
-                                Leave Review
+                                Give Feedback
                             </a>
                         </div>
                     </div>
@@ -176,7 +179,7 @@
                     </svg>
                 </div>
                 <h3 class="text-lg font-medium text-gray-900 mb-2">No pending reviews</h3>
-                <p class="text-gray-600">You might have already reviewed all your completed projects or you don't have any pending reviews.</p>
+                <p class="text-gray-600">You've reviewed all team members from your completed projects!</p>
             </div>
         @endif
     </div>
@@ -190,7 +193,7 @@
                         <!-- Project & Rating Header -->
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ $feedback->project->title }}</h3>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ $feedback->project_title }}</h3>
                                 <div class="flex items-center space-x-4">
                                     <div class="flex items-center">
                                         @for($i = 1; $i <= 5; $i++)
@@ -208,57 +211,22 @@
 
                         <!-- Adiutor Info -->
                         <div class="flex items-center mb-4">
-                            <img src="{{ $feedback->adiutor->user->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($feedback->adiutor->user->fullName) }}" 
-                                 alt="{{ $feedback->adiutor->user->fullName }}" 
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($feedback->adiutor_name) }}&background=4F46E5&color=fff" 
+                                 alt="{{ $feedback->adiutor_name }}" 
                                  class="w-10 h-10 rounded-full mr-3">
                             <div>
-                                <p class="font-medium text-gray-900">{{ $feedback->adiutor->user->fullName }}</p>
-                                <p class="text-sm text-gray-600">{{ $feedback->adiutor->title ?? 'Adiutor' }}</p>
+                                <p class="font-medium text-gray-900">{{ $feedback->adiutor_name }}</p>
+                                <p class="text-sm text-gray-600">Adiutor</p>
                             </div>
                         </div>
 
                         <!-- Feedback Content -->
                         <div class="bg-gray-50 rounded-lg p-4 mb-4">
                             <h4 class="font-medium text-gray-900 mb-2">Your Review:</h4>
-                            <p class="text-gray-700">{{ $feedback->comment }}</p>
+                            <p class="text-gray-700 whitespace-pre-line">{{ $feedback->message }}</p>
                         </div>
 
-                        <!-- Rating Breakdown -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-600">Quality:</span>
-                                <div class="flex items-center space-x-1">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <svg class="w-4 h-4 {{ $i <= $feedback->quality_rating ? 'text-primary-500' : 'text-gray-300' }}" 
-                                             fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                        </svg>
-                                    @endfor
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-600">Communication:</span>
-                                <div class="flex items-center space-x-1">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <svg class="w-4 h-4 {{ $i <= $feedback->communication_rating ? 'text-primary-500' : 'text-gray-300' }}" 
-                                             fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                        </svg>
-                                    @endfor
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-600">Timeliness:</span>
-                                <div class="flex items-center space-x-1">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <svg class="w-4 h-4 {{ $i <= $feedback->timeliness_rating ? 'text-primary-500' : 'text-gray-300' }}" 
-                                             fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                        </svg>
-                                    @endfor
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 @endforeach
             </div>

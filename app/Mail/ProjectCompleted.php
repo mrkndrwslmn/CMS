@@ -9,7 +9,8 @@ use Illuminate\Mail\Mailables\Address;
 
 class ProjectCompleted extends BaseMailable
 {
-    public $project;
+    public $projectId;
+    public $projectTitle;
     public $client;
 
     /**
@@ -20,9 +21,10 @@ class ProjectCompleted extends BaseMailable
     /**
      * Create a new message instance.
      */
-    public function __construct($project = null, $client = null)
+    public function __construct($projectId = null, $projectTitle = null, $client = null)
     {
-        $this->project = $project;
+        $this->projectId = $projectId;
+        $this->projectTitle = $projectTitle;
         $this->client = $client;
         
         parent::__construct();
@@ -43,7 +45,7 @@ class ProjectCompleted extends BaseMailable
         // Set the recipient email if available
         if ($this->client && $this->client->email) {
             $envelope->to(
-                new Address($this->client->email, $this->client->name ?? '')
+                new Address($this->client->email, $this->client->fullName ?? $this->client->name ?? '')
             );
         }
 
@@ -55,7 +57,7 @@ class ProjectCompleted extends BaseMailable
      */
     protected function getSubject(): string
     {
-        $projectName = $this->project ? $this->project->name : 'Your Project';
+        $projectName = $this->projectTitle ?: 'Your Project';
         return "Project Completed - {$projectName}";
     }
 
@@ -67,7 +69,8 @@ class ProjectCompleted extends BaseMailable
         return new Content(
             view: 'emails.project-completed',
             with: [
-                'project' => $this->project,
+                'projectId' => $this->projectId,
+                'projectTitle' => $this->projectTitle,
                 'client' => $this->client,
             ]
         );

@@ -23,31 +23,23 @@
                             <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Project Name</p>
                         </td>
                         <td style="padding: 12px 0; vertical-align: top; border-bottom: 1px solid #E5E7EB;">
-                            <p style="margin: 0; font-size: 15px; color: #1F2937; font-weight: 600;">{{ $project->project_name }}</p>
+                            <p style="margin: 0; font-size: 15px; color: #1F2937; font-weight: 600;">{{ $projectTitle }}</p>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding: 12px 0; vertical-align: top; border-bottom: 1px solid #E5E7EB;">
-                            <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Service Type</p>
+                            <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Status</p>
                         </td>
                         <td style="padding: 12px 0; vertical-align: top; border-bottom: 1px solid #E5E7EB;">
-                            <p style="margin: 0; font-size: 14px; color: #1F2937; font-weight: 500;">{{ $project->service_type ?? 'N/A' }}</p>
+                            <p style="margin: 0; font-size: 14px; color: #10B981; font-weight: 600;">Completed</p>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 12px 0; vertical-align: top; border-bottom: 1px solid #E5E7EB;">
+                        <td style="padding: 12px 0 0 0; vertical-align: top;">
                             <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Completed Date</p>
                         </td>
-                        <td style="padding: 12px 0; vertical-align: top; border-bottom: 1px solid #E5E7EB;">
-                            <p style="margin: 0; font-size: 14px; color: #1F2937; font-weight: 500;">{{ $project->completed_at ? $project->completed_at->format('M d, Y') : 'N/A' }}</p>
-                        </td>
-                    </tr>
-                    <tr>
                         <td style="padding: 12px 0 0 0; vertical-align: top;">
-                            <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Duration</p>
-                        </td>
-                        <td style="padding: 12px 0 0 0; vertical-align: top;">
-                            <p style="margin: 0; font-size: 14px; color: #1F2937; font-weight: 500;">{{ $project->completed_at ? $project->created_at->diffInDays($project->completed_at) : 'N/A' }} days</p>
+                            <p style="margin: 0; font-size: 14px; color: #1F2937; font-weight: 500;">{{ now()->format('M d, Y') }}</p>
                         </td>
                     </tr>
                 </table>
@@ -91,7 +83,7 @@
         
         <!-- CTA Button -->
         <div style="text-align: center; margin: 32px 0 0 0; padding: 32px 0 0 0; border-top: 1px solid #E5E7EB;">
-            <a href="{{ url('/dashboard') }}" style="display: inline-block; background: #3B82F6; color: white; padding: 14px 32px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 0;">Access Your Deliverables</a>
+            <a href="{{ route('client.projects.show', $projectId) }}" style="display: inline-block; background: #3B82F6; color: white; padding: 14px 32px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 0;">Access Your Project</a>
         </div>
         
         <!-- Support Section -->
