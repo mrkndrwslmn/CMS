@@ -13,6 +13,7 @@ class Message extends Model
 
     protected $fillable = [
         'conversation_id',
+        'group_chat_id',
         'sender_id',
         'recipient_id',
         'subject',
@@ -81,6 +82,14 @@ class Message extends Model
     }
 
     /**
+     * Get the group chat this message belongs to
+     */
+    public function groupChat(): BelongsTo
+    {
+        return $this->belongsTo(GroupChat::class, 'group_chat_id');
+    }
+
+    /**
      * Scope a query to only include messages for a specific project
      */
     public function scopeForProject($query, $projectId)
@@ -97,11 +106,19 @@ class Message extends Model
     }
 
     /**
-     * Scope a query to only include messages for a specific conversation
+     * Scope a query to only include messages in a specific conversation
      */
     public function scopeInConversation($query, $conversationId)
     {
         return $query->where('conversation_id', $conversationId);
+    }
+
+    /**
+     * Scope a query to only include messages in a specific group chat
+     */
+    public function scopeForGroupChat($query, $groupChatId)
+    {
+        return $query->where('group_chat_id', $groupChatId);
     }
 
     /**
@@ -176,6 +193,11 @@ class Message extends Model
      */
     public function canAccess(User $user): bool
     {
+        // For group chat messages, check group chat access
+        if ($this->group_chat_id) {
+            return $this->groupChat->canAccess($user);
+        }
+
         // Admins can access all messages
         if ($user->isAdmin()) {
             return true;

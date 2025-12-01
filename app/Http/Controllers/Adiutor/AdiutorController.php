@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\GroupChat;
+use App\Models\Project;
 
 class AdiutorController extends Controller
 {
@@ -294,5 +296,54 @@ class AdiutorController extends Controller
         ];
         
         return view('adiutor.feedback.index', compact('user', 'feedback', 'feedbackStats'));
+    }
+
+    public function groupChats()
+    {
+        $user = Auth::user();
+        
+        // Get all group chats for projects this adiutor is assigned to
+        $groupChats = GroupChat::whereHas('members', function($query) use ($user) {
+            $query->where('users.id', $user->id);
+        })
+        ->with(['project', 'lastMessage', 'members'])
+        ->withCount(['messages as unread_count' => function($query) use ($user) {
+            $member = \DB::table('group_chat_members')
+                ->where('group_chat_id', \DB::raw('group_chats.id'))
+                ->where('user_id', $user->id)
+                ->first();
+            
+            if ($member && $member->last_read_at) {
+                $query->where('created_at', '>', $member->last_read_at);
+            }
+        }])
+        ->orderBy('last_message_at', 'desc')
+        ->get();
+
+        return view('adiutor.group-chats.index', compact('user', 'groupChats'));
+    }
+
+    public function showGroupChat(Project $project)
+    {
+        $user = Auth::user();
+        
+        // Get or create group chat for this project
+        $groupChat = GroupChat::getOrCreateForProject($project->id);
+        
+        // Check if user can access this group chat
+        if (!$groupChat->canAccess($user)) {
+            abort(403, 'You do not have access to this group chat.');
+        }
+        
+        // Get all messages for this group chat
+        $messages = Message::where('group_chat_id', $groupChat->id)
+            ->with(['sender'])
+            ->orderBy('created_at', 'asc')
+            ->get();
+        
+        // Mark messages as read
+        $groupChat->resetUnreadForMember($user->id);
+        
+        return view('adiutor.group-chats.show', compact('user', 'groupChat', 'messages', 'project'));
     }
 }

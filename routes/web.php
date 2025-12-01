@@ -614,6 +614,17 @@ Route::prefix('api')->group(function () {
             Route::post('/projects/{project}/mark-read', [\App\Http\Controllers\Api\MessageController::class, 'markAsRead'])->name('mark-read');
             Route::delete('/{message}', [\App\Http\Controllers\Api\MessageController::class, 'destroy'])->name('destroy');
         });
+
+        // Group Chat API routes (admins and adiutors only, NOT clients)
+        Route::prefix('group-chats')->name('api.group-chats.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\GroupChatController::class, 'index'])->name('index');
+            Route::get('/unread-count', [\App\Http\Controllers\Api\GroupChatController::class, 'unreadCount'])->name('unread-count');
+            Route::get('/{groupChat}', [\App\Http\Controllers\Api\GroupChatController::class, 'show'])->name('show');
+            Route::post('/{groupChat}', [\App\Http\Controllers\Api\GroupChatController::class, 'store'])->name('store');
+            Route::post('/{groupChat}/mark-read', [\App\Http\Controllers\Api\GroupChatController::class, 'markAsRead'])->name('mark-read');
+            Route::post('/{groupChat}/archive', [\App\Http\Controllers\Api\GroupChatController::class, 'archive'])->name('archive');
+            Route::post('/{groupChat}/reopen', [\App\Http\Controllers\Api\GroupChatController::class, 'reopen'])->name('reopen');
+        });
         
         // Meeting API routes
         Route::prefix('meetings')->name('api.meetings.')->group(function () {
@@ -1116,6 +1127,12 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
     Route::get('/clients', [AdiutorController::class, 'clients'])->name('clients');
     Route::get('/documents', [AdiutorController::class, 'documents'])->name('documents');
     Route::get('/feedback', [AdiutorController::class, 'feedback'])->name('feedback');
+    
+    // Group Chat Routes
+    Route::prefix('group-chats')->name('group-chats.')->group(function () {
+        Route::get('/', [AdiutorController::class, 'groupChats'])->name('index');
+        Route::get('/{project}', [AdiutorController::class, 'showGroupChat'])->name('show');
+    });
     
     // Notifications
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');

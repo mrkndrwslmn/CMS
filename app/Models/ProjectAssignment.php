@@ -38,6 +38,32 @@ class ProjectAssignment extends Model
     ];
 
     /**
+     * Boot method to automatically add adiutor to group chat when assigned
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($assignment) {
+            // Get or create group chat for the project
+            $groupChat = GroupChat::getOrCreateForProject($assignment->project_id);
+            
+            // Add the adiutor to the group chat
+            $groupChat->addMember($assignment->adiutor_id);
+        });
+
+        static::deleted(function ($assignment) {
+            // Optionally remove adiutor from group chat when assignment is deleted
+            // For now, we'll keep them in the chat for historical context
+            // If you want to remove them, uncomment below:
+            // $groupChat = GroupChat::where('project_id', $assignment->project_id)->first();
+            // if ($groupChat) {
+            //     $groupChat->members()->detach($assignment->adiutor_id);
+            // }
+        });
+    }
+
+    /**
      * Get the project that this assignment belongs to
      */
     public function project()

@@ -96,6 +96,40 @@ class FirebaseService
     }
 
     /**
+     * Send group chat message notification
+     */
+    public function sendGroupChatNotification(Message $message, User $recipient): bool
+    {
+        if (!$message->groupChat) {
+            Log::warning('Message does not belong to a group chat');
+            return false;
+        }
+
+        $sender = $message->sender;
+        $project = $message->project;
+        $groupChat = $message->groupChat;
+
+        $notification = [
+            'title' => "{$sender->fullName} (Group: {$groupChat->getDisplayName()})",
+            'body' => substr($message->message, 0, 100),
+        ];
+
+        $data = [
+            'type' => 'group_chat_message',
+            'group_chat_id' => (string) $message->group_chat_id,
+            'message_id' => (string) $message->id,
+            'sender_id' => (string) $sender->id,
+            'sender_name' => $sender->fullName,
+            'project_id' => (string) $message->project_id,
+            'project_title' => $project ? $project->title : 'Unknown Project',
+            'role' => $recipient->role,
+            'click_action' => "/{$recipient->role}/group-chats/{$message->group_chat_id}",
+        ];
+
+        return $this->sendToUser($recipient, $data, $notification);
+    }
+
+    /**
      * Send push notification using Kreait Firebase SDK
      */
     protected function send(string $token, array $data, array $notification = null): bool

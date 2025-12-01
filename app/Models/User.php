@@ -445,6 +445,16 @@ class User extends Authenticatable
     }
 
     /**
+     * Get group chats this user is a member of
+     */
+    public function groupChats()
+    {
+        return $this->belongsToMany(GroupChat::class, 'group_chat_members', 'user_id', 'group_chat_id')
+                    ->withPivot('unread_count', 'last_read_at')
+                    ->withTimestamps();
+    }
+
+    /**
      * Get total unread message count for this user
      */
     public function unreadMessagesCount(): int

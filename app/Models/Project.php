@@ -41,6 +41,19 @@ class Project extends Model
     }
 
     /**
+     * Boot method to automatically create group chat when project is created
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($project) {
+            // Automatically create group chat for this project
+            GroupChat::getOrCreateForProject($project->id);
+        });
+    }
+
+    /**
      * Get the SERVICE REQUEST this project was created from
      */
     public function serviceRequest()
@@ -160,6 +173,14 @@ class Project extends Model
     public function conversation()
     {
         return $this->hasOne(Conversation::class);
+    }
+
+    /**
+     * Get group chat for this project
+     */
+    public function groupChat()
+    {
+        return $this->hasOne(GroupChat::class);
     }
 
     /**
