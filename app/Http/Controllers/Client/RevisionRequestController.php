@@ -425,7 +425,7 @@ class RevisionRequestController extends Controller
         $user = Auth::user();
         
         // Get task and verify ownership
-        $task = Task::with(['project.serviceRequest', 'assignments'])
+        $task = Task::with(['project.serviceRequest', 'assignedUser'])
             ->where('taskID', $taskId)
             ->whereHas('project.serviceRequest', function($query) use ($user) {
                 $query->where('client_id', $user->id);
@@ -458,9 +458,8 @@ class RevisionRequestController extends Controller
         try {
             DB::beginTransaction();
 
-            // Get assigned adiutor from task
-            $assignment = $task->assignments()->where('status', 'active')->first();
-            $adiutorId = $assignment ? $assignment->adiutor_id : null;
+            // Get assigned adiutor from task (assignedTo field contains the user ID)
+            $adiutorId = $task->assignedTo;
 
             $revisionNumber = RevisionRequest::where('task_id', $taskId)->count() + 1;
 

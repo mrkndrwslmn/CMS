@@ -790,11 +790,13 @@
             </div>
         </form>
     </div>
+    </div>
 </div>
 
 <!-- Task Revision Modal -->
-<div id="taskRevisionModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 items-center justify-center p-4" onclick="if(event.target === this) closeTaskRevisionModal()">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+<div id="taskRevisionModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50" style="display: none;">
+    <div class="flex items-center justify-center min-h-screen p-4" onclick="if(event.target.parentElement.id === 'taskRevisionModal') closeTaskRevisionModal()">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
         <!-- Modal Header -->
         <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-2xl">
             <div class="flex items-center justify-between">
@@ -893,6 +895,7 @@
                 </button>
             </div>
         </form>
+        </div>
     </div>
 </div>
 
@@ -923,30 +926,71 @@ function toggleTaskSelection(show) {
 }
 
 function openTaskRevisionModal(taskId, taskTitle) {
+    console.log('Opening task revision modal for task:', taskId, taskTitle);
+    
     const modal = document.getElementById('taskRevisionModal');
+    
+    if (!modal) {
+        console.error('Modal element not found!');
+        alert('ERROR: Modal element not found in DOM!');
+        return;
+    }
+    
+    console.log('Modal found:', modal);
+    console.log('Modal parent:', modal.parentElement);
+    console.log('Modal innerHTML length:', modal.innerHTML.length);
+    
     const form = document.getElementById('taskRevisionForm');
     const titleElement = document.getElementById('taskRevisionTitle');
     const infoTitleElement = document.getElementById('taskRevisionInfoTitle');
     
     // Set form action to task-specific revision endpoint
-    form.action = `/client/revisions/tasks/${taskId}`;
+    if (form) {
+        form.action = `/client/revisions/tasks/${taskId}`;
+        console.log('Form action set to:', form.action);
+    } else {
+        console.error('Form not found!');
+    }
     
     // Set task title in modal
-    titleElement.textContent = taskTitle;
-    infoTitleElement.textContent = taskTitle;
+    if (titleElement) {
+        titleElement.textContent = taskTitle;
+        console.log('Title element updated');
+    }
+    if (infoTitleElement) {
+        infoTitleElement.textContent = taskTitle;
+        console.log('Info title element updated');
+    }
     
     // Show modal
+    console.log('Before show - display:', modal.style.display, 'class:', modal.className);
     modal.classList.remove('hidden');
-    modal.style.display = 'flex';
+    modal.style.display = 'block';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    console.log('After show - display:', modal.style.display, 'class:', modal.className);
+    
+    // Force reflow
+    modal.offsetHeight;
+    
+    console.log('Final computed style:', window.getComputedStyle(modal).display);
+    console.log('Final visibility:', window.getComputedStyle(modal).visibility);
+    console.log('Final opacity:', window.getComputedStyle(modal).opacity);
+    console.log('Final z-index:', window.getComputedStyle(modal).zIndex);
 }
 
 function closeTaskRevisionModal() {
     const modal = document.getElementById('taskRevisionModal');
-    modal.classList.add('hidden');
-    modal.style.display = 'none';
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
     
     // Reset form
-    document.getElementById('taskRevisionForm').reset();
+    const form = document.getElementById('taskRevisionForm');
+    if (form) {
+        form.reset();
+    }
 }
 
 // Reopen modal if there are validation errors

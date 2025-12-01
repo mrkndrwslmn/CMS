@@ -83,6 +83,7 @@ class RevisionController extends Controller
             'requestedBy.clientProfile',
             'assignedAdiutor.adiutorProfile',
             'task.project',
+            'task.assignedUser',
             'project.serviceRequest',
             'serviceRequest',
             'reviewedBy',

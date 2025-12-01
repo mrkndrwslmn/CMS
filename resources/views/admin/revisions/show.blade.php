@@ -458,7 +458,7 @@
 </div>
 
 <!-- Approve Modal -->
-<div id="approveModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+<div id="approveModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl max-w-lg w-full shadow-xl">
         <form action="{{ route('admin.revisions.approve', $revision->id) }}" method="POST">
             @csrf
@@ -474,7 +474,7 @@
                     </button>
                 </div>
             </div>
-            <div class="px-6 py-5 space-y-4">
+            <div class="px-6 py-5 space-y-4">                
                 <div>
                     <label for="assigned_adiutor_id" class="block text-sm font-medium text-neutral-700 mb-2">
                         Assign Adiutor <span class="text-error-500">*</span>
@@ -484,17 +484,36 @@
                             required>
                         <option value="">Select Adiutor</option>
                         @foreach($adiutors as $adiutor)
-                            <option value="{{ $adiutor->id }}">{{ $adiutor->fullName }}</option>
+                            <option value="{{ $adiutor->id }}" 
+                                {{ ($revision->source_type === 'task' && $revision->task && $revision->task->assignedTo && $revision->task->assignedTo == $adiutor->id) ? 'selected' : '' }}>
+                                {{ $adiutor->fullName }}
+                                @if($revision->source_type === 'task' && $revision->task && $revision->task->assignedTo == $adiutor->id)
+                                    (Currently Assigned)
+                                @endif
+                            </option>
                         @endforeach
                     </select>
+                    @if($revision->source_type === 'task' && $revision->task && $revision->task->assignedTo)
+                        <p class="mt-1 text-xs text-blue-600">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            This task is currently assigned to {{ $revision->task->assignedUser ? $revision->task->assignedUser->fullName : 'an adiutor' }}
+                        </p>
+                    @endif
                 </div>
                 <div>
                     <label for="approved_due_date" class="block text-sm font-medium text-neutral-700 mb-2">
                         Due Date
                     </label>
                     <input type="date" name="approved_due_date" id="approved_due_date" 
+                           value="{{ $revision->requested_due_date ? $revision->requested_due_date->format('Y-m-d') : '' }}"
                            class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-primary-500" 
                            min="{{ date('Y-m-d') }}">
+                    @if($revision->requested_due_date)
+                        <p class="mt-1 text-xs text-neutral-600">
+                            <i class="fas fa-calendar-alt mr-1"></i>
+                            Client requested: {{ $revision->requested_due_date->format('M d, Y') }}
+                        </p>
+                    @endif
                 </div>
                 <div>
                     <label for="admin_notes" class="block text-sm font-medium text-neutral-700 mb-2">
@@ -594,7 +613,7 @@
 </div>
 
 <!-- Reject Modal -->
-<div id="rejectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+<div id="rejectModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl max-w-lg w-full shadow-xl">
         <form action="{{ route('admin.revisions.reject', $revision->id) }}" method="POST">
             @csrf
