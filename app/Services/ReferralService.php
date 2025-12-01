@@ -82,8 +82,8 @@ class ReferralService
             }
 
             // Calculate rewards
-            $referrerPendingPoints = config('referral.rewards.referrer.completion_points', 1000);
-            $referredWelcomePoints = config('referral.rewards.referred.welcome_points', 500);
+            $referrerPendingPoints = config('referral.legacy_rewards.referrer.completion_points', 1000);
+            $referredWelcomePoints = config('referral.legacy_rewards.referred.welcome_points', 500);
 
             // Create referral record
             $referral = Referral::create([
@@ -167,17 +167,23 @@ class ReferralService
 
             DB::beginTransaction();
 
+            // Check if payment amount qualifies for rewards
+            $minQualifyingAmount = config('referral.eligibility.min_qualifying_amount', 100000);
+            if ($payment->amount < $minQualifyingAmount) {
+                Log::info('Payment amount below minimum for referral rewards', [
+                    'payment_amount' => $payment->amount,
+                    'min_amount' => $minQualifyingAmount,
+                ]);
+                DB::rollBack();
+                return false;
+            }
+
             // Mark referral as completed
             $referral->markCompleted($payment);
+            $referral->update(['qualifying_payment_amount' => $payment->amount]);
 
-            // Award points to referrer
-            $this->awardReferrerCompletionReward($referral);
-
-            // Generate reward coupon for referrer
-            $referrerCoupon = $this->generateReferrerRewardCoupon($referral->referrer);
-            if ($referrerCoupon) {
-                $referral->update(['referrer_coupon_id' => $referrerCoupon->id]);
-            }
+            // Calculate and award tiered benefits
+            $this->awardTieredBenefits($referral, $payment->amount);
 
             // Update referral code stats
             $referrerCode = $referral->referrer->referralCode;
@@ -197,6 +203,7 @@ class ReferralService
             Log::info('Referral completed successfully', [
                 'referral_id' => $referral->id,
                 'payment_id' => $payment->id,
+                'payment_amount' => $payment->amount,
             ]);
 
             return true;
@@ -207,6 +214,201 @@ class ReferralService
                 'payment_id' => $payment->id,
             ]);
             return false;
+        }
+    }
+
+    /**
+     * Award tiered benefits based on payment amount
+     */
+    protected function awardTieredBenefits(Referral $referral, float $paymentAmount): void
+    {
+        $tier = $this->getRewardTier($paymentAmount);
+        
+        if (!$tier) {
+            Log::warning('No reward tier found for payment amount', [
+                'payment_amount' => $paymentAmount,
+            ]);
+            return;
+        }
+
+        // Award benefits to referrer
+        $this->awardBenefitToReferrer($referral, $paymentAmount, $tier);
+        
+        // Award benefits to referred user
+        $this->awardBenefitToReferred($referral, $paymentAmount, $tier);
+    }
+
+    /**
+     * Get the appropriate reward tier for a payment amount
+     */
+    protected function getRewardTier(float $amount): ?array
+    {
+        $tiers = config('referral.reward_tiers', []);
+        
+        foreach ($tiers as $tier) {
+            if ($amount >= $tier['min_amount']) {
+                if ($tier['max_amount'] === null || $amount <= $tier['max_amount']) {
+                    return $tier;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Award benefit to referrer (person who referred)
+     * ALWAYS awards CREDITS (withdrawable money)
+     */
+    protected function awardBenefitToReferrer(Referral $referral, float $paymentAmount, array $tier): void
+    {
+        $percentage = $tier['referrer_percentage'];
+        $benefitAmount = ($paymentAmount * $percentage) / 100;
+
+        $referral->update([
+            'referrer_benefit_type' => 'credits',
+            'referrer_discount_percentage' => $percentage,
+        ]);
+
+        // Award withdrawable credits (ALWAYS)
+        $this->awardReferralCredits(
+            $referral->referrer,
+            $benefitAmount,
+            $referral,
+            "Referral reward: {$percentage}% of ₱" . number_format($paymentAmount, 2)
+        );
+        
+        $referral->update(['referrer_credits_earned' => $benefitAmount]);
+
+        // Also award legacy points for compatibility
+        $this->awardReferrerCompletionReward($referral);
+    }
+
+    /**
+     * Award benefit to referred user (person who was referred)
+     * ALWAYS awards COUPON (discount percentage)
+     */
+    protected function awardBenefitToReferred(Referral $referral, float $paymentAmount, array $tier): void
+    {
+        $percentage = $tier['referred_percentage'];
+
+        $referral->update([
+            'referred_benefit_type' => 'coupon',
+            'referred_discount_percentage' => $percentage,
+        ]);
+
+        // Generate coupon (ALWAYS)
+        // The percentage is now the coupon discount percentage (not payment percentage)
+        $coupon = $this->generateReferredTieredCoupon($referral->referred, $percentage, $paymentAmount);
+        if ($coupon) {
+            $referral->update(['referred_coupon_id' => $coupon->id]);
+        }
+    }
+
+    /**
+     * Award referral credits to a user
+     */
+    protected function awardReferralCredits(
+        User $user,
+        float $amount,
+        Referral $referral,
+        string $description
+    ): void {
+        $balanceBefore = $user->referral_credits;
+        $balanceAfter = $balanceBefore + $amount;
+
+        // Update user balance
+        $user->increment('referral_credits', $amount);
+
+        // Log transaction
+        \App\Models\ReferralCreditTransaction::create([
+            'user_id' => $user->id,
+            'transaction_type' => 'earned',
+            'amount' => $amount,
+            'balance_before' => $balanceBefore,
+            'balance_after' => $balanceAfter,
+            'source' => 'referral_completed',
+            'description' => $description,
+            'referral_id' => $referral->id,
+        ]);
+
+        Log::info('Referral credits awarded', [
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'balance_after' => $balanceAfter,
+        ]);
+    }
+
+    /**
+     * Generate tiered coupon for referrer
+     */
+    protected function generateReferrerTieredCoupon(User $referrer, float $percentage, float $maxDiscount): ?Coupon
+    {
+        try {
+            $validDays = config('referral.benefits.coupon.validity_days', 60);
+            $minPurchase = config('referral.benefits.coupon.min_purchase_amount', 10000);
+
+            $couponData = [
+                'code' => 'REF' . strtoupper(substr($referrer->fullName, 0, 4)) . rand(1000, 9999),
+                'name' => 'Referral Reward - ' . $percentage . '%',
+                'description' => "Thank you for referring! Get {$percentage}% off your next service (up to ₱" . number_format($maxDiscount, 0) . ")",
+                'discount_type' => 'percentage',
+                'discount_value' => $percentage,
+                'max_discount_amount' => $maxDiscount,
+                'min_purchase_amount' => $minPurchase,
+                'valid_until' => now()->addDays($validDays),
+                'stackable_with_loyalty_tier' => config('referral.benefits.coupon.stackable_with_loyalty', true),
+                'stackable_with_points' => false,
+            ];
+
+            return $this->couponService->createUserSpecificCoupon(
+                $couponData,
+                $referrer,
+                $referrer
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to generate referrer tiered coupon', [
+                'error' => $e->getMessage(),
+                'referrer_id' => $referrer->id,
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Generate tiered coupon for referred user
+     */
+    protected function generateReferredTieredCoupon(User $referred, float $percentage, float $qualifyingAmount): ?Coupon
+    {
+        try {
+            $validDays = config('referral.benefits.coupon.validity_days', 90);
+            $minPurchase = config('referral.benefits.coupon.min_purchase_amount', 50000);
+            $maxDiscount = config('referral.benefits.coupon.max_discount_amount', 30000);
+
+            $couponData = [
+                'code' => 'WELCOME' . strtoupper(substr($referred->fullName, 0, 4)) . rand(1000, 9999),
+                'name' => 'Referral Welcome - ' . $percentage . '% Off',
+                'description' => "Thank you for joining! Get {$percentage}% off your next project (up to ₱" . number_format($maxDiscount, 0) . ")",
+                'discount_type' => 'percentage',
+                'discount_value' => $percentage,
+                'max_discount_amount' => $maxDiscount,
+                'min_purchase_amount' => $minPurchase,
+                'valid_until' => now()->addDays($validDays),
+                'stackable_with_loyalty_tier' => config('referral.benefits.coupon.stackable_with_loyalty', false),
+                'stackable_with_points' => false,
+            ];
+
+            return $this->couponService->createUserSpecificCoupon(
+                $couponData,
+                $referred,
+                $referred
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to generate referred tiered coupon', [
+                'error' => $e->getMessage(),
+                'referred_id' => $referred->id,
+            ]);
+            return null;
         }
     }
 
@@ -248,8 +450,8 @@ class ReferralService
     protected function generateWelcomeCoupon(User $user): ?Coupon
     {
         try {
-            $discountValue = config('referral.rewards.referred.coupon_discount', 15);
-            $validDays = config('referral.rewards.referred.coupon_validity_days', 30);
+            $discountValue = config('referral.legacy_rewards.referred.coupon_discount', 15);
+            $validDays = config('referral.legacy_rewards.referred.coupon_validity_days', 30);
 
             $couponData = [
                 'code' => 'WELCOME' . strtoupper(substr($user->fullName, 0, 4)) . rand(100, 999),
@@ -283,8 +485,8 @@ class ReferralService
     protected function generateReferrerRewardCoupon(User $referrer): ?Coupon
     {
         try {
-            $discountValue = config('referral.rewards.referrer.coupon_discount', 20);
-            $validDays = config('referral.rewards.referrer.coupon_validity_days', 60);
+            $discountValue = config('referral.legacy_rewards.referrer.coupon_discount', 20);
+            $validDays = config('referral.legacy_rewards.referrer.coupon_validity_days', 60);
 
             $couponData = [
                 'code' => 'REFERRAL' . strtoupper(substr($referrer->fullName, 0, 4)) . rand(100, 999),
@@ -327,6 +529,9 @@ class ReferralService
                 'pending_referrals' => 0,
                 'lifetime_earnings' => 0,
                 'conversion_rate' => 0,
+                'referral_credits' => $user->referral_credits ?? 0,
+                'referral_credits_pending' => $user->referral_credits_pending ?? 0,
+                'referral_credits_withdrawn' => $user->referral_credits_withdrawn ?? 0,
             ];
         }
 
@@ -338,7 +543,176 @@ class ReferralService
             'lifetime_earnings' => $referralCode->lifetime_earnings_points,
             'conversion_rate' => $referralCode->getConversionRate(),
             'last_used' => $referralCode->last_used_at,
+            'referral_credits' => $user->referral_credits ?? 0,
+            'referral_credits_pending' => $user->referral_credits_pending ?? 0,
+            'referral_credits_withdrawn' => $user->referral_credits_withdrawn ?? 0,
         ];
+    }
+
+    /**
+     * Request withdrawal of referral credits
+     */
+    public function requestWithdrawal(
+        User $user,
+        float $amount,
+        string $withdrawalMethod,
+        array $withdrawalDetails,
+        ?string $notes = null
+    ): ?\App\Models\ReferralCreditWithdrawal {
+        $minWithdrawal = config('referral.benefits.credits.minimum_withdrawal', 1000);
+        
+        if ($amount < $minWithdrawal) {
+            throw new \Exception("Minimum withdrawal amount is ₱" . number_format($minWithdrawal, 2));
+        }
+        
+        if ($user->referral_credits < $amount) {
+            throw new \Exception("Insufficient referral credits. Available: ₱" . number_format($user->referral_credits, 2));
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Create withdrawal request
+            $withdrawal = \App\Models\ReferralCreditWithdrawal::create([
+                'withdrawal_number' => \App\Models\ReferralCreditWithdrawal::generateWithdrawalNumber(),
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'status' => 'pending',
+                'withdrawal_method' => $withdrawalMethod,
+                'withdrawal_details' => $withdrawalDetails,
+                'user_notes' => $notes,
+                'requested_at' => now(),
+            ]);
+
+            // Move credits from available to pending
+            $user->decrement('referral_credits', $amount);
+            $user->increment('referral_credits_pending', $amount);
+
+            // Log transaction
+            $balanceBefore = $user->referral_credits + $amount;
+            \App\Models\ReferralCreditTransaction::create([
+                'user_id' => $user->id,
+                'transaction_type' => 'withdrawn',
+                'amount' => -$amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $user->referral_credits,
+                'source' => 'withdrawal_requested',
+                'description' => "Withdrawal request #{$withdrawal->withdrawal_number}",
+                'withdrawal_id' => $withdrawal->id,
+            ]);
+
+            DB::commit();
+
+            Log::info('Referral credit withdrawal requested', [
+                'user_id' => $user->id,
+                'withdrawal_id' => $withdrawal->id,
+                'amount' => $amount,
+            ]);
+
+            return $withdrawal;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to request withdrawal', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+                'amount' => $amount,
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Approve and complete a withdrawal
+     */
+    public function completeWithdrawal(
+        \App\Models\ReferralCreditWithdrawal $withdrawal,
+        string $referenceNumber,
+        ?string $proofPath = null,
+        ?string $notes = null,
+        User $admin = null
+    ): bool {
+        try {
+            DB::beginTransaction();
+
+            $withdrawal->markCompleted($referenceNumber, $proofPath, $notes);
+
+            $user = $withdrawal->user;
+
+            // Move from pending to withdrawn
+            $user->decrement('referral_credits_pending', $withdrawal->amount);
+            $user->increment('referral_credits_withdrawn', $withdrawal->amount);
+
+            DB::commit();
+
+            Log::info('Referral credit withdrawal completed', [
+                'withdrawal_id' => $withdrawal->id,
+                'user_id' => $user->id,
+                'amount' => $withdrawal->amount,
+                'processed_by' => $admin?->id,
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to complete withdrawal', [
+                'error' => $e->getMessage(),
+                'withdrawal_id' => $withdrawal->id,
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Reject a withdrawal and refund credits
+     */
+    public function rejectWithdrawal(
+        \App\Models\ReferralCreditWithdrawal $withdrawal,
+        string $reason,
+        User $admin = null
+    ): bool {
+        try {
+            DB::beginTransaction();
+
+            $withdrawal->markRejected($reason);
+
+            $user = $withdrawal->user;
+
+            // Return credits from pending to available
+            $user->increment('referral_credits', $withdrawal->amount);
+            $user->decrement('referral_credits_pending', $withdrawal->amount);
+
+            // Log refund transaction
+            $balanceBefore = $user->referral_credits - $withdrawal->amount;
+            \App\Models\ReferralCreditTransaction::create([
+                'user_id' => $user->id,
+                'transaction_type' => 'refunded',
+                'amount' => $withdrawal->amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $user->referral_credits,
+                'source' => 'withdrawal_rejected',
+                'description' => "Withdrawal #{$withdrawal->withdrawal_number} rejected: {$reason}",
+                'withdrawal_id' => $withdrawal->id,
+                'performed_by' => $admin?->id,
+            ]);
+
+            DB::commit();
+
+            Log::info('Referral credit withdrawal rejected', [
+                'withdrawal_id' => $withdrawal->id,
+                'user_id' => $user->id,
+                'amount' => $withdrawal->amount,
+                'processed_by' => $admin?->id,
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to reject withdrawal', [
+                'error' => $e->getMessage(),
+                'withdrawal_id' => $withdrawal->id,
+            ]);
+            return false;
+        }
     }
 
     /**

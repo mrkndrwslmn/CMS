@@ -8,7 +8,7 @@
     <div class="mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-neutral-900">🎁 Referral Program</h1>
+                <h1 class="text-3xl font-bold text-neutral-900">Referral Program</h1>
                 <p class="text-neutral-600 mt-2">Invite friends and earn rewards together!</p>
             </div>
             <a href="{{ route('client.referrals.share') }}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">

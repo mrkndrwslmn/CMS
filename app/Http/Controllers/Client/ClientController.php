@@ -324,60 +324,27 @@ class ClientController extends Controller
     {
         $user = Auth::user();
         
-        // Get all projects with completed assignments and their feedback status
-        $allCompletedAssignments = DB::table('project_assignments')
-            ->join('projects', 'project_assignments.project_id', '=', 'projects.id')
-            ->join('users', 'project_assignments.adiutor_id', '=', 'users.id')
-            ->leftJoin('feedbacks', function($join) use ($user) {
-                $join->on('project_assignments.project_id', '=', 'feedbacks.project_id')
-                     ->on('project_assignments.adiutor_id', '=', 'feedbacks.adiutor_id')
-                     ->where('feedbacks.client_id', '=', $user->id);
-            })
-            ->where('projects.client_id', $user->id)
-            ->where('projects.status', 'completed')
-            ->select(
-                'projects.id',
-                'projects.title',
-                'projects.description',
-                'projects.budget',
-                'projects.updated_at',
-                'project_assignments.adiutor_id',
-                'users.fullName as adiutor_name',
-                'feedbacks.id as feedback_id'
-            )
+        // Get completed projects with feedback status
+        $completedProjects = Project::where('client_id', $user->id)
+            ->where('status', 'completed')
+            ->with(['assignments.adiutor'])
             ->get();
 
-        // Group by project and check which projects have pending feedback
-        $projectGroups = $allCompletedAssignments->groupBy('id');
-        
-        $pendingFeedback = collect();
-        foreach ($projectGroups as $projectId => $assignments) {
-            // Check if any adiutor hasn't received feedback yet
-            $hasPendingFeedback = $assignments->where('feedback_id', null)->isNotEmpty();
-            
-            if ($hasPendingFeedback) {
-                // Add the project (use first assignment for project details)
-                $project = $assignments->first();
-                $projectObj = (object) [
-                    'id' => $project->id,
-                    'title' => $project->title,
-                    'description' => $project->description,
-                    'budget' => $project->budget,
-                    'updated_at' => Carbon::parse($project->updated_at),
-                    'adiutor_count' => $assignments->count(),
-                    'pending_count' => $assignments->where('feedback_id', null)->count(),
-                ];
-                $pendingFeedback->push($projectObj);
-            }
-        }
-        
+        // Get existing feedback project IDs
+        $feedbackProjectIds = ProjectFeedback::where('client_id', $user->id)
+            ->pluck('project_id')
+            ->toArray();
+
+        // Separate into pending and completed
+        $pendingFeedback = $completedProjects->reject(function($project) use ($feedbackProjectIds) {
+            return in_array($project->id, $feedbackProjectIds);
+        });
+
         // Calculate feedback statistics
         $stats = [
-            'completedProjects' => $projectGroups->count(),
-            'reviewsGiven' => DB::table('feedbacks')
-                ->where('client_id', $user->id)
-                ->count(),
-            'pendingReviews' => $allCompletedAssignments->where('feedback_id', null)->count(),
+            'completedProjects' => $completedProjects->count(),
+            'reviewsGiven' => count($feedbackProjectIds),
+            'pendingReviews' => $pendingFeedback->count(),
             'averageRating' => DB::table('feedbacks')
                 ->where('client_id', $user->id)
                 ->avg('rating') ?? 0
@@ -389,12 +356,10 @@ class ClientController extends Controller
         // Get feedback given by this client
         $completedFeedback = DB::table('feedbacks')
             ->join('projects', 'feedbacks.project_id', '=', 'projects.id')
-            ->join('users', 'feedbacks.adiutor_id', '=', 'users.id')
             ->where('feedbacks.client_id', $user->id)
             ->select(
                 'feedbacks.*',
-                'projects.title as project_title',
-                'users.fullName as adiutor_name'
+                'projects.title as project_title'
             )
             ->orderBy('feedbacks.created_at', 'desc')
             ->get()
@@ -515,15 +480,11 @@ class ClientController extends Controller
             ->orderBy('tasks.created_at', 'desc')
             ->get();
 
-        // Get project feedback
+        // Get project feedback (project-based, not adiutor-specific)
         $feedback = DB::table('feedbacks')
-            ->join('users', 'feedbacks.adiutor_id', '=', 'users.id')
             ->where('feedbacks.project_id', $id)
             ->where('feedbacks.client_id', $user->id)
-            ->select(
-                'feedbacks.*',
-                'users.fullName as adiutor_name'
-            )
+            ->select('feedbacks.*')
             ->first();
 
         // Load service request for payment info

@@ -11,64 +11,24 @@ use App\Notifications\FeedbackReceivedNotification;
 
 class FeedbackController extends Controller
 {
-    public function create(Request $request, $projectId)
+    public function create($projectId)
     {
         $project = Project::with(['assignments.adiutor'])
             ->where('client_id', auth()->id())
             ->where('status', 'completed')
             ->findOrFail($projectId);
 
-        // Get adiutor_id from request (if selecting specific adiutor)
-        $adiutorId = $request->query('adiutor_id');
-
-        if ($adiutorId) {
-            // Check if adiutor exists in project assignments
-            $assignment = $project->assignments->firstWhere('adiutor_id', $adiutorId);
-            
-            if (!$assignment) {
-                return redirect()->route('client.feedback')
-                    ->with('error', 'Invalid adiutor selected for this project.');
-            }
-
-            // Check if feedback already exists for this adiutor
-            $existingFeedback = ProjectFeedback::where('project_id', $projectId)
-                ->where('client_id', auth()->id())
-                ->where('adiutor_id', $adiutorId)
-                ->first();
-
-            if ($existingFeedback) {
-                return redirect()->route('client.feedback')
-                    ->with('error', 'You have already submitted feedback for this adiutor.');
-            }
-
-            return view('client.feedback.create', [
-                'project' => $project,
-                'selectedAdiutor' => $assignment,
-            ]);
-        }
-
-        // If no adiutor_id, show selection page
-        $assignments = $project->assignments->load('adiutor');
-        
-        // Get adiutors who haven't received feedback yet
-        $feedbackGiven = ProjectFeedback::where('project_id', $projectId)
+        // Check if feedback already exists for this project
+        $existingFeedback = ProjectFeedback::where('project_id', $projectId)
             ->where('client_id', auth()->id())
-            ->pluck('adiutor_id')
-            ->toArray();
+            ->first();
 
-        $remainingAssignments = $assignments->reject(function($assignment) use ($feedbackGiven) {
-            return in_array($assignment->adiutor_id, $feedbackGiven);
-        });
-
-        if ($remainingAssignments->isEmpty()) {
+        if ($existingFeedback) {
             return redirect()->route('client.feedback')
-                ->with('error', 'You have already submitted feedback for all adiutors on this project.');
+                ->with('error', 'You have already submitted feedback for this project.');
         }
 
-        return view('client.feedback.select-adiutor', [
-            'project' => $project,
-            'assignments' => $remainingAssignments,
-        ]);
+        return view('client.feedback.create', compact('project'));
     }
 
     public function store(Request $request, $projectId)
@@ -78,9 +38,18 @@ class FeedbackController extends Controller
             ->where('status', 'completed')
             ->findOrFail($projectId);
 
-        // Validate adiutor_id is provided and valid
+        // Check if feedback already exists for this project
+        $existingFeedback = ProjectFeedback::where('project_id', $projectId)
+            ->where('client_id', auth()->id())
+            ->first();
+
+        if ($existingFeedback) {
+            return redirect()->route('client.feedback')
+                ->with('error', 'You have already submitted feedback for this project.');
+        }
+
+        // Validate project feedback (no adiutor_id needed)
         $validated = $request->validate([
-            'adiutor_id' => 'required|integer',
             'rating' => 'required|integer|min:1|max:5',
             'quality_rating' => 'required|integer|min:1|max:5',
             'communication_rating' => 'required|integer|min:1|max:5',
@@ -89,25 +58,6 @@ class FeedbackController extends Controller
             'would_recommend' => 'boolean',
             'public' => 'boolean'
         ]);
-
-        // Verify adiutor is assigned to this project
-        $assignment = $project->assignments->firstWhere('adiutor_id', $validated['adiutor_id']);
-        
-        if (!$assignment) {
-            return redirect()->route('client.feedback')
-                ->with('error', 'Invalid adiutor selected for this project.');
-        }
-
-        // Check if feedback already exists for this adiutor
-        $existingFeedback = ProjectFeedback::where('project_id', $projectId)
-            ->where('client_id', auth()->id())
-            ->where('adiutor_id', $validated['adiutor_id'])
-            ->first();
-
-        if ($existingFeedback) {
-            return redirect()->route('client.feedback')
-                ->with('error', 'You have already submitted feedback for this adiutor.');
-        }
 
         // Calculate average rating from detailed ratings
         $averageRating = round((
@@ -132,11 +82,10 @@ class FeedbackController extends Controller
             $detailedMessage .= "\n[Public Review]";
         }
 
-        // Create feedback
+        // Create project-based feedback (no adiutor_id)
         $feedback = ProjectFeedback::create([
             'project_id' => $projectId,
             'client_id' => auth()->id(),
-            'adiutor_id' => $validated['adiutor_id'],
             'rating' => $averageRating,
             'message' => $detailedMessage,
             'type' => 'service',
@@ -144,16 +93,17 @@ class FeedbackController extends Controller
             'category' => 'project_completion'
         ]);
 
-        // Notify the Adiutor
-        $adiutorUser = User::find($validated['adiutor_id']);
-        if ($adiutorUser) {
-            $adiutorUser->notify(new FeedbackReceivedNotification(
-                $projectId,
-                $project->title,
-                $feedback->id,
-                $averageRating,
-                auth()->user()->fullName
-            ));
+        // Notify ALL adiutors assigned to this project
+        foreach ($project->assignments as $assignment) {
+            if ($assignment->adiutor) {
+                $assignment->adiutor->notify(new FeedbackReceivedNotification(
+                    $projectId,
+                    $project->title,
+                    $feedback->id,
+                    $averageRating,
+                    auth()->user()->fullName
+                ));
+            }
         }
 
         return redirect()->route('client.feedback')

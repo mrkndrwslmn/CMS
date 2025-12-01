@@ -10,7 +10,7 @@ class ProjectFeedback extends Model
 
     protected $fillable = [
         'client_id',
-        'adiutor_id',
+        // 'adiutor_id' - NOT used for project feedback, ratings are derived from project assignments
         'task_id',
         'project_id',
         'title',

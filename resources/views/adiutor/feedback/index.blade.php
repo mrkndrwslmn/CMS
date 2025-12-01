@@ -102,8 +102,6 @@
                                 <p class="text-sm text-neutral-600">
                                     @if($review->project_title)
                                         Project: {{ $review->project_title }}
-                                    @elseif($review->task_title)
-                                        Task: {{ $review->task_title }}
                                     @else
                                         General Feedback
                                     @endif

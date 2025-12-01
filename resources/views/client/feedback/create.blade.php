@@ -12,9 +12,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
             </a>
-            <h1 class="text-3xl font-bold text-primary-700">Leave Feedback</h1>
+            <h1 class="text-3xl font-bold text-primary-700">Rate This Project</h1>
         </div>
-        <p class="text-neutral-600 mt-2">Share your experience and help us improve our services</p>
+        <p class="text-neutral-600 mt-2">Share your feedback to help us improve our services and recognize great work</p>
     </div>
 
     <!-- Project Information -->
@@ -26,12 +26,16 @@
                 <p class="text-neutral-600 text-sm mb-4 leading-relaxed">{{ $project->description }}</p>
                 
                 <div class="space-y-3 text-sm">
-                    @if($selectedAdiutor)
+                    @if($project->assignments->count() > 0)
                         <div class="flex items-center gap-2">
                             <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
-                            <span class="text-neutral-600">Adiutor: <span class="font-semibold text-primary-700">{{ $selectedAdiutor->adiutor->fullName }}</span></span>
+                            <span class="text-neutral-600">Team: 
+                                @foreach($project->assignments as $index => $assignment)
+                                    <span class="font-semibold text-primary-700">{{ $assignment->adiutor->fullName }}</span>{{ $index < $project->assignments->count() - 1 ? ', ' : '' }}
+                                @endforeach
+                            </span>
                         </div>
                     @endif
 
@@ -60,12 +64,20 @@
                 </div>
             </div>
 
-            <!-- Adiutor Avatar -->
-            @if($selectedAdiutor)
-                <div class="flex-shrink-0">
-                    <img src="{{ $selectedAdiutor->adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($selectedAdiutor->adiutor->fullName) . '&background=4F46E5&color=fff' }}" 
-                         alt="{{ $selectedAdiutor->adiutor->fullName }}" 
-                         class="w-16 h-16 rounded-full border-2 border-primary-200">
+            <!-- Team Avatars -->
+            @if($project->assignments->count() > 0)
+                <div class="flex-shrink-0 flex -space-x-2">
+                    @foreach($project->assignments->take(3) as $assignment)
+                        <img src="{{ $assignment->adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($assignment->adiutor->fullName) . '&background=4F46E5&color=fff' }}" 
+                             alt="{{ $assignment->adiutor->fullName }}" 
+                             class="w-12 h-12 rounded-full border-2 border-white"
+                             title="{{ $assignment->adiutor->fullName }}">
+                    @endforeach
+                    @if($project->assignments->count() > 3)
+                        <div class="w-12 h-12 rounded-full border-2 border-white bg-primary-100 flex items-center justify-center">
+                            <span class="text-xs font-semibold text-primary-700">+{{ $project->assignments->count() - 3 }}</span>
+                        </div>
+                    @endif
                 </div>
             @endif
         </div>
@@ -74,7 +86,6 @@
     <!-- Feedback Form -->
     <form action="{{ route('client.feedback.store', $project->id) }}" method="POST" class="space-y-8">
         @csrf
-        <input type="hidden" name="adiutor_id" value="{{ $selectedAdiutor->adiutor_id }}">
 
         <!-- Overall Rating -->
         <div class="bg-white rounded-xl border border-neutral-200 p-6">
@@ -177,13 +188,13 @@
             
             <div>
                 <label for="comment" class="block text-sm font-semibold text-neutral-700 mb-2">
-                    Please share your detailed feedback <span class="text-error-600">*</span>
+                    Please share your detailed feedback about this project <span class="text-error-600">*</span>
                 </label>
                 <textarea id="comment" 
                           name="comment" 
                           rows="6" 
                           class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors @error('comment') border-error-300 @enderror" 
-                          placeholder="Tell us about your experience working with this Adiutor. What went well? What could be improved?"
+                          placeholder="Tell us about your experience with this project. What went well? What could be improved? How was the team's performance?"
                           required>{{ old('comment') }}</textarea>
                 @error('comment')
                     <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
@@ -205,7 +216,7 @@
                            {{ old('would_recommend') ? 'checked' : '' }}
                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded">
                     <label for="would_recommend" class="ml-2 block text-sm text-neutral-900">
-                        I would recommend this Adiutor to others
+                        I would work with this team again
                     </label>
                 </div>
 
@@ -218,7 +229,7 @@
                            {{ old('public') ? 'checked' : '' }}
                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded">
                     <label for="public" class="ml-2 block text-sm text-neutral-900">
-                        Make this review public (it will be visible on the Adiutor's profile)
+                        Make this review public (visible on team member profiles)
                     </label>
                 </div>
             </div>

@@ -16,7 +16,7 @@ return new class extends Migration
             
             // Relationships
             $table->foreignId('client_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('adiutor_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('adiutor_id')->nullable()->constrained('users')->onDelete('set null'); // Legacy: not used for project feedback, adiutor ratings are derived
             $table->unsignedBigInteger('task_id')->nullable();
             $table->foreign('task_id')->references('taskID')->on('tasks')->onDelete('set null');
             $table->foreignId('project_id')->nullable()->constrained('projects')->onDelete('set null');
