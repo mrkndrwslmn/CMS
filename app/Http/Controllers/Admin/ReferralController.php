@@ -81,14 +81,18 @@ class ReferralController extends Controller
         
         // Monthly statistics (last 6 months)
         $monthlyStats = Referral::select(
-                DB::raw('DATE_FORMAT(created_at, "%b %Y") as month'),
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month_key'),
                 DB::raw('COUNT(*) as total'),
                 DB::raw('SUM(CASE WHEN status = "rewarded" THEN 1 ELSE 0 END) as completed')
             )
             ->where('created_at', '>=', now()->subMonths(6))
             ->groupBy(DB::raw('DATE_FORMAT(created_at, "%Y-%m")'))
             ->orderBy(DB::raw('DATE_FORMAT(created_at, "%Y-%m")'), 'asc')
-            ->get();
+            ->get()
+            ->map(function ($stat) {
+                $stat->month = \Carbon\Carbon::createFromFormat('Y-m', $stat->month_key)->format('M Y');
+                return $stat;
+            });
         
         return view('admin.referrals.index', compact(
             'stats',

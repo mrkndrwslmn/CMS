@@ -3,7 +3,7 @@
 @section('title', 'Loyalty Profile - ' . $user->name)
 
 @section('content')
-<div class="container-fluid px-6 py-8">
+<div class="max-w-7xl mx-auto container-fluid px-6 py-8">
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
         <div>

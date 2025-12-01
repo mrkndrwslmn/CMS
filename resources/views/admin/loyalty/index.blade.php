@@ -3,7 +3,7 @@
 @section('title', 'Loyalty Program')
 
 @section('content')
-<div class="container-fluid px-6 py-8">
+<div class="max-w-8xl mx-auto container-fluid px-6 py-8">
     <!-- Header -->
     <div class="flex justify-between items-center mb-8">
         <div>
