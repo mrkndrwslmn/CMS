@@ -119,7 +119,10 @@ class RevisionController extends Controller
         // Validate input
         $validated = $request->validate([
             'admin_notes' => 'nullable|string|max:500',
-            'assigned_adiutor_id' => 'nullable|exists:users,id'
+            'assigned_adiutor_id' => 'nullable|exists:users,id',
+            'reopen_task_ids' => 'nullable|array',
+            'reopen_task_ids.*' => 'exists:tasks,taskID',
+            'allows_new_tasks' => 'nullable|boolean'
         ]);
 
         try {
@@ -141,7 +144,14 @@ class RevisionController extends Controller
             if ($revision->source_type === 'task' && $revision->task) {
                 $this->reopenTask($revision->task);
             } elseif ($revision->source_type === 'project' && $revision->project) {
-                $this->reopenProject($revision->project);
+                $taskIdsToReopen = $validated['reopen_task_ids'] ?? [];
+                $this->reopenProject($revision->project, $taskIdsToReopen);
+                
+                // Store reopened task IDs and flags
+                $revision->update([
+                    'reopened_task_ids' => $taskIdsToReopen,
+                    'allows_new_tasks' => $validated['allows_new_tasks'] ?? false
+                ]);
             }
 
             // Notify the adiutor
@@ -270,7 +280,7 @@ class RevisionController extends Controller
     /**
      * Reopen a project when revision is approved
      */
-    protected function reopenProject(Project $project)
+    protected function reopenProject(Project $project, array $taskIdsToReopen = [])
     {
         // Reopen if project is completed or in review
         if (in_array($project->status, ['completed', 'review'])) {
@@ -281,22 +291,23 @@ class RevisionController extends Controller
                 'updated_at' => now()
             ]);
 
-            // Also reopen all completed tasks in the project
-            $completedTasks = Task::where('project_id', $project->id)
-                ->where('status', 'completed')
-                ->get();
-
-            foreach ($completedTasks as $task) {
-                $task->update([
-                    'status' => 'in_progress',
-                    'updated_at' => now()
-                ]);
+            // Only reopen specified tasks (if any provided)
+            $tasksReopened = 0;
+            if (!empty($taskIdsToReopen)) {
+                $tasksReopened = Task::whereIn('taskID', $taskIdsToReopen)
+                    ->where('project_id', $project->id)
+                    ->where('status', 'completed')
+                    ->update([
+                        'status' => 'in_progress',
+                        'updated_at' => now()
+                    ]);
             }
 
-            Log::info('Project and tasks reopened for revision', [
+            Log::info('Project and selected tasks reopened for revision', [
                 'project_id' => $project->id,
                 'previous_status' => $previousStatus,
-                'tasks_reopened' => $completedTasks->count()
+                'task_ids_to_reopen' => $taskIdsToReopen,
+                'tasks_reopened' => $tasksReopened
             ]);
         }
     }

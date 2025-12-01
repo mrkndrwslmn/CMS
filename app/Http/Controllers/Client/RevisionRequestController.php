@@ -418,6 +418,109 @@ class RevisionRequestController extends Controller
     }
 
     /**
+     * Store a task-specific revision request
+     */
+    public function storeForTask(Request $request, $taskId)
+    {
+        $user = Auth::user();
+        
+        // Get task and verify ownership
+        $task = Task::with(['project.serviceRequest', 'assignments'])
+            ->where('taskID', $taskId)
+            ->whereHas('project.serviceRequest', function($query) use ($user) {
+                $query->where('client_id', $user->id);
+            })
+            ->firstOrFail();
+
+        // Check if task is completed
+        if ($task->status !== 'completed') {
+            Log::warning('Revision request rejected - task not completed', [
+                'task_id' => $taskId,
+                'status' => $task->status
+            ]);
+            return redirect()->back()
+                ->with('error', 'Revisions can only be requested for completed tasks.');
+        }
+
+        // Validate input
+        $validated = $request->validate([
+            'reason' => 'required|string|min:20|max:2000',
+            'requested_due_date' => 'nullable|date|after:today',
+            'priority' => 'nullable|in:normal,high,urgent'
+        ]);
+        
+        Log::info('Task revision request received', [
+            'task_id' => $taskId,
+            'user_id' => $user->id,
+            'validated_data' => $validated
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Get assigned adiutor from task
+            $assignment = $task->assignments()->where('status', 'active')->first();
+            $adiutorId = $assignment ? $assignment->adiutor_id : null;
+
+            $revisionNumber = RevisionRequest::where('task_id', $taskId)->count() + 1;
+
+            $revisionRequest = RevisionRequest::create([
+                'document_id' => null,
+                'requested_by' => $user->id,
+                'reason' => $validated['reason'],
+                'requested_due_date' => $validated['requested_due_date'] ?? null,
+                'revision_number' => $revisionNumber,
+                'status' => 'pending',
+                'task_id' => $taskId,
+                'project_id' => $task->project_id,
+                'service_request_id' => $task->project->service_request_id,
+                'source_type' => 'task',
+                'assigned_adiutor_id' => $adiutorId,
+                'priority' => $validated['priority'] ?? 'normal'
+            ]);
+
+            // Notify admins
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new RevisionRequestedNotification($revisionRequest));
+            }
+
+            // Notify assigned adiutor
+            if ($adiutorId) {
+                $adiutor = User::find($adiutorId);
+                if ($adiutor) {
+                    $adiutor->notify(new RevisionRequestedNotification($revisionRequest));
+                }
+            }
+
+            DB::commit();
+
+            Log::info('Task revision request created', [
+                'revision_id' => $revisionRequest->id,
+                'task_id' => $taskId,
+                'client_id' => $user->id,
+                'priority' => $validated['priority'] ?? 'normal'
+            ]);
+
+            return redirect()->back()
+                ->with('success', 'Task revision request submitted successfully. An admin will review it shortly.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Failed to create task revision request', [
+                'task_id' => $taskId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to submit revision request. Please try again.');
+        }
+    }
+
+    /**
      * Cancel a revision request (only if pending)
      */
     public function cancel($revisionId)

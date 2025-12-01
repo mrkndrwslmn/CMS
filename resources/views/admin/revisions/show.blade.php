@@ -504,6 +504,80 @@
                               class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-primary-500" 
                               placeholder="Add any notes or instructions for the adiutor..."></textarea>
                 </div>
+                
+                <!-- Task Selection for Project-based Revisions -->
+                @if($revision->source_type === 'project' && $revision->project)
+                    <div class="border-t pt-4">
+                        <label class="block text-sm font-semibold text-neutral-900 mb-3">
+                            <i class="fas fa-tasks text-primary-500 mr-2"></i>
+                            Select Tasks to Reopen (Optional)
+                        </label>
+                        <p class="text-xs text-neutral-600 mb-3">
+                            Choose which completed tasks should be reopened for this revision. If none selected, only the project status will be changed.
+                        </p>
+                        
+                        @php
+                            $completedTasks = $revision->project->tasks()->where('status', 'completed')->get();
+                        @endphp
+                        
+                        @if($completedTasks->count() > 0)
+                            <div class="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-3 bg-neutral-50">
+                                @foreach($completedTasks as $task)
+                                    <label class="flex items-start p-3 border border-neutral-200 rounded-lg hover:bg-white hover:border-primary-300 transition-all cursor-pointer">
+                                        <input type="checkbox" 
+                                               name="reopen_task_ids[]" 
+                                               value="{{ $task->taskID }}"
+                                               class="mt-1 rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                                        <div class="ml-3 flex-1">
+                                            <span class="block font-medium text-neutral-900">{{ $task->taskTitle }}</span>
+                                            <span class="block text-xs text-neutral-600 mt-1">
+                                                Assigned to: {{ $task->assignee_name ?? 'Unassigned' }}
+                                            </span>
+                                            @if($task->completedAt)
+                                                <span class="block text-xs text-neutral-500 mt-1">
+                                                    Completed: {{ \Carbon\Carbon::parse($task->completedAt)->format('M d, Y') }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                            
+                            <!-- Select All / None -->
+                            <div class="flex gap-2 mt-2">
+                                <button type="button" 
+                                        onclick="selectAllTasks()"
+                                        class="text-xs text-primary-600 hover:text-primary-700 font-medium">
+                                    Select All
+                                </button>
+                                <span class="text-xs text-neutral-400">|</span>
+                                <button type="button" 
+                                        onclick="deselectAllTasks()"
+                                        class="text-xs text-neutral-600 hover:text-neutral-700 font-medium">
+                                    Deselect All
+                                </button>
+                            </div>
+                        @else
+                            <p class="text-sm text-neutral-500 italic">No completed tasks to reopen.</p>
+                        @endif
+                    </div>
+                    
+                    <!-- Allow New Tasks -->
+                    <div class="border-t pt-4">
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox" 
+                                   name="allows_new_tasks" 
+                                   value="1"
+                                   class="mt-1 rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                            <div class="ml-3">
+                                <span class="block font-medium text-neutral-900">Allow creating new tasks for this revision</span>
+                                <span class="block text-xs text-neutral-600 mt-1">
+                                    If checked, admin/adiutor can create additional tasks as part of this revision scope.
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+                @endif
             </div>
             <div class="px-6 py-4 bg-neutral-50 rounded-b-xl flex justify-end space-x-3">
                 <button type="button" 
@@ -563,4 +637,14 @@
         </form>
     </div>
 </div>
+
+<script>
+function selectAllTasks() {
+    document.querySelectorAll('input[name="reopen_task_ids[]"]').forEach(cb => cb.checked = true);
+}
+
+function deselectAllTasks() {
+    document.querySelectorAll('input[name="reopen_task_ids[]"]').forEach(cb => cb.checked = false);
+}
+</script>
 @endsection

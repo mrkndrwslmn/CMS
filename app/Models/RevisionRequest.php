@@ -26,13 +26,17 @@ class RevisionRequest extends Model
         'source_type',
         'assigned_adiutor_id',
         'completed_at',
-        'completed_by'
+        'completed_by',
+        'allows_new_tasks',
+        'reopened_task_ids'
     ];
 
     protected $casts = [
         'requested_due_date' => 'date',
         'reviewed_at' => 'datetime',
-        'completed_at' => 'datetime'
+        'completed_at' => 'datetime',
+        'allows_new_tasks' => 'boolean',
+        'reopened_task_ids' => 'array'
     ];
 
     /**

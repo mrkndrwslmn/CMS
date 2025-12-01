@@ -1080,6 +1080,9 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
         Route::get('/projects/{project}/create', [\App\Http\Controllers\Client\RevisionRequestController::class, 'createForProject'])->name('project.create');
         Route::post('/projects/{project}', [\App\Http\Controllers\Client\RevisionRequestController::class, 'storeForProject'])->name('project.store');
         
+        // Task-level revisions (NEW)
+        Route::post('/tasks/{task}', [\App\Http\Controllers\Client\RevisionRequestController::class, 'storeForTask'])->name('task.store');
+        
         // Document-level revisions
         Route::get('/documents/{document}/create', [\App\Http\Controllers\Client\RevisionRequestController::class, 'create'])->name('create');
         Route::post('/documents/{document}', [\App\Http\Controllers\Client\RevisionRequestController::class, 'store'])->name('store');

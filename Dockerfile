@@ -61,8 +61,8 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Install PHP dependencies (include dev dependencies for Laravel Pail and other dev tools)
+RUN composer install --optimize-autoloader
 
 # Install Node.js dependencies (will do npm run build separately)
 # We skip npm run build here to avoid timeout issues during build

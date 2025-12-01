@@ -24,7 +24,21 @@ export default defineConfig({
         },
         watch: {
             usePolling: true,
-            interval: 100,
+            interval: 1000,
+        },
+    },
+    optimizeDeps: {
+        force: false,
+        entries: [
+            'resources/js/app.js',
+            'resources/js/messaging.js',
+        ],
+    },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
         },
     },
 });
