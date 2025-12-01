@@ -5,7 +5,6 @@
 
 @push('analytics')
     <script defer src="https://cdn.vercel-insights.com/v1/script.js?projectId=prj_8NsY544ll3Q74OVb6njoN8QFj0kl"></script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1864950796514595" crossorigin="anonymous"></script>
     
     @if(app(\App\Services\RecaptchaService::class)->isEnabled())
         <script src="{{ app(\App\Services\RecaptchaService::class)->getScriptUrl() }}" async defer></script>

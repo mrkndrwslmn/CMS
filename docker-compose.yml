@@ -10,10 +10,13 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
-      - ./:/var/www/html
-      - ./storage/logs:/var/www/html/storage/logs
+      - ./:/var/www/html:delegated
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+      - ./storage/logs:/var/www/html/storage/logs:delegated
     ports:
       - "8000:80"
+      - "5173:5173"
     depends_on:
       - mysql
       - redis
@@ -43,7 +46,7 @@ services:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
     ports:
-      - "3307:3306"
+      - "3308:3306"
     command: --default-authentication-plugin=mysql_native_password
     networks:
       - laravel-network

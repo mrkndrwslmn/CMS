@@ -22,8 +22,10 @@ class AiSearchController extends Controller
         $query = $request->input('query');
         $services = $request->input('services');
 
-        // Get Gemini API key from environment
-        $geminiApiKey = env('GEMINI_API_KEY');
+        // Get Gemini API configuration
+        $geminiApiKey = config('services.gemini.api_key');
+        $geminiModel = config('services.gemini.model', 'gemini-2.0-flash');
+        $geminiApiUrl = config('services.gemini.api_url');
         
         if (!$geminiApiKey) {
             return response()->json([
@@ -36,17 +38,17 @@ class AiSearchController extends Controller
         
         $prompt = "I'm a user looking for a service related to \"{$query}\". Please provide suggestions for services in the following structure, considering these existing service names: {$serviceNames}. Ensure that the new service prices are in the range of 100 to 1000. Service type should be just the name itself and one of these 3: 1. Writing 2. Editing & Arts 3. Programming Structure should be:
 
-Service Type: [There are 3 service type: Writing / Editing & Arts / Programming.]
-Service Name: [service name]
-Service Description: [service description]
-Price: [estimated price]
+                Service Type: [There are 3 service type: Writing / Editing & Arts / Programming.]
+                Service Name: [service name]
+                Service Description: [service description]
+                Price: [estimated price]
 
-Return only 1 service if the query is too generic, and return 3-5 if there is a specific query";
+                Return only 1 service if the query is too generic, and return 3-5 if there is a specific query";
 
         try {
             // Call Gemini API
             $response = Http::timeout(30)->post(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$geminiApiKey}",
+                "{$geminiApiUrl}/{$geminiModel}:generateContent?key={$geminiApiKey}",
                 [
                     'contents' => [
                         [

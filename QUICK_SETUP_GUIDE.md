@@ -116,13 +116,17 @@ php artisan queue:work
 
 ### Asset Management
 ```bash
-# Development (with hot reload)
+# Development with Docker (Hot Reload Enabled)
+# Vite dev server runs automatically inside Docker container
+# Just access http://localhost:8000 - changes auto-reload!
+
+# For local development (without Docker)
 npm run dev
 
 # Production build
 npm run build
 
-# Watch for changes
+# Watch for changes (local only)
 npm run watch
 ```
 
