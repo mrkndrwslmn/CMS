@@ -45,7 +45,8 @@
                              data-task-id="{{ $task['id'] }}"
                              data-assigned-to="{{ $task['assigned_to_id'] ?? '' }}"
                              data-deadline="{{ $task['deadline'] ?? '' }}"
-                             data-estimated-hours="{{ $task['estimated_hours'] ?? 8 }}">
+                             data-estimated-hours="{{ $task['estimated_hours'] ?? 8 }}"
+                             data-conflicting-with="{{ $task['conflicting_with'] ?? '' }}">
                             
                             @if($task['has_conflict'])
                                 <div class="mb-3 flex items-center gap-2 text-yellow-700 bg-yellow-100 px-3 py-2 rounded-lg">
@@ -88,7 +89,7 @@
                                 </p>
                             </div>
                             
-                            <button onclick="scheduleTask({{ $task['id'] }})" class="mt-3 w-full px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
+                            <button onclick="scheduleTask({{ $task['id'] }}, {{ $task['has_conflict'] ? 'true' : 'false' }})" class="mt-3 w-full px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
                                 <i class="fas fa-calendar-plus mr-2"></i>
                                 Schedule Task
                             </button>
@@ -157,8 +158,73 @@
     </div>
 </div>
 
+<!-- Schedule Conflict Modal -->
+<div id="scheduleConflictModal" class="hidden fixed inset-0 backdrop-blur-md bg-white/30 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <!-- Modal Header -->
+        <div class="bg-yellow-50 border-b border-yellow-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                <h2 class="text-xl font-bold text-yellow-800">Schedule Conflict</h2>
+            </div>
+            <button onclick="closeConflictModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6">
+            <div class="mb-4">
+                <h3 class="font-semibold text-gray-900 mb-2" id="conflictTaskTitle">Task Title</h3>
+                <p class="text-sm text-gray-600 mb-3">
+                    This task has the same deadline as another task assigned to the same adiutor.
+                </p>
+            </div>
+
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <p class="text-sm text-yellow-800 font-medium mb-2">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Deadline Conflict Details:
+                </p>
+                <div class="text-sm text-gray-700 space-y-1">
+                    <p><strong>Assigned to:</strong> <span id="conflictAssignedTo">-</span></p>
+                    <p><strong>Deadline:</strong> <span id="conflictDeadline">-</span></p>
+                    <p><strong>Estimated Hours:</strong> <span id="conflictHours">-</span> hours</p>
+                </div>
+            </div>
+
+            <div class="bg-red-50 border-l-4 border-red-500 rounded p-4 mb-6">
+                <p class="text-sm text-red-800 font-medium mb-1">
+                    <i class="fas fa-calendar-times mr-1"></i>
+                    Conflicts with:
+                </p>
+                <p class="text-sm text-red-900 font-semibold" id="conflictingTaskName">-</p>
+            </div>
+
+            <p class="text-sm text-gray-600 mb-6">
+                To avoid overloading the adiutor, please choose one of the following options:
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="space-y-3">
+                <button onclick="manuallyScheduleConflict()" class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    Manually Schedule This Task
+                </button>
+                <button onclick="reassignTask()" class="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center justify-center">
+                    <i class="fas fa-user-edit mr-2"></i>
+                    Reassign to Different Adiutor
+                </button>
+                <button onclick="closeConflictModal()" class="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Task Scheduling Modal -->
-<div id="scheduleTaskModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+<div id="scheduleTaskModal" class="hidden fixed inset-0 backdrop-blur-md bg-white/30 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <!-- Modal Header -->
         <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -378,11 +444,12 @@ function renderCalendar(slots) {
                     // Extract task name and adiutor for tooltip
                     const fullTaskTitle = slot.title.includes(' - ') ? slot.title.split(' - ')[0] : slot.title;
                     const adiutorName = slot.adiutor || (slot.title.includes(' - ') ? slot.title.split(' - ')[1] : 'N/A');
+                    const description = slot.description || 'No description';
                     
                     html += `<div class="${colorClass} border rounded px-2 py-1 text-xs mb-1 cursor-pointer hover:shadow-md transition-shadow" 
-                                  title="Task: ${fullTaskTitle}&#10;Assigned to: ${adiutorName}&#10;Days: ${slot.duration}">
+                                  title="Task: ${fullTaskTitle}&#10;Assigned to: ${adiutorName}&#10;Description: ${description}&#10;Days: ${slot.duration}">
                         <div class="font-semibold truncate">${displayTitle}</div>
-                        <div class="text-xs opacity-75">${slot.duration}</div>
+                        <div class="text-xs opacity-75">${slot.duration} day/s</div>
                     </div>`;
                 });
             }
@@ -396,7 +463,7 @@ function renderCalendar(slots) {
     document.getElementById('calendarGrid').innerHTML = html;
 }
 
-function scheduleTask(taskId) {
+function scheduleTask(taskId, hasConflict) {
     // Get task details from the task card
     const taskCard = document.querySelector(`.task-card[data-task-id="${taskId}"]`);
     if (!taskCard) return;
@@ -408,7 +475,26 @@ function scheduleTask(taskId) {
     const priority = taskCard.querySelector('.rounded-full')?.textContent.trim() || 'Medium';
     const assignedTo = taskCard.querySelector('.fa-user').parentElement.querySelector('.font-medium')?.textContent || 'Unassigned';
     const assignedToId = taskCard.dataset.assignedTo;
+    const conflictingWith = taskCard.dataset.conflictingWith || 'Unknown Task';
     
+    // If task has a conflict, show conflict modal instead
+    if (hasConflict) {
+        // Fill conflict modal with task details
+        document.getElementById('conflictTaskTitle').textContent = title;
+        document.getElementById('conflictAssignedTo').textContent = assignedTo;
+        document.getElementById('conflictDeadline').textContent = deadline.replace('', '').trim();
+        document.getElementById('conflictHours').textContent = hours.replace(/[^\d]/g, '');
+        document.getElementById('conflictingTaskName').textContent = conflictingWith;
+        
+        // Store task ID for later use
+        document.getElementById('scheduleConflictModal').dataset.taskId = taskId;
+        
+        // Show conflict modal
+        document.getElementById('scheduleConflictModal').classList.remove('hidden');
+        return;
+    }
+    
+    // Otherwise, show regular schedule modal for tasks without deadline
     // Fill modal with task details
     document.getElementById('modalTaskTitle').textContent = title;
     document.getElementById('modalTaskDescription').textContent = description;
@@ -475,11 +561,15 @@ function closeScheduleModal() {
 }
 
 function confirmSchedule() {
+    console.log('confirmSchedule called');
+    
     const modal = document.getElementById('scheduleTaskModal');
     const taskId = modal.dataset.taskId;
     const selectedAdiutor = document.querySelector('input[name="selected_adiutor"]:checked');
     const startTime = document.getElementById('scheduledStart').value;
     const endTime = document.getElementById('scheduledEnd').value;
+    
+    console.log('Data:', { taskId, selectedAdiutor, startTime, endTime });
     
     if (!selectedAdiutor) {
         alert('Please select an adiutor');
@@ -490,6 +580,8 @@ function confirmSchedule() {
         alert('Please select start and end times');
         return;
     }
+    
+    console.log('About to send request to /api/schedule/task');
     
     // Send to backend
     fetch('/api/schedule/task', {
@@ -553,6 +645,45 @@ function formatDate(date) {
 function formatDateDisplay(date) {
     const options = { month: 'short', day: 'numeric', year: 'numeric' };
     return date.toLocaleDateString('en-US', options);
+}
+
+function closeConflictModal() {
+    document.getElementById('scheduleConflictModal').classList.add('hidden');
+}
+
+function manuallyScheduleConflict() {
+    // Get task ID from conflict modal
+    const taskId = document.getElementById('scheduleConflictModal').dataset.taskId;
+    
+    // Close conflict modal
+    closeConflictModal();
+    
+    // Open regular schedule modal to manually set time
+    const taskCard = document.querySelector(`.task-card[data-task-id="${taskId}"]`);
+    if (taskCard) {
+        // Call scheduleTask with hasConflict=false to show regular modal
+        scheduleTask(taskId, false);
+    }
+}
+
+function reassignTask() {
+    const taskId = document.getElementById('scheduleConflictModal').dataset.taskId;
+    
+    // Close conflict modal
+    closeConflictModal();
+    
+    // Open regular schedule modal with different adiutor selection
+    const taskCard = document.querySelector(`.task-card[data-task-id="${taskId}"]`);
+    if (taskCard) {
+        // Call scheduleTask with hasConflict=false to show regular modal
+        // User can select a different adiutor
+        scheduleTask(taskId, false);
+        
+        // Show a hint to select a different adiutor
+        setTimeout(() => {
+            alert('Please select a different adiutor to avoid the conflict.');
+        }, 300);
+    }
 }
 </script>
 @endsection
