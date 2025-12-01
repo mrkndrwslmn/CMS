@@ -184,8 +184,8 @@ class GoogleCalendarService
                 $items[] = [
                     'id' => $event->getId(),
                     'title' => $event->getSummary() ?: '(No title)',
-                    'start' => Carbon::parse($start),
-                    'end' => Carbon::parse($end),
+                    'start' => Carbon::parse($start)->setTimezone(config('app.timezone')),
+                    'end' => Carbon::parse($end)->setTimezone(config('app.timezone')),
                     'is_all_day' => !$event->getStart()->getDateTime(),
                     'description' => $event->getDescription(),
                     'location' => $event->getLocation(),
@@ -211,15 +211,23 @@ class GoogleCalendarService
         $this->initializeService($adiutor);
 
         try {
+            // Show event only on the deadline date with the deadline time
+            $deadline = $taskData['end']; // scheduled_end (deadline)
+            
+            // Event appears on deadline date only
+            // Start at deadline time minus 1 hour, end at deadline time
+            $eventStart = $deadline->copy()->subHour();
+            $eventEnd = $deadline->copy();
+            
             $event = new \Google\Service\Calendar\Event([
                 'summary' => '[CMS] ' . $taskData['title'],
                 'description' => $this->buildEventDescription($taskData),
                 'start' => [
-                    'dateTime' => $taskData['start']->toRfc3339String(),
+                    'dateTime' => $eventStart->toRfc3339String(),
                     'timeZone' => config('app.timezone'),
                 ],
                 'end' => [
-                    'dateTime' => $taskData['end']->toRfc3339String(),
+                    'dateTime' => $eventEnd->toRfc3339String(),
                     'timeZone' => config('app.timezone'),
                 ],
                 'colorId' => $this->getColorIdForPriority($taskData['priority'] ?? 'medium'),
@@ -260,14 +268,22 @@ class GoogleCalendarService
         try {
             $event = $this->service->events->get('primary', $eventId);
             
+            // Show event only on the deadline date with the deadline time
+            $deadline = $taskData['end']; // scheduled_end (deadline)
+            
+            // Event appears on deadline date only
+            // Start at deadline time minus 1 hour, end at deadline time
+            $eventStart = $deadline->copy()->subHour();
+            $eventEnd = $deadline->copy();
+            
             $event->setSummary('[CMS] ' . $taskData['title']);
             $event->setDescription($this->buildEventDescription($taskData));
             $event->setStart(new \Google\Service\Calendar\EventDateTime([
-                'dateTime' => $taskData['start']->toRfc3339String(),
+                'dateTime' => $eventStart->toRfc3339String(),
                 'timeZone' => config('app.timezone'),
             ]));
             $event->setEnd(new \Google\Service\Calendar\EventDateTime([
-                'dateTime' => $taskData['end']->toRfc3339String(),
+                'dateTime' => $eventEnd->toRfc3339String(),
                 'timeZone' => config('app.timezone'),
             ]));
             $event->setColorId($this->getColorIdForPriority($taskData['priority'] ?? 'medium'));
@@ -338,6 +354,16 @@ class GoogleCalendarService
     {
         $description = "Project: {$taskData['project']}\n";
         $description .= "Priority: " . ucfirst($taskData['priority'] ?? 'medium') . "\n";
+        
+        // Add start date if provided
+        if (!empty($taskData['start'])) {
+            $description .= "Work Period Start: " . $taskData['start']->format('M d, Y g:i A') . "\n";
+        }
+        
+        // Add deadline
+        if (!empty($taskData['end'])) {
+            $description .= "Deadline: " . $taskData['end']->format('M d, Y g:i A') . "\n";
+        }
         
         if (!empty($taskData['description'])) {
             $description .= "\nDescription:\n{$taskData['description']}\n";

@@ -775,8 +775,10 @@ class ProjectManagementController extends Controller
                         'conflicting_task_title' => $oldestTask->taskTitle,
                     ];
                     
-                    // Delete any existing schedule for conflicting tasks
-                    \App\Models\TaskSchedule::where('task_id', $conflictingTask->taskID)->delete();
+                    // Delete any existing AUTO schedule for conflicting tasks (keep manual schedules)
+                    \App\Models\TaskSchedule::where('task_id', $conflictingTask->taskID)
+                        ->where('schedule_type', 'auto')
+                        ->delete();
                 }
             }
         }

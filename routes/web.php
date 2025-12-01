@@ -130,8 +130,9 @@ Route::prefix('api')->group(function () {
                 $slots = [];
                 
                 // 1. Get scheduled tasks from task_schedules table (manually scheduled by admin)
+                // Check if scheduled_end (deadline) falls within the week
                 $scheduledTasksQuery = \App\Models\TaskSchedule::where('adiutor_id', $id)
-                    ->whereBetween('scheduled_start', [$weekStart, $weekEnd])
+                    ->whereBetween('scheduled_end', [$weekStart, $weekEnd])
                     ->with('task');
                 
                 // Apply project filter if provided
@@ -144,19 +145,16 @@ Route::prefix('api')->group(function () {
                 $scheduledTasks = $scheduledTasksQuery->get();
                 
                 foreach ($scheduledTasks as $schedule) {
-                    $start = \Carbon\Carbon::parse($schedule->scheduled_start);
+                    // Use scheduled_end (deadline) for display
+                    $deadline = \Carbon\Carbon::parse($schedule->scheduled_end);
                     
-                    // Calculate days until deadline
-                    $daysUntil = 'N/A';
-                    if ($schedule->task && $schedule->task->deadline) {
-                        $deadline = \Carbon\Carbon::parse($schedule->task->deadline);
-                        $now = \Carbon\Carbon::now();
-                        $daysUntil = (int) $now->diffInDays($deadline, false);
-                    }
+                    // Calculate days until deadline (from today)
+                    $now = \Carbon\Carbon::now();
+                    $daysUntil = (int) $now->diffInDays($deadline, false);
                     
                     $slots[] = [
-                        'date' => $start->format('Y-m-d'),
-                        'hour' => $start->hour,
+                        'date' => $deadline->format('Y-m-d'), // Show on deadline date
+                        'hour' => $deadline->hour,
                         'type' => 'task',
                         'title' => $schedule->task->taskTitle ?? 'Task',
                         'description' => $schedule->task->taskDescription ?? '',
@@ -240,21 +238,27 @@ Route::prefix('api')->group(function () {
                         $calendarService = app(\App\Services\GoogleCalendarService::class);
                         $calendarEvents = $calendarService->getEvents($user, $weekStart, $weekEnd);
                         
-                        // Add calendar events to slots
+                        // Add calendar events to slots (exclude CMS-synced tasks to avoid duplicates)
                         foreach ($calendarEvents as $event) {
+                            // Skip events created by CMS (they're already shown from task_schedules)
+                            $title = $event['title'] ?? '';
+                            if (str_starts_with($title, '[CMS]')) {
+                                continue;
+                            }
+                            
                             $start = \Carbon\Carbon::parse($event['start']);
                             $end = \Carbon\Carbon::parse($event['end']);
                             
-                            // Calculate duration in hours
-                            $durationMinutes = $start->diffInMinutes($end);
-                            $durationHours = round($durationMinutes / 60, 1);
+                            // Calculate days until event (from today)
+                            $now = \Carbon\Carbon::now();
+                            $daysUntil = (int) $now->diffInDays($end, false); // Use end date for countdown
                             
                             $slots[] = [
-                                'date' => $start->format('Y-m-d'),
-                                'hour' => $start->hour,
+                                'date' => $end->format('Y-m-d'), // Show on end/deadline date
+                                'hour' => $end->hour,
                                 'type' => 'calendar',
-                                'title' => $event['title'] ?? 'Calendar Event',
-                                'duration' => $durationHours . 'h',
+                                'title' => $title,
+                                'duration' => $daysUntil,
                                 'is_synced' => true
                             ];
                         }
@@ -291,7 +295,8 @@ Route::prefix('api')->group(function () {
                 $slots = [];
                 
                 // 1. Get scheduled tasks from task_schedules table (manually scheduled)
-                $scheduledTasks = \App\Models\TaskSchedule::whereBetween('scheduled_start', [$weekStart, $weekEnd])
+                // Check if scheduled_end (deadline) falls within the week
+                $scheduledTasks = \App\Models\TaskSchedule::whereBetween('scheduled_end', [$weekStart, $weekEnd])
                     ->with(['task', 'adiutor'])
                     ->whereHas('task', function($query) use ($id) {
                         $query->where('project_id', $id);
@@ -299,19 +304,16 @@ Route::prefix('api')->group(function () {
                     ->get();
                 
                 foreach ($scheduledTasks as $schedule) {
-                    $start = \Carbon\Carbon::parse($schedule->scheduled_start);
+                    // Use scheduled_end (deadline) for display, not scheduled_start
+                    $deadline = \Carbon\Carbon::parse($schedule->scheduled_end);
                     
-                    // Calculate days until deadline
-                    $daysUntil = 'N/A';
-                    if ($schedule->task && $schedule->task->deadline) {
-                        $deadline = \Carbon\Carbon::parse($schedule->task->deadline);
-                        $now = \Carbon\Carbon::now();
-                        $daysUntil = (int) $now->diffInDays($deadline, false);
-                    }
+                    // Calculate days until deadline (from today)
+                    $now = \Carbon\Carbon::now();
+                    $daysUntil = (int) $now->diffInDays($deadline, false); // false = signed difference
                     
                     $slots[] = [
-                        'date' => $start->format('Y-m-d'),
-                        'hour' => $start->hour,
+                        'date' => $deadline->format('Y-m-d'), // Show on deadline date
+                        'hour' => $deadline->hour,
                         'type' => 'task',
                         'title' => ($schedule->task->taskTitle ?? 'Task') . ' - ' . ($schedule->adiutor->fullName ?? 'Unknown'),
                         'description' => $schedule->task->taskDescription ?? '',

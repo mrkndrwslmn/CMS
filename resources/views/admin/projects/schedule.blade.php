@@ -619,10 +619,12 @@ function confirmSchedule() {
         console.log('Parsed data:', data);
         if (data.success) {
             alert('Task scheduled successfully!');
+            console.log('SUCCESS RESPONSE:', JSON.stringify(data, null, 2));
             closeScheduleModal();
             location.reload(); // Refresh to update the view
         } else {
             alert('Error: ' + (data.message || 'Failed to schedule task'));
+            console.error('ERROR RESPONSE:', data);
         }
     })
     .catch(error => {
