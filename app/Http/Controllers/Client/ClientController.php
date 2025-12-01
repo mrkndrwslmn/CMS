@@ -59,8 +59,10 @@ class ClientController extends Controller
                 'projects.created_at'
             )
             ->orderBy('projects.created_at', 'desc')
-            ->limit(5)
+            ->limit(20)
             ->get()
+            ->unique('id')
+            ->take(5)
             ->map(function ($project) {
                 // Convert date strings to Carbon instances
                 $project->created_at = Carbon::parse($project->created_at);
@@ -241,6 +243,7 @@ class ClientController extends Controller
             )
             ->orderBy('projects.created_at', 'desc')
             ->get()
+            ->unique('id')
             ->map(function ($project) {
                 // Convert date strings to Carbon instances
                 $project->created_at = Carbon::parse($project->created_at);
