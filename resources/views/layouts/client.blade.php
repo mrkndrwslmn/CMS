@@ -115,9 +115,12 @@
                                     <a href="{{ route('client.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.profile') ? 'bg-gray-100' : '' }}">
                                         <i class="fas fa-user mr-2"></i> Profile
                                     </a>
-                                    <a href="{{ route('logout') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                                    </a>
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                                        </button>
+                                    </form>
                                 </div>
                             </li>
                         @else
@@ -179,9 +182,14 @@
                         <li><a href="{{ route('client.profile') }}" class="block py-2 px-3 rounded {{ request()->routeIs('client.profile') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">
                             <i class="fas fa-user mr-2"></i> Profile
                         </a></li>
-                        <li><a href="{{ route('logout') }}" class="block py-2 px-3 rounded text-gray-700 hover:bg-gray-200 transition-colors duration-300 font-medium">
-                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                        </a></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="block w-full text-left py-2 px-3 rounded text-gray-700 hover:bg-gray-200 transition-colors duration-300 font-medium">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                                </button>
+                            </form>
+                        </li>
                     @else
                         <!-- Guest mobile navigation -->
                         <li><a href="{{ route('home') }}" class="block py-2 px-3 rounded {{ request()->routeIs('home') ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-200' }} transition-colors duration-300 font-medium">

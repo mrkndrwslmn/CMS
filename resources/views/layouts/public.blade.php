@@ -113,7 +113,12 @@
                     @auth
                         <li><a href="{{ route('client.dashboard') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Dashboard</a></li>
                         <li><a href="{{ route('client.profile') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Profile</a></li>
-                        <li><a href="{{ route('logout') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Logout</a></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}" class="inline">
+                                @csrf
+                                <button type="submit" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Logout</button>
+                            </form>
+                        </li>
                     @else
                         <li><a href="{{ route('services') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Services</a></li>
                         <li><a href="{{ route('about') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">About</a></li>
@@ -130,7 +135,12 @@
                 @auth
                     <li><a href="{{ route('client.dashboard') }}" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Dashboard</a></li>
                     <li><a href="{{ route('client.profile') }}" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Profile</a></li>
-                    <li><a href="{{ route('logout') }}" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Logout</a></li>
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="block text-left w-full text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Logout</button>
+                        </form>
+                    </li>
                 @else
                     <li><a href="{{ route('home') }}" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Home</a></li>
                     <li><a href="{{ route('home') }}#services" class="block text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Services</a></li>
