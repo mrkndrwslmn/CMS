@@ -729,45 +729,8 @@ class ProjectManagementController extends Controller
             ->pluck('task_id')
             ->toArray();
 
-        // Detect deadline conflicts BEFORE auto-scheduling
-        $deadlineConflicts = [];
-        $conflictDetails = []; // Store details about which task conflicts with which
-        $tasksByAdiutorAndDeadline = $project->tasks
-            ->filter(fn($t) => $t->deadline && $t->assignedTo)
-            ->groupBy(function($task) {
-                return $task->assignedTo . '_' . \Carbon\Carbon::parse($task->deadline)->format('Y-m-d');
-            });
-        
-        foreach ($tasksByAdiutorAndDeadline as $group) {
-            if ($group->count() > 1) {
-                // Multiple tasks with same deadline for same adiutor = conflict
-                // Sort by creation date (taskID) descending and skip the last one (oldest)
-                $sortedGroup = $group->sortByDesc('taskID');
-                $oldestTask = $sortedGroup->last(); // The task that will remain scheduled
-                $sortedGroup->pop(); // Remove last task (oldest/first assigned)
-                
-                foreach ($sortedGroup as $conflictingTask) {
-                    $deadlineConflicts[] = $conflictingTask->taskID;
-                    
-                    // Store which task it conflicts with
-                    $conflictDetails[$conflictingTask->taskID] = [
-                        'conflicting_task_id' => $oldestTask->taskID,
-                        'conflicting_task_title' => $oldestTask->taskTitle,
-                    ];
-                    
-                    // Delete any existing schedule for conflicting tasks
-                    \App\Models\TaskSchedule::where('task_id', $conflictingTask->taskID)->delete();
-                }
-            }
-        }
-
-        // Auto-schedule assigned tasks that don't have a schedule yet AND are not conflicting
+        // Auto-schedule assigned tasks that don't have a schedule yet
         foreach ($project->tasks as $task) {
-            // Skip if task is in conflict list
-            if (in_array($task->taskID, $deadlineConflicts)) {
-                continue;
-            }
-            
             // If task has a deadline and is assigned to an adiutor but not scheduled yet, auto-create schedule
             if ($task->deadline &&
                 $task->assignedTo && 
@@ -804,14 +767,30 @@ class ProjectManagementController extends Controller
             }
         }
 
+        // Detect deadline conflicts: tasks with same deadline for same adiutor
+        $deadlineConflicts = [];
+        $tasksByAdiutorAndDeadline = $project->tasks
+            ->filter(fn($t) => $t->deadline && $t->assignedTo)
+            ->groupBy(function($task) {
+                return $task->assignedTo . '_' . \Carbon\Carbon::parse($task->deadline)->format('Y-m-d');
+            });
+        
+        foreach ($tasksByAdiutorAndDeadline as $group) {
+            if ($group->count() > 1) {
+                // Multiple tasks with same deadline for same adiutor = conflict
+                // Sort by creation date (taskID as proxy) and skip the first one
+                $sortedGroup = $group->sortBy('taskID');
+                $sortedGroup->shift(); // Remove first task (earliest assigned)
+                
+                foreach ($sortedGroup as $conflictingTask) {
+                    $deadlineConflicts[] = $conflictingTask->taskID;
+                }
+            }
+        }
+
         // Filter unscheduled tasks: include tasks without deadlines OR tasks with deadline conflicts
         $unscheduledTasks = $project->tasks->filter(function($task) use ($scheduledTaskIds, $deadlineConflicts) {
-            // ALWAYS include if has deadline conflict (most important check first)
-            if (in_array($task->taskID, $deadlineConflicts)) {
-                return true;
-            }
-            
-            // Exclude if scheduled (and not a conflict)
+            // Exclude if manually scheduled (not auto-scheduled)
             if (in_array($task->taskID, $scheduledTaskIds)) {
                 return false;
             }
@@ -821,14 +800,14 @@ class ProjectManagementController extends Controller
                 return true;
             }
             
-            // Include if not assigned to anyone
-            if (!$task->assignedTo) {
+            // Include if has deadline conflict
+            if (in_array($task->taskID, $deadlineConflicts)) {
                 return true;
             }
             
             return false;
-        })->map(function($task) use ($deadlineConflicts, $conflictDetails) {
-            $taskData = [
+        })->map(function($task) use ($deadlineConflicts) {
+            return [
                 'id' => $task->taskID,
                 'title' => $task->taskTitle,
                 'description' => $task->description,
@@ -839,13 +818,6 @@ class ProjectManagementController extends Controller
                 'assigned_to_id' => $task->assignedTo,
                 'has_conflict' => in_array($task->taskID, $deadlineConflicts),
             ];
-            
-            // Add conflict details if this task has a conflict
-            if (isset($conflictDetails[$task->taskID])) {
-                $taskData['conflicting_with'] = $conflictDetails[$task->taskID]['conflicting_task_title'];
-            }
-            
-            return $taskData;
         });
 
         return view('admin.projects.schedule', compact('project', 'assignedAdiutors', 'unscheduledTasks'));
