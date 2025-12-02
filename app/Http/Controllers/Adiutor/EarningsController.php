@@ -46,7 +46,9 @@ class EarningsController extends Controller
         // Base query for time entries
         $timeEntriesQuery = TimeEntry::where('adiutor_id', $adiutorId)
             ->whereNotNull('end_time')
-            ->with(['task.project', 'payout']);
+            ->with(['task.project', 'task.project.assignments' => function($query) use ($adiutorId) {
+                $query->where('adiutor_id', $adiutorId);
+            }, 'payout']);
 
         // Apply period filter
         if ($periodFilter === 'month') {

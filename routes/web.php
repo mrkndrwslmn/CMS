@@ -294,13 +294,16 @@ Route::prefix('api')->group(function () {
                 // Build slots array
                 $slots = [];
                 
-                // 1. Get scheduled tasks from task_schedules table (manually scheduled)
+                // Get all adiutors assigned to this project
+                $projectAdiutorIds = \App\Models\ProjectAssignment::where('project_id', $id)
+                    ->pluck('adiutor_id')
+                    ->toArray();
+                
+                // 1. Get scheduled tasks from task_schedules table (all tasks for project adiutors)
                 // Check if scheduled_end (deadline) falls within the week
                 $scheduledTasks = \App\Models\TaskSchedule::whereBetween('scheduled_end', [$weekStart, $weekEnd])
                     ->with(['task', 'adiutor'])
-                    ->whereHas('task', function($query) use ($id) {
-                        $query->where('project_id', $id);
-                    })
+                    ->whereIn('adiutor_id', $projectAdiutorIds)
                     ->get();
                 
                 foreach ($scheduledTasks as $schedule) {
@@ -323,10 +326,9 @@ Route::prefix('api')->group(function () {
                     ];
                 }
                 
-                // 2. Get assigned tasks with deadlines (show on calendar even if not manually scheduled)
-                $assignedTasks = \App\Models\Task::where('project_id', $id)
+                // 2. Get assigned tasks with deadlines for all project adiutors (from any project)
+                $assignedTasks = \App\Models\Task::whereIn('assignedTo', $projectAdiutorIds)
                     ->whereNotNull('deadline')
-                    ->whereNotNull('assignedTo')
                     ->whereBetween('deadline', [$weekStart, $weekEnd])
                     ->where('status', '!=', 'completed') // Only exclude completed tasks
                     ->with('assignedUser')
@@ -521,6 +523,32 @@ Route::prefix('api')->group(function () {
                 $start = \Carbon\Carbon::parse($validated['scheduled_start']);
                 $end = \Carbon\Carbon::parse($validated['scheduled_end']);
                 $durationMinutes = $start->diffInMinutes($end);
+                
+                // Check for deadline conflicts: same adiutor, same deadline date, different task
+                if ($task->deadline) {
+                    $deadlineDate = \Carbon\Carbon::parse($task->deadline)->format('Y-m-d');
+                    
+                    $conflictingTask = \App\Models\Task::where('assignedTo', $validated['adiutor_id'])
+                        ->whereNotNull('deadline')
+                        ->whereRaw('DATE(deadline) = ?', [$deadlineDate])
+                        ->where('taskID', '!=', $validated['task_id'])
+                        ->whereHas('schedule') // Only check tasks that are already scheduled
+                        ->with('schedule')
+                        ->first();
+                    
+                    if ($conflictingTask && $conflictingTask->taskID < $task->taskID) {
+                        // There's an older task with the same deadline already scheduled
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Cannot schedule this task. There is already an older task (Task #{$conflictingTask->taskID}: {$conflictingTask->taskTitle}) with the same deadline ({$deadlineDate}) scheduled for this adiutor.",
+                            'conflict' => [
+                                'task_id' => $conflictingTask->taskID,
+                                'task_title' => $conflictingTask->taskTitle,
+                                'deadline' => $conflictingTask->deadline,
+                            ]
+                        ], 409); // 409 Conflict
+                    }
+                }
                 
                 // Check if already scheduled and update, or create new
                 $schedule = \App\Models\TaskSchedule::updateOrCreate(

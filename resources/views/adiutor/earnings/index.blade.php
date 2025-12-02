@@ -166,6 +166,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project / Task</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type of Payment</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     </tr>
@@ -182,10 +183,18 @@
                             <div class="text-xs text-gray-500">{{ $entry->task->project->title ?? 'No Project' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ number_format($entry->duration_minutes / 60, 2) }}h
+                            @php
+                                // If there are tracked hours/duration, it's Time Tracking
+                                // Otherwise it's Agreed Rate (fixed payment)
+                                $paymentType = ($entry->duration_minutes && $entry->duration_minutes > 0) ? 'Time Tracking' : 'Agreed Rate';
+                            @endphp
+                            {{ $paymentType }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             ₱{{ number_format($entry->hourly_rate ?? 0, 2) }}/hr
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ number_format($entry->duration_minutes / 60, 2) }}h
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                             ₱{{ number_format($entry->calculated_amount ?? 0, 2) }}
@@ -217,7 +226,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
+                        <td colspan="7" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>

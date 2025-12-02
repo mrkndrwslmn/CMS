@@ -810,6 +810,7 @@ class ProjectManagementController extends Controller
                     $startTime = $endTime->copy()->setTime(9, 0, 0);
                 }
                 
+                // No additional conflict check needed here - deadline conflicts already detected above
                 // Create the schedule entry
                 \App\Models\TaskSchedule::create([
                     'task_id' => $task->taskID,
