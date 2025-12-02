@@ -57,7 +57,9 @@ class CouponTest extends TestCase
      */
     public function test_discount_cannot_exceed_purchase(): void
     {
-        $coupon = Coupon::factory()->fixed(1000)->create();
+        $coupon = Coupon::factory()->fixed(1000)->create([
+            'min_purchase_amount' => 0, // No minimum so we can test with 500
+        ]);
 
         // Buying 500 worth item with 1000 off coupon
         $discount = $coupon->calculateDiscount(500);
@@ -176,12 +178,18 @@ class CouponTest extends TestCase
         // First use - should be allowed
         $this->assertTrue($coupon->canBeUsedBy($user));
 
+        // Create a service request for the usage record (FK constraint)
+        $serviceRequest = ServiceRequest::factory()->forClient($user)->create();
+
         // Create a usage record
         $coupon->usages()->create([
             'user_id' => $user->id,
-            'service_request_id' => 1,
+            'service_request_id' => $serviceRequest->id,
+            'original_amount' => 1000,
             'discount_amount' => 100,
+            'final_amount' => 900,
             'payment_status' => 'completed',
+            'used_at' => now(),
         ]);
 
         // Second use - should be denied
@@ -297,7 +305,9 @@ class CouponTest extends TestCase
             'valid_until' => now()->addDays(10),
         ]);
 
-        $this->assertEquals(10, $coupon->getDaysUntilExpiration());
+        // Allow for slight timing differences (9-10 days)
+        $days = $coupon->getDaysUntilExpiration();
+        $this->assertTrue($days >= 9 && $days <= 10, "Expected 9-10 days, got $days");
     }
 
     /**

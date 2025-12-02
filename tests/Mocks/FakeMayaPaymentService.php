@@ -2,13 +2,15 @@
 
 namespace Tests\Mocks;
 
+use App\Services\MayaPaymentService;
+
 /**
  * Fake Maya Payment Service for Testing
  * 
  * This mock service simulates Maya payment gateway operations
  * without making actual API calls.
  */
-class FakeMayaPaymentService
+class FakeMayaPaymentService extends MayaPaymentService
 {
     /**
      * Array of all created checkouts
@@ -40,33 +42,47 @@ class FakeMayaPaymentService
      */
     protected string $failureCode = 'MOCK_FAILURE';
 
+    public function __construct()
+    {
+        // Don't call parent constructor - we don't need real Maya API credentials for testing
+    }
+
     /**
      * Create a checkout session
+     * Override parent signature to match
      */
-    public function createCheckout(array $data): array
-    {
+    public function createCheckout(
+        array $items,
+        float $totalAmount,
+        string $referenceNumber,
+        array $buyer,
+        array $redirectUrls
+    ): array {
         $checkoutId = 'mock_checkout_' . uniqid();
 
         $this->createdCheckouts[] = [
             'checkout_id' => $checkoutId,
-            'data' => $data,
+            'items' => $items,
+            'total_amount' => $totalAmount,
+            'reference_number' => $referenceNumber,
+            'buyer' => $buyer,
+            'redirect_urls' => $redirectUrls,
             'created_at' => now()->toDateTimeString(),
         ];
 
         if ($this->shouldSucceed) {
             return [
-                'success' => true,
-                'checkout_id' => $checkoutId,
-                'checkout_url' => 'https://sandbox.maya.ph/checkout/' . $checkoutId,
-                'redirect_url' => 'https://sandbox.maya.ph/checkout/' . $checkoutId,
-                'expires_at' => now()->addHours(24)->toIso8601String(),
+                'error' => false,
+                'data' => [
+                    'checkoutId' => $checkoutId,
+                    'redirectUrl' => 'https://sandbox.maya.ph/checkout/' . $checkoutId,
+                ]
             ];
         }
 
         return [
-            'success' => false,
-            'error' => $this->failureMessage,
-            'error_code' => $this->failureCode,
+            'error' => true,
+            'message' => $this->failureMessage,
         ];
     }
 
@@ -82,23 +98,20 @@ class FakeMayaPaymentService
 
         if ($this->shouldSucceed) {
             return [
-                'success' => true,
-                'status' => 'PAYMENT_SUCCESS',
-                'payment_status' => 'completed',
-                'amount' => 1000.00,
-                'currency' => 'PHP',
-                'reference' => 'mock_ref_' . uniqid(),
-                'payment_method' => 'card',
-                'paid_at' => now()->toIso8601String(),
+                'error' => false,
+                'data' => [
+                    'status' => 'PAYMENT_SUCCESS',
+                    'paymentStatus' => 'completed',
+                    'amount' => 1000.00,
+                    'currency' => 'PHP',
+                    'requestReferenceNumber' => 'mock_ref_' . uniqid(),
+                ]
             ];
         }
 
         return [
-            'success' => false,
-            'status' => 'PAYMENT_FAILED',
-            'payment_status' => 'failed',
-            'error' => $this->failureMessage,
-            'error_code' => $this->failureCode,
+            'error' => true,
+            'message' => $this->failureMessage,
         ];
     }
 
@@ -119,17 +132,18 @@ class FakeMayaPaymentService
 
         if ($this->shouldSucceed) {
             return [
-                'success' => true,
-                'refund_id' => $refundId,
-                'status' => 'REFUND_SUCCESS',
-                'amount' => $amount,
+                'error' => false,
+                'data' => [
+                    'refundId' => $refundId,
+                    'status' => 'REFUND_SUCCESS',
+                    'amount' => $amount,
+                ]
             ];
         }
 
         return [
-            'success' => false,
-            'error' => $this->failureMessage,
-            'error_code' => $this->failureCode,
+            'error' => true,
+            'message' => $this->failureMessage,
         ];
     }
 
@@ -140,19 +154,36 @@ class FakeMayaPaymentService
     {
         if ($this->shouldSucceed) {
             return [
-                'success' => true,
-                'checkout_id' => $checkoutId,
-                'status' => 'COMPLETED',
-                'amount' => 1000.00,
-                'currency' => 'PHP',
+                'error' => false,
+                'data' => [
+                    'checkoutId' => $checkoutId,
+                    'status' => 'COMPLETED',
+                    'amount' => 1000.00,
+                    'currency' => 'PHP',
+                ]
             ];
         }
 
         return [
-            'success' => false,
-            'error' => 'Checkout not found',
-            'error_code' => 'CHECKOUT_NOT_FOUND',
+            'error' => true,
+            'message' => 'Checkout not found',
         ];
+    }
+
+    /**
+     * Check if service is in production mode
+     */
+    public function isProduction(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Get current environment name
+     */
+    public function getEnvironment(): string
+    {
+        return 'sandbox';
     }
 
     // =========================================
@@ -229,7 +260,7 @@ class FakeMayaPaymentService
     public function assertCheckoutCreatedWith(array $expectedData): bool
     {
         foreach ($this->createdCheckouts as $checkout) {
-            if ($this->arrayContainsAll($checkout['data'], $expectedData)) {
+            if ($this->arrayContainsAll($checkout, $expectedData)) {
                 return true;
             }
         }
@@ -345,3 +376,4 @@ class FakeMayaPaymentService
         return true;
     }
 }
+
