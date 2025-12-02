@@ -10,16 +10,22 @@
 
 ### ✅ What's Already Implemented (Strengths)
 
-#### 1. **Dual Payment Model** ✅
+#### 1. **Payment Model (Mutually Exclusive Per Adiutor Assignment)** ✅
 
-**A. PROJECT-LEVEL: Fixed Rate (Agreed Rate)**
-- **Purpose:** Projects have a FIXED payment amount
+For each project assignment, admin chooses **ONE** payment method:
+
+**OPTION A: FIXED RATE PROJECT**
 - **Field:** `project_assignments.agreed_rate`
-- **Concept:** Regardless of how many tasks or hours spent, adiutor earns the agreed fixed amount
-- **Not time-based:** This is a flat fee for the entire project
+- **Concept:** One flat fee for entire project completion
+- **Example:** ₱50,000 for completing the e-commerce website
+- **No time tracking needed:** Payment is fixed regardless of hours
+- **Tasks:** May exist for organization, but NOT billable individually
+- **Implementation Status:** ⚠️ PARTIAL - Field exists but no approval workflow
 
-**B. TASK-LEVEL: Hourly Rate (Time Tracking)**
-- **Purpose:** Individual tasks can be time-tracked for hourly billing
+**OPTION B: HOURLY RATE PROJECT (Per Task)**
+- **Field:** `project_assignments.hourly_rate` + `tasks.hourly_rate`
+- **Concept:** Adiutor bills per hour worked on tasks
+- **Tasks are time-tracked:** Each task has time entries
 - **Rate Hierarchy for Tasks:**
   ```
   Priority 1: Task-specific hourly rate (task.hourly_rate)
@@ -28,10 +34,14 @@
       ↓
   Priority 3: Adiutor standard rate (adiutor_profiles.standard_hourly_rate)
   ```
-- **Only tasks can be time-tracked** (not projects)
+- **Total Project Earnings:** Sum of all approved task time entries
 - **Implementation Status:** ✅ COMPLETE
   - `Task::getEffectiveHourlyRate()` - Working
   - Auto-fill on admin forms via AJAX - Working
+
+**CRITICAL RULE:** Each adiutor assignment uses EITHER fixed rate OR hourly rate, NEVER both!
+- **Multiple adiutors on same project CAN have different payment methods**
+- Example: Adiutor 1 = Hourly Rate, Adiutor 2 = Fixed Rate (on same project)
 
 ---
 
@@ -109,16 +119,22 @@ When creating tasks, admin can choose:
 - The `agreed_rate` is the total amount adiutor earns for completing the PROJECT
 - Individual tasks within the project are billed hourly (if time tracking enabled)
 
+**CORRECTED Understanding:**
+- Each **ADIUTOR ASSIGNMENT** uses ONE payment method: Fixed Rate OR Hourly Rate
+- **Same project can have MULTIPLE adiutors with DIFFERENT payment methods**
+- Example: Project has Adiutor 1 (hourly) + Adiutor 2 (fixed rate)
+- **Fixed Rate Assignment:** Adiutor earns `agreed_rate` when work completes (one payment)
+- **Hourly Rate Assignment:** Adiutor earns per task via time tracking (multiple payments)
+- Admin chooses payment method **per adiutor assignment**
+- **Each adiutor can only earn ONE way** (either fixed OR hourly, not both)
+
 **What's Missing:**
-1. No logic to award `agreed_rate` when project is completed
-2. No admin approval workflow for project completion payment
-3. No tracking of whether fixed rate has been paid
-4. No deduction of task earnings from project budget in Budget Overview
-5. Project earnings not integrated with wallet system
-
----
-
-#### 2. **Max Hours for Task (PARTIALLY IMPLEMENTED)**
+1. No `payment_type` field to distinguish fixed vs hourly **per adiutor assignment**
+2. No admin approval workflow for fixed-rate adiutor completion payment
+3. No tracking of whether fixed rate has been paid to specific adiutor
+4. No deduction of ALL adiutor earnings (fixed + hourly) in Budget Overview
+5. Assignment earnings not integrated with wallet system
+6. Budget doesn't group adiutors by payment type (fixed vs hourly)
 
 **Current Status:**
 - `tasks.max_hours` field EXISTS
@@ -245,7 +261,13 @@ Budget Overview (Should Be - Correct)
 
 **Add columns to `project_assignments`:**
 ```sql
-ALTER TABLE project_assignments ADD COLUMN fixed_rate_approved BOOLEAN DEFAULT FALSE AFTER agreed_rate;
+-- Payment method selector (REQUIRED - defines how THIS ADIUTOR earns)
+ALTER TABLE project_assignments 
+ADD COLUMN payment_type ENUM('fixed_rate', 'hourly_rate') NOT NULL DEFAULT 'hourly_rate' 
+AFTER agreed_rate;
+
+-- For fixed rate adiutor assignments only
+ALTER TABLE project_assignments ADD COLUMN fixed_rate_approved BOOLEAN DEFAULT FALSE AFTER payment_type;
 ALTER TABLE project_assignments ADD COLUMN fixed_rate_approved_at TIMESTAMP NULL AFTER fixed_rate_approved;
 ALTER TABLE project_assignments ADD COLUMN fixed_rate_approved_by BIGINT UNSIGNED NULL AFTER fixed_rate_approved_at;
 ALTER TABLE project_assignments ADD COLUMN fixed_rate_paid BOOLEAN DEFAULT FALSE AFTER fixed_rate_approved_by;
@@ -261,44 +283,49 @@ FOREIGN KEY (fixed_rate_payout_id) REFERENCES payouts(id) ON DELETE SET NULL;
 ```
 
 **Purpose:**
-- `fixed_rate_approved`: Admin has approved the project completion payment
-- `fixed_rate_approved_at`: When admin approved
-- `fixed_rate_approved_by`: Which admin approved
-- `fixed_rate_paid`: Whether included in a payout and paid
-- `fixed_rate_payout_id`: Links to the payout that included this payment
+- `payment_type`: **CRITICAL** - Defines how THIS ADIUTOR earns (fixed_rate OR hourly_rate - mutually exclusive per assignment)
+- `fixed_rate_approved`: Admin has approved this adiutor's completion payment (for fixed_rate assignments only)
+- `fixed_rate_approved_at`: When admin approved this adiutor's completion
+- `fixed_rate_approved_by`: Which admin approved this adiutor's completion
+- `fixed_rate_paid`: Whether this adiutor's fixed payment was included in a payout
+- `fixed_rate_payout_id`: Links to the payout that included this adiutor's fixed payment
 
 ---
 
 #### B. Admin UI Changes
 
-**When assigning adiutor to project (CORRECTED):**
+**When assigning adiutor to project (CORRECTED - Per-Adiutor Exclusive Choice):**
 ```
 ┌─────────────────────────────────────┐
 │ Assign Adiutor                      │
 ├─────────────────────────────────────┤
 │ Adiutor: [Select Adiutor ▼]        │
 │                                     │
-│ PROJECT FIXED RATE (Required)       │
-│ └─ Agreed Rate: ₱[15,000.00]       │
-│    (Total payment for entire        │
-│     project regardless of tasks)    │
+│ PAYMENT METHOD (Choose ONE):        │
 │                                     │
-│ TASK HOURLY RATE (Optional)         │
-│ └─ Hourly Rate: ₱[500.00] /hr      │
-│    (For time-tracked tasks)         │
-│    ☐ Require time tracking for     │
-│       tasks in this project         │
+│ ○ Fixed Rate                        │
+│   └─ Agreed Rate: ₱[15,000.00]     │
+│      Total payment when project     │
+│      is completed. No time          │
+│      tracking required.             │
 │                                     │
-│ Note: Project fixed rate and task   │
-│ hourly earnings are separate.       │
+│ ○ Hourly Rate (Time-tracked)        │
+│   └─ Hourly Rate: ₱[500.00] /hr    │
+│      Adiutor bills per hour         │
+│      worked on tasks.               │
+│      ☑ Require time tracking        │
+│                                     │
+│ ⚠️ You can only choose ONE method  │
+│    per project assignment.          │
 └─────────────────────────────────────┘
 ```
 
 **EXPLANATION:**
-- **Agreed Rate** = Fixed payment for completing the project
-- **Hourly Rate** = Rate used for time-tracked tasks within the project
-- Adiutor earns BOTH: fixed rate + task hourly earnings
-- These are tracked and approved separately
+- **Fixed Rate** = ONE payment for this adiutor's work (no time tracking needed)
+- **Hourly Rate** = Multiple payments based on this adiutor's task time entries
+- **Mutually Exclusive PER ADIUTOR**: Each adiutor uses only one method
+- **IMPORTANT:** Different adiutors on same project CAN use different methods
+- Tasks assigned to fixed-rate adiutors are for organization only (not billable individually)
 
 ---
 
@@ -320,6 +347,11 @@ FOREIGN KEY (fixed_rate_payout_id) REFERENCES payouts(id) ON DELETE SET NULL;
    public function approveProjectFixedRate($assignmentId)
    {
        $assignment = ProjectAssignment::findOrFail($assignmentId);
+       
+       // Validate payment type
+       if ($assignment->payment_type !== 'fixed_rate') {
+           return back()->withErrors(['This project uses hourly rate payment, not fixed rate']);
+       }
        
        // Validate project is complete
        if ($assignment->status !== 'completed') {
@@ -786,33 +818,46 @@ When admin views a project, the Budget Overview section does NOT show adiutor ea
 
 **Location:** `resources/views/admin/projects/show.blade.php` - Budget Overview Section
 
-**New Budget Breakdown:**
+**New Budget Breakdown (CORRECTED - Shows ALL Adiutors):**
+
+**Example: Project with MULTIPLE Adiutors (Different Payment Methods)**
 ```
 ┌────────────────────────────────────────────────────┐
 │ 💰 BUDGET OVERVIEW                                 │
 ├────────────────────────────────────────────────────┤
-│                                                    │
 │ Total Project Budget: ₱100,000.00                 │
 │                                                    │
 │ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
 │                                                    │
 │ 👤 ADIUTOR EARNINGS                               │
-│ ├─ Hourly (Approved Tasks):    ₱15,000.00  ⚠️    │
-│ ├─ Hourly (Pending Approval):  ₱3,500.00   ⏳    │
-│ └─ Project Fixed Rate:          ₱10,000.00  ✅    │
-│    Total Adiutor Earnings:      ₱28,500.00        │
+│                                                    │
+│ Adiutor 1: John Doe (Fixed Rate) 💰               │
+│ └─ Fixed Payment:               ₱50,000.00  ✅    │
+│    Status: Approved                                │
+│                                                    │
+│ Adiutor 2: Jane Smith (Hourly Rate) ⏱️           │
+│ ├─ Approved Hours:              ₱15,000.00  ✅    │
+│ │  (30 hrs × ₱500/hr)                             │
+│ └─ Pending Approval:            ₱3,500.00   ⏳    │
+│    (7 hrs × ₱500/hr)                              │
+│                                                    │
+│ Adiutor 3: Bob Lee (Hourly Rate) ⏱️              │
+│ └─ Approved Hours:              ₱8,000.00   ✅    │
+│    (16 hrs × ₱500/hr)                             │
+│                                                    │
+│ Total Adiutor Earnings:         ₱76,500.00        │
+│   ├─ Fixed Rate Total:          ₱50,000.00        │
+│   └─ Hourly Rate Total:         ₱26,500.00        │
 │                                                    │
 │ 📦 OTHER EXPENSES                                  │
 │ └─ Materials, Tools, etc:       ₱5,000.00         │
 │                                                    │
 │ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
 │                                                    │
-│ Total Spent/Committed:          ₱33,500.00        │
-│ Remaining Budget:               ₱66,500.00        │
+│ Total Spent/Committed:          ₱81,500.00        │
+│ Remaining Budget:               ₱18,500.00        │
 │                                                    │
-│ ⚠️ Budget Status: UNDER BUDGET                    │
-│                                                    │
-│ [View Detailed Breakdown]                          │
+│ ⚠️ Budget Status: UNDER BUDGET (81.5% used)      │
 └────────────────────────────────────────────────────┘
 ```
 
@@ -827,7 +872,7 @@ public function show($id)
         'tasks.timeEntries'
     ])->findOrFail($id);
     
-    // Calculate adiutor earnings
+    // Calculate adiutor earnings based on payment type
     $adiutorEarnings = [];
     
     foreach ($project->assignments as $assignment) {
@@ -836,6 +881,7 @@ public function show($id)
         if (!isset($adiutorEarnings[$adiutorId])) {
             $adiutorEarnings[$adiutorId] = [
                 'adiutor' => $assignment->adiutor,
+                'payment_type' => $assignment->payment_type,
                 'hourly_approved' => 0,
                 'hourly_pending' => 0,
                 'fixed_rate' => 0,
@@ -844,35 +890,34 @@ public function show($id)
             ];
         }
         
-        // Calculate hourly earnings from tasks
-        $approvedHourly = TimeEntry::whereHas('task', function($q) use ($project) {
-                $q->where('project_id', $project->id);
-            })
-            ->where('adiutor_id', $adiutorId)
-            ->where('is_approved', true)
-            ->sum('calculated_amount');
-        
-        $pendingHourly = TimeEntry::whereHas('task', function($q) use ($project) {
-                $q->where('project_id', $project->id);
-            })
-            ->where('adiutor_id', $adiutorId)
-            ->where('is_approved', false)
-            ->whereNotNull('end_time')
-            ->sum('calculated_amount');
-        
-        $adiutorEarnings[$adiutorId]['hourly_approved'] = $approvedHourly;
-        $adiutorEarnings[$adiutorId]['hourly_pending'] = $pendingHourly;
-        
-        // Add fixed rate if approved
-        if ($assignment->fixed_rate_approved) {
-            $adiutorEarnings[$adiutorId]['fixed_rate'] = $assignment->agreed_rate ?? 0;
-            $adiutorEarnings[$adiutorId]['fixed_rate_approved'] = true;
+        // Calculate based on THIS ADIUTOR'S payment type (EXCLUSIVE PER ADIUTOR)
+        if ($assignment->payment_type === 'hourly_rate') {
+            // Calculate hourly earnings from tasks
+            $approvedHourly = TimeEntry::whereHas('task', function($q) use ($project) {
+                    $q->where('project_id', $project->id);
+                })->where('adiutor_id', $adiutorId)
+                ->where('is_approved', true)
+                ->sum('calculated_amount');
+            
+            $pendingHourly = TimeEntry::whereHas('task', function($q) use ($project) {
+                    $q->where('project_id', $project->id);
+                })->where('adiutor_id', $adiutorId)
+                ->where('is_approved', false)
+                ->whereNotNull('end_time')
+                ->sum('calculated_amount');
+            
+            $adiutorEarnings[$adiutorId]['hourly_approved'] = $approvedHourly;
+            $adiutorEarnings[$adiutorId]['hourly_pending'] = $pendingHourly;
+            $adiutorEarnings[$adiutorId]['total'] = $approvedHourly + $pendingHourly;
+            
+        } else if ($assignment->payment_type === 'fixed_rate') {
+            // Fixed rate payment
+            if ($assignment->fixed_rate_approved) {
+                $adiutorEarnings[$adiutorId]['fixed_rate'] = $assignment->agreed_rate ?? 0;
+                $adiutorEarnings[$adiutorId]['fixed_rate_approved'] = true;
+                $adiutorEarnings[$adiutorId]['total'] = $assignment->agreed_rate ?? 0;
+            }
         }
-        
-        $adiutorEarnings[$adiutorId]['total'] = 
-            $adiutorEarnings[$adiutorId]['hourly_approved'] +
-            $adiutorEarnings[$adiutorId]['hourly_pending'] +
-            $adiutorEarnings[$adiutorId]['fixed_rate'];
     }
     
     // Calculate totals
@@ -1021,59 +1066,104 @@ public function show($id)
 
 ---
 
-## 📝 BUSINESS RULES SUMMARY (CORRECTED)
+## 📝 BUSINESS RULES SUMMARY (CORRECTED - Per-Adiutor Exclusive Payment)
 
-### For Projects (FIXED RATE):
+### Payment Method Selection:
+**CRITICAL:** When assigning **each adiutor** to project, admin chooses **ONE** payment method for that adiutor:
+- **Fixed Rate** - One payment when this adiutor's work completes
+- **Hourly Rate** - Multiple payments based on this adiutor's task hours
+- **Each adiutor can only use one method** (mutually exclusive per adiutor)
+- **IMPORTANT:** Different adiutors on same project CAN have different payment methods
+
+### For Fixed Rate Projects:
 1. ✅ Admin assigns adiutor to project
-2. ⚠️ **REQUIRED:** Sets `agreed_rate` (e.g., ₱15,000) - This is the TOTAL project payment
-3. ⚠️ **OPTIONAL:** Can also set hourly rate for tasks (if time tracking needed)
-4. ⚠️ **NEW:** When project is completed, admin approves fixed rate payment
-5. ⚠️ **NEW:** Fixed rate (₱15,000) added to adiutor wallet
-6. ⚠️ **NEW:** This is SEPARATE from task hourly earnings
-7. ⚠️ **NEW:** Shown in Budget Overview as deduction
+2. ⚠️ Admin selects "Fixed Rate" payment method
+3. ⚠️ Sets `agreed_rate` (e.g., ₱50,000) - This is the TOTAL project payment
+4. ⚠️ **No time tracking required** - Tasks are for organization only
+5. ⚠️ When project is completed, admin approves fixed rate payment
+6. ⚠️ Fixed rate (₱50,000) added to adiutor wallet
+7. ⚠️ Shown in Budget Overview as deduction
+8. ⚠️ Adiutor can request payout
 
-### For Tasks (HOURLY RATE):
-1. ✅ Admin creates task within a project
-2. ✅ Task inherits hourly rate (task → project assignment → adiutor standard)
-3. ✅ Adiutor logs time entries for this task
-4. ✅ System calculates earnings: `hours × rate`
-5. ⚠️ **NEW:** System caps at `max_hours` if set on task
-6. ⚠️ **NEW:** Admin can adjust hours/amount before approval
-7. ✅ Admin approves → added to wallet balance
-8. ⚠️ **NEW:** Approved hourly earnings shown in project Budget Overview
-9. ⚠️ **NEW:** Deducted from project budget
+### For Hourly Rate Projects:
+1. ✅ Admin assigns adiutor to project
+2. ⚠️ Admin selects "Hourly Rate" payment method
+3. ⚠️ Sets hourly rate (or uses adiutor's standard rate)
+4. ⚠️ **Time tracking IS required**
+5. ✅ Admin creates tasks within the project
+6. ✅ Each task inherits hourly rate (task → project assignment → adiutor standard)
+7. ✅ Adiutor logs time entries for each task
+8. ✅ System calculates earnings: `hours × rate`
+9. ⚠️ **NEW:** System caps at `max_hours` if set on task
+10. ⚠️ **NEW:** Admin can adjust hours/amount before approval
+11. ✅ Admin approves → added to wallet balance
+12. ⚠️ **NEW:** Approved hourly earnings shown in project Budget Overview
+13. ⚠️ **NEW:** Deducted from project budget
+14. ⚠️ **NEW:** Total project earnings = sum of all approved task time entries
 
-### Example Scenario:
+### Example Scenario (CORRECTED - Multiple Adiutors with Different Payment Methods):
+
 ```
-Project: E-Commerce Website
-├─ Agreed Rate (Fixed): ₱50,000
-├─ Project Budget: ₱100,000
-│
-├─ Task 1: Homepage Design (5 hours × ₱500/hr = ₱2,500)
-├─ Task 2: API Development (20 hours × ₱500/hr = ₱10,000)
-├─ Task 3: Testing (8 hours × ₱500/hr = ₱4,000)
-│
-└─ TOTAL ADIUTOR EARNINGS:
-    ├─ Fixed Rate: ₱50,000 (when project completes)
-    ├─ Hourly (Tasks): ₱16,500 (approved time entries)
-    └─ TOTAL: ₱66,500
+Project: E-Commerce Website Redesign
+Project Budget: ₱100,000
 
-Budget Overview:
+ADIUTOR ASSIGNMENTS:
+├─────────────────────────────────────────────────────────
+│ ADIUTOR 1: Sarah (Designer)
+│ Payment Method: Fixed Rate ⚠️
+├─ Agreed Rate: ₱35,000 (one payment for all design work)
+│
+├─ Tasks assigned to Sarah (for organization, NOT billable):
+│   ├─ Task 1: Initial Mockups
+│   ├─ Task 2: Revisions
+│   └─ Task 3: Final Assets
+│
+└─ EARNINGS: ₱35,000 (when design work approved)
+│
+├─────────────────────────────────────────────────────────
+│ ADIUTOR 2: John (Developer)
+│ Payment Method: Hourly Rate ⚠️
+├─ Hourly Rate: ₱500/hr
+│
+├─ Tasks assigned to John (time-tracked, billable per hour):
+│   ├─ Task 4: Frontend Dev (20 hrs × ₱500 = ₱10,000) ✅
+│   ├─ Task 5: Backend API (15 hrs × ₱500 = ₱7,500) ✅
+│   └─ Task 6: Testing (8 hrs × ₱500 = ₱4,000) ⏳
+│
+└─ EARNINGS: ₱21,500 (sum of approved task hours)
+    ├─ Approved: ₱17,500
+    └─ Pending: ₱4,000
+│
+├─────────────────────────────────────────────────────────
+│ ADIUTOR 3: Mike (QA Tester)
+│ Payment Method: Fixed Rate ⚠️
+├─ Agreed Rate: ₱15,000 (one payment for QA)
+│
+└─ EARNINGS: ₱15,000 (when QA work approved)
+
+═══════════════════════════════════════════════════════════
+BUDGET OVERVIEW:
 ├─ Total Budget: ₱100,000
-├─ Adiutor Earnings: ₱66,500 (50k fixed + 16.5k hourly)
+├─ Adiutor Earnings:
+│   ├─ Sarah (Fixed): ₱35,000 ✅
+│   ├─ John (Hourly): ₱21,500 (₱17.5k approved + ₱4k pending)
+│   ├─ Mike (Fixed): ₱15,000 ✅
+│   └─ TOTAL: ₱71,500
 ├─ Other Expenses: ₱5,000
-└─ Remaining: ₱28,500
+└─ Remaining: ₱23,500
 ```
 
 ### For Wallet & Payouts:
-1. ⚠️ **NEW:** Wallet tracks TWO types of work earnings:
-   - Project fixed rates (approved)
-   - Task hourly earnings (approved)
-2. ⚠️ **NEW:** Plus referral credits (existing)
-3. ⚠️ **NEW:** Total available balance = fixed + hourly + referral
-4. ⚠️ **NEW:** Adiutor can request payout for any/all sources
+1. ⚠️ **NEW:** Wallet tracks work earnings from EITHER:
+   - Fixed rate project completions (when approved), OR
+   - Hourly task time entries (when approved)
+   - Only ONE type per project (based on payment_type)
+2. ⚠️ **NEW:** Plus referral credits (existing separate system)
+3. ⚠️ **NEW:** Total available balance = work earnings + referral credits
+4. ⚠️ **NEW:** Adiutor can request payout combining both sources
 5. ✅ Admin reviews and processes
 6. ✅ Marks as completed with proof
+7. ⚠️ **NEW:** Payout includes breakdown by source (fixed/hourly/referral)
 
 ---
 
@@ -1195,26 +1285,30 @@ php artisan make:migration create_task_hour_increase_requests_table
 ## 📄 CONCLUSION
 
 ### **CORRECTED Understanding:**
-- **Projects = FIXED RATE** (agreed_rate field) - Payment for entire project
-- **Tasks = HOURLY RATE** (time tracking) - Payment per hour worked
-- **Both earnings are SEPARATE and CUMULATIVE**
-- **Budget must reflect BOTH types of adiutor earnings**
+- Each **ADIUTOR ASSIGNMENT** uses ONE payment method: Fixed Rate OR Hourly Rate
+- **ONE PROJECT can have MULTIPLE ADIUTORS with DIFFERENT payment methods**
+- Example: Same project has Designer (fixed rate) + Developer (hourly rate)
+- **Per Adiutor Rule:** Each adiutor can only earn ONE way (fixed OR hourly)
+- **Budget must reflect ALL adiutor earnings** (sum of all assignments regardless of payment type)
 
 ### **Critical Gaps Identified:**
-1. ⚠️ **Budget Overview Missing Earnings** - Admins cannot see adiutor costs
-2. ⚠️ **Project Fixed Rate Not Payable** - No approval workflow
-3. ⚠️ **Max Hours Not Enforced** - Billing can exceed limits
-4. ⚠️ **Cannot Adjust Approved Hours** - Only approve/reject
-5. ⚠️ **No Unified Wallet** - Earnings scattered
+1. ⚠️ **Budget Overview Missing Earnings** - Admins cannot see adiutor costs per assignment
+2. ⚠️ **Project Fixed Rate Not Payable** - No approval workflow per adiutor
+3. ⚠️ **No Payment Type Field** - Cannot distinguish fixed vs hourly per assignment
+4. ⚠️ **Budget doesn't group by payment type** - Should show fixed vs hourly breakdown
+5. ⚠️ **Max Hours Not Enforced** - Billing can exceed limits (hourly assignments)
+6. ⚠️ **Cannot Adjust Approved Hours** - Only approve/reject
+7. ⚠️ **No Unified Wallet** - Earnings scattered
 
 ### **What You Have vs. What You Need:**
 
 | Feature | Current Status | Needed |
 |---------|---------------|--------|
-| Project fixed rate field | ✅ Exists | ⚠️ Add approval workflow |
+| Assignment payment_type field | ❌ None | ⚠️ Add to distinguish fixed/hourly per adiutor |
+| Fixed rate approval | ❌ None | ⚠️ Add approval workflow per assignment |
 | Task hourly tracking | ✅ Working | ✅ Keep as-is |
-| Budget Overview | ✅ Exists | ⚠️ Add earnings deduction |
-| Earnings approval | ✅ For tasks | ⚠️ Add for projects |
+| Budget Overview | ✅ Exists | ⚠️ Show ALL adiutors grouped by payment type |
+| Earnings approval | ✅ For tasks | ⚠️ Add for fixed-rate assignments |
 | Wallet system | ❌ None | ⚠️ Build unified wallet |
 | Max hours | ✅ Field exists | ⚠️ Enforce in billing |
 | Hour adjustment | ❌ None | ⚠️ Add admin adjustment |
