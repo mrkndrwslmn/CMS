@@ -93,9 +93,10 @@ class FeedbackController extends Controller
             'category' => 'project_completion'
         ]);
 
-        // Notify ALL adiutors assigned to this project
+        // Notify ALL adiutors assigned to this project and update their ratings
         foreach ($project->assignments as $assignment) {
             if ($assignment->adiutor) {
+                // Send notification
                 $assignment->adiutor->notify(new FeedbackReceivedNotification(
                     $projectId,
                     $project->title,
@@ -103,6 +104,14 @@ class FeedbackController extends Controller
                     $averageRating,
                     auth()->user()->fullName
                 ));
+                
+                // Update adiutor's rating in their profile based on all project feedback
+                $adiutorRating = $assignment->adiutor->calculateAdiutorRating();
+                if ($assignment->adiutor->adiutorProfile) {
+                    $assignment->adiutor->adiutorProfile->update([
+                        'rating' => $adiutorRating ?? 0
+                    ]);
+                }
             }
         }
 

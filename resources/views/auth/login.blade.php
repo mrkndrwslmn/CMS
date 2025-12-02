@@ -110,7 +110,7 @@
                                         Remember me
                                     </label>
                                 </div>
-                                <a href="#" class="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors">Forgot password?</a>
+                                <a href="{{ route('password.request') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors">Forgot password?</a>
                             </div>
                             
                             <!-- Submit Button -->
