@@ -75,7 +75,7 @@ class Project extends Model
     public function adiutors()
     {
         return $this->belongsToMany(User::class, 'project_assignments', 'project_id', 'adiutor_id')
-                    ->withPivot('agreed_rate', 'start_date', 'expected_completion', 'status', 'notes', 'progress_percentage')
+                    ->withPivot('id', 'agreed_rate', 'hourly_rate', 'max_hours', 'total_hours_logged', 'total_billable_hours', 'start_date', 'expected_completion', 'status', 'notes', 'progress_percentage', 'payment_type', 'fixed_rate_approved', 'fixed_rate_approved_at', 'fixed_rate_approved_by', 'fixed_rate_paid', 'fixed_rate_payout_id')
                     ->wherePivotNotIn('status', ['removed', 'declined'])
                     ->withTimestamps();
     }
@@ -89,7 +89,22 @@ class Project extends Model
     }
 
     /**
-     * Get TASKS related to this project (CORRECT: Only projects have tasks!)
+     * Get time entries for this project (from tasks)
+     */
+    public function timeEntries()
+    {
+        return $this->hasManyThrough(
+            TimeEntry::class,
+            Task::class,
+            'project_id', // Foreign key on tasks table
+            'task_id',    // Foreign key on time_entries table
+            'id',         // Local key on projects table
+            'taskID'      // Local key on tasks table
+        );
+    }
+
+    /**
+     * Get TASKS related to this project
      */
     public function tasks()
     {

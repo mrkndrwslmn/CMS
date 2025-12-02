@@ -17,10 +17,19 @@ class TimeEntry extends Model
         'start_time',
         'end_time',
         'duration_minutes',
+        'original_duration_minutes',
+        'billable_minutes',
+        'non_billable_minutes',
+        'is_capped',
         'hourly_rate',
         'calculated_amount',
+        'original_calculated_amount',
         'description',
         'is_approved',
+        'admin_adjusted',
+        'adjustment_reason',
+        'adjusted_by',
+        'adjusted_at',
         'is_paid',
         'payout_id',
         'approved_by',
@@ -32,11 +41,18 @@ class TimeEntry extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'approved_at' => 'datetime',
+        'adjusted_at' => 'datetime',
         'is_approved' => 'boolean',
         'is_paid' => 'boolean',
+        'is_capped' => 'boolean',
+        'admin_adjusted' => 'boolean',
         'duration_minutes' => 'integer',
+        'original_duration_minutes' => 'integer',
+        'billable_minutes' => 'integer',
+        'non_billable_minutes' => 'integer',
         'hourly_rate' => 'decimal:2',
         'calculated_amount' => 'decimal:2',
+        'original_calculated_amount' => 'decimal:2',
     ];
 
     /**
@@ -61,6 +77,96 @@ class TimeEntry extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get the admin who adjusted this entry
+     */
+    public function adjuster(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'adjusted_by');
+    }
+
+    /**
+     * Check if this entry was adjusted by admin
+     */
+    public function wasAdjusted(): bool
+    {
+        return $this->admin_adjusted ?? false;
+    }
+
+    /**
+     * Get the adjustment difference in minutes
+     */
+    public function getAdjustmentDifferenceMinutes(): int
+    {
+        if (!$this->wasAdjusted() || !$this->original_duration_minutes) {
+            return 0;
+        }
+        return $this->duration_minutes - $this->original_duration_minutes;
+    }
+
+    /**
+     * Get the adjustment difference in amount
+     */
+    public function getAdjustmentDifferenceAmount(): float
+    {
+        if (!$this->wasAdjusted() || !$this->original_calculated_amount) {
+            return 0;
+        }
+        return (float) $this->calculated_amount - (float) $this->original_calculated_amount;
+    }
+
+    /**
+     * Get original duration formatted
+     */
+    public function getOriginalFormattedDuration(): ?string
+    {
+        if (!$this->original_duration_minutes) {
+            return null;
+        }
+        $hours = floor($this->original_duration_minutes / 60);
+        $minutes = $this->original_duration_minutes % 60;
+        return sprintf('%dh %dm', $hours, $minutes);
+    }
+
+    /**
+     * Get original amount formatted
+     */
+    public function getOriginalFormattedAmount(): ?string
+    {
+        if (!$this->original_calculated_amount) {
+            return null;
+        }
+        return '₱' . number_format($this->original_calculated_amount, 2);
+    }
+
+    /**
+     * Apply admin adjustment to this entry
+     */
+    public function applyAdjustment(float $adjustedHours, string $reason, int $adminId): void
+    {
+        // Store original values if not already stored
+        if (!$this->original_duration_minutes) {
+            $this->original_duration_minutes = $this->duration_minutes;
+        }
+        if (!$this->original_calculated_amount) {
+            $this->original_calculated_amount = $this->calculated_amount;
+        }
+
+        // Apply adjustment
+        $adjustedMinutes = (int) ($adjustedHours * 60);
+        $adjustedAmount = round($adjustedHours * (float) $this->hourly_rate, 2);
+
+        $this->update([
+            'duration_minutes' => $adjustedMinutes,
+            'billable_minutes' => $adjustedMinutes,
+            'calculated_amount' => $adjustedAmount,
+            'admin_adjusted' => true,
+            'adjustment_reason' => $reason,
+            'adjusted_by' => $adminId,
+            'adjusted_at' => now(),
+        ]);
     }
 
     /**
@@ -227,5 +333,116 @@ class TimeEntry extends Model
     public function getDurationHoursAttribute()
     {
         return $this->duration_minutes ? round($this->duration_minutes / 60, 2) : 0;
+    }
+
+    // ==========================================
+    // BILLABLE/NON-BILLABLE METHODS
+    // ==========================================
+
+    /**
+     * Get billable minutes (defaults to duration_minutes if not set)
+     */
+    public function getBillableMinutes(): int
+    {
+        return $this->billable_minutes ?? $this->duration_minutes ?? 0;
+    }
+
+    /**
+     * Get non-billable minutes
+     */
+    public function getNonBillableMinutes(): int
+    {
+        return $this->non_billable_minutes ?? 0;
+    }
+
+    /**
+     * Get billable hours
+     */
+    public function getBillableHours(): float
+    {
+        return round($this->getBillableMinutes() / 60, 2);
+    }
+
+    /**
+     * Get non-billable hours
+     */
+    public function getNonBillableHours(): float
+    {
+        return round($this->getNonBillableMinutes() / 60, 2);
+    }
+
+    /**
+     * Check if this entry was capped due to max hours limit
+     */
+    public function wasCapped(): bool
+    {
+        return $this->is_capped ?? false;
+    }
+
+    /**
+     * Get formatted billable duration
+     */
+    public function getFormattedBillableDuration(): string
+    {
+        $minutes = $this->getBillableMinutes();
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+
+        return sprintf('%dh %dm', $hours, $mins);
+    }
+
+    /**
+     * Calculate amount based on billable minutes (not total duration)
+     * This respects max hours cap
+     */
+    public function calculateBillableAmount(): float
+    {
+        $billableHours = $this->getBillableHours();
+        return round($billableHours * (float) ($this->hourly_rate ?? 0), 2);
+    }
+
+    /**
+     * Get the project assignment for this time entry
+     */
+    public function getProjectAssignment(): ?ProjectAssignment
+    {
+        return ProjectAssignment::where('project_id', $this->project_id)
+            ->where('adiutor_id', $this->adiutor_id)
+            ->first();
+    }
+
+    /**
+     * Apply max hours cap to this entry
+     * Should be called when stopping a timer
+     */
+    public function applyMaxHoursCap(): void
+    {
+        $assignment = $this->getProjectAssignment();
+        
+        if (!$assignment || !$this->duration_minutes) {
+            // No assignment or no duration, all time is billable
+            $this->billable_minutes = $this->duration_minutes;
+            $this->non_billable_minutes = 0;
+            $this->is_capped = false;
+            return;
+        }
+
+        // Calculate billable/non-billable split
+        $result = $assignment->calculateBillableMinutes($this->duration_minutes);
+        
+        $this->billable_minutes = $result['billable_minutes'];
+        $this->non_billable_minutes = $result['non_billable_minutes'];
+        $this->is_capped = $result['is_capped'];
+        
+        // Recalculate amount based on billable minutes only
+        $this->calculated_amount = $this->calculateBillableAmount();
+    }
+
+    /**
+     * Scope for capped entries
+     */
+    public function scopeCapped($query)
+    {
+        return $query->where('is_capped', true);
     }
 }

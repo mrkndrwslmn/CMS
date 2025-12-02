@@ -21,61 +21,46 @@
 @endpush
 
 @section('content')
-<div class="w-full">
-    <div class="w-full px-4 py-5" 
+<div class="min-h-screen bg-neutral-50">
+    <div class="max-w-8xl mx-auto px-6 py-8" 
          data-monthly-users="{{ json_encode($monthlyUsers ?? []) }}" 
          data-task-stats="{{ json_encode($taskStats ?? []) }}">
-        <!-- Header Section -->
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <div class="flex flex-col md:flex-row md:justify-between md:items-center">
-                <div>
-                    <h1 class="text-2xl font-semibold text-primary-500 mb-2 relative">
-                        Dashboard Overview
-                    </h1>
-                    <p class="text-neutral-500">Welcome back, <span class="font-medium text-accent-500">{{ Auth::user()->fullName }}</span>! Here's what's happening today.</p>
-                    <p class="text-xs text-neutral-400 mt-1" data-timestamp>Last updated: {{ now()->format('F d, Y \a\t g:i A') }}</p>
-                </div>
-                <div class="mt-4 md:mt-0">
-                    <div class="flex items-center space-x-3">
-                        <div class="flex items-center bg-accent-50 px-4 py-2 rounded-lg">
-                            <i class="fas fa-calendar-alt mr-2 text-accent-500"></i>
-                            <span class="font-medium text-primary-500">{{ now()->format('F d, Y') }}</span>
-                        </div>
-                        <button x-data="{ spinning: false }"
-                                @click="spinning = true; setTimeout(() => { spinning = false; refreshDashboard(); }, 1500)"
-                                class="glass-button-accent rounded-lg px-4 py-2 flex items-center">
-                            <i class="fas fa-sync-alt mr-2" :class="{ 'animate-spin': spinning }"></i> Refresh
-                        </button>
-                    </div>
-                </div>
+        
+        <!-- Streamlined Header/Taskbar -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-xl font-semibold text-primary-500">Dashboard</h1>
+                <p class="text-sm text-neutral-400 mt-0.5">Welcome back, <span class="text-accent-500">{{ Auth::user()->fullName }}</span></p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-neutral-400 hidden sm:block" data-timestamp>{{ now()->format('M d, Y') }}</span>
+                <button x-data="{ spinning: false }"
+                        @click="spinning = true; setTimeout(() => { spinning = false; refreshDashboard(); }, 1500)"
+                        class="p-2 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50 transition-colors"
+                        title="Refresh">
+                    <i class="fas fa-sync-alt text-neutral-500 text-sm" :class="{ 'animate-spin': spinning }"></i>
+                </button>
+                <a href="{{ route('admin.profile') }}" class="p-2 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50 transition-colors" title="Settings">
+                    <i class="fas fa-cog text-neutral-500 text-sm"></i>
+                </a>
             </div>
         </div>
 
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <!-- Total Users Card -->
             <div class="animate-fade-in delay-100 opacity-0">
-                <div class="bg-white rounded-xl shadow-sm h-full transition-all hover:-translate-y-1 duration-300 overflow-hidden">
-                    <div class="p-5 border-l-4 border-primary-500">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="text-xs uppercase font-bold text-neutral-500 mb-1">Total Users</div>
-                                <div class="flex items-baseline">
-                                    <div class="text-2xl font-bold text-primary-500" data-stat="total-users">{{ number_format($stats['total_users']) }}</div>
-                                    <div class="ml-2 px-2 py-0.5 bg-success-50 text-success-500 text-xs font-medium rounded-full flex items-center">
-                                        <i class="fas fa-arrow-up mr-1"></i>12%
-                                    </div>
-                                </div>
-                                <div class="text-neutral-500 text-xs mt-2 flex items-center">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-user-plus mr-1 text-success-500"></i>
-                                        <span>24 new this month</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-primary-50 p-3 rounded-xl">
-                                <i class="fas fa-users text-primary-500 text-xl"></i>
-                            </div>
+                <div class="bg-white rounded-lg border border-neutral-200 p-5 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-neutral-400 uppercase tracking-wide">Total Users</p>
+                            <p class="text-2xl font-bold text-primary-500 mt-1" data-stat="total-users">{{ number_format($stats['total_users']) }}</p>
+                            <p class="text-xs text-success-500 mt-2 flex items-center">
+                                <i class="fas fa-arrow-up mr-1"></i>12% from last month
+                            </p>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center">
+                            <i class="fas fa-users text-primary-500"></i>
                         </div>
                     </div>
                 </div>
@@ -83,27 +68,17 @@
 
             <!-- Active Tasks Card -->
             <div class="animate-fade-in delay-200 opacity-0">
-                <div class="bg-white rounded-xl shadow-sm h-full transition-all hover:-translate-y-1 duration-300 overflow-hidden">
-                    <div class="p-5 border-l-4 border-accent-500">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="text-xs uppercase font-bold text-neutral-500 mb-1">Active Tasks</div>
-                                <div class="flex items-baseline">
-                                    <div class="text-2xl font-bold text-primary-500" data-stat="active-tasks">{{ number_format($stats['active_tasks']) }}</div>
-                                    <div class="ml-2 px-2 py-0.5 bg-accent-50 text-accent-500 text-xs font-medium rounded-full flex items-center">
-                                        <i class="fas fa-clock mr-1"></i>In progress
-                                    </div>
-                                </div>
-                                <div class="text-neutral-500 text-xs mt-2 flex items-center">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-hourglass-half mr-1 text-accent-500"></i>
-                                        <span>Updated 2 hours ago</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-accent-50 p-3 rounded-xl">
-                                <i class="fas fa-tasks text-accent-500 text-xl"></i>
-                            </div>
+                <div class="bg-white rounded-lg border border-neutral-200 p-5 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-neutral-400 uppercase tracking-wide">Active Tasks</p>
+                            <p class="text-2xl font-bold text-primary-500 mt-1" data-stat="active-tasks">{{ number_format($stats['active_tasks']) }}</p>
+                            <p class="text-xs text-accent-500 mt-2 flex items-center">
+                                <i class="fas fa-clock mr-1"></i>In progress
+                            </p>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-accent-50 flex items-center justify-center">
+                            <i class="fas fa-tasks text-accent-500"></i>
                         </div>
                     </div>
                 </div>
@@ -111,27 +86,17 @@
 
             <!-- Pending Requests Card -->
             <div class="animate-fade-in delay-300 opacity-0">
-                <div class="bg-white rounded-xl shadow-sm h-full transition-all hover:-translate-y-1 duration-300 overflow-hidden">
-                    <div class="p-5 border-l-4 border-tertiary-500">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="text-xs uppercase font-bold text-neutral-500 mb-1">Pending Requests</div>
-                                <div class="flex items-baseline">
-                                    <div class="text-2xl font-bold text-primary-500" data-stat="pending-requests">{{ number_format($stats['pending_requests']) }}</div>
-                                    <div class="ml-2 px-2 py-0.5 bg-warning-50 text-warning-500 text-xs font-medium rounded-full flex items-center">
-                                        <i class="fas fa-exclamation-triangle mr-1"></i>Attention
-                                    </div>
-                                </div>
-                                <div class="text-neutral-500 text-xs mt-2 flex items-center">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-clock mr-1 text-tertiary-500"></i>
-                                        <span>5 require review</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-tertiary-50 p-3 rounded-xl">
-                                <i class="fas fa-clipboard-list text-tertiary-500 text-xl"></i>
-                            </div>
+                <div class="bg-white rounded-lg border border-neutral-200 p-5 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-neutral-400 uppercase tracking-wide">Pending</p>
+                            <p class="text-2xl font-bold text-primary-500 mt-1" data-stat="pending-requests">{{ number_format($stats['pending_requests']) }}</p>
+                            <p class="text-xs text-warning-500 mt-2 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i>Needs review
+                            </p>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-tertiary-50 flex items-center justify-center">
+                            <i class="fas fa-clipboard-list text-tertiary-500"></i>
                         </div>
                     </div>
                 </div>
@@ -139,77 +104,168 @@
 
             <!-- Completed Tasks Card -->
             <div class="animate-fade-in delay-400 opacity-0">
-                <div class="bg-white rounded-xl shadow-sm h-full transition-all hover:-translate-y-1 duration-300 overflow-hidden">
-                    <div class="p-5 border-l-4 border-success-500">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="text-xs uppercase font-bold text-neutral-500 mb-1">Completed Tasks</div>
-                                <div class="flex items-baseline">
-                                    <div class="text-2xl font-bold text-primary-500" data-stat="completed-tasks">{{ number_format($stats['completed_tasks']) }}</div>
-                                    <div class="ml-2 px-2 py-0.5 bg-success-50 text-success-500 text-xs font-medium rounded-full flex items-center">
-                                        <i class="fas fa-check-circle mr-1"></i>All time
-                                    </div>
-                                </div>
-                                <div class="text-neutral-500 text-xs mt-2 flex items-center">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-calendar-check mr-1 text-success-500"></i>
-                                        <span>18 this week</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-success-50 p-3 rounded-xl">
-                                <i class="fas fa-trophy text-success-500 text-xl"></i>
-                            </div>
+                <div class="bg-white rounded-lg border border-neutral-200 p-5 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-neutral-400 uppercase tracking-wide">Completed</p>
+                            <p class="text-2xl font-bold text-primary-500 mt-1" data-stat="completed-tasks">{{ number_format($stats['completed_tasks']) }}</p>
+                            <p class="text-xs text-success-500 mt-2 flex items-center">
+                                <i class="fas fa-check-circle mr-1"></i>All time
+                            </p>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-success-50 flex items-center justify-center">
+                            <i class="fas fa-trophy text-success-500"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Charts Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-            <!-- Monthly User Growth Chart -->
-            <div class="lg:col-span-8 animate-fade-in opacity-0">
-                <div class="bg-white rounded-xl shadow-sm h-full">
-                    <div class="p-5 border-b border-neutral-100">
-                        <div class="flex flex-wrap justify-between items-center">
-                            <div>
-                                <h5 class="flex items-center text-lg font-bold text-primary-500 mb-1">
-                                    <i class="fas fa-chart-line text-accent-500 mr-2"></i>
-                                    User Growth Analytics
-                                </h5>
-                                <p class="text-neutral-500 text-sm">Monthly registration trends for {{ date('Y') }}</p>
-                            </div>
-                            <div class="flex space-x-3 mt-2 md:mt-0">
-                                <div x-data="{ open: false }" class="relative">
-                                    <button @click="open = !open" class="glass-button-accent text-sm rounded-lg px-4 py-2 flex items-center" type="button">
-                                        <i class="fas fa-calendar mr-2"></i> 
-                                        <span x-text="$store.timeFilter ? $store.timeFilter : 'This Year'">This Year</span> 
-                                        <i class="fas fa-chevron-down ml-2 text-xs transition-transform" :class="{'rotate-180': open}"></i>
-                                    </button>
-                                    <ul x-show="open" 
-                                        @click.outside="open = false"
-                                        x-transition:enter="transition ease-out duration-200"
-                                        x-transition:enter-start="opacity-0 transform scale-95"
-                                        x-transition:enter-end="opacity-100 transform scale-100"
-                                        x-transition:leave="transition ease-in duration-150"
-                                        x-transition:leave-start="opacity-100 transform scale-100"
-                                        x-transition:leave-end="opacity-0 transform scale-95"
-                                        class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10 py-1 border border-neutral-100"
-                                        style="display: none;">
-                                        <li><a @click="$store.timeFilter = 'This Year'; open = false" class="flex items-center px-4 py-2 text-sm text-primary-500 hover:bg-accent-50 cursor-pointer"><i class="fas fa-calendar-day mr-2 text-neutral-500"></i>This Year</a></li>
-                                        <li><a @click="$store.timeFilter = 'Last Year'; open = false" class="flex items-center px-4 py-2 text-sm text-primary-500 hover:bg-accent-50 cursor-pointer"><i class="fas fa-calendar-week mr-2 text-neutral-500"></i>Last Year</a></li>
-                                        <li><a @click="$store.timeFilter = 'All Time'; open = false" class="flex items-center px-4 py-2 text-sm text-primary-500 hover:bg-accent-50 cursor-pointer"><i class="fas fa-calendar mr-2 text-neutral-500"></i>All Time</a></li>
-                                    </ul>
-                                </div>
-                                <button @click="downloadReport()" class="glass-button rounded-lg px-3 py-2 text-sm" title="Download Report">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
+        <!-- Earnings Analytics Widget -->
+        @if(isset($earningsStats))
+        <div class="animate-fade-in opacity-0 mb-8">
+            <div class="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
+                            <i class="fas fa-chart-line text-primary-500 text-sm"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-semibold text-primary-500">Financial Overview</h2>
+                            <p class="text-xs text-neutral-400">Revenue & earnings analytics</p>
                         </div>
                     </div>
-                    <div class="p-5 pt-4">
-                        <div class="chart-area h-72">
+                    <a href="{{ route('admin.earnings-analytics.index') }}" class="text-xs text-accent-500 hover:text-accent-600 font-medium flex items-center gap-1">
+                        <span>View Details</span>
+                        <i class="fas fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
+                
+                <!-- Main Stats Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-neutral-100">
+                    <!-- Total Revenue -->
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <p class="text-xs font-medium text-neutral-400 uppercase tracking-wide">Total Revenue</p>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-success-50 text-success-600 font-medium">
+                                {{ $earningsStats['completed_projects'] }} projects
+                            </span>
+                        </div>
+                        <p class="text-3xl font-bold text-primary-500 tracking-tight">₱{{ number_format($earningsStats['total_earnings'], 2) }}</p>
+                        <p class="text-xs text-neutral-400 mt-2">Lifetime earnings from completed projects</p>
+                    </div>
+                    
+                    <!-- This Month -->
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <p class="text-xs font-medium text-neutral-400 uppercase tracking-wide">This Month</p>
+                            @if($earningsStats['monthly_growth'] >= 0)
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-success-50 text-success-600 font-medium flex items-center gap-1">
+                                    <i class="fas fa-arrow-up text-[8px]"></i>
+                                    {{ $earningsStats['monthly_growth'] }}%
+                                </span>
+                            @else
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-error-50 text-error-600 font-medium flex items-center gap-1">
+                                    <i class="fas fa-arrow-down text-[8px]"></i>
+                                    {{ abs($earningsStats['monthly_growth']) }}%
+                                </span>
+                            @endif
+                        </div>
+                        <p class="text-3xl font-bold text-primary-500 tracking-tight">₱{{ number_format($earningsStats['this_month_earnings'], 2) }}</p>
+                        <p class="text-xs text-neutral-400 mt-2">{{ now()->format('F Y') }} revenue</p>
+                    </div>
+                    
+                    <!-- Adiutor Payouts -->
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <p class="text-xs font-medium text-neutral-400 uppercase tracking-wide">Adiutor Earnings</p>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-accent-50 text-accent-600 font-medium">
+                                This month
+                            </span>
+                        </div>
+                        <p class="text-3xl font-bold text-primary-500 tracking-tight">₱{{ number_format($earningsStats['adiutor_earnings_this_month'], 2) }}</p>
+                        <p class="text-xs text-neutral-400 mt-2">Approved time entries</p>
+                    </div>
+                </div>
+                
+                <!-- Action Items Row -->
+                <div class="bg-neutral-50 px-6 py-4 border-t border-neutral-100">
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs font-medium text-neutral-500">Action Items</p>
+                        <div class="flex items-center gap-6">
+                            <!-- Pending Approvals -->
+                            <a href="{{ route('admin.payouts.index') }}" class="flex items-center gap-2 group">
+                                <div class="flex items-center gap-1.5">
+                                    @if($earningsStats['pending_approvals'] > 0)
+                                        <span class="w-1.5 h-1.5 rounded-full bg-warning-500 animate-pulse"></span>
+                                    @endif
+                                    <span class="text-xs text-neutral-600 group-hover:text-primary-500 transition-colors">{{ $earningsStats['pending_approvals'] }} pending approvals</span>
+                                </div>
+                                <i class="fas fa-chevron-right text-[8px] text-neutral-400 group-hover:text-primary-500 transition-colors"></i>
+                            </a>
+                            
+                            <!-- Pending Payouts -->
+                            <a href="{{ route('admin.payouts.index', ['status' => 'pending']) }}" class="flex items-center gap-2 group">
+                                <div class="flex items-center gap-1.5">
+                                    @if($earningsStats['pending_payouts'] > 0)
+                                        <span class="w-1.5 h-1.5 rounded-full bg-tertiary-500 animate-pulse"></span>
+                                    @endif
+                                    <span class="text-xs text-neutral-600 group-hover:text-primary-500 transition-colors">₱{{ number_format($earningsStats['pending_payouts'], 2) }} pending payouts</span>
+                                </div>
+                                <i class="fas fa-chevron-right text-[8px] text-neutral-400 group-hover:text-primary-500 transition-colors"></i>
+                            </a>
+                            
+                            <!-- Hour Requests -->
+                            <a href="{{ route('admin.hour-requests.index') }}" class="flex items-center gap-2 group">
+                                <div class="flex items-center gap-1.5">
+                                    @if($earningsStats['pending_hour_requests'] > 0)
+                                        <span class="w-1.5 h-1.5 rounded-full bg-accent-500 animate-pulse"></span>
+                                    @endif
+                                    <span class="text-xs text-neutral-600 group-hover:text-primary-500 transition-colors">{{ $earningsStats['pending_hour_requests'] }} hour requests</span>
+                                </div>
+                                <i class="fas fa-chevron-right text-[8px] text-neutral-400 group-hover:text-primary-500 transition-colors"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Monthly User Growth Chart -->
+            <div class="lg:col-span-2 animate-fade-in opacity-0">
+                <div class="bg-white rounded-lg border border-neutral-200 h-full">
+                    <div class="flex items-center justify-between p-5 border-b border-neutral-100">
+                        <div>
+                            <h2 class="text-sm font-semibold text-primary-500">User Growth</h2>
+                            <p class="text-xs text-neutral-400 mt-0.5">Monthly registration trends</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div x-data="{ open: false }" class="relative">
+                                <button @click="open = !open" class="text-xs px-3 py-1.5 rounded-md bg-neutral-100 hover:bg-neutral-200 text-neutral-600 transition-colors flex items-center gap-1.5">
+                                    <span x-text="$store.timeFilter ? $store.timeFilter : 'This Year'">This Year</span>
+                                    <i class="fas fa-chevron-down text-[10px]" :class="{'rotate-180': open}"></i>
+                                </button>
+                                <ul x-show="open" 
+                                    @click.outside="open = false"
+                                    x-transition
+                                    class="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-neutral-200 py-1 z-10"
+                                    style="display: none;">
+                                    <li><a @click="$store.timeFilter = 'This Year'; open = false" class="block px-3 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50 cursor-pointer">This Year</a></li>
+                                    <li><a @click="$store.timeFilter = 'Last Year'; open = false" class="block px-3 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50 cursor-pointer">Last Year</a></li>
+                                    <li><a @click="$store.timeFilter = 'All Time'; open = false" class="block px-3 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50 cursor-pointer">All Time</a></li>
+                                </ul>
+                            </div>
+                            <button @click="downloadReport()" class="p-1.5 rounded-md hover:bg-neutral-100 transition-colors" title="Download">
+                                <i class="fas fa-download text-neutral-400 text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div class="h-64">
                             <canvas id="userGrowthChart"></canvas>
                         </div>
                     </div>
@@ -217,43 +273,36 @@
             </div>
 
             <!-- Task Status Pie Chart -->
-            <div class="lg:col-span-4 animate-fade-in opacity-0">
-                <div class="tech-card h-full rounded-xl">
-                    <div class="p-5 border-b border-neutral-100">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h5 class="flex items-center text-lg font-bold text-primary-500 mb-1">
-                                    <i class="fas fa-chart-pie text-secondary-500 mr-2"></i>
-                                    Task Distribution
-                                </h5>
-                                <p class="text-neutral-500 text-sm">Current task status overview</p>
-                            </div>
-                            <button x-data="{ spinning: false }"
-                                    @click="spinning = true; setTimeout(() => { spinning = false }, 1500)"
-                                    class="glass-button-purple rounded-lg px-3 py-2 text-sm" 
-                                    title="Refresh Data">
-                                <i class="fas fa-sync-alt" :class="{ 'animate-spin': spinning }"></i>
-                            </button>
+            <div class="animate-fade-in opacity-0">
+                <div class="bg-white rounded-lg border border-neutral-200 h-full">
+                    <div class="flex items-center justify-between p-5 border-b border-neutral-100">
+                        <div>
+                            <h2 class="text-sm font-semibold text-primary-500">Task Distribution</h2>
+                            <p class="text-xs text-neutral-400 mt-0.5">Current status overview</p>
                         </div>
+                        <button x-data="{ spinning: false }"
+                                @click="spinning = true; setTimeout(() => { spinning = false }, 1500)"
+                                class="p-1.5 rounded-md hover:bg-neutral-100 transition-colors" 
+                                title="Refresh">
+                            <i class="fas fa-sync-alt text-neutral-400 text-xs" :class="{ 'animate-spin': spinning }"></i>
+                        </button>
                     </div>
-                    <div class="p-5 pt-4">
-                        <div class="chart-pie mb-5 h-56">
+                    <div class="p-5">
+                        <div class="h-44">
                             <canvas id="taskStatusChart"></canvas>
                         </div>
-                        <div class="mt-4">
-                            <div class="grid grid-cols-3 gap-3 text-center">
-                                <div class="bg-accent-50 p-3 rounded-lg">
-                                    <div class="text-neutral-500 text-xs mb-1">Active</div>
-                                    <div class="font-bold text-accent-500">{{ $stats['active_tasks'] }}</div>
-                                </div>
-                                <div class="bg-tertiary-50 p-3 rounded-lg">
-                                    <div class="text-neutral-500 text-xs mb-1">Pending</div>
-                                    <div class="font-bold text-tertiary-500">{{ $stats['pending_requests'] }}</div>
-                                </div>
-                                <div class="bg-success-50 p-3 rounded-lg">
-                                    <div class="text-neutral-500 text-xs mb-1">Complete</div>
-                                    <div class="font-bold text-success-500">{{ $stats['completed_tasks'] }}</div>
-                                </div>
+                        <div class="grid grid-cols-3 gap-2 mt-4">
+                            <div class="text-center p-2 rounded-md bg-accent-50">
+                                <p class="text-xs text-neutral-500">Active</p>
+                                <p class="text-sm font-semibold text-accent-500">{{ $stats['active_tasks'] }}</p>
+                            </div>
+                            <div class="text-center p-2 rounded-md bg-tertiary-50">
+                                <p class="text-xs text-neutral-500">Pending</p>
+                                <p class="text-sm font-semibold text-tertiary-500">{{ $stats['pending_requests'] }}</p>
+                            </div>
+                            <div class="text-center p-2 rounded-md bg-success-50">
+                                <p class="text-xs text-neutral-500">Done</p>
+                                <p class="text-sm font-semibold text-success-500">{{ $stats['completed_tasks'] }}</p>
                             </div>
                         </div>
                     </div>
@@ -262,99 +311,53 @@
         </div>
 
         <!-- Content Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- Recent Users -->
             <div class="animate-fade-in opacity-0">
-                <div class="bg-white rounded-xl shadow-sm h-full">
-                    <div class="p-5 border-b border-neutral-100">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h5 class="flex items-center text-lg font-bold text-primary-500 mb-1">
-                                    <i class="fas fa-users text-primary-500 mr-2"></i>
-                                    Recent Users
-                                </h5>
-                                <p class="text-neutral-500 text-sm">Latest user registrations</p>
-                            </div>
-                            <a href="{{ route('admin.users.index') }}" class="flex items-center px-4 py-2 bg-primary-50 hover:bg-primary-100 text-primary-500 text-sm font-medium rounded-lg transition-colors">
-                                <i class="fas fa-external-link-alt mr-2"></i> View All
-                            </a>
-                        </div>
+                <div class="bg-white rounded-lg border border-neutral-200">
+                    <div class="flex items-center justify-between p-5 border-b border-neutral-100">
+                        <h2 class="text-sm font-semibold text-primary-500">Recent Users</h2>
+                        <a href="{{ route('admin.users.index') }}" class="text-xs text-accent-500 hover:text-accent-600 font-medium">View all →</a>
                     </div>
-                    <div class="p-5 pt-3">
+                    <div class="p-5">
                         @if($stats['recent_users']->count() > 0)
-                            <div class="overflow-hidden">
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-sm">
-                                        <thead>
-                                            <tr class="border-b border-neutral-100">
-                                                <th class="text-neutral-500 font-semibold py-3 pl-3 text-left">User</th>
-                                                <th class="text-neutral-500 font-semibold py-3 text-left">Role</th>
-                                                <th class="text-neutral-500 font-semibold py-3 text-left">Status</th>
-                                                <th class="text-neutral-500 font-semibold py-3 pr-3 text-right">Joined</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($stats['recent_users'] as $user)
-                                            <tr class="hover:bg-neutral-50 transition-all duration-200 border-b border-neutral-50">
-                                                <td class="py-3 pl-3">
-                                                    <div class="flex items-center">
-                                                        <div class="mr-3">
-                                                            @if($user->profilePic)
-                                                                <img src="{{ $user->getProfilePictureUrl() }}" class="h-10 w-10 rounded-full object-cover" alt="{{ $user->fullName }}">
-                                                            @else
-                                                                <div class="h-10 w-10 rounded-full flex items-center justify-center bg-gradient-to-r from-accent-400 to-secondary-500">
-                                                                    <span class="text-white font-bold">{{ substr($user->fullName, 0, 1) }}</span>
-                                                                </div>
-                                                            @endif
-                                                        </div>
-                                                        <div>
-                                                            <div class="font-medium text-primary-500">{{ $user->fullName }}</div>
-                                                            <div class="text-neutral-500 text-xs">{{ $user->email }}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3">
-                                                    @php
-                                                        $roleClasses = [
-                                                            'admin' => 'bg-secondary-50 text-secondary-500',
-                                                            'client' => 'bg-accent-50 text-accent-500',
-                                                            'adiutor' => 'bg-success-50 text-success-500'
-                                                        ];
-                                                        $roleClass = $roleClasses[$user->role] ?? 'bg-neutral-100 text-neutral-500';
-                                                    @endphp
-                                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium inline-flex items-center {{ $roleClass }}">
-                                                        {{ ucfirst($user->role) }}
-                                                    </span>
-                                                </td>
-                                                <td class="py-3">
-                                                    <div class="flex items-center">
-                                                        <span class="inline-block w-2 h-2 rounded-full mr-2 {{ $user->status === 'active' ? 'bg-success-500' : 'bg-neutral-400' }}"></span>
-                                                        <span class="text-sm {{ $user->status === 'active' ? 'text-success-500' : 'text-neutral-500' }}">
-                                                            {{ ucfirst($user->status) }}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3 pr-3 text-right">
-                                                    <div class="flex items-center justify-end text-neutral-500">
-                                                        <i class="far fa-calendar-alt mr-1 opacity-70"></i>
-                                                        <span>{{ $user->created_at->format('M d, Y') }}</span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                            <div class="space-y-3">
+                                @foreach($stats['recent_users'] as $user)
+                                <div class="flex items-center justify-between py-2 {{ !$loop->last ? 'border-b border-neutral-50' : '' }}">
+                                    <div class="flex items-center gap-3">
+                                        @if($user->profilePic)
+                                            <img src="{{ $user->getProfilePictureUrl() }}" class="h-9 w-9 rounded-full object-cover" alt="{{ $user->fullName }}">
+                                        @else
+                                            <div class="h-9 w-9 rounded-full bg-gradient-to-br from-accent-400 to-secondary-500 flex items-center justify-center">
+                                                <span class="text-white text-xs font-medium">{{ substr($user->fullName, 0, 1) }}</span>
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-500">{{ $user->fullName }}</p>
+                                            <p class="text-xs text-neutral-400">{{ $user->email }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        @php
+                                            $roleClasses = [
+                                                'admin' => 'bg-secondary-50 text-secondary-500',
+                                                'client' => 'bg-accent-50 text-accent-500',
+                                                'adiutor' => 'bg-success-50 text-success-500'
+                                            ];
+                                            $roleClass = $roleClasses[$user->role] ?? 'bg-neutral-100 text-neutral-500';
+                                        @endphp
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-medium {{ $roleClass }}">{{ ucfirst($user->role) }}</span>
+                                        <span class="text-xs text-neutral-400">{{ $user->created_at->format('M d') }}</span>
+                                    </div>
                                 </div>
+                                @endforeach
                             </div>
                         @else
-                            <div class="text-center py-10">
-                                <div class="bg-primary-50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-users text-primary-300 text-3xl"></i>
+                            <div class="text-center py-8">
+                                <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-users text-neutral-300"></i>
                                 </div>
-                                <p class="text-neutral-500 mb-4">No recent users found</p>
-                                <a href="{{ route('admin.users.create') }}" class="glass-button-secondary inline-flex items-center px-4 py-2 rounded-lg">
-                                    <i class="fas fa-plus mr-2"></i> Add New User
-                                </a>
+                                <p class="text-sm text-neutral-400">No recent users</p>
                             </div>
                         @endif
                     </div>
@@ -363,84 +366,42 @@
 
             <!-- Recent Requests -->
             <div class="animate-fade-in opacity-0">
-                <div class="bg-white rounded-xl shadow-sm h-full">
-                    <div class="p-5 border-b border-neutral-100">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h5 class="flex items-center text-lg font-bold text-primary-500 mb-1">
-                                    <i class="fas fa-clipboard-list text-tertiary-500 mr-2"></i>
-                                    Service Requests
-                                </h5>
-                                <p class="text-neutral-500 text-sm">Recent client submissions</p>
-                            </div>
-                            <a href="{{ route('admin.requests.index') }}" class="flex items-center px-4 py-2 bg-tertiary-50 hover:bg-tertiary-100 text-tertiary-500 text-sm font-medium rounded-lg transition-colors">
-                                <i class="fas fa-external-link-alt mr-2"></i> View All
-                            </a>
-                        </div>
+                <div class="bg-white rounded-lg border border-neutral-200">
+                    <div class="flex items-center justify-between p-5 border-b border-neutral-100">
+                        <h2 class="text-sm font-semibold text-primary-500">Service Requests</h2>
+                        <a href="{{ route('admin.requests.index') }}" class="text-xs text-accent-500 hover:text-accent-600 font-medium">View all →</a>
                     </div>
-                    <div class="p-5 pt-3">
+                    <div class="p-5">
                         @if($stats['recent_requests']->count() > 0)
-                            <div class="overflow-hidden">
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-sm">
-                                        <thead>
-                                            <tr class="border-b border-neutral-100">
-                                                <th class="text-neutral-500 font-semibold py-3 pl-3 text-left">Client</th>
-                                                <th class="text-neutral-500 font-semibold py-3 text-left">Company</th>
-                                                <th class="text-neutral-500 font-semibold py-3 text-left">Status</th>
-                                                <th class="text-neutral-500 font-semibold py-3 pr-3 text-right">Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($stats['recent_requests'] as $request)
-                                            <tr class="hover:bg-neutral-50 transition-all duration-200 border-b border-neutral-50">
-                                                <td class="py-3 pl-3">
-                                                    <div>
-                                                        <div class="font-medium text-primary-500">{{ $request->user->fullName }}</div>
-                                                        <div class="text-neutral-500 text-xs">{{ $request->user->email }}</div>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3">
-                                                    <div class="flex items-center text-neutral-600">
-                                                        <i class="fas fa-building mr-2 text-neutral-400"></i>
-                                                        <span>{{ $request->company_name ?? 'Individual' }}</span>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3">
-                                                    @php
-                                                        $statusClasses = [
-                                                            'pending' => 'bg-warning-50 text-warning-500',
-                                                            'approved' => 'bg-success-50 text-success-500',
-                                                            'rejected' => 'bg-error-50 text-error-500',
-                                                            'processing' => 'bg-accent-50 text-accent-500'
-                                                        ];
-                                                        $statusClass = $statusClasses[$request->status] ?? $statusClasses['pending'];
-                                                    @endphp
-                                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium inline-flex items-center {{ $statusClass }}">
-                                                        {{ ucfirst($request->status) }}
-                                                    </span>
-                                                </td>
-                                                <td class="py-3 pr-3 text-right">
-                                                    <div class="flex items-center justify-end text-neutral-500">
-                                                        <i class="far fa-calendar-alt mr-1 opacity-70"></i>
-                                                        <span>{{ $request->submission_date ? $request->submission_date->format('M d, Y') : 'N/A' }}</span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                            <div class="space-y-3">
+                                @foreach($stats['recent_requests'] as $request)
+                                <div class="flex items-center justify-between py-2 {{ !$loop->last ? 'border-b border-neutral-50' : '' }}">
+                                    <div>
+                                        <p class="text-sm font-medium text-primary-500">{{ $request->user->fullName }}</p>
+                                        <p class="text-xs text-neutral-400">{{ $request->company_name ?? 'Individual' }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        @php
+                                            $statusClasses = [
+                                                'pending' => 'bg-warning-50 text-warning-500',
+                                                'approved' => 'bg-success-50 text-success-500',
+                                                'rejected' => 'bg-error-50 text-error-500',
+                                                'processing' => 'bg-accent-50 text-accent-500'
+                                            ];
+                                            $statusClass = $statusClasses[$request->status] ?? $statusClasses['pending'];
+                                        @endphp
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-medium {{ $statusClass }}">{{ ucfirst($request->status) }}</span>
+                                        <span class="text-xs text-neutral-400">{{ $request->submission_date ? $request->submission_date->format('M d') : 'N/A' }}</span>
+                                    </div>
                                 </div>
+                                @endforeach
                             </div>
                         @else
-                            <div class="text-center py-10">
-                                <div class="bg-tertiary-50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-clipboard-list text-tertiary-300 text-3xl"></i>
+                            <div class="text-center py-8">
+                                <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-clipboard-list text-neutral-300"></i>
                                 </div>
-                                <p class="text-neutral-500 mb-4">No recent requests found</p>
-                                <a href="{{ route('admin.requests.index') }}" class="glass-button-orange inline-flex items-center px-4 py-2 rounded-lg">
-                                    <i class="fas fa-search mr-2"></i> View All Requests
-                                </a>
+                                <p class="text-sm text-neutral-400">No recent requests</p>
                             </div>
                         @endif
                     </div>
@@ -449,82 +410,65 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="grid grid-cols-1 gap-6">
-            <div class="animate-fade-in opacity-0">
-                <div class="bg-white rounded-xl shadow-sm">
-                    <div class="p-5 border-b border-neutral-100">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h5 class="flex items-center text-lg font-bold text-primary-500 mb-1">
-                                    <i class="fas fa-bolt text-secondary-500 mr-2"></i>
-                                    Quick Actions
-                                </h5>
-                                <p class="text-neutral-500 text-sm">Access key management features</p>
+        <div class="animate-fade-in opacity-0">
+            <div class="bg-white rounded-lg border border-neutral-200">
+                <div class="flex items-center justify-between p-5 border-b border-neutral-100">
+                    <h2 class="text-sm font-semibold text-primary-500">Quick Actions</h2>
+                    <button class="text-xs text-neutral-400 hover:text-neutral-600" id="customizeActions" title="Customize">
+                        <i class="fas fa-sliders-h"></i>
+                    </button>
+                </div>
+                <div class="p-5">
+                    <div class="grid grid-cols-3 sm:grid-cols-7 gap-4">
+                        <a href="{{ route('admin.users.index') }}" class="group text-center">
+                            <div class="w-12 h-12 mx-auto rounded-lg bg-primary-50 group-hover:bg-primary-100 flex items-center justify-center transition-colors mb-2">
+                                <i class="fas fa-users text-primary-500"></i>
                             </div>
-                            <div>
-                                <button class="flex items-center px-4 py-2 bg-secondary-50 hover:bg-secondary-100 text-secondary-500 text-sm font-medium rounded-lg transition-colors" id="customizeActions" title="Customize Quick Actions">
-                                    <i class="fas fa-sliders-h mr-2"></i> Customize
-                                </button>
+                            <p class="text-xs font-medium text-neutral-600">Users</p>
+                            <p class="text-[10px] text-neutral-400">{{ $stats['total_users'] }}</p>
+                        </a>
+                        <a href="{{ route('admin.requests.index') }}" class="group text-center">
+                            <div class="w-12 h-12 mx-auto rounded-lg bg-tertiary-50 group-hover:bg-tertiary-100 flex items-center justify-center transition-colors mb-2">
+                                <i class="fas fa-clipboard-list text-tertiary-500"></i>
                             </div>
-                        </div>
-                    </div>
-                    <div class="p-5 pt-4">
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4">
-                            <div>
-                                <a href="{{ route('admin.users.index') }}" class="flex flex-col items-center justify-center p-4 h-full rounded-xl hover:bg-neutral-50 transition-all duration-300 group">
-                                    <div class="mb-3 rounded-xl flex items-center justify-center w-14 h-14 bg-primary-50 group-hover:bg-primary-100 transition-colors">
-                                        <i class="fas fa-users text-primary-500 text-xl"></i>
-                                    </div>
-                                    <span class="text-sm font-medium text-primary-500 mb-1">Manage Users</span>
-                                    <span class="px-2.5 py-1 bg-primary-50 text-primary-500 text-xs font-medium rounded-full">{{ $stats['total_users'] }} Users</span>
-                                </a>
+                            <p class="text-xs font-medium text-neutral-600">Requests</p>
+                            <p class="text-[10px] text-neutral-400">{{ $stats['pending_requests'] }} pending</p>
+                        </a>
+                        <a href="{{ route('admin.tasks.index') }}" class="group text-center">
+                            <div class="w-12 h-12 mx-auto rounded-lg bg-accent-50 group-hover:bg-accent-100 flex items-center justify-center transition-colors mb-2">
+                                <i class="fas fa-tasks text-accent-500"></i>
                             </div>
-                            <div>
-                                <a href="{{ route('admin.requests.index') }}" class="flex flex-col items-center justify-center p-4 h-full rounded-xl hover:bg-neutral-50 transition-all duration-300 group">
-                                    <div class="mb-3 rounded-xl flex items-center justify-center w-14 h-14 bg-tertiary-50 group-hover:bg-tertiary-100 transition-colors">
-                                        <i class="fas fa-clipboard-list text-tertiary-500 text-xl"></i>
-                                    </div>
-                                    <span class="text-sm font-medium text-primary-500 mb-1">View Requests</span>
-                                    <span class="px-2.5 py-1 bg-tertiary-50 text-tertiary-500 text-xs font-medium rounded-full">{{ $stats['pending_requests'] }} Pending</span>
-                                </a>
+                            <p class="text-xs font-medium text-neutral-600">Tasks</p>
+                            <p class="text-[10px] text-neutral-400">{{ $stats['active_tasks'] }} active</p>
+                        </a>
+                        <a href="{{ route('admin.earnings-analytics.index') }}" class="group text-center">
+                            <div class="w-12 h-12 mx-auto rounded-lg bg-gradient-to-br from-success-50 to-accent-50 group-hover:from-success-100 group-hover:to-accent-100 flex items-center justify-center transition-colors mb-2">
+                                <i class="fas fa-money-bill-wave text-success-500"></i>
                             </div>
-                            <div>
-                                <a href="{{ route('admin.tasks.index') }}" class="flex flex-col items-center justify-center p-4 h-full rounded-xl hover:bg-neutral-50 transition-all duration-300 group">
-                                    <div class="mb-3 rounded-xl flex items-center justify-center w-14 h-14 bg-accent-50 group-hover:bg-accent-100 transition-colors">
-                                        <i class="fas fa-tasks text-accent-500 text-xl"></i>
-                                    </div>
-                                    <span class="text-sm font-medium text-primary-500 mb-1">Manage Tasks</span>
-                                    <span class="px-2.5 py-1 bg-accent-50 text-accent-500 text-xs font-medium rounded-full">{{ $stats['active_tasks'] }} Active</span>
-                                </a>
+                            <p class="text-xs font-medium text-neutral-600">Earnings</p>
+                            <p class="text-[10px] text-neutral-400">Analytics</p>
+                        </a>
+                        <a href="{{ route('admin.reports.index') }}" class="group text-center">
+                            <div class="w-12 h-12 mx-auto rounded-lg bg-tertiary-50 group-hover:bg-tertiary-100 flex items-center justify-center transition-colors mb-2">
+                                <i class="fas fa-chart-bar text-tertiary-500"></i>
                             </div>
-                            <div>
-                                <a href="{{ route('admin.reports.index') }}" class="flex flex-col items-center justify-center p-4 h-full rounded-xl hover:bg-neutral-50 transition-all duration-300 group">
-                                    <div class="mb-3 rounded-xl flex items-center justify-center w-14 h-14 bg-tertiary-50 group-hover:bg-tertiary-100 transition-colors">
-                                        <i class="fas fa-chart-bar text-tertiary-500 text-xl"></i>
-                                    </div>
-                                    <span class="text-sm font-medium text-primary-500 mb-1">View Reports</span>
-                                    <span class="px-2.5 py-1 bg-neutral-50 text-neutral-500 text-xs font-medium rounded-full">Analytics</span>
-                                </a>
+                            <p class="text-xs font-medium text-neutral-600">Reports</p>
+                            <p class="text-[10px] text-neutral-400">Analytics</p>
+                        </a>
+                        <a href="{{ route('admin.documents.index') }}" class="group text-center">
+                            <div class="w-12 h-12 mx-auto rounded-lg bg-neutral-100 group-hover:bg-neutral-200 flex items-center justify-center transition-colors mb-2">
+                                <i class="fas fa-folder-open text-neutral-500"></i>
                             </div>
-                            <div>
-                                <a href="{{ route('admin.documents.index') }}" class="flex flex-col items-center justify-center p-4 h-full rounded-xl hover:bg-neutral-50 transition-all duration-300 group">
-                                    <div class="mb-3 rounded-xl flex items-center justify-center w-14 h-14 bg-neutral-50 group-hover:bg-neutral-100 transition-colors">
-                                        <i class="fas fa-folder-open text-neutral-500 text-xl"></i>
-                                    </div>
-                                    <span class="text-sm font-medium text-primary-500 mb-1">Documents</span>
-                                    <span class="px-2.5 py-1 bg-neutral-50 text-neutral-500 text-xs font-medium rounded-full">Files</span>
-                                </a>
+                            <p class="text-xs font-medium text-neutral-600">Documents</p>
+                            <p class="text-[10px] text-neutral-400">Files</p>
+                        </a>
+                        <a href="{{ route('admin.profile') }}" class="group text-center">
+                            <div class="w-12 h-12 mx-auto rounded-lg bg-secondary-50 group-hover:bg-secondary-100 flex items-center justify-center transition-colors mb-2">
+                                <i class="fas fa-user text-secondary-500"></i>
                             </div>
-                            <div>
-                                <a href="{{ route('admin.profile') }}" class="flex flex-col items-center justify-center p-4 h-full rounded-xl hover:bg-neutral-50 transition-all duration-300 group">
-                                    <div class="mb-3 rounded-xl flex items-center justify-center w-14 h-14 bg-secondary-50 group-hover:bg-secondary-100 transition-colors">
-                                        <i class="fas fa-user text-secondary-500 text-xl"></i>
-                                    </div>
-                                    <span class="text-sm font-medium text-primary-500 mb-1">Your Profile</span>
-                                    <span class="px-2.5 py-1 bg-secondary-50 text-secondary-500 text-xs font-medium rounded-full">Settings</span>
-                                </a>
-                            </div>
-                        </div>
+                            <p class="text-xs font-medium text-neutral-600">Profile</p>
+                            <p class="text-[10px] text-neutral-400">Settings</p>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -532,6 +476,7 @@
     </div>
 </div>
 @endsection
+
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

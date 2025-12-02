@@ -160,7 +160,7 @@
                 
                 <!-- Financial Management Section -->
                 <div class="mb-1.5">
-                    <button @click="toggle('finance')" class="w-full flex items-center justify-between py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.payments*', 'admin.budget-requests*', 'admin.payouts*') ? 'bg-white/15 text-white' : '' }}">
+                    <button @click="toggle('finance')" class="w-full flex items-center justify-between py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.payments*', 'admin.budget-requests*', 'admin.payouts*', 'admin.earnings-analytics*', 'admin.hour-requests*') ? 'bg-white/15 text-white' : '' }}">
                         <div class="flex items-center">
                             <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg mr-3 group-hover:bg-white/10 transition-all duration-200">
                                 <i class="fas fa-wallet"></i>
@@ -170,6 +170,10 @@
                         <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="{ 'rotate-180': openSections.finance }"></i>
                     </button>
                     <div x-show="openSections.finance" x-collapse class="ml-3 mt-1.5 space-y-0.5">
+                        <a href="{{ route('admin.earnings-analytics.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.earnings-analytics*') ? 'bg-white/10 text-white font-medium' : '' }}">
+                            <i class="fas fa-chart-pie w-4 mr-3 text-xs"></i>
+                            <span>Earnings Analytics</span>
+                        </a>
                         <a href="{{ route('admin.payments.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.payments*') ? 'bg-white/10 text-white font-medium' : '' }}">
                             <i class="fas fa-credit-card w-4 mr-3 text-xs"></i>
                             <span>Payments</span>
@@ -177,6 +181,10 @@
                         <a href="{{ route('admin.payouts.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.payouts*') ? 'bg-white/10 text-white font-medium' : '' }}">
                             <i class="fas fa-money-check-alt w-4 mr-3 text-xs"></i>
                             <span>Payouts</span>
+                        </a>
+                        <a href="{{ route('admin.hour-requests.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.hour-requests*') ? 'bg-white/10 text-white font-medium' : '' }}">
+                            <i class="fas fa-hourglass-half w-4 mr-3 text-xs"></i>
+                            <span>Hour Requests</span>
                         </a>
                     </div>
                 </div>
@@ -495,7 +503,7 @@
                 openSections: {
                     users: {{ request()->routeIs('admin.users*', 'admin.clients*') ? 'true' : 'false' }},
                     projects: {{ request()->routeIs('admin.requests*', 'admin.projects*', 'admin.tasks*', 'admin.revisions*') ? 'true' : 'false' }},
-                    finance: {{ request()->routeIs('admin.payments*', 'admin.payouts*') ? 'true' : 'false' }},
+                    finance: {{ request()->routeIs('admin.payments*', 'admin.payouts*', 'admin.earnings-analytics*', 'admin.hour-requests*') ? 'true' : 'false' }},
                     communication: {{ request()->routeIs('admin.messages*', 'admin.feedback*', 'admin.announcements*') ? 'true' : 'false' }},
                     content: {{ request()->routeIs('admin.documents*', 'admin.templates*') ? 'true' : 'false' }},
                     rewards: {{ request()->routeIs('admin.coupons*', 'admin.loyalty*', 'admin.referrals*') ? 'true' : 'false' }},

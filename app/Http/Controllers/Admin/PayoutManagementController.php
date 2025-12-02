@@ -7,6 +7,7 @@ use App\Models\Payout;
 use App\Models\PayoutItem;
 use App\Models\TimeEntry;
 use App\Models\User;
+use App\Models\WalletTransaction;
 use App\Mail\PayoutApprovedMail;
 use App\Mail\PayoutRejectedMail;
 use App\Mail\PayoutPaidMail;
@@ -311,6 +312,140 @@ class PayoutManagementController extends Controller
         }
 
         return redirect()->back()->with('success', "$count time entries approved successfully.");
+    }
+
+    /**
+     * Approve a single time entry with optional adjustment
+     */
+    public function approveTimeEntry(Request $request, $id)
+    {
+        $request->validate([
+            'adjust' => 'nullable|boolean',
+            'adjusted_hours' => 'nullable|required_if:adjust,1|numeric|min:0',
+            'adjustment_reason' => 'nullable|required_if:adjust,1|string|max:500',
+        ]);
+
+        $timeEntry = TimeEntry::findOrFail($id);
+
+        if ($timeEntry->is_approved) {
+            return redirect()->back()->with('error', 'This time entry has already been approved.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Apply adjustment if requested
+            if ($request->adjust && $request->adjusted_hours !== null) {
+                $timeEntry->applyAdjustment(
+                    (float) $request->adjusted_hours,
+                    $request->adjustment_reason,
+                    auth()->id()
+                );
+            }
+
+            // Approve the entry
+            $timeEntry->update([
+                'is_approved' => true,
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+            ]);
+
+            // Update task earnings
+            $timeEntry->task?->updateEarnings();
+
+            // Update project assignment hour totals
+            $assignment = $timeEntry->getProjectAssignment();
+            $assignment?->updateHourTotals();
+
+            // Add earnings to adiutor's wallet
+            $adiutor = $timeEntry->adiutor;
+            $amount = $timeEntry->calculated_amount;
+            
+            if ($amount > 0 && $adiutor) {
+                $adiutor->addWorkEarnings(
+                    $amount,
+                    WalletTransaction::SOURCE_TIME_ENTRY,
+                    $timeEntry->id,
+                    "Time entry approved: " . ($timeEntry->description ?? 'Work on ' . ($timeEntry->task?->taskTitle ?? 'task')),
+                    auth()->id(),
+                    [
+                        'project_id' => $timeEntry->project_id,
+                        'task_id' => $timeEntry->task_id,
+                        'hours' => round($timeEntry->duration_minutes / 60, 2),
+                        'rate' => $timeEntry->hourly_rate,
+                    ]
+                );
+            }
+
+            DB::commit();
+
+            $message = 'Time entry approved successfully.';
+            if ($request->adjust) {
+                $message = "Time entry approved with adjustment to {$request->adjusted_hours} hours.";
+            }
+
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Failed to approve time entry', [
+                'time_entry_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', 'Failed to approve time entry. Please try again.');
+        }
+    }
+
+    /**
+     * Reject a time entry
+     */
+    public function rejectTimeEntry(Request $request, $id)
+    {
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        $timeEntry = TimeEntry::findOrFail($id);
+
+        if ($timeEntry->is_approved) {
+            return redirect()->back()->with('error', 'Cannot reject an already approved time entry.');
+        }
+
+        // Delete the time entry (or you could add a 'rejected' status instead)
+        $taskId = $timeEntry->task_id;
+        $timeEntry->delete();
+
+        // Update task earnings
+        $task = \App\Models\Task::find($taskId);
+        $task?->updateEarnings();
+
+        return redirect()->back()->with('success', 'Time entry rejected and removed.');
+    }
+
+    /**
+     * Get time entry details for adjustment modal (AJAX)
+     */
+    public function getTimeEntryDetails($id)
+    {
+        $timeEntry = TimeEntry::with(['adiutor', 'task.project'])->findOrFail($id);
+
+        return response()->json([
+            'id' => $timeEntry->id,
+            'adiutor_name' => $timeEntry->adiutor->fullName,
+            'task_title' => $timeEntry->task?->taskTitle,
+            'project_title' => $timeEntry->task?->project?->title,
+            'start_time' => $timeEntry->start_time?->format('M d, Y g:i A'),
+            'end_time' => $timeEntry->end_time?->format('M d, Y g:i A'),
+            'duration_minutes' => $timeEntry->duration_minutes,
+            'duration_hours' => round($timeEntry->duration_minutes / 60, 2),
+            'formatted_duration' => $timeEntry->getFormattedDuration(),
+            'hourly_rate' => (float) $timeEntry->hourly_rate,
+            'calculated_amount' => (float) $timeEntry->calculated_amount,
+            'formatted_amount' => $timeEntry->getFormattedAmount(),
+            'description' => $timeEntry->description,
+            'is_capped' => $timeEntry->is_capped,
+            'billable_minutes' => $timeEntry->billable_minutes,
+            'non_billable_minutes' => $timeEntry->non_billable_minutes,
+        ]);
     }
 
     /**

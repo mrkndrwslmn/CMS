@@ -104,7 +104,10 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'monthlyUsers', 'taskStats', 'pendingBudgetRequests'));
+        // Earnings Quick Stats (Phase 7)
+        $earningsStats = $this->getEarningsQuickStats();
+
+        return view('admin.dashboard', compact('stats', 'monthlyUsers', 'taskStats', 'pendingBudgetRequests', 'earningsStats'));
     }
 
     /**
@@ -395,5 +398,80 @@ class AdminController extends Controller
         User::where('id', $user->id)->update($userData);
 
         return redirect()->route('admin.profile')->with('success', 'Profile updated successfully.');
+    }
+
+    /**
+     * Get earnings quick stats for dashboard widget
+     */
+    private function getEarningsQuickStats()
+    {
+        // Get completed projects with their service requests to calculate actual revenue (after discounts)
+        $completedProjects = \App\Models\Project::where('status', 'completed')
+            ->with('serviceRequest')
+            ->get();
+        
+        // Calculate total earnings (approved_budget - discount from service request)
+        $totalProjectEarnings = $completedProjects->sum(function ($project) {
+            if ($project->serviceRequest) {
+                // Use approved_budget minus any discounts applied
+                $approved = $project->serviceRequest->approved_budget ?? $project->budget ?? 0;
+                $discount = $project->serviceRequest->total_discount_amount ?? 0;
+                return max(0, $approved - $discount);
+            }
+            return $project->budget ?? 0;
+        });
+        
+        // Get this month's completed projects
+        $thisMonthProjects = $completedProjects->filter(function ($project) {
+            return $project->completed_at && $project->completed_at->isCurrentMonth();
+        });
+        
+        $thisMonthProjectEarnings = $thisMonthProjects->sum(function ($project) {
+            if ($project->serviceRequest) {
+                $approved = $project->serviceRequest->approved_budget ?? $project->budget ?? 0;
+                $discount = $project->serviceRequest->total_discount_amount ?? 0;
+                return max(0, $approved - $discount);
+            }
+            return $project->budget ?? 0;
+        });
+        
+        // Get last month's completed projects for comparison
+        $lastMonthProjects = $completedProjects->filter(function ($project) {
+            return $project->completed_at && $project->completed_at->month === now()->subMonth()->month 
+                && $project->completed_at->year === now()->subMonth()->year;
+        });
+        
+        $lastMonthProjectEarnings = $lastMonthProjects->sum(function ($project) {
+            if ($project->serviceRequest) {
+                $approved = $project->serviceRequest->approved_budget ?? $project->budget ?? 0;
+                $discount = $project->serviceRequest->total_discount_amount ?? 0;
+                return max(0, $approved - $discount);
+            }
+            return $project->budget ?? 0;
+        });
+        
+        // Calculate month-over-month growth
+        $monthlyGrowth = $lastMonthProjectEarnings > 0 
+            ? round((($thisMonthProjectEarnings - $lastMonthProjectEarnings) / $lastMonthProjectEarnings) * 100, 1)
+            : ($thisMonthProjectEarnings > 0 ? 100 : 0);
+
+        return [
+            'total_earnings' => $totalProjectEarnings,
+            'this_month_earnings' => $thisMonthProjectEarnings,
+            'monthly_growth' => $monthlyGrowth,
+            'pending_approvals' => \App\Models\TimeEntry::where('is_approved', false)
+                ->whereNotNull('end_time')
+                ->count(),
+            'pending_payouts' => \App\Models\Payout::where('status', 'pending')
+                ->sum('amount'),
+            'adiutor_earnings_this_month' => \App\Models\TimeEntry::where('is_approved', true)
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('calculated_amount'),
+            'pending_hour_requests' => \App\Models\HourIncreaseRequest::where('status', 'pending')
+                ->count(),
+            'completed_projects' => $completedProjects->count(),
+            'active_projects' => \App\Models\Project::whereIn('status', ['active', 'in_progress'])->count(),
+        ];
     }
 }

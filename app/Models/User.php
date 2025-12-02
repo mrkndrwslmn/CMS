@@ -674,4 +674,126 @@ class User extends Authenticatable
         $minWithdrawal = config('referral.benefits.credits.minimum_withdrawal', 1000);
         return $this->referral_credits >= $amount && $amount >= $minWithdrawal;
     }
+
+    /**
+     * ==========================================
+     * UNIFIED WALLET SYSTEM
+     * ==========================================
+     */
+
+    /**
+     * Get all wallet transactions for this user
+     */
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+    /**
+     * Get work earnings wallet transactions
+     */
+    public function workEarningsTransactions(): HasMany
+    {
+        return $this->walletTransactions()->where('wallet_type', 'work_earnings');
+    }
+
+    /**
+     * Get the total available balance (work earnings + referral credits)
+     */
+    public function getTotalAvailableBalanceAttribute(): float
+    {
+        return ($this->work_earnings_balance ?? 0) + ($this->referral_credits ?? 0);
+    }
+
+    /**
+     * Get the total pending balance (work earnings + referral credits)
+     */
+    public function getTotalPendingBalanceAttribute(): float
+    {
+        return ($this->work_earnings_pending ?? 0) + ($this->referral_credits_pending ?? 0);
+    }
+
+    /**
+     * Get the total withdrawn (work earnings + referral credits)
+     */
+    public function getTotalWithdrawnAttribute(): float
+    {
+        return ($this->work_earnings_withdrawn ?? 0) + ($this->referral_credits_withdrawn ?? 0);
+    }
+
+    /**
+     * Add work earnings to balance and log transaction
+     */
+    public function addWorkEarnings(float $amount, string $sourceType, ?int $sourceId, string $description, ?int $performedBy = null, array $metadata = []): WalletTransaction
+    {
+        $balanceBefore = $this->work_earnings_balance ?? 0;
+        
+        $this->increment('work_earnings_balance', $amount);
+        
+        return WalletTransaction::create([
+            'user_id' => $this->id,
+            'transaction_type' => WalletTransaction::TYPE_WORK_EARNED,
+            'source_type' => $sourceType,
+            'source_id' => $sourceId,
+            'amount' => $amount,
+            'balance_before' => $balanceBefore,
+            'balance_after' => $this->fresh()->work_earnings_balance,
+            'wallet_type' => WalletTransaction::WALLET_WORK_EARNINGS,
+            'description' => $description,
+            'metadata' => $metadata,
+            'performed_by' => $performedBy,
+        ]);
+    }
+
+    /**
+     * Check if user can withdraw from work earnings
+     */
+    public function canWithdrawWorkEarnings(float $amount): bool
+    {
+        $minWithdrawal = config('earnings.minimum_withdrawal', 500);
+        return ($this->work_earnings_balance ?? 0) >= $amount && $amount >= $minWithdrawal;
+    }
+
+    /**
+     * Get formatted work earnings balance
+     */
+    public function getFormattedWorkEarningsAttribute(): string
+    {
+        return '₱' . number_format($this->work_earnings_balance ?? 0, 2);
+    }
+
+    /**
+     * Get formatted total available balance
+     */
+    public function getFormattedTotalBalanceAttribute(): string
+    {
+        return '₱' . number_format($this->total_available_balance, 2);
+    }
+
+    /**
+     * Get recent wallet transactions (for dashboard display)
+     */
+    public function getRecentWalletTransactions(int $limit = 10)
+    {
+        return $this->walletTransactions()
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get work earnings statistics
+     */
+    public function getWorkEarningsStatsAttribute(): array
+    {
+        $transactions = $this->workEarningsTransactions();
+        
+        return [
+            'available' => $this->work_earnings_balance ?? 0,
+            'pending' => $this->work_earnings_pending ?? 0,
+            'withdrawn' => $this->work_earnings_withdrawn ?? 0,
+            'total_earned' => $transactions->where('amount', '>', 0)->sum('amount'),
+            'transaction_count' => $transactions->count(),
+        ];
+    }
 }

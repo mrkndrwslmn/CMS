@@ -74,6 +74,14 @@ class Payout extends Model
     }
 
     /**
+     * Get fixed rate project assignments included in this payout
+     */
+    public function fixedRateAssignments()
+    {
+        return $this->hasMany(ProjectAssignment::class, 'fixed_rate_payout_id');
+    }
+
+    /**
      * Check if payout is pending
      */
     public function isPending(): bool

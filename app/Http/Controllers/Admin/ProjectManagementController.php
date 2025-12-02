@@ -9,6 +9,7 @@ use App\Models\GroupChat;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Models\Task;
+use App\Models\WalletTransaction;
 use App\Mail\ProjectAssigned;
 use App\Mail\ProjectCancelledMail;
 use App\Mail\AdiutorRemovedFromProjectMail;
@@ -90,13 +91,60 @@ class ProjectManagementController extends Controller
      */
     public function show($id)
     {
-        $project = Project::with(['serviceRequest', 'client', 'adiutors', 'tasks.assignedUser', 'tasks.creator'])
+        $project = Project::with(['serviceRequest', 'client', 'adiutors', 'tasks.assignedUser', 'tasks.creator', 'assignments'])
                          ->findOrFail($id);
 
         // Calculate budget overview
         $totalAllocated = $project->tasks->sum('allocated_budget') ?? 0;
         $totalSpent = $project->tasks->sum('actual_cost') ?? 0;
+        
+        // Calculate Adiutor Earnings - PHASE 2 ENHANCEMENT
+        // 1. Approved Time Entries (Hourly Rate)
+        $approvedTimeEntries = \App\Models\TimeEntry::whereHas('task', function($query) use ($project) {
+                $query->where('project_id', $project->id);
+            })
+            ->where('is_approved', true)
+            ->get();
+        
+        $hourlyEarnings = $approvedTimeEntries->sum('calculated_amount') ?? 0;
+        $totalApprovedHours = $approvedTimeEntries->sum('duration_minutes') / 60;
+        
+        // 2. Approved Fixed Rate Payments
+        $approvedFixedRates = $project->assignments()
+            ->where('payment_type', 'fixed_rate')
+            ->where('fixed_rate_approved', true)
+            ->get();
+        
+        $fixedRateEarnings = $approvedFixedRates->sum('agreed_rate') ?? 0;
+        
+        // 3. Pending Fixed Rates (not yet approved)
+        $pendingFixedRates = $project->assignments()
+            ->where('payment_type', 'fixed_rate')
+            ->where('fixed_rate_approved', false)
+            ->whereNotIn('status', ['removed', 'declined'])
+            ->get();
+        
+        $pendingFixedRateAmount = $pendingFixedRates->sum('agreed_rate') ?? 0;
+        
+        // 4. Pending Time Entries (not yet approved)
+        $pendingTimeEntries = \App\Models\TimeEntry::whereHas('task', function($query) use ($project) {
+                $query->where('project_id', $project->id);
+            })
+            ->where('is_approved', false)
+            ->get();
+        
+        $pendingHourlyAmount = $pendingTimeEntries->sum('calculated_amount') ?? 0;
+        
+        // Total Adiutor Earnings (Approved)
+        $totalAdiutorEarnings = $hourlyEarnings + $fixedRateEarnings;
+        
+        // Total Pending Earnings
+        $totalPendingEarnings = $pendingHourlyAmount + $pendingFixedRateAmount;
+        
+        // Remaining budget after earnings
         $remainingBudget = ($project->budget ?? 0) - $totalAllocated;
+        $remainingAfterEarnings = ($project->budget ?? 0) - $totalAdiutorEarnings;
+        $projectedRemaining = $remainingAfterEarnings - $totalPendingEarnings;
 
         $budgetOverview = [
             'project_budget' => $project->budget,
@@ -104,7 +152,28 @@ class ProjectManagementController extends Controller
             'total_spent' => $totalSpent,
             'remaining_budget' => $remainingBudget,
             'is_over_budget' => $remainingBudget < 0,
-            'budget_utilization_percentage' => $project->budget > 0 ? round(($totalAllocated / $project->budget) * 100, 2) : 0
+            'budget_utilization_percentage' => $project->budget > 0 ? round(($totalAllocated / $project->budget) * 100, 2) : 0,
+            
+            // Phase 2: Adiutor Earnings Enhancement
+            'adiutor_earnings' => [
+                'hourly' => [
+                    'approved_amount' => $hourlyEarnings,
+                    'approved_hours' => round($totalApprovedHours, 2),
+                    'pending_amount' => $pendingHourlyAmount,
+                    'entry_count' => $approvedTimeEntries->count(),
+                ],
+                'fixed_rate' => [
+                    'approved_amount' => $fixedRateEarnings,
+                    'approved_count' => $approvedFixedRates->count(),
+                    'pending_amount' => $pendingFixedRateAmount,
+                    'pending_count' => $pendingFixedRates->count(),
+                ],
+                'total_approved' => $totalAdiutorEarnings,
+                'total_pending' => $totalPendingEarnings,
+                'remaining_after_earnings' => $remainingAfterEarnings,
+                'projected_remaining' => $projectedRemaining,
+                'earnings_percentage' => $project->budget > 0 ? round(($totalAdiutorEarnings / $project->budget) * 100, 2) : 0,
+            ],
         ];
 
         // Get available adiutors for assignment with detailed information
@@ -473,9 +542,11 @@ class ProjectManagementController extends Controller
     {
         $request->validate([
             'adiutor_id' => 'required|exists:users,id',
-            'hourly_rate' => 'nullable|numeric|min:0',
+            'payment_type' => 'required|in:fixed_rate,hourly_rate',
+            'hourly_rate' => 'nullable|numeric|min:0|required_if:payment_type,hourly_rate',
+            'max_hours' => 'nullable|numeric|min:0.5',
             'requires_time_tracking' => 'nullable|boolean',
-            'agreed_rate' => 'nullable|numeric|min:0',
+            'agreed_rate' => 'nullable|numeric|min:0|required_if:payment_type,fixed_rate',
             'expected_completion' => 'nullable|date',
             'notes' => 'nullable|string|max:500',
         ]);
@@ -491,35 +562,41 @@ class ProjectManagementController extends Controller
             return redirect()->back()->with('error', 'Adiutor is already assigned to this project.');
         }
 
+        // Prepare assignment data based on payment type
+        $assignmentData = [
+            'payment_type' => $request->payment_type,
+            'start_date' => now(),
+            'expected_completion' => $request->expected_completion,
+            'status' => 'assigned',
+            'notes' => $request->notes,
+        ];
+
+        // Set payment-specific fields based on payment type
+        if ($request->payment_type === 'fixed_rate') {
+            $assignmentData['agreed_rate'] = $request->agreed_rate;
+            $assignmentData['hourly_rate'] = null;
+            $assignmentData['max_hours'] = null; // Fixed rate doesn't need max hours
+            $assignmentData['requires_time_tracking'] = false;
+        } else {
+            $assignmentData['hourly_rate'] = $request->hourly_rate;
+            $assignmentData['max_hours'] = $request->max_hours; // Optional max hours limit
+            $assignmentData['agreed_rate'] = null;
+            $assignmentData['requires_time_tracking'] = true;
+        }
+
         // If there's a removed/declined assignment, update it; otherwise create new
         if ($existingAssignment && in_array($existingAssignment->status, ['removed', 'declined'])) {
             // Update existing assignment
-            $existingAssignment->update([
-                'hourly_rate' => $request->hourly_rate,
-                'requires_time_tracking' => $request->has('requires_time_tracking'),
-                'agreed_rate' => $request->agreed_rate,
-                'start_date' => now(),
-                'expected_completion' => $request->expected_completion,
-                'status' => 'assigned',
-                'notes' => $request->notes,
-            ]);
+            $existingAssignment->update($assignmentData);
             
             // Manually add to group chat since update doesn't trigger created event
             $groupChat = GroupChat::getOrCreateForProject($id);
             $groupChat->addMember($request->adiutor_id);
         } else {
             // Create new assignment (will automatically add to group chat via model boot method)
-            ProjectAssignment::create([
-                'project_id' => $id,
-                'adiutor_id' => $request->adiutor_id,
-                'hourly_rate' => $request->hourly_rate,
-                'requires_time_tracking' => $request->has('requires_time_tracking'),
-                'agreed_rate' => $request->agreed_rate,
-                'start_date' => now(),
-                'expected_completion' => $request->expected_completion,
-                'status' => 'assigned',
-                'notes' => $request->notes,
-            ]);
+            $assignmentData['project_id'] = $id;
+            $assignmentData['adiutor_id'] = $request->adiutor_id;
+            ProjectAssignment::create($assignmentData);
         }
 
         // Send project assignment email
@@ -538,7 +615,9 @@ class ProjectManagementController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', 'Adiutor assigned to project successfully.');
+        $paymentLabel = $request->payment_type === 'fixed_rate' ? 'Fixed Rate' : 'Hourly Rate';
+        $maxHoursNote = $request->max_hours ? " with {$request->max_hours} hour limit" : '';
+        return redirect()->back()->with('success', "Adiutor assigned to project with {$paymentLabel} payment{$maxHoursNote} successfully.");
     }
 
     /**
@@ -880,5 +959,200 @@ class ProjectManagementController extends Controller
         });
 
         return view('admin.projects.schedule', compact('project', 'assignedAdiutors', 'unscheduledTasks'));
+    }
+
+    /**
+     * Approve fixed rate payment for an adiutor assignment
+     * 
+     * This is for assignments with payment_type = 'fixed_rate'
+     * When approved, the adiutor becomes eligible to receive the agreed_rate amount in their payout
+     */
+    public function approveFixedRate(Request $request, $projectId, $assignmentId)
+    {
+        $project = Project::findOrFail($projectId);
+        $assignment = ProjectAssignment::where('id', $assignmentId)
+            ->where('project_id', $projectId)
+            ->firstOrFail();
+
+        // Validate payment type is fixed rate
+        if (!$assignment->isFixedRate()) {
+            return redirect()->back()
+                ->with('error', 'This assignment uses hourly rate payment, not fixed rate. Time entries must be approved individually.');
+        }
+
+        // Validate assignment status (must be completed or at least in active status)
+        if (!in_array($assignment->status, ['completed', 'active', 'assigned'])) {
+            return redirect()->back()
+                ->with('error', 'Assignment must be active or completed to approve fixed rate payment.');
+        }
+
+        // Check if already approved
+        if ($assignment->fixed_rate_approved) {
+            return redirect()->back()
+                ->with('error', 'Fixed rate has already been approved for this assignment.');
+        }
+
+        // Validate agreed_rate exists and is greater than 0
+        if (!$assignment->agreed_rate || $assignment->agreed_rate <= 0) {
+            return redirect()->back()
+                ->with('error', 'No agreed rate set for this assignment. Please edit the assignment first.');
+        }
+
+        try {
+            DB::transaction(function() use ($assignment) {
+                // Mark as approved
+                $assignment->update([
+                    'fixed_rate_approved' => true,
+                    'fixed_rate_approved_at' => now(),
+                    'fixed_rate_approved_by' => Auth::id(),
+                ]);
+
+                // Add earnings to adiutor's wallet
+                $adiutor = $assignment->adiutor;
+                $amount = $assignment->agreed_rate;
+                
+                if ($amount > 0 && $adiutor) {
+                    $adiutor->addWorkEarnings(
+                        $amount,
+                        WalletTransaction::SOURCE_FIXED_RATE,
+                        $assignment->id,
+                        "Fixed rate payment for project: " . ($assignment->project?->title ?? 'Project'),
+                        Auth::id(),
+                        [
+                            'project_id' => $assignment->project_id,
+                            'agreed_rate' => $assignment->agreed_rate,
+                        ]
+                    );
+                }
+
+                // Log the approval
+                \Log::info('Fixed rate approved for assignment', [
+                    'assignment_id' => $assignment->id,
+                    'project_id' => $assignment->project_id,
+                    'adiutor_id' => $assignment->adiutor_id,
+                    'agreed_rate' => $assignment->agreed_rate,
+                    'approved_by' => Auth::id(),
+                ]);
+            });
+
+            $adiutor = $assignment->adiutor;
+            $formattedAmount = '₱' . number_format($assignment->agreed_rate, 2);
+
+            return redirect()->back()
+                ->with('success', "Fixed rate payment of {$formattedAmount} approved for {$adiutor->fullName}. This amount is now available for payout.");
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to approve fixed rate', [
+                'assignment_id' => $assignment->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Failed to approve fixed rate payment. Please try again.');
+        }
+    }
+
+    /**
+     * Revoke fixed rate approval (in case of mistake)
+     */
+    public function revokeFixedRateApproval(Request $request, $projectId, $assignmentId)
+    {
+        $project = Project::findOrFail($projectId);
+        $assignment = ProjectAssignment::where('id', $assignmentId)
+            ->where('project_id', $projectId)
+            ->firstOrFail();
+
+        // Validate it's a fixed rate assignment
+        if (!$assignment->isFixedRate()) {
+            return redirect()->back()
+                ->with('error', 'This assignment does not use fixed rate payment.');
+        }
+
+        // Check if already paid
+        if ($assignment->fixed_rate_paid) {
+            return redirect()->back()
+                ->with('error', 'Cannot revoke approval - payment has already been processed.');
+        }
+
+        // Check if not approved
+        if (!$assignment->fixed_rate_approved) {
+            return redirect()->back()
+                ->with('error', 'Fixed rate has not been approved yet.');
+        }
+
+        try {
+            DB::transaction(function() use ($assignment) {
+                $assignment->update([
+                    'fixed_rate_approved' => false,
+                    'fixed_rate_approved_at' => null,
+                    'fixed_rate_approved_by' => null,
+                ]);
+
+                \Log::info('Fixed rate approval revoked', [
+                    'assignment_id' => $assignment->id,
+                    'revoked_by' => Auth::id(),
+                ]);
+            });
+
+            return redirect()->back()
+                ->with('success', 'Fixed rate approval has been revoked.');
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to revoke fixed rate approval', [
+                'assignment_id' => $assignment->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Failed to revoke approval. Please try again.');
+        }
+    }
+
+    /**
+     * Update assignment payment type and rate
+     */
+    public function updateAssignmentPayment(Request $request, $projectId, $assignmentId)
+    {
+        $request->validate([
+            'payment_type' => 'required|in:fixed_rate,hourly_rate',
+            'agreed_rate' => 'nullable|numeric|min:0',
+            'hourly_rate' => 'nullable|numeric|min:0',
+        ]);
+
+        $project = Project::findOrFail($projectId);
+        $assignment = ProjectAssignment::where('id', $assignmentId)
+            ->where('project_id', $projectId)
+            ->firstOrFail();
+
+        // Cannot change payment type if already has approved payments
+        if ($assignment->fixed_rate_approved || $assignment->fixed_rate_paid) {
+            return redirect()->back()
+                ->with('error', 'Cannot change payment type - fixed rate has already been approved or paid.');
+        }
+
+        // Check for approved hourly entries
+        $hasApprovedHourlyEntries = $assignment->timeEntries()->where('is_approved', true)->exists();
+        if ($hasApprovedHourlyEntries) {
+            return redirect()->back()
+                ->with('error', 'Cannot change payment type - there are already approved hourly time entries.');
+        }
+
+        $updateData = [
+            'payment_type' => $request->payment_type,
+        ];
+
+        // Set appropriate rate based on payment type
+        if ($request->payment_type === 'fixed_rate') {
+            $updateData['agreed_rate'] = $request->agreed_rate;
+            $updateData['requires_time_tracking'] = false;
+        } else {
+            $updateData['hourly_rate'] = $request->hourly_rate;
+            $updateData['requires_time_tracking'] = true;
+        }
+
+        $assignment->update($updateData);
+
+        return redirect()->back()
+            ->with('success', 'Assignment payment settings updated successfully.');
     }
 }

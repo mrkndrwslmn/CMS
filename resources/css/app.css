@@ -177,7 +177,6 @@
 }
 
 body {
-    background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-primary-100) 50%, var(--color-primary-200) 100%);
     overflow-x: hidden;
     scroll-behavior: smooth;
     min-height: 100vh;

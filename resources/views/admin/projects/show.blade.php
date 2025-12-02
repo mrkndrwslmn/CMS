@@ -179,6 +179,7 @@
                         @endif
                     </div>
                     <div class="p-6">
+                        <!-- Main Budget Stats -->
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                             <div class="text-center p-4 bg-primary-50 rounded-lg">
                                 <p class="text-sm text-primary-600 font-medium mb-1">Project Budget</p>
@@ -188,34 +189,115 @@
                                 @endif
                             </div>
                             <div class="text-center p-4 bg-warning-50 rounded-lg">
-                                <p class="text-sm text-warning-600 font-medium mb-1">Allocated</p>
+                                <p class="text-sm text-warning-600 font-medium mb-1">Task Allocated</p>
                                 <p class="text-2xl font-bold text-warning-900">₱{{ number_format($budgetOverview['total_allocated'], 2) }}</p>
                             </div>
-                            <div class="text-center p-4 bg-error-50 rounded-lg">
-                                <p class="text-sm text-error-600 font-medium mb-1">Spent</p>
-                                <p class="text-2xl font-bold text-error-900">₱{{ number_format($budgetOverview['total_spent'], 2) }}</p>
+                            <div class="text-center p-4 bg-purple-50 rounded-lg">
+                                <p class="text-sm text-purple-600 font-medium mb-1">Adiutor Earnings</p>
+                                <p class="text-2xl font-bold text-purple-900">₱{{ number_format($budgetOverview['adiutor_earnings']['total_approved'] ?? 0, 2) }}</p>
+                                <p class="text-xs text-neutral-500 mt-1">Approved payments</p>
                             </div>
                             <div class="text-center p-4 bg-success-50 rounded-lg">
                                 <p class="text-sm text-success-600 font-medium mb-1">Remaining</p>
-                                <p class="text-2xl font-bold {{ $budgetOverview['is_over_budget'] ? 'text-error-900' : 'text-success-900' }}">
-                                    ₱{{ number_format($budgetOverview['remaining_budget'], 2) }}
+                                <p class="text-2xl font-bold {{ ($budgetOverview['adiutor_earnings']['remaining_after_earnings'] ?? 0) < 0 ? 'text-error-900' : 'text-success-900' }}">
+                                    ₱{{ number_format($budgetOverview['adiutor_earnings']['remaining_after_earnings'] ?? $budgetOverview['remaining_budget'], 2) }}
                                 </p>
+                                <p class="text-xs text-neutral-500 mt-1">After earnings</p>
                             </div>
                         </div>
+
+                        <!-- Adiutor Earnings Breakdown -->
+                        @if(isset($budgetOverview['adiutor_earnings']))
+                        <div class="border border-neutral-200 rounded-lg p-4 mb-6">
+                            <h3 class="text-sm font-semibold text-neutral-700 mb-4 flex items-center">
+                                <i class="fas fa-wallet text-purple-500 mr-2"></i>
+                                Adiutor Earnings Breakdown
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Hourly Rate Earnings -->
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-sm font-medium text-blue-700">
+                                            <i class="fas fa-clock mr-1"></i>Hourly Rate
+                                        </span>
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                            {{ $budgetOverview['adiutor_earnings']['hourly']['entry_count'] }} entries
+                                        </span>
+                                    </div>
+                                    <p class="text-lg font-bold text-blue-900">
+                                        ₱{{ number_format($budgetOverview['adiutor_earnings']['hourly']['approved_amount'], 2) }}
+                                    </p>
+                                    <p class="text-xs text-blue-600 mt-1">
+                                        {{ $budgetOverview['adiutor_earnings']['hourly']['approved_hours'] }} hours approved
+                                    </p>
+                                    @if($budgetOverview['adiutor_earnings']['hourly']['pending_amount'] > 0)
+                                        <p class="text-xs text-warning-600 mt-1">
+                                            <i class="fas fa-hourglass-half mr-1"></i>
+                                            ₱{{ number_format($budgetOverview['adiutor_earnings']['hourly']['pending_amount'], 2) }} pending
+                                        </p>
+                                    @endif
+                                </div>
+
+                                <!-- Fixed Rate Earnings -->
+                                <div class="bg-purple-50 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-sm font-medium text-purple-700">
+                                            <i class="fas fa-file-invoice-dollar mr-1"></i>Fixed Rate
+                                        </span>
+                                        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                                            {{ $budgetOverview['adiutor_earnings']['fixed_rate']['approved_count'] }} approved
+                                        </span>
+                                    </div>
+                                    <p class="text-lg font-bold text-purple-900">
+                                        ₱{{ number_format($budgetOverview['adiutor_earnings']['fixed_rate']['approved_amount'], 2) }}
+                                    </p>
+                                    @if($budgetOverview['adiutor_earnings']['fixed_rate']['pending_count'] > 0)
+                                        <p class="text-xs text-warning-600 mt-1">
+                                            <i class="fas fa-hourglass-half mr-1"></i>
+                                            {{ $budgetOverview['adiutor_earnings']['fixed_rate']['pending_count'] }} pending 
+                                            (₱{{ number_format($budgetOverview['adiutor_earnings']['fixed_rate']['pending_amount'], 2) }})
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Projected Budget Warning -->
+                            @if($budgetOverview['adiutor_earnings']['total_pending'] > 0)
+                                <div class="mt-4 bg-warning-50 border border-warning-200 rounded-lg p-3">
+                                    <div class="flex items-start">
+                                        <i class="fas fa-exclamation-triangle text-warning-500 mt-0.5 mr-2"></i>
+                                        <div class="text-sm">
+                                            <p class="font-medium text-warning-800">Pending Approvals</p>
+                                            <p class="text-warning-700">
+                                                ₱{{ number_format($budgetOverview['adiutor_earnings']['total_pending'], 2) }} in pending payments.
+                                                Projected remaining: 
+                                                <span class="font-semibold {{ $budgetOverview['adiutor_earnings']['projected_remaining'] < 0 ? 'text-error-600' : '' }}">
+                                                    ₱{{ number_format($budgetOverview['adiutor_earnings']['projected_remaining'], 2) }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                        @endif
 
                         <!-- Budget Utilization Bar -->
                         <div>
                             <div class="flex justify-between text-sm mb-2">
-                                <span class="text-neutral-600">Budget Utilization</span>
-                                <span class="font-semibold {{ $budgetOverview['is_over_budget'] ? 'text-error-600' : 'text-neutral-900' }}">
-                                    {{ $budgetOverview['budget_utilization_percentage'] }}%
+                                <span class="text-neutral-600">Earnings vs Budget</span>
+                                <span class="font-semibold {{ ($budgetOverview['adiutor_earnings']['earnings_percentage'] ?? 0) > 100 ? 'text-error-600' : 'text-neutral-900' }}">
+                                    {{ $budgetOverview['adiutor_earnings']['earnings_percentage'] ?? $budgetOverview['budget_utilization_percentage'] }}%
                                 </span>
                             </div>
                             <div class="w-full bg-neutral-200 rounded-full h-3">
-                                <div class="h-3 rounded-full {{ $budgetOverview['is_over_budget'] ? 'bg-error-600' : 'bg-success-600' }}" 
-                                     style="width: {{ min($budgetOverview['budget_utilization_percentage'], 100) }}%">
+                                <div class="h-3 rounded-full {{ ($budgetOverview['adiutor_earnings']['earnings_percentage'] ?? 0) > 100 ? 'bg-error-600' : 'bg-purple-600' }}" 
+                                     style="width: {{ min($budgetOverview['adiutor_earnings']['earnings_percentage'] ?? $budgetOverview['budget_utilization_percentage'], 100) }}%">
                                 </div>
                             </div>
+                            <p class="text-xs text-neutral-500 mt-1">
+                                Shows approved adiutor earnings as percentage of total project budget
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -296,71 +378,107 @@
             <div class="lg:col-span-1">
                 <!-- Client Information Card -->
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                    <div class="px-6 py-4 border-b border-neutral-200">
-                        <h2 class="text-lg font-semibold text-primary-500">Client Information</h2>
+                    <!-- Header -->
+                    <div class="px-4 py-3 border-b border-neutral-100 flex items-center gap-2">
+                        <div class="w-7 h-7 bg-primary-50 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-user text-primary-500 text-xs"></i>
+                        </div>
+                        <h2 class="text-sm font-semibold text-neutral-800">Client Information</h2>
                     </div>
-                    <div class="p-6">
-                        <div class="flex items-center mb-6">
-                            <div class="bg-primary-100 h-12 w-12 rounded-full flex items-center justify-center text-primary-600 mr-4">
-                                <i class="fas fa-user text-xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-medium text-neutral-900">{{ $project->client->fullName }}</h3>
-                                <p class="text-sm text-neutral-500">{{ $project->client->email }}</p>
-                            </div>
-                        </div>
-                        
-                        @if($project->client->phone)
-                        <div class="space-y-3 mb-6">
-                            <div class="flex">
-                                <div class="w-8 flex-shrink-0 text-neutral-400">
-                                    <i class="fas fa-phone"></i>
+                    
+                    <!-- Content -->
+                    <div class="p-3">
+                        <div class="p-3 bg-neutral-50 rounded-lg">
+                            <!-- Client Profile -->
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 shadow-sm">
+                                    {{ substr($project->client->fullName, 0, 1) }}
                                 </div>
-                                <div>
-                                    <div class="text-sm font-medium text-neutral-500">Phone</div>
-                                    <div class="text-neutral-900">{{ $project->client->phone }}</div>
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-medium text-neutral-900 text-sm truncate">{{ $project->client->fullName }}</h3>
+                                    <p class="text-xs text-neutral-500 truncate">{{ $project->client->email }}</p>
                                 </div>
                             </div>
-                        </div>
-                        @endif
-                        
-                        <div class="pt-4 border-t border-neutral-100">
+                            
+                            <!-- Contact Details -->
+                            @if($project->client->phone)
+                            <div class="py-2 px-2.5 bg-white rounded-md border border-neutral-200/60 mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 bg-neutral-100 rounded flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-phone text-neutral-500 text-[10px]"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[10px] text-neutral-400 uppercase tracking-wide">Phone</p>
+                                        <p class="text-sm text-neutral-900 truncate">{{ $project->client->phone }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                            
+                            <!-- View Profile Link -->
                             <a href="{{ route('admin.clients.show', $project->client->id) }}" 
-                               class="inline-flex items-center text-primary-600 hover:text-primary-700">
+                            class="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-md transition-colors">
                                 <span>View Client Profile</span>
-                                <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                                <i class="fas fa-arrow-right text-[10px]"></i>
                             </a>
                         </div>
                     </div>
                 </div>
 
+
                 <!-- Related Service Request -->
                 @if($project->serviceRequest)
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                    <div class="px-6 py-4 border-b border-neutral-200">
-                        <h2 class="text-lg font-semibold text-primary-500">Related Service Request</h2>
-                    </div>
-                    <div class="p-6">
-                        <div class="space-y-3 mb-6">
-                            <div class="flex">
-                                <div class="w-32 text-neutral-500">Request ID:</div>
-                                <div class="flex-1 text-neutral-900 font-medium">#{{ $project->serviceRequest->id }}</div>
+                    <!-- Header -->
+                    <div class="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 bg-secondary-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-alt text-secondary-500 text-xs"></i>
                             </div>
-                            <div class="flex">
-                                <div class="w-32 text-neutral-500">Service Type:</div>
-                                <div class="flex-1 text-neutral-900">{{ $project->serviceRequest->service_type ?? 'N/A' }}</div>
-                            </div>
-                            <div class="flex">
-                                <div class="w-32 text-neutral-500">Submitted:</div>
-                                <div class="flex-1 text-neutral-900">{{ $project->serviceRequest->created_at->format('M d, Y') }}</div>
-                            </div>
+                            <h2 class="text-sm font-semibold text-neutral-800">Service Request</h2>
                         </div>
-                        
-                        <div class="pt-4 border-t border-neutral-100">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary-100 text-primary-700">
+                            #{{ $project->serviceRequest->id }}
+                        </span>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-3">
+                        <div class="p-3 bg-neutral-50 rounded-lg">
+                            <!-- Request Details -->
+                            <div class="space-y-2 mb-3">
+                                <!-- Service Type -->
+                                <div class="py-2 px-2.5 bg-white rounded-md border border-neutral-200/60">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 bg-accent-100 rounded flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-concierge-bell text-accent-600 text-[10px]"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-[10px] text-neutral-400 uppercase tracking-wide">Service Type</p>
+                                            <p class="text-sm text-neutral-900 truncate">{{ $project->serviceRequest->service_type ?? 'N/A' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Submitted Date -->
+                                <div class="py-2 px-2.5 bg-white rounded-md border border-neutral-200/60">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 bg-neutral-100 rounded flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-calendar-alt text-neutral-500 text-[10px]"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-[10px] text-neutral-400 uppercase tracking-wide">Submitted</p>
+                                            <p class="text-sm text-neutral-900">{{ $project->serviceRequest->created_at->format('M d, Y') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- View Details Link -->
                             <a href="{{ route('admin.requests.show', $project->serviceRequest->id) }}" 
-                               class="inline-flex items-center text-primary-600 hover:text-primary-700">
+                            class="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-md transition-colors">
                                 <span>View Request Details</span>
-                                <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                                <i class="fas fa-arrow-right text-[10px]"></i>
                             </a>
                         </div>
                     </div>
@@ -369,54 +487,183 @@
 
                 <!-- Assigned Team -->
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                    <div class="px-6 py-4 border-b border-neutral-200 flex justify-between items-center">
-                        <h2 class="text-lg font-semibold text-primary-500">Assigned Team</h2>
+                    <!-- Header -->
+                    <div class="px-4 py-3 border-b border-neutral-100 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 bg-primary-50 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-primary-500 text-xs"></i>
+                            </div>
+                            <h2 class="text-sm font-semibold text-neutral-800">Assigned Team</h2>
+                            @if($project->adiutors->count() > 0)
+                                <span class="bg-neutral-100 text-neutral-600 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                                    {{ $project->adiutors->count() }}
+                                </span>
+                            @endif
+                        </div>
                         <button onclick="showAssignModal()"
                                 type="button"
-                                class="inline-flex items-center px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors">
-                            <i class="fas fa-plus mr-2"></i>Assign Adiutor
+                                class="inline-flex items-center justify-center w-7 h-7 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-xs transition-colors"
+                                title="Assign Adiutor">
+                            <i class="fas fa-plus"></i>
                         </button>
                     </div>
-                    <div class="p-6">
+                    
+                    <!-- Team List -->
+                    <div class="p-3">
                         @if($project->adiutors->count() > 0)
-                            <div class="space-y-3">
+                            <div class="space-y-2">
                                 @foreach($project->adiutors as $adiutor)
-                                <div class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
-                                    <div class="flex items-center">
-                                        <div class="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                                <div class="group p-3 bg-neutral-50 hover:bg-neutral-100/80 rounded-lg transition-colors">
+                                    <!-- Member Info Row -->
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <div class="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 shadow-sm">
                                             {{ substr($adiutor->fullName, 0, 1) }}
                                         </div>
-                                        <div class="flex-1">
-                                            <p class="font-medium text-neutral-900">{{ $adiutor->fullName }}</p>
-                                            <p class="text-xs text-neutral-500">{{ $adiutor->email }}</p>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-medium text-neutral-900 text-sm truncate">{{ $adiutor->fullName }}</p>
+                                            <p class="text-xs text-neutral-500 truncate">{{ $adiutor->email }}</p>
                                         </div>
                                     </div>
-                                    <form action="{{ route('admin.projects.remove-adiutor', [$project->id, $adiutor->id]) }}" 
-                                          method="POST"
-                                          onsubmit="return confirm('Are you sure you want to remove this adiutor from the project?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                                class="text-error-600 hover:text-error-700 text-sm font-medium transition-colors">
-                                            <i class="fas fa-times mr-1"></i>Remove
-                                        </button>
-                                    </form>
+                                    
+                                    <!-- Payment Details -->
+                                    <div class="space-y-2">
+                                        @if($adiutor->pivot->payment_type === 'fixed_rate')
+                                            <!-- Fixed Rate Info -->
+                                            <div class="flex items-center justify-between py-2 px-2.5 bg-white rounded-md border border-neutral-200/60">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                                                        <i class="fas fa-file-invoice-dollar mr-1 text-[10px]"></i>Fixed
+                                                    </span>
+                                                    <span class="text-sm font-semibold text-neutral-900">₱{{ number_format($adiutor->pivot->agreed_rate, 2) }}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Approval Status -->
+                                            <div class="flex items-center justify-between py-2 px-2.5 bg-white rounded-md border border-neutral-200/60">
+                                                @if($adiutor->pivot->fixed_rate_paid)
+                                                    <span class="inline-flex items-center text-xs font-medium text-success-700">
+                                                        <i class="fas fa-check-circle mr-1.5 text-success-500"></i>Payment Complete
+                                                    </span>
+                                                @elseif($adiutor->pivot->fixed_rate_approved)
+                                                    <span class="inline-flex items-center text-xs font-medium text-success-700">
+                                                        <i class="fas fa-check mr-1.5"></i>Approved
+                                                    </span>
+                                                    <form action="{{ route('admin.projects.assignments.revoke-fixed-rate', [$project->id, $adiutor->pivot->id]) }}" 
+                                                        method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit"
+                                                                onclick="return confirm('Revoke approval? This will prevent payout.');"
+                                                                class="text-xs text-warning-600 hover:text-warning-700 font-medium">
+                                                            Revoke
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <span class="text-xs text-neutral-500">Pending Approval</span>
+                                                    <form action="{{ route('admin.projects.assignments.approve-fixed-rate', [$project->id, $adiutor->pivot->id]) }}" 
+                                                        method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit"
+                                                                class="inline-flex items-center px-2.5 py-1 bg-success-500 hover:bg-success-600 text-white rounded text-xs font-medium transition-colors">
+                                                            <i class="fas fa-check mr-1"></i>Approve
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <!-- Hourly Rate Info -->
+                                            <div class="py-2 px-2.5 bg-white rounded-md border border-neutral-200/60">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                                                        <i class="fas fa-clock mr-1 text-[10px]"></i>Hourly
+                                                    </span>
+                                                    <span class="text-sm font-semibold text-neutral-900">₱{{ number_format($adiutor->pivot->hourly_rate ?? $adiutor->pivot->agreed_rate ?? $adiutor->hourlyRate ?? 0, 2) }}<span class="text-xs font-normal text-neutral-500">/hr</span></span>
+                                                </div>
+                                                
+                                                <!-- Hours Progress -->
+                                                @if($adiutor->pivot->max_hours)
+                                                    @php
+                                                        $maxHours = (float) $adiutor->pivot->max_hours;
+                                                        $loggedHours = (float) ($adiutor->pivot->total_billable_hours ?? 0);
+                                                        $remainingHours = max(0, $maxHours - $loggedHours);
+                                                        $percentage = $maxHours > 0 ? min(100, round(($loggedHours / $maxHours) * 100)) : 0;
+                                                        
+                                                        $statusColor = 'success';
+                                                        $statusIcon = 'check-circle';
+                                                        if ($percentage >= 100) {
+                                                            $statusColor = 'error';
+                                                            $statusIcon = 'ban';
+                                                        } elseif ($percentage >= 80) {
+                                                            $statusColor = 'warning';
+                                                            $statusIcon = 'exclamation-triangle';
+                                                        }
+                                                    @endphp
+                                                    <div class="pt-2 border-t border-neutral-100">
+                                                        <div class="flex items-center justify-between text-xs mb-1.5">
+                                                            <span class="text-neutral-600">Hours Used</span>
+                                                            <span class="font-medium text-{{ $statusColor }}-600">
+                                                                {{ number_format($loggedHours, 1) }} / {{ number_format($maxHours, 1) }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="w-full bg-neutral-200 rounded-full h-1.5 overflow-hidden">
+                                                            <div class="h-full rounded-full bg-{{ $statusColor }}-500 transition-all duration-300" 
+                                                                style="width: {{ $percentage }}%"></div>
+                                                        </div>
+                                                        <div class="flex items-center justify-between mt-1.5">
+                                                            @if($remainingHours > 0)
+                                                                <span class="text-[10px] text-neutral-500">{{ number_format($remainingHours, 1) }} hrs left</span>
+                                                            @else
+                                                                <span class="text-[10px] text-error-600 font-medium">
+                                                                    <i class="fas fa-{{ $statusIcon }} mr-0.5"></i>Max reached
+                                                                </span>
+                                                            @endif
+                                                            <span class="text-[10px] font-medium text-{{ $statusColor }}-600">{{ $percentage }}%</span>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div class="pt-2 border-t border-neutral-100">
+                                                        <span class="inline-flex items-center text-[10px] text-neutral-400">
+                                                            <i class="fas fa-infinity mr-1"></i>Unlimited hours
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                    
+                                    <!-- Remove Button -->
+                                    <div class="mt-3 pt-2 border-t border-neutral-200/60">
+                                        <form action="{{ route('admin.projects.remove-adiutor', [$project->id, $adiutor->id]) }}" 
+                                            method="POST"
+                                            onsubmit="return confirm('Are you sure you want to remove this adiutor from the project?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium text-neutral-500 hover:text-error-600 hover:bg-error-50 rounded transition-colors">
+                                                <i class="fas fa-user-minus text-[10px]"></i>
+                                                Remove from Project
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                                 @endforeach
                             </div>
                         @else
-                            <div class="text-center py-6">
-                                <div class="bg-neutral-50 rounded-full h-12 w-12 flex items-center justify-center mx-auto mb-3">
-                                    <i class="fas fa-users text-neutral-400"></i>
+                            <!-- Empty State -->
+                            <div class="text-center py-8 px-4">
+                                <div class="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-user-plus text-neutral-400"></i>
                                 </div>
-                                <p class="text-neutral-500 text-sm">No team members assigned</p>
+                                <p class="text-sm font-medium text-neutral-600 mb-1">No team members</p>
+                                <p class="text-xs text-neutral-400 mb-4">Assign adiutors to this project</p>
+                                <button onclick="showAssignModal()"
+                                        type="button"
+                                        class="inline-flex items-center px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-xs font-medium transition-colors">
+                                    <i class="fas fa-plus mr-1.5"></i>Assign Adiutor
+                                </button>
                             </div>
                         @endif
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Complete Project Modal -->
     <div id="completeModal" class="modal-overlay fixed inset-0 z-50 overflow-y-auto hidden">
@@ -639,42 +886,114 @@
                             </div>
                         </div>
                         
-                        <div>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" name="requires_time_tracking" value="1"
-                                       class="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
-                                <span class="text-sm font-medium text-neutral-700">Require time tracking for this project</span>
-                            </label>
-                            <p class="text-xs text-neutral-500 mt-1 ml-6">Adiutor must log time entries for hourly payment</p>
-                        </div>
-                        
-                        <div id="hourly_rate_container">
-                            <label class="block text-sm font-medium text-neutral-700 mb-2">
-                                Hourly Rate (₱)
-                            </label>
-                            <input type="number" name="hourly_rate" id="hourly_rate_input" step="0.01" min="0"
-                                   class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-                                   placeholder="Leave empty to use adiutor's standard rate">
-                            <p class="text-xs text-neutral-500 mt-1">
-                                <span id="standard_rate_display" class="font-medium text-primary-600"></span>
-                                Override the adiutor's standard rate for this project
-                            </p>
-                            <div id="hourly_rate_warning" class="hidden mt-2 p-2 bg-warning-50 border border-warning-300 rounded-lg">
-                                <p class="text-xs text-warning-700 flex items-start">
-                                    <i class="fas fa-exclamation-triangle mr-2 mt-0.5"></i>
-                                    <span>Warning: The overridden hourly rate is below the adiutor's standard rate.</span>
-                                </p>
+                        <!-- Payment Type Selection (Phase 1) -->
+                        <div class="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
+                            <h3 class="text-sm font-semibold text-neutral-800 mb-3">
+                                <i class="fas fa-money-bill-wave mr-2 text-primary-600"></i>
+                                Payment Method <span class="text-error-500">*</span>
+                            </h3>
+                            <p class="text-xs text-neutral-500 mb-4">Choose how this adiutor will be paid for this project. Each adiutor can only use ONE payment method.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Fixed Rate Option -->
+                                <label class="payment-type-option relative flex cursor-pointer rounded-lg border border-neutral-300 bg-white p-4 shadow-sm hover:border-primary-400 focus:outline-none transition-all"
+                                       id="payment_type_fixed_label">
+                                    <input type="radio" name="payment_type" value="fixed_rate" 
+                                           class="sr-only" id="payment_type_fixed"
+                                           onchange="togglePaymentType('fixed_rate')">
+                                    <span class="flex flex-1">
+                                        <span class="flex flex-col">
+                                            <span class="block text-sm font-medium text-neutral-900">
+                                                Fixed Rate
+                                            </span>
+                                            <span class="mt-1 flex items-center text-xs text-neutral-500">
+                                                One-time payment when work completes
+                                            </span>
+                                            <span class="mt-2 text-xs text-neutral-400">
+                                                No time tracking required. Tasks are for organization only.
+                                            </span>
+                                        </span>
+                                    </span>
+                                    <span class="pointer-events-none absolute -inset-px rounded-lg border-2 border-transparent payment-type-border" aria-hidden="true"></span>
+                                </label>
+                                
+                                <!-- Hourly Rate Option -->
+                                <label class="payment-type-option relative flex cursor-pointer rounded-lg border border-neutral-300 bg-white p-4 shadow-sm hover:border-primary-400 focus:outline-none transition-all"
+                                       id="payment_type_hourly_label">
+                                    <input type="radio" name="payment_type" value="hourly_rate" 
+                                           class="sr-only" id="payment_type_hourly" checked
+                                           onchange="togglePaymentType('hourly_rate')">
+                                    <span class="flex flex-1">
+                                        <span class="flex flex-col">
+                                            <span class="block text-sm font-medium text-neutral-900">
+                                                Hourly Rate
+                                            </span>
+                                            <span class="mt-1 flex items-center text-xs text-neutral-500">
+                                                Multiple payments based on time logged
+                                            </span>
+                                            <span class="mt-2 text-xs text-neutral-400">
+                                                Time tracking required. Billed per task.
+                                            </span>
+                                        </span>
+                                    </span>
+                                    <span class="pointer-events-none absolute -inset-px rounded-lg border-2 border-primary-500 payment-type-border" aria-hidden="true"></span>
+                                </label>
                             </div>
                         </div>
                         
-                        <div id="agreed_rate_container">
+                        <!-- Fixed Rate Fields (shown when Fixed Rate is selected) -->
+                        <div id="fixed_rate_container" class="hidden">
                             <label class="block text-sm font-medium text-neutral-700 mb-2">
-                                Agreed Rate (₱)
+                                Agreed Fixed Rate (₱) <span class="text-error-500">*</span>
                             </label>
-                            <input type="number" name="agreed_rate" step="0.01" min="0"
+                            <input type="number" name="agreed_rate" id="agreed_rate_input" step="0.01" min="0"
                                    class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-                                   placeholder="e.g., 5000.00">
-                            <p class="text-xs text-neutral-500 mt-1">Fixed project rate or budget cap (optional)</p>
+                                   placeholder="e.g., 50000.00">
+                            <p class="text-xs text-neutral-500 mt-1">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Total payment for this adiutor's complete work on this project. Paid when admin approves completion.
+                            </p>
+                        </div>
+                        
+                        <!-- Hourly Rate Fields (shown when Hourly Rate is selected) -->
+                        <div id="hourly_rate_container">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">
+                                    Hourly Rate (₱)
+                                </label>
+                                <input type="number" name="hourly_rate" id="hourly_rate_input" step="0.01" min="0"
+                                       class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                       placeholder="Leave empty to use adiutor's standard rate">
+                                <p class="text-xs text-neutral-500 mt-1">
+                                    <span id="standard_rate_display" class="font-medium text-primary-600"></span>
+                                    Override the adiutor's standard rate for this project
+                                </p>
+                                <div id="hourly_rate_warning" class="hidden mt-2 p-2 bg-warning-50 border border-warning-300 rounded-lg">
+                                    <p class="text-xs text-warning-700 flex items-start">
+                                        <i class="fas fa-exclamation-triangle mr-2 mt-0.5"></i>
+                                        <span>Warning: The overridden hourly rate is below the adiutor's standard rate.</span>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Max Hours Limit (Phase 3) -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">
+                                    Maximum Billable Hours <span class="text-neutral-400 text-xs">(Optional)</span>
+                                </label>
+                                <input type="number" name="max_hours" id="max_hours_input" step="0.5" min="0.5"
+                                       class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                       placeholder="No limit">
+                                <p class="text-xs text-neutral-500 mt-1">
+                                    Set a cap on billable hours. Leave empty for unlimited.
+                                </p>
+                                <div id="max_hours_estimate" class="hidden mt-2 p-2 bg-primary-50 border border-primary-200 rounded-lg">
+                                    <p class="text-xs text-primary-700 flex items-start">
+                                        <i class="fas fa-calculator mr-2 mt-0.5"></i>
+                                        <span>Estimated max cost: <strong id="max_hours_cost">₱0.00</strong></span>
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                         
                         <div>
@@ -873,7 +1192,75 @@ function hideAssignModal() {
     document.querySelectorAll('.adiutor-row').forEach(row => {
         row.classList.remove('bg-primary-50', 'border-l-4', 'border-primary-500');
     });
+    
+    // Reset payment type to hourly (default)
+    togglePaymentType('hourly_rate');
+    document.getElementById('payment_type_hourly').checked = true;
 }
+
+// Toggle payment type fields
+function togglePaymentType(type) {
+    const fixedRateContainer = document.getElementById('fixed_rate_container');
+    const hourlyRateContainer = document.getElementById('hourly_rate_container');
+    const fixedLabel = document.getElementById('payment_type_fixed_label');
+    const hourlyLabel = document.getElementById('payment_type_hourly_label');
+    
+    if (type === 'fixed_rate') {
+        // Show fixed rate, hide hourly rate
+        fixedRateContainer.classList.remove('hidden');
+        hourlyRateContainer.classList.add('hidden');
+        
+        // Update border styling
+        fixedLabel.querySelector('.payment-type-border').classList.add('border-primary-500');
+        fixedLabel.querySelector('.payment-type-border').classList.remove('border-transparent');
+        hourlyLabel.querySelector('.payment-type-border').classList.remove('border-primary-500');
+        hourlyLabel.querySelector('.payment-type-border').classList.add('border-transparent');
+        
+        // Make agreed_rate required
+        document.getElementById('agreed_rate_input').setAttribute('required', 'required');
+        document.getElementById('hourly_rate_input').removeAttribute('required');
+    } else {
+        // Show hourly rate, hide fixed rate
+        fixedRateContainer.classList.add('hidden');
+        hourlyRateContainer.classList.remove('hidden');
+        
+        // Update border styling
+        hourlyLabel.querySelector('.payment-type-border').classList.add('border-primary-500');
+        hourlyLabel.querySelector('.payment-type-border').classList.remove('border-transparent');
+        fixedLabel.querySelector('.payment-type-border').classList.remove('border-primary-500');
+        fixedLabel.querySelector('.payment-type-border').classList.add('border-transparent');
+        
+        // Remove required from agreed_rate
+        document.getElementById('agreed_rate_input').removeAttribute('required');
+    }
+    
+    // Reset max hours
+    document.getElementById('max_hours_input').value = '';
+    updateMaxHoursEstimate();
+}
+
+// Update max hours cost estimate
+function updateMaxHoursEstimate() {
+    const maxHoursInput = document.getElementById('max_hours_input');
+    const hourlyRateInput = document.getElementById('hourly_rate_input');
+    const estimateDiv = document.getElementById('max_hours_estimate');
+    const costSpan = document.getElementById('max_hours_cost');
+    
+    const maxHours = parseFloat(maxHoursInput.value) || 0;
+    const hourlyRate = parseFloat(hourlyRateInput.value) || 0;
+    
+    if (maxHours > 0 && hourlyRate > 0) {
+        const maxCost = maxHours * hourlyRate;
+        costSpan.textContent = '₱' + maxCost.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        estimateDiv.classList.remove('hidden');
+    } else {
+        estimateDiv.classList.add('hidden');
+    }
+}
+
+// Add event listeners for max hours calculation
+document.getElementById('max_hours_input').addEventListener('input', updateMaxHoursEstimate);
+document.getElementById('hourly_rate_input').addEventListener('input', updateMaxHoursEstimate);
 
 // Select adiutor from table
 function selectAdiutor(adiutorId, adiutorName, rating) {

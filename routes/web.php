@@ -824,10 +824,25 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::get('/export', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'export'])->name('export');
         Route::get('/adiutor/{adiutorId}', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'adiutorEarnings'])->name('adiutor-earnings');
         Route::post('/approve-time-entries', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'approveTimeEntries'])->name('approve-entries');
+        
+        // Time Entry Approval with Adjustment (Phase 4)
+        Route::get('/time-entries/{id}', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'getTimeEntryDetails'])->name('time-entry-details');
+        Route::post('/time-entries/{id}/approve', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'approveTimeEntry'])->name('approve-time-entry');
+        Route::post('/time-entries/{id}/reject', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'rejectTimeEntry'])->name('reject-time-entry');
+        
         Route::get('/{id}', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'show'])->name('show');
         Route::post('/{id}/process', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'markAsProcessing'])->name('process');
         Route::post('/{id}/complete', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'complete'])->name('complete');
         Route::post('/{id}/cancel', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'cancel'])->name('cancel');
+    });
+    
+    // Hour Increase Requests Management
+    Route::prefix('hour-requests')->name('hour-requests.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\HourIncreaseRequestController::class, 'index'])->name('index');
+        Route::get('/{id}', [\App\Http\Controllers\Admin\HourIncreaseRequestController::class, 'show'])->name('show');
+        Route::post('/{id}/approve', [\App\Http\Controllers\Admin\HourIncreaseRequestController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [\App\Http\Controllers\Admin\HourIncreaseRequestController::class, 'reject'])->name('reject');
+        Route::post('/{id}/quick-approve', [\App\Http\Controllers\Admin\HourIncreaseRequestController::class, 'quickApprove'])->name('quick-approve');
     });
     
     // Payment Management
@@ -999,6 +1014,11 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::get('/projects/{project}/team-members', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'getTeamMembers'])->name('projects.team-members');
     Route::get('/projects/{project}/phases', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'getProjectPhases'])->name('projects.phases');
     
+    // Assignment Payment Management (Phase 1: Fixed Rate Approval)
+    Route::post('/projects/{project}/assignments/{assignment}/approve-fixed-rate', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'approveFixedRate'])->name('projects.assignments.approve-fixed-rate');
+    Route::post('/projects/{project}/assignments/{assignment}/revoke-fixed-rate', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'revokeFixedRateApproval'])->name('projects.assignments.revoke-fixed-rate');
+    Route::put('/projects/{project}/assignments/{assignment}/payment', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'updateAssignmentPayment'])->name('projects.assignments.update-payment');
+    
     // Reporting and Analytics
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ReportingController::class, 'index'])->name('index');
@@ -1017,6 +1037,16 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::post('/custom/templates', [\App\Http\Controllers\Admin\ReportingController::class, 'saveCustomTemplate'])->name('custom.template.save');
         Route::get('/custom/templates', [\App\Http\Controllers\Admin\ReportingController::class, 'getCustomTemplates'])->name('custom.templates');
         Route::get('/custom/filters/{type}', [\App\Http\Controllers\Admin\ReportingController::class, 'getFilterOptions'])->name('custom.filters');
+    });
+    
+    // Earnings Analytics (Phase 7)
+    Route::prefix('earnings-analytics')->name('earnings-analytics.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\EarningsAnalyticsController::class, 'index'])->name('index');
+        Route::get('/leaderboard', [\App\Http\Controllers\Admin\EarningsAnalyticsController::class, 'leaderboard'])->name('leaderboard');
+        Route::get('/project-costs', [\App\Http\Controllers\Admin\EarningsAnalyticsController::class, 'projectCosts'])->name('project-costs');
+        Route::get('/audit-log', [\App\Http\Controllers\Admin\EarningsAnalyticsController::class, 'auditLog'])->name('audit-log');
+        Route::get('/payout-history', [\App\Http\Controllers\Admin\EarningsAnalyticsController::class, 'payoutHistory'])->name('payout-history');
+        Route::get('/export', [\App\Http\Controllers\Admin\EarningsAnalyticsController::class, 'export'])->name('export');
     });
     
     // Messaging routes
@@ -1198,10 +1228,20 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
     // Earnings & Payout Routes
     Route::prefix('earnings')->name('earnings.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Adiutor\EarningsController::class, 'index'])->name('index');
+        Route::get('/wallet', [\App\Http\Controllers\Adiutor\EarningsController::class, 'wallet'])->name('wallet');
         Route::get('/request-payout', [\App\Http\Controllers\Adiutor\EarningsController::class, 'showRequestForm'])->name('request-form');
         Route::post('/request-payout', [\App\Http\Controllers\Adiutor\EarningsController::class, 'requestPayout'])->name('request');
         Route::get('/payouts', [\App\Http\Controllers\Adiutor\EarningsController::class, 'payouts'])->name('payouts');
         Route::get('/payouts/{id}', [\App\Http\Controllers\Adiutor\EarningsController::class, 'showPayout'])->name('payout.show');
+    });
+    
+    // Hour Increase Requests Routes
+    Route::prefix('hour-requests')->name('hour-requests.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'store'])->name('store');
+        Route::get('/{id}', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'show'])->name('show');
+        Route::delete('/{id}', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'cancel'])->name('cancel');
     });
     
     // Profile management routes

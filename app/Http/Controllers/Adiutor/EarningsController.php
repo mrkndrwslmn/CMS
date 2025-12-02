@@ -9,6 +9,7 @@ use App\Models\ProjectAssignment;
 use App\Models\Payout;
 use App\Models\PayoutItem;
 use App\Models\User;
+use App\Models\WalletTransaction;
 use App\Mail\PayoutRequestedMail;
 use App\Notifications\PayoutRequestedNotification;
 use App\Services\FirebaseService;
@@ -146,6 +147,83 @@ class EarningsController extends Controller
             ->paginate(10);
 
         return view('adiutor.earnings.payouts', compact('payouts'));
+    }
+
+    /**
+     * Display unified wallet dashboard
+     */
+    public function wallet(Request $request)
+    {
+        $adiutor = Auth::user();
+
+        // Wallet balances
+        $workEarningsBalance = $adiutor->work_earnings_balance ?? 0;
+        $referralCreditsBalance = $adiutor->referral_credits ?? 0;
+        $totalAvailable = $workEarningsBalance + $referralCreditsBalance;
+        
+        $workEarningsPending = $adiutor->work_earnings_pending ?? 0;
+        $referralCreditsPending = $adiutor->referral_credits_pending ?? 0;
+        $totalPending = $workEarningsPending + $referralCreditsPending;
+        
+        $workEarningsWithdrawn = $adiutor->work_earnings_withdrawn ?? 0;
+        $referralCreditsWithdrawn = $adiutor->referral_credits_withdrawn ?? 0;
+        $totalWithdrawn = $workEarningsWithdrawn + $referralCreditsWithdrawn;
+
+        // Get wallet transactions with filters
+        $walletType = $request->get('wallet_type', 'all'); // all, work_earnings, referral_credits
+        $transactionType = $request->get('transaction_type', 'all');
+        
+        $transactionsQuery = WalletTransaction::where('user_id', $adiutor->id)
+            ->with('performer')
+            ->orderBy('created_at', 'desc');
+
+        if ($walletType !== 'all') {
+            $transactionsQuery->where('wallet_type', $walletType);
+        }
+
+        if ($transactionType !== 'all') {
+            $transactionsQuery->where('transaction_type', $transactionType);
+        }
+
+        $transactions = $transactionsQuery->paginate(15);
+
+        // Stats for charts
+        $monthlyEarnings = WalletTransaction::where('user_id', $adiutor->id)
+            ->where('amount', '>', 0)
+            ->where('wallet_type', 'work_earnings')
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->sum('amount');
+
+        $lastMonthEarnings = WalletTransaction::where('user_id', $adiutor->id)
+            ->where('amount', '>', 0)
+            ->where('wallet_type', 'work_earnings')
+            ->whereMonth('created_at', Carbon::now()->subMonth()->month)
+            ->whereYear('created_at', Carbon::now()->subMonth()->year)
+            ->sum('amount');
+
+        $earningsChange = $lastMonthEarnings > 0 
+            ? round((($monthlyEarnings - $lastMonthEarnings) / $lastMonthEarnings) * 100, 1)
+            : ($monthlyEarnings > 0 ? 100 : 0);
+
+        return view('adiutor.earnings.wallet', compact(
+            'adiutor',
+            'workEarningsBalance',
+            'referralCreditsBalance',
+            'totalAvailable',
+            'workEarningsPending',
+            'referralCreditsPending',
+            'totalPending',
+            'workEarningsWithdrawn',
+            'referralCreditsWithdrawn',
+            'totalWithdrawn',
+            'transactions',
+            'walletType',
+            'transactionType',
+            'monthlyEarnings',
+            'lastMonthEarnings',
+            'earningsChange'
+        ));
     }
 
     /**
