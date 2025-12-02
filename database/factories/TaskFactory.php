@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Task;
 use App\Models\User;
-use App\Models\Form;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -135,14 +135,25 @@ class TaskFactory extends Factory
         $completedAt = ($status === 'completed') ? fake()->dateTimeBetween($dateAssigned, $deadline) : null;
 
         return [
+            'project_id' => Project::factory(),
+            'client_id' => User::factory()->client(),
+            'createdBy' => User::factory()->admin(),
+            'assignedTo' => User::factory()->adiutor(),
             'taskTitle' => $taskTitle,
             'taskDescription' => $taskDescription,
             'status' => $status,
-            'priority' => fake()->randomElement(['low', 'medium', 'high']),
+            'priority' => fake()->randomElement(['low', 'medium', 'high', 'urgent']),
             'deadline' => $deadline,
             'completedAt' => $completedAt,
             'notes' => fake()->randomElement($notesTemplates),
             'dateAssigned' => $dateAssigned,
+            'allocated_budget' => fake()->randomFloat(2, 500, 5000),
+            'progress_percentage' => $status === 'completed' ? 100 : fake()->numberBetween(0, 90),
+            'hourly_rate' => fake()->randomElement([200, 300, 400, 500, 750]),
+            'requires_time_tracking' => fake()->boolean(70),
+            'total_hours_tracked' => 0,
+            'calculated_earnings' => 0,
+            'use_fixed_budget' => fake()->boolean(30),
         ];
     }
 
@@ -199,6 +210,61 @@ class TaskFactory extends Factory
             'status' => fake()->randomElement(['pending', 'in_progress']),
             'deadline' => fake()->dateTimeBetween('-30 days', '-1 days'),
             'completedAt' => null,
+        ]);
+    }
+
+    /**
+     * For a specific project
+     */
+    public function forProject(Project $project): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'project_id' => $project->id,
+            'client_id' => $project->client_id,
+        ]);
+    }
+
+    /**
+     * Assigned to specific adiutor
+     */
+    public function assignedTo(User $adiutor): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'assignedTo' => $adiutor->id,
+        ]);
+    }
+
+    /**
+     * With time tracking enabled
+     */
+    public function withTimeTracking(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'requires_time_tracking' => true,
+            'hourly_rate' => fake()->randomElement([300, 400, 500, 750, 1000]),
+        ]);
+    }
+
+    /**
+     * With fixed budget
+     */
+    public function withFixedBudget(float $amount = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'use_fixed_budget' => true,
+            'allocated_budget' => $amount ?? fake()->randomFloat(2, 1000, 10000),
+            'requires_time_tracking' => false,
+        ]);
+    }
+
+    /**
+     * Urgent priority
+     */
+    public function urgent(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'priority' => 'urgent',
+            'deadline' => fake()->dateTimeBetween('+1 day', '+1 week'),
         ]);
     }
 }

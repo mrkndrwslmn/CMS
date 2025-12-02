@@ -16,14 +16,14 @@ return new class extends Migration
         // Add composite index for time_entries - most important for your app
         if (!Schema::hasIndex('time_entries', 'time_entries_adiutor_started_index')) {
             Schema::table('time_entries', function (Blueprint $table) {
-                $table->index(['adiutor_id', 'started_at'], 'time_entries_adiutor_started_index');
+                $table->index(['adiutor_id', 'start_time'], 'time_entries_adiutor_started_index');
             });
         }
 
         // Add index for finding active timers
         if (!Schema::hasIndex('time_entries', 'time_entries_adiutor_ended_index')) {
             Schema::table('time_entries', function (Blueprint $table) {
-                $table->index(['adiutor_id', 'ended_at'], 'time_entries_adiutor_ended_index');
+                $table->index(['adiutor_id', 'end_time'], 'time_entries_adiutor_ended_index');
             });
         }
 

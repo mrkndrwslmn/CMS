@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Project;
+use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Models\Skill;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -194,6 +195,8 @@ class ProjectFactory extends Factory
         $selectedSkills = array_slice($skillsForProject, 0, fake()->numberBetween(3, 6));
 
         return [
+            'service_request_id' => ServiceRequest::factory(),
+            'client_id' => User::factory()->client(),
             'title' => $title,
             'description' => fake()->paragraph(3),
             'requirements' => json_encode($selectedRequirements),
@@ -202,7 +205,7 @@ class ProjectFactory extends Factory
             'budget_type' => fake()->randomElement(['fixed', 'hourly']),
             'deadline' => $deadline,
             'priority' => fake()->randomElement(['low', 'medium', 'high', 'urgent']),
-            'status' => fake()->randomElement(['draft', 'open', 'assigned', 'in_progress', 'review', 'completed', 'cancelled']),
+            'status' => fake()->randomElement(['active', 'in_progress', 'review', 'completed', 'cancelled']),
             'attachments' => null,
         ];
     }

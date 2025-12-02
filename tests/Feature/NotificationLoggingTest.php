@@ -8,13 +8,13 @@ use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Notifications\PaymentConfirmedNotification;
 use App\Traits\LogsNotifications;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 class NotificationLoggingTest extends TestCase
 {
-    use RefreshDatabase, LogsNotifications;
+    use LogsNotifications;
+    // Using UseCmsSqlSchema from TestCase
 
     protected function setUp(): void
     {
