@@ -111,7 +111,11 @@ class ProjectManagementController extends Controller
         // Get project's required service type for skill matching
         $projectServiceType = $project->serviceRequest ? $project->serviceRequest->service_type : null;
 
+        // Get IDs of adiutors already assigned to this project
+        $assignedAdiutorIds = $project->adiutors->pluck('id')->toArray();
+
         $availableAdiutors = User::where('role', 'adiutor')
+            ->whereNotIn('id', $assignedAdiutorIds) // Exclude already assigned adiutors
             ->with([
                 'calendarIntegration',
                 'adiutorProfile.skills',  // Load skills through adiutorProfile
@@ -232,7 +236,7 @@ class ProjectManagementController extends Controller
                     'email' => $adiutor->email,
                     'calendar_connected' => $adiutor->calendarIntegration && $adiutor->calendarIntegration->is_connected,
                     'skills' => $skills,
-                    'rating' => $adiutor->adiutorProfile->rating ?? 0,
+                    'rating' => $adiutor->calculateAdiutorRating() ?? 0,
                     'active_projects_count' => $activeProjectsCount,
                     'rank_score' => $score,
                     'skill_score' => $skillScore,
