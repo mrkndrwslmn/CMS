@@ -53,23 +53,25 @@ class ClientManagementController extends Controller
     
     public function show($id)
     {
-        $client = User::where('role', 'client')->with(['tasks', 'serviceRequests'])->findOrFail($id);
+        $client = User::where('role', 'client')->with(['tasks', 'serviceRequests', 'forms'])->findOrFail($id);
         
         // Get client statistics
         $stats = [
+            'total_projects' => $client->tasks()->count(),
             'total_requests' => $client->serviceRequests()->count(),
             'completed_projects' => $client->tasks()->where('status', 'completed')->count(),
             'active_projects' => $client->tasks()->where('status', 'in_progress')->count(),
+            'total_feedback' => 0, // Placeholder - update when feedback feature is implemented
         ];
         
         // Get recent activities
         $recentTasks = $client->tasks()->latest()->take(5)->get();
-        $recentRequests = $client->serviceRequests()->latest()->take(5)->get();
+        $recentForms = $client->forms()->latest()->take(5)->get();
         
         // Get notes for this client
         $notes = Note::where('client_id', $id)->latest()->get();
         
-        return view('admin.clients.show', compact('client', 'stats', 'recentTasks', 'recentRequests', 'notes'));
+        return view('admin.clients.show', compact('client', 'stats', 'recentTasks', 'recentForms', 'notes'));
     }
     
     public function create()
@@ -142,7 +144,7 @@ class ClientManagementController extends Controller
         
         Note::create([
             'client_id' => $id,
-            'admin_id' => Auth::id(),
+            'added_by' => Auth::id(),
             'title' => $request->title,
             'content' => $request->input('content'),
             'type' => $request->type,

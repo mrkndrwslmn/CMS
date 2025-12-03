@@ -4,48 +4,59 @@
 @section('page-title', 'Client Management')
 
 @section('content')
-<div class="px-6 py-8" data-client-id="{{ isset($client) && is_object($client) ? $client->id : 0 }}">
+<div class="p-6 lg:p-8" data-client-id="{{ isset($client) && is_object($client) ? $client->id : 0 }}">
     @if(!isset($client) || !is_object($client))
-        <div class="bg-error-50 border-l-4 border-error-500 text-error-700 p-6 rounded-lg shadow-sm mb-6">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-circle text-error-500 text-xl"></i>
-                </div>
-                <div class="ml-3">
-                    <h4 class="text-lg font-medium">Client Not Found</h4>
-                    <p class="mt-2">The requested client could not be found.</p>
-                    <div class="mt-4">
-                        <a href="{{ route('admin.clients.index') }}" 
-                           class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                            <i class="fas fa-arrow-left mr-2"></i>Back to Clients
+        <x-ui.card class="border-l-4 border-error-500">
+            <div class="p-6">
+                <div class="flex items-start gap-4">
+                    <div class="p-3 bg-error-50 rounded-xl">
+                        <x-lucide-alert-circle class="w-6 h-6 text-error-500" />
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-medium text-neutral-800">Client Not Found</h4>
+                        <p class="text-neutral-600 mt-1">The requested client could not be found.</p>
+                        <a href="{{ route('admin.clients.index') }}" class="mt-4 inline-block">
+                            <x-ui.button variant="secondary" icon="arrow-left">
+                                Back to Clients
+                            </x-ui.button>
                         </a>
                     </div>
                 </div>
             </div>
-        </div>
+        </x-ui.card>
     @else
+    
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Clients', 'route' => 'admin.clients.index', 'icon' => 'users'],
+        ['label' => $client->fullName, 'icon' => 'user'],
+    ]" class="mb-6" />
+
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-6 border-b border-neutral-200">
-        <div class="flex items-center space-x-4">
-            <div class="bg-primary-500 h-16 w-16 rounded-full flex items-center justify-center text-white shadow-sm">
-                <i class="fas fa-user text-2xl"></i>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div class="flex items-center gap-4">
+            <div class="bg-primary-100 h-16 w-16 rounded-full flex items-center justify-center">
+                <x-lucide-user class="w-8 h-8 text-primary-600" />
             </div>
             <div>
-                <h1 class="text-2xl font-semibold text-primary-600 mb-1">{{ $client->fullName }}</h1>
-                <div class="flex items-center text-neutral-500">
-                    <i class="fas fa-envelope mr-2"></i>
-                    <span>{{ $client->email }}</span>
+                <h1 class="text-2xl font-semibold text-neutral-800">{{ $client->fullName }}</h1>
+                <div class="flex items-center gap-1.5 text-neutral-500 mt-1">
+                    <x-lucide-mail class="w-4 h-4" />
+                    <span class="text-sm">{{ $client->email }}</span>
                 </div>
             </div>
         </div>
-        <div class="mt-4 sm:mt-0 flex flex-wrap gap-3">
-            <a href="{{ route('admin.clients.edit', $client->id) }}" 
-               class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                <i class="fas fa-edit mr-2"></i>Edit Client
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ route('admin.clients.edit', $client->id) }}">
+                <x-ui.button icon="pencil">
+                    Edit Client
+                </x-ui.button>
             </a>
-            <a href="{{ route('admin.clients.index') }}" 
-               class="inline-flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Back to List
+            <a href="{{ route('admin.clients.index') }}">
+                <x-ui.button variant="secondary" icon="arrow-left">
+                    Back to List
+                </x-ui.button>
             </a>
         </div>
     </div>
@@ -53,262 +64,213 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Client Profile Card -->
         <div class="lg:col-span-1">
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">Client Profile</h2>
+            <x-ui.card class="mb-6">
+                <div class="px-6 py-4 border-b border-neutral-100">
+                    <div class="flex items-center gap-2">
+                        <x-lucide-user class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Client Profile</h2>
+                    </div>
                 </div>
                 <div class="p-6">
-                    <div class="space-y-6">
+                    <div class="space-y-5">
                         <div>
-                            <div class="text-sm font-medium text-neutral-500 mb-1">Status</div>
+                            <div class="text-sm font-medium text-neutral-500 mb-1.5">Status</div>
                             @if($client->status == 'active')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
-                                    <span class="h-2 w-2 rounded-full bg-success-500 mr-1.5"></span>
+                                <x-ui.badge type="success">
+                                    <span class="w-1.5 h-1.5 bg-success-500 rounded-full mr-1.5"></span>
                                     Active
-                                </span>
+                                </x-ui.badge>
                             @elseif($client->status == 'inactive')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
-                                    <span class="h-2 w-2 rounded-full bg-warning-500 mr-1.5"></span>
+                                <x-ui.badge type="warning">
+                                    <span class="w-1.5 h-1.5 bg-warning-500 rounded-full mr-1.5"></span>
                                     Inactive
-                                </span>
+                                </x-ui.badge>
                             @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-800">
-                                    <span class="h-2 w-2 rounded-full bg-error-500 mr-1.5"></span>
+                                <x-ui.badge type="error">
+                                    <span class="w-1.5 h-1.5 bg-error-500 rounded-full mr-1.5"></span>
                                     Banned
-                                </span>
+                                </x-ui.badge>
                             @endif
                         </div>
                         
-                        <div class="flex border-t border-neutral-100 pt-4">
-                            <div class="w-10 flex-shrink-0 text-neutral-400">
-                                <i class="fas fa-user"></i>
-                            </div>
+                        <div class="flex items-start gap-3 border-t border-neutral-100 pt-4">
+                            <x-lucide-user class="w-5 h-5 text-neutral-400 mt-0.5" />
                             <div>
                                 <div class="text-sm font-medium text-neutral-500">Full Name</div>
-                                <div class="text-neutral-900">{{ $client->fullName }}</div>
+                                <div class="text-neutral-800">{{ $client->fullName }}</div>
                             </div>
                         </div>
                         
-                        <div class="flex border-t border-neutral-100 pt-4">
-                            <div class="w-10 flex-shrink-0 text-neutral-400">
-                                <i class="fas fa-envelope"></i>
-                            </div>
+                        <div class="flex items-start gap-3 border-t border-neutral-100 pt-4">
+                            <x-lucide-mail class="w-5 h-5 text-neutral-400 mt-0.5" />
                             <div>
                                 <div class="text-sm font-medium text-neutral-500">Email Address</div>
-                                <div class="text-neutral-900 break-all">{{ $client->email }}</div>
+                                <div class="text-neutral-800 break-all">{{ $client->email }}</div>
                             </div>
                         </div>
                         
-                        <div class="flex border-t border-neutral-100 pt-4">
-                            <div class="w-10 flex-shrink-0 text-neutral-400">
-                                <i class="fas fa-phone"></i>
-                            </div>
+                        <div class="flex items-start gap-3 border-t border-neutral-100 pt-4">
+                            <x-lucide-phone class="w-5 h-5 text-neutral-400 mt-0.5" />
                             <div>
                                 <div class="text-sm font-medium text-neutral-500">Phone Number</div>
-                                <div class="text-neutral-900">{{ $client->phoneNumber }}</div>
+                                <div class="text-neutral-800">{{ $client->phoneNumber }}</div>
                             </div>
                         </div>
                         
-                        <div class="flex border-t border-neutral-100 pt-4">
-                            <div class="w-10 flex-shrink-0 text-neutral-400">
-                                <i class="fas fa-calendar-alt"></i>
-                            </div>
+                        <div class="flex items-start gap-3 border-t border-neutral-100 pt-4">
+                            <x-lucide-calendar class="w-5 h-5 text-neutral-400 mt-0.5" />
                             <div>
                                 <div class="text-sm font-medium text-neutral-500">Member Since</div>
-                                <div class="text-neutral-900">{{ $client->created_at->format('F d, Y') }}</div>
+                                <div class="text-neutral-800">{{ $client->created_at->format('F d, Y') }}</div>
                             </div>
                         </div>
                         
-                        <div class="flex border-t border-neutral-100 pt-4">
-                            <div class="w-10 flex-shrink-0 text-neutral-400">
-                                <i class="fas fa-clock"></i>
-                            </div>
+                        <div class="flex items-start gap-3 border-t border-neutral-100 pt-4">
+                            <x-lucide-clock class="w-5 h-5 text-neutral-400 mt-0.5" />
                             <div>
                                 <div class="text-sm font-medium text-neutral-500">Last Updated</div>
-                                <div class="text-neutral-900">{{ $client->updated_at->diffForHumans() }}</div>
+                                <div class="text-neutral-800">{{ $client->updated_at->diffForHumans() }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </x-ui.card>
             
             <!-- Quick Actions Card -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">Quick Actions</h2>
+            <x-ui.card class="mb-6">
+                <div class="px-6 py-4 border-b border-neutral-100">
+                    <div class="flex items-center gap-2">
+                        <x-lucide-zap class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Quick Actions</h2>
+                    </div>
                 </div>
                 <div class="p-6">
-                    <div class="grid grid-cols-1 gap-3">
+                    <div class="space-y-3">
                         <button onclick="$('#addNoteModal').modal('show')" 
-                                class="flex items-center justify-between w-full px-4 py-3 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg transition-colors">
-                            <span class="flex items-center">
-                                <i class="fas fa-sticky-note mr-3"></i>
+                                class="flex items-center justify-between w-full px-4 py-3 bg-neutral-50 hover:bg-primary-50 text-neutral-700 hover:text-primary-700 rounded-xl transition-colors group">
+                            <span class="flex items-center gap-3">
+                                <x-lucide-sticky-note class="w-5 h-5 text-neutral-400 group-hover:text-primary-500" />
                                 <span>Add Client Note</span>
                             </span>
-                            <i class="fas fa-chevron-right"></i>
+                            <x-lucide-chevron-right class="w-4 h-4 text-neutral-400 group-hover:text-primary-500" />
                         </button>
                         <a href="#" 
-                           class="flex items-center justify-between w-full px-4 py-3 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg transition-colors">
-                            <span class="flex items-center">
-                                <i class="fas fa-envelope mr-3"></i>
+                           class="flex items-center justify-between w-full px-4 py-3 bg-neutral-50 hover:bg-primary-50 text-neutral-700 hover:text-primary-700 rounded-xl transition-colors group">
+                            <span class="flex items-center gap-3">
+                                <x-lucide-mail class="w-5 h-5 text-neutral-400 group-hover:text-primary-500" />
                                 <span>Send Message</span>
                             </span>
-                            <i class="fas fa-chevron-right"></i>
+                            <x-lucide-chevron-right class="w-4 h-4 text-neutral-400 group-hover:text-primary-500" />
                         </a>
                         <a href="#" 
-                           class="flex items-center justify-between w-full px-4 py-3 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg transition-colors">
-                            <span class="flex items-center">
-                                <i class="fas fa-tasks mr-3"></i>
+                           class="flex items-center justify-between w-full px-4 py-3 bg-neutral-50 hover:bg-primary-50 text-neutral-700 hover:text-primary-700 rounded-xl transition-colors group">
+                            <span class="flex items-center gap-3">
+                                <x-lucide-clipboard-list class="w-5 h-5 text-neutral-400 group-hover:text-primary-500" />
                                 <span>Create Task</span>
                             </span>
-                            <i class="fas fa-chevron-right"></i>
+                            <x-lucide-chevron-right class="w-4 h-4 text-neutral-400 group-hover:text-primary-500" />
                         </a>
                     </div>
                 </div>
-            </div>
+            </x-ui.card>
         </div>
         
         <!-- Main Content Area -->
         <div class="lg:col-span-2">
             <!-- Statistics Cards -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-primary-500">
-                    <div class="p-5">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                                    Total Projects
-                                </div>
-                                <div class="mt-1 text-2xl font-semibold text-neutral-900">
-                                    {{ $stats['total_projects'] }}
-                                </div>
-                            </div>
-                            <div class="rounded-full p-3 bg-primary-50 text-primary-500">
-                                <i class="fas fa-project-diagram fa-lg"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-success-500">
-                    <div class="p-5">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                                    Completed
-                                </div>
-                                <div class="mt-1 text-2xl font-semibold text-neutral-900">
-                                    {{ $stats['completed_projects'] }}
-                                </div>
-                            </div>
-                            <div class="rounded-full p-3 bg-success-50 text-success-500">
-                                <i class="fas fa-check-circle fa-lg"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-warning-500">
-                    <div class="p-5">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                                    Active
-                                </div>
-                                <div class="mt-1 text-2xl font-semibold text-neutral-900">
-                                    {{ $stats['active_projects'] }}
-                                </div>
-                            </div>
-                            <div class="rounded-full p-3 bg-warning-50 text-warning-500">
-                                <i class="fas fa-tasks fa-lg"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-info-500">
-                    <div class="p-5">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                                    Feedback
-                                </div>
-                                <div class="mt-1 text-2xl font-semibold text-neutral-900">
-                                    {{ $stats['total_feedback'] }}
-                                </div>
-                            </div>
-                            <div class="rounded-full p-3 bg-info-50 text-info-500">
-                                <i class="fas fa-comments fa-lg"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <x-ui.stat-card 
+                    label="Total Projects" 
+                    :value="$stats['total_projects']" 
+                    icon="folder-kanban"
+                />
+                <x-ui.stat-card 
+                    label="Completed" 
+                    :value="$stats['completed_projects']" 
+                    icon="check-circle"
+                    iconBg="success"
+                />
+                <x-ui.stat-card 
+                    label="Active" 
+                    :value="$stats['active_projects']" 
+                    icon="clock"
+                    iconBg="warning"
+                />
+                <x-ui.stat-card 
+                    label="Feedback" 
+                    :value="$stats['total_feedback']" 
+                    icon="message-square"
+                    iconBg="primary"
+                />
             </div>
 
             <!-- Recent Tasks -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                <div class="flex justify-between items-center px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">Recent Tasks</h2>
-                    <a href="#" class="text-sm text-primary-500 hover:text-primary-700 flex items-center">
+            <x-ui.card class="mb-6">
+                <div class="flex justify-between items-center px-6 py-4 border-b border-neutral-100">
+                    <div class="flex items-center gap-2">
+                        <x-lucide-clipboard-list class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Recent Tasks</h2>
+                    </div>
+                    <a href="#" class="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 transition-colors">
                         <span>View All</span>
-                        <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                        <x-lucide-chevron-right class="w-4 h-4" />
                     </a>
                 </div>
                 <div class="p-6">
                     @if(isset($recentTasks) && !empty($recentTasks) && ((is_array($recentTasks) && count($recentTasks) > 0) || (is_object($recentTasks) && method_exists($recentTasks, 'count') && $recentTasks->count() > 0)))
                         <div class="overflow-x-auto">
-                            <table class="w-full whitespace-nowrap">
+                            <table class="w-full">
                                 <thead>
-                                    <tr class="bg-neutral-50 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                                        <th class="px-4 py-3 rounded-l-lg">Task</th>
-                                        <th class="px-4 py-3">Status</th>
-                                        <th class="px-4 py-3">Priority</th>
-                                        <th class="px-4 py-3 rounded-r-lg">Due Date</th>
+                                    <tr class="bg-neutral-50 border-b border-neutral-100">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider rounded-l-lg">Task</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Priority</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider rounded-r-lg">Due Date</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-neutral-100">
                                     @foreach($recentTasks as $task)
-                                    <tr class="hover:bg-neutral-50">
+                                    <tr class="hover:bg-neutral-50 transition-colors">
                                         <td class="px-4 py-3">
-                                            <div class="font-medium text-neutral-900">{{ $task->title ?? 'Task #' . $task->id }}</div>
+                                            <div class="font-medium text-neutral-800">{{ $task->title ?? 'Task #' . $task->id }}</div>
                                         </td>
                                         <td class="px-4 py-3">
                                             @if($task->status == 'completed')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
-                                                    <span class="h-1.5 w-1.5 rounded-full bg-success-500 mr-1.5"></span>
+                                                <x-ui.badge type="success">
+                                                    <span class="w-1.5 h-1.5 bg-success-500 rounded-full mr-1.5"></span>
                                                     Completed
-                                                </span>
+                                                </x-ui.badge>
                                             @elseif($task->status == 'in_progress')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
-                                                    <span class="h-1.5 w-1.5 rounded-full bg-warning-500 mr-1.5"></span>
+                                                <x-ui.badge type="warning">
+                                                    <span class="w-1.5 h-1.5 bg-warning-500 rounded-full mr-1.5"></span>
                                                     In Progress
-                                                </span>
+                                                </x-ui.badge>
                                             @else
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
-                                                    <span class="h-1.5 w-1.5 rounded-full bg-neutral-500 mr-1.5"></span>
+                                                <x-ui.badge type="neutral">
+                                                    <span class="w-1.5 h-1.5 bg-neutral-500 rounded-full mr-1.5"></span>
                                                     Pending
-                                                </span>
+                                                </x-ui.badge>
                                             @endif
                                         </td>
                                         <td class="px-4 py-3">
                                             @if($task->priority == 'high')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-800">
-                                                    <i class="fas fa-arrow-up mr-1 text-xs"></i>
+                                                <x-ui.badge type="error">
+                                                    <x-lucide-arrow-up class="w-3 h-3 mr-1" />
                                                     High
-                                                </span>
+                                                </x-ui.badge>
                                             @elseif($task->priority == 'medium')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
-                                                    <i class="fas fa-minus mr-1 text-xs"></i>
+                                                <x-ui.badge type="warning">
+                                                    <x-lucide-minus class="w-3 h-3 mr-1" />
                                                     Medium
-                                                </span>
+                                                </x-ui.badge>
                                             @else
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-100 text-info-800">
-                                                    <i class="fas fa-arrow-down mr-1 text-xs"></i>
+                                                <x-ui.badge type="info">
+                                                    <x-lucide-arrow-down class="w-3 h-3 mr-1" />
                                                     Low
-                                                </span>
+                                                </x-ui.badge>
                                             @endif
                                         </td>
-                                        <td class="px-4 py-3 text-neutral-600">
+                                        <td class="px-4 py-3 text-neutral-600 text-sm">
                                             {{ $task->due_date ? $task->due_date : 'Not set' }}
                                         </td>
                                     </tr>
@@ -317,70 +279,73 @@
                             </table>
                         </div>
                     @else
-                        <div class="text-center py-8">
-                            <div class="bg-neutral-50 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-tasks text-neutral-400 text-xl"></i>
-                            </div>
-                            <h3 class="text-neutral-500 text-base">No tasks found for this client</h3>
-                            <p class="text-neutral-400 text-sm mt-1">Tasks assigned to this client will appear here</p>
-                            <a href="#" class="mt-4 inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                                <i class="fas fa-plus mr-2"></i>
-                                Assign New Task
+                        <x-ui.empty-state 
+                            icon="clipboard-list"
+                            title="No tasks found for this client"
+                            description="Tasks assigned to this client will appear here"
+                        >
+                            <a href="#">
+                                <x-ui.button icon="plus">
+                                    Assign New Task
+                                </x-ui.button>
                             </a>
-                        </div>
+                        </x-ui.empty-state>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
 
             <!-- Recent Forms -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                <div class="flex justify-between items-center px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">Recent Forms</h2>
-                    <a href="#" class="text-sm text-primary-500 hover:text-primary-700 flex items-center">
+            <x-ui.card class="mb-6">
+                <div class="flex justify-between items-center px-6 py-4 border-b border-neutral-100">
+                    <div class="flex items-center gap-2">
+                        <x-lucide-file-text class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Recent Forms</h2>
+                    </div>
+                    <a href="#" class="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 transition-colors">
                         <span>View All</span>
-                        <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                        <x-lucide-chevron-right class="w-4 h-4" />
                     </a>
                 </div>
                 <div class="p-6">
                     @if(isset($recentForms) && !empty($recentForms) && ((is_array($recentForms) && count($recentForms) > 0) || (is_object($recentForms) && method_exists($recentForms, 'count') && $recentForms->count() > 0)))
                         <div class="overflow-x-auto">
-                            <table class="w-full whitespace-nowrap">
+                            <table class="w-full">
                                 <thead>
-                                    <tr class="bg-neutral-50 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                                        <th class="px-4 py-3 rounded-l-lg">Form</th>
-                                        <th class="px-4 py-3">Type</th>
-                                        <th class="px-4 py-3">Status</th>
-                                        <th class="px-4 py-3 rounded-r-lg">Submitted</th>
+                                    <tr class="bg-neutral-50 border-b border-neutral-100">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider rounded-l-lg">Form</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Type</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider rounded-r-lg">Submitted</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-neutral-100">
                                     @foreach($recentForms as $form)
-                                    <tr class="hover:bg-neutral-50">
+                                    <tr class="hover:bg-neutral-50 transition-colors">
                                         <td class="px-4 py-3">
-                                            <div class="font-medium text-neutral-900">{{ $form->title ?? 'Form #' . $form->id }}</div>
+                                            <div class="font-medium text-neutral-800">{{ $form->title ?? 'Form #' . $form->id }}</div>
                                         </td>
-                                        <td class="px-4 py-3 text-neutral-600">
+                                        <td class="px-4 py-3 text-neutral-600 text-sm">
                                             {{ ucfirst($form->type ?? 'general') }}
                                         </td>
                                         <td class="px-4 py-3">
                                             @if($form->status == 'completed')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
-                                                    <span class="h-1.5 w-1.5 rounded-full bg-success-500 mr-1.5"></span>
+                                                <x-ui.badge type="success">
+                                                    <span class="w-1.5 h-1.5 bg-success-500 rounded-full mr-1.5"></span>
                                                     Completed
-                                                </span>
+                                                </x-ui.badge>
                                             @elseif($form->status == 'pending')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
-                                                    <span class="h-1.5 w-1.5 rounded-full bg-warning-500 mr-1.5"></span>
+                                                <x-ui.badge type="warning">
+                                                    <span class="w-1.5 h-1.5 bg-warning-500 rounded-full mr-1.5"></span>
                                                     Pending
-                                                </span>
+                                                </x-ui.badge>
                                             @else
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
-                                                    <span class="h-1.5 w-1.5 rounded-full bg-neutral-500 mr-1.5"></span>
+                                                <x-ui.badge type="neutral">
+                                                    <span class="w-1.5 h-1.5 bg-neutral-500 rounded-full mr-1.5"></span>
                                                     Draft
-                                                </span>
+                                                </x-ui.badge>
                                             @endif
                                         </td>
-                                        <td class="px-4 py-3 text-neutral-600">
+                                        <td class="px-4 py-3 text-neutral-600 text-sm">
                                             {{ $form->created_at->format('M d, Y') }}
                                         </td>
                                     </tr>
@@ -389,82 +354,87 @@
                             </table>
                         </div>
                     @else
-                        <div class="text-center py-8">
-                            <div class="bg-neutral-50 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-file-alt text-neutral-400 text-xl"></i>
-                            </div>
-                            <h3 class="text-neutral-500 text-base">No forms found for this client</h3>
-                            <p class="text-neutral-400 text-sm mt-1">Forms submitted by this client will appear here</p>
-                            <a href="#" class="mt-4 inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                                <i class="fas fa-plus mr-2"></i>
-                                Create New Form
+                        <x-ui.empty-state 
+                            icon="file-text"
+                            title="No forms found for this client"
+                            description="Forms submitted by this client will appear here"
+                        >
+                            <a href="#">
+                                <x-ui.button icon="plus">
+                                    Create New Form
+                                </x-ui.button>
                             </a>
-                        </div>
+                        </x-ui.empty-state>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
         </div>
 
         <!-- Notes Section -->
         <div class="lg:col-span-3">
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="flex justify-between items-center px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">Client Notes</h2>
-                    <button onclick="$('#addNoteModal').modal('show')" 
-                            class="inline-flex items-center px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors">
-                        <i class="fas fa-plus mr-1"></i>
-                        Add Note
+            <x-ui.card>
+                <div class="flex justify-between items-center px-6 py-4 border-b border-neutral-100">
+                    <div class="flex items-center gap-2">
+                        <x-lucide-sticky-note class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Client Notes</h2>
+                    </div>
+                    <button onclick="$('#addNoteModal').modal('show')">
+                        <x-ui.button size="sm" icon="plus">
+                            Add Note
+                        </x-ui.button>
                     </button>
                 </div>
                 <div class="p-6 max-h-[500px] overflow-y-auto">
                     @if(isset($notes) && is_object($notes) && $notes->count() > 0)
-                        <div class="space-y-6">
+                        <div class="space-y-4">
                             @foreach($notes as $note)
-                            <div class="bg-white border border-neutral-200 rounded-lg p-5 shadow-sm">
+                            <div class="bg-neutral-50 border border-neutral-100 rounded-xl p-5">
                                 <div class="flex justify-between items-start">
-                                    <div>
-                                        <div class="flex items-center mb-3">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-3">
                                             @if($note->type == 'important')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-800 mr-2">
-                                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                                <x-ui.badge type="error">
+                                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" />
                                                     Important
-                                                </span>
+                                                </x-ui.badge>
                                             @elseif($note->type == 'reminder')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800 mr-2">
-                                                    <i class="fas fa-bell mr-1"></i>
+                                                <x-ui.badge type="warning">
+                                                    <x-lucide-bell class="w-3 h-3 mr-1" />
                                                     Reminder
-                                                </span>
+                                                </x-ui.badge>
                                             @elseif($note->type == 'issue')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-800 text-white mr-2">
-                                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                <x-ui.badge type="neutral">
+                                                    <x-lucide-alert-triangle class="w-3 h-3 mr-1" />
                                                     Issue
-                                                </span>
+                                                </x-ui.badge>
                                             @else
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-100 text-info-800 mr-2">
-                                                    <i class="fas fa-info-circle mr-1"></i>
+                                                <x-ui.badge type="info">
+                                                    <x-lucide-info class="w-3 h-3 mr-1" />
                                                     General
-                                                </span>
+                                                </x-ui.badge>
                                             @endif
                                             <span class="text-neutral-500 text-xs">{{ $note->created_at->format('M d, Y') }}</span>
                                         </div>
-                                        <h3 class="text-lg font-medium text-neutral-900 mb-1">{{ $note->title }}</h3>
-                                        <p class="text-neutral-600">{{ $note->content }}</p>
+                                        <h3 class="text-base font-medium text-neutral-800 mb-1">{{ $note->title }}</h3>
+                                        <p class="text-neutral-600 text-sm">{{ $note->content }}</p>
                                     </div>
-                                    <div class="dropdown">
-                                        <button class="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-500" data-toggle="dropdown">
-                                            <i class="fas fa-ellipsis-v"></i>
+                                    <div class="dropdown ml-4">
+                                        <button class="p-2 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600 transition-colors" data-toggle="dropdown">
+                                            <x-lucide-more-vertical class="w-4 h-4" />
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-right">
-                                            <a href="#" class="dropdown-item edit-note-btn"
+                                            <a href="#" class="dropdown-item edit-note-btn flex items-center gap-2"
                                                data-note-id="{{ $note->id }}" 
                                                data-note-title="{{ $note->title }}" 
                                                data-note-content="{{ $note->content }}" 
                                                data-note-type="{{ $note->type }}">
-                                                <i class="fas fa-edit mr-2"></i>Edit
+                                                <x-lucide-pencil class="w-4 h-4" />
+                                                Edit
                                             </a>
-                                            <a href="#" class="dropdown-item text-error-600 delete-note-btn" 
+                                            <a href="#" class="dropdown-item text-error-600 delete-note-btn flex items-center gap-2" 
                                                data-note-id="{{ $note->id }}">
-                                                <i class="fas fa-trash mr-2"></i>Delete
+                                                <x-lucide-trash-2 class="w-4 h-4" />
+                                                Delete
                                             </a>
                                         </div>
                                     </div>
@@ -473,21 +443,20 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-12">
-                            <div class="bg-neutral-50 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-sticky-note text-neutral-400 text-xl"></i>
-                            </div>
-                            <h3 class="text-neutral-500 text-base">No notes for this client</h3>
-                            <p class="text-neutral-400 text-sm mt-1">Add important information about this client</p>
-                            <button onclick="$('#addNoteModal').modal('show')" 
-                                    class="mt-4 inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                                <i class="fas fa-plus mr-2"></i>
-                                Add First Note
+                        <x-ui.empty-state 
+                            icon="sticky-note"
+                            title="No notes for this client"
+                            description="Add important information about this client"
+                        >
+                            <button onclick="$('#addNoteModal').modal('show')">
+                                <x-ui.button icon="plus">
+                                    Add First Note
+                                </x-ui.button>
                             </button>
-                        </div>
+                        </x-ui.empty-state>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
         </div>
     </div>
 </div>
@@ -495,58 +464,47 @@
 <!-- Add Note Modal -->
 <div class="modal fade" id="addNoteModal" tabindex="-1" style="display: none;">
     <div class="modal-dialog">
-        <div class="modal-content rounded-lg shadow-lg border-0">
+        <div class="modal-content rounded-2xl shadow-xl border-0 overflow-hidden">
             <form action="{{ route('admin.clients.notes.store', $client->id) }}" method="POST">
                 @csrf
-                <div class="modal-header bg-neutral-50 border-b border-neutral-200 px-6 py-4">
+                <div class="bg-neutral-50 border-b border-neutral-100 px-6 py-4 flex items-center justify-between">
                     <h5 class="text-lg font-semibold text-neutral-800">Add Client Note</h5>
-                    <button type="button" class="text-neutral-500 hover:text-neutral-700 focus:outline-none" data-dismiss="modal">
-                        <i class="fas fa-times"></i>
+                    <button type="button" class="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors" data-dismiss="modal">
+                        <x-lucide-x class="w-5 h-5" />
                     </button>
                 </div>
-                <div class="modal-body p-6">
+                <div class="p-6">
                     <div class="mb-5">
-                        <label for="title" class="block text-sm font-medium text-neutral-700 mb-1">Title</label>
-                        <input type="text" name="title" id="title" 
-                               class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50" 
-                               placeholder="Note title" required>
+                        <label for="title" class="block text-sm font-medium text-neutral-700 mb-1.5">Title</label>
+                        <x-ui.input type="text" name="title" id="title" placeholder="Note title" required />
                     </div>
                     <div class="mb-5">
-                        <label for="content" class="block text-sm font-medium text-neutral-700 mb-1">Content</label>
+                        <label for="content" class="block text-sm font-medium text-neutral-700 mb-1.5">Content</label>
                         <textarea name="content" id="content" rows="4" 
-                                  class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50" 
+                                  class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" 
                                   placeholder="Note details..." required></textarea>
                     </div>
-                    <div class="mb-2">
-                        <label for="type" class="block text-sm font-medium text-neutral-700 mb-1">Note Type</label>
-                        <div class="relative">
-                            <select name="type" id="type" 
-                                    class="w-full appearance-none rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-                                    required>
-                                <option value="general">General</option>
-                                <option value="important">Important</option>
-                                <option value="reminder">Reminder</option>
-                                <option value="issue">Issue</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-500">
-                                <i class="fas fa-chevron-down text-xs"></i>
-                            </div>
-                        </div>
+                    <div class="mb-4">
+                        <label for="type" class="block text-sm font-medium text-neutral-700 mb-1.5">Note Type</label>
+                        <x-ui.select name="type" id="type" required>
+                            <option value="general">General</option>
+                            <option value="important">Important</option>
+                            <option value="reminder">Reminder</option>
+                            <option value="issue">Issue</option>
+                        </x-ui.select>
                     </div>
-                    <div class="mt-4 flex items-center space-x-3">
-                        <div class="flex items-center text-xs text-neutral-500">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            <span>Notes are visible to all administrators</span>
-                        </div>
+                    <div class="flex items-center gap-1.5 text-xs text-neutral-500">
+                        <x-lucide-info class="w-3.5 h-3.5" />
+                        <span>Notes are visible to all administrators</span>
                     </div>
                 </div>
-                <div class="modal-footer bg-neutral-50 border-t border-neutral-200 px-6 py-4 flex justify-end">
-                    <button type="button" class="px-4 py-2 border border-neutral-300 bg-white text-neutral-700 rounded-lg hover:bg-neutral-100 mr-3" data-dismiss="modal">
+                <div class="bg-neutral-50 border-t border-neutral-100 px-6 py-4 flex justify-end gap-3">
+                    <x-ui.button type="button" variant="secondary" data-dismiss="modal">
                         Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Add Note
-                    </button>
+                    </x-ui.button>
+                    <x-ui.button type="submit" icon="plus">
+                        Add Note
+                    </x-ui.button>
                 </div>
             </form>
         </div>
@@ -556,59 +514,48 @@
 <!-- Edit Note Modal -->
 <div class="modal fade" id="editNoteModal" tabindex="-1" style="display: none;">
     <div class="modal-dialog">
-        <div class="modal-content rounded-lg shadow-lg border-0">
+        <div class="modal-content rounded-2xl shadow-xl border-0 overflow-hidden">
             <form id="editNoteForm" method="POST">
                 @csrf
                 @method('PUT')
-                <div class="modal-header bg-neutral-50 border-b border-neutral-200 px-6 py-4">
+                <div class="bg-neutral-50 border-b border-neutral-100 px-6 py-4 flex items-center justify-between">
                     <h5 class="text-lg font-semibold text-neutral-800">Edit Note</h5>
-                    <button type="button" class="text-neutral-500 hover:text-neutral-700 focus:outline-none" data-dismiss="modal">
-                        <i class="fas fa-times"></i>
+                    <button type="button" class="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors" data-dismiss="modal">
+                        <x-lucide-x class="w-5 h-5" />
                     </button>
                 </div>
-                <div class="modal-body p-6">
+                <div class="p-6">
                     <div class="mb-5">
-                        <label for="edit_title" class="block text-sm font-medium text-neutral-700 mb-1">Title</label>
-                        <input type="text" name="title" id="edit_title" 
-                               class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50" 
-                               placeholder="Note title" required>
+                        <label for="edit_title" class="block text-sm font-medium text-neutral-700 mb-1.5">Title</label>
+                        <x-ui.input type="text" name="title" id="edit_title" placeholder="Note title" required />
                     </div>
                     <div class="mb-5">
-                        <label for="edit_content" class="block text-sm font-medium text-neutral-700 mb-1">Content</label>
+                        <label for="edit_content" class="block text-sm font-medium text-neutral-700 mb-1.5">Content</label>
                         <textarea name="content" id="edit_content" rows="4" 
-                                  class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50" 
+                                  class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" 
                                   placeholder="Note details..." required></textarea>
                     </div>
-                    <div class="mb-2">
-                        <label for="edit_type" class="block text-sm font-medium text-neutral-700 mb-1">Note Type</label>
-                        <div class="relative">
-                            <select name="type" id="edit_type" 
-                                    class="w-full appearance-none rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50" 
-                                    required>
-                                <option value="general">General</option>
-                                <option value="important">Important</option>
-                                <option value="reminder">Reminder</option>
-                                <option value="issue">Issue</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-500">
-                                <i class="fas fa-chevron-down text-xs"></i>
-                            </div>
-                        </div>
+                    <div class="mb-4">
+                        <label for="edit_type" class="block text-sm font-medium text-neutral-700 mb-1.5">Note Type</label>
+                        <x-ui.select name="type" id="edit_type" required>
+                            <option value="general">General</option>
+                            <option value="important">Important</option>
+                            <option value="reminder">Reminder</option>
+                            <option value="issue">Issue</option>
+                        </x-ui.select>
                     </div>
-                    <div class="mt-4 flex items-center space-x-3">
-                        <div class="flex items-center text-xs text-neutral-500">
-                            <i class="fas fa-clock mr-1"></i>
-                            <span>Last edited: <span class="font-medium">Now</span></span>
-                        </div>
+                    <div class="flex items-center gap-1.5 text-xs text-neutral-500">
+                        <x-lucide-clock class="w-3.5 h-3.5" />
+                        <span>Last edited: <span class="font-medium">Now</span></span>
                     </div>
                 </div>
-                <div class="modal-footer bg-neutral-50 border-t border-neutral-200 px-6 py-4 flex justify-end">
-                    <button type="button" class="px-4 py-2 border border-neutral-300 bg-white text-neutral-700 rounded-lg hover:bg-neutral-100 mr-3" data-dismiss="modal">
+                <div class="bg-neutral-50 border-t border-neutral-100 px-6 py-4 flex justify-end gap-3">
+                    <x-ui.button type="button" variant="secondary" data-dismiss="modal">
                         Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                        <i class="fas fa-save mr-2"></i>Save Changes
-                    </button>
+                    </x-ui.button>
+                    <x-ui.button type="submit" icon="save">
+                        Save Changes
+                    </x-ui.button>
                 </div>
             </form>
         </div>

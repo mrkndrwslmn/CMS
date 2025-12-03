@@ -4,242 +4,244 @@
 @section('page-title', 'Feedback Details')
 
 @section('content')
-<div class="max-w-5xl mx-auto">
+<div class="p-6 lg:p-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Feedback', 'route' => 'admin.feedback.index', 'icon' => 'message-square-text'],
+        ['label' => 'Details', 'icon' => 'file-text'],
+    ]" class="mb-6" />
+
     <!-- Page Header -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Feedback Details</h1>
-                <nav class="flex items-center space-x-2 text-sm text-gray-500 mt-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-accent-500 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
-                    <a href="{{ route('admin.feedback.index') }}" class="hover:text-accent-500 transition-colors">Feedback</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
-                    <span class="text-gray-900">Details</span>
-                </nav>
-            </div>
-            <a href="{{ route('admin.feedback.index') }}" class="inline-flex items-center px-5 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>
-                Back to Feedback
-            </a>
-        </div>
-    </div>
+    <x-ui.page-header 
+        title="Feedback Details" 
+        :description="'Submitted on ' . $feedback->created_at->format('F d, Y')"
+        class="mb-6"
+    />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Feedback Card -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <!-- Header -->
-                <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-4">
-                    <div class="flex items-center justify-between text-white">
-                        <div>
-                            <h2 class="text-xl font-semibold">{{ $feedback->title ?? 'Feedback' }}</h2>
-                            <p class="text-accent-100 text-sm mt-1">Submitted on {{ $feedback->created_at->format('F d, Y') }}</p>
+            <x-ui.card>
+                <x-slot:header>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-primary-50 rounded-lg">
+                                <x-lucide-message-square-text class="w-5 h-5 text-primary-500" />
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-medium text-neutral-700">{{ $feedback->title ?? 'Feedback' }}</h2>
+                                <p class="text-sm text-neutral-400">Submitted on {{ $feedback->created_at->format('F d, Y') }}</p>
+                            </div>
                         </div>
                         @php
-                            $statusColors = [
-                                'pending' => 'bg-orange-100 text-orange-800',
-                                'reviewed' => 'bg-blue-100 text-blue-800',
-                                'resolved' => 'bg-green-100 text-green-800',
+                            $statusVariants = [
+                                'pending' => 'warning',
+                                'reviewed' => 'info',
+                                'resolved' => 'success',
                             ];
-                            $statusColor = $statusColors[$feedback->status] ?? 'bg-gray-100 text-gray-800';
+                            $statusVariant = $statusVariants[$feedback->status] ?? 'neutral';
                         @endphp
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusColor }}">
+                        <x-ui.badge :variant="$statusVariant" size="lg">
                             {{ ucfirst($feedback->status ?? 'pending') }}
-                        </span>
+                        </x-ui.badge>
+                    </div>
+                </x-slot:header>
+
+                <!-- Rating -->
+                @if($feedback->rating)
+                    <div class="mb-6">
+                        <h3 class="text-sm font-medium text-neutral-500 mb-2">Rating</h3>
+                        <div class="flex items-center gap-1">
+                            @for($i = 1; $i <= 5; $i++)
+                                <x-lucide-star class="w-6 h-6 {{ $i <= $feedback->rating ? 'text-warning-400 fill-warning-400' : 'text-neutral-200' }}" />
+                            @endfor
+                            <span class="ml-2 text-xl font-semibold text-neutral-700">{{ $feedback->rating }}/5</span>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Message -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-neutral-500 mb-2">Feedback Message</h3>
+                    <div class="bg-neutral-50 rounded-xl p-4 border border-neutral-100">
+                        <p class="text-neutral-700 whitespace-pre-wrap">{{ $feedback->message }}</p>
                     </div>
                 </div>
 
-                <!-- Body -->
-                <div class="p-6">
-                    <!-- Rating -->
-                    @if($feedback->rating)
-                        <div class="mb-6">
-                            <h3 class="text-sm font-semibold text-gray-700 mb-2">Rating</h3>
-                            <div class="flex items-center">
-                                @for($i = 1; $i <= 5; $i++)
-                                    @if($i <= $feedback->rating)
-                                        <i class="fas fa-star text-amber-400 text-2xl"></i>
-                                    @else
-                                        <i class="far fa-star text-gray-300 text-2xl"></i>
-                                    @endif
-                                @endfor
-                                <span class="ml-3 text-xl font-bold text-gray-700">{{ $feedback->rating }}/5</span>
-                            </div>
-                        </div>
-                    @endif
-
-                    <!-- Message -->
+                <!-- Task Reference -->
+                @if($feedback->task)
                     <div class="mb-6">
-                        <h3 class="text-sm font-semibold text-gray-700 mb-2">Feedback Message</h3>
-                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <p class="text-gray-700 whitespace-pre-wrap">{{ $feedback->message }}</p>
+                        <h3 class="text-sm font-medium text-neutral-500 mb-2">Related Task</h3>
+                        <a href="{{ route('admin.tasks.show', $feedback->task->taskID) }}" 
+                           class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors">
+                            <x-lucide-clipboard-list class="w-4 h-4" />
+                            {{ $feedback->task->taskTitle }}
+                        </a>
+                    </div>
+                @endif
+
+                <!-- Admin Response -->
+                @if($feedback->admin_response)
+                    <div class="mb-6">
+                        <h3 class="text-sm font-medium text-neutral-500 mb-2">Admin Response</h3>
+                        <div class="bg-success-50 border-l-4 border-success-500 rounded-r-xl p-4">
+                            <p class="text-neutral-700 whitespace-pre-wrap">{{ $feedback->admin_response }}</p>
+                            @if($feedback->responded_at)
+                                <p class="text-xs text-neutral-400 mt-3">
+                                    Responded on {{ $feedback->responded_at->format('F d, Y g:i A') }}
+                                </p>
+                            @endif
                         </div>
                     </div>
+                @endif
 
-                    <!-- Task Reference -->
-                    @if($feedback->task)
-                        <div class="mb-6">
-                            <h3 class="text-sm font-semibold text-gray-700 mb-2">Related Task</h3>
-                            <a href="{{ route('admin.tasks.show', $feedback->task->taskID) }}" 
-                               class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
-                                <i class="fas fa-tasks mr-2"></i>
-                                {{ $feedback->task->taskTitle }}
-                            </a>
-                        </div>
-                    @endif
-
-                    <!-- Admin Response -->
-                    @if($feedback->admin_response)
-                        <div class="mb-6">
-                            <h3 class="text-sm font-semibold text-gray-700 mb-2">Admin Response</h3>
-                            <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
-                                <p class="text-gray-700 whitespace-pre-wrap">{{ $feedback->admin_response }}</p>
-                                @if($feedback->responded_at)
-                                    <p class="text-xs text-gray-500 mt-2">Responded on {{ $feedback->responded_at->format('F d, Y g:i A') }}</p>
+                <!-- Response Form -->
+                @if(!$feedback->admin_response || $feedback->status !== 'resolved')
+                    <div class="border-t border-neutral-100 pt-6">
+                        <h3 class="text-sm font-medium text-neutral-700 mb-4">
+                            {{ $feedback->admin_response ? 'Update Response' : 'Add Response' }}
+                        </h3>
+                        <form action="{{ route('admin.feedback.respond', $feedback->id) }}" method="POST">
+                            @csrf
+                            <div class="mb-4">
+                                <x-ui.textarea 
+                                    name="response" 
+                                    rows="4" 
+                                    required
+                                    placeholder="Write your response here..."
+                                    :value="old('response', $feedback->admin_response)"
+                                />
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <x-ui.button type="submit" variant="primary">
+                                    <x-lucide-send class="w-4 h-4" />
+                                    Send Response
+                                </x-ui.button>
+                                @if($feedback->status !== 'resolved')
+                                    <x-ui.button type="submit" name="mark_resolved" value="1" variant="success">
+                                        <x-lucide-check-circle class="w-4 h-4" />
+                                        Send & Mark Resolved
+                                    </x-ui.button>
                                 @endif
                             </div>
-                        </div>
-                    @endif
-
-                    <!-- Response Form -->
-                    @if(!$feedback->admin_response || $feedback->status !== 'resolved')
-                        <div class="border-t border-gray-200 pt-6">
-                            <h3 class="text-sm font-semibold text-gray-700 mb-4">
-                                {{ $feedback->admin_response ? 'Update Response' : 'Add Response' }}
-                            </h3>
-                            <form action="{{ route('admin.feedback.respond', $feedback->id) }}" method="POST">
-                                @csrf
-                                <div class="mb-4">
-                                    <textarea 
-                                        name="response" 
-                                        rows="4" 
-                                        required
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all resize-none"
-                                        placeholder="Write your response here...">{{ old('response', $feedback->admin_response) }}</textarea>
-                                </div>
-                                <div class="flex items-center space-x-3">
-                                    <button type="submit" 
-                                            class="px-6 py-2.5 bg-gradient-to-r from-accent-500 to-accent-600 text-white font-semibold rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all duration-200 shadow-lg shadow-accent-500/30">
-                                        <i class="fas fa-paper-plane mr-2"></i>
-                                        Send Response
-                                    </button>
-                                    @if($feedback->status !== 'resolved')
-                                        <button type="submit" 
-                                                name="mark_resolved" 
-                                                value="1"
-                                                class="px-6 py-2.5 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors">
-                                            <i class="fas fa-check-circle mr-2"></i>
-                                            Send & Mark Resolved
-                                        </button>
-                                    @endif
-                                </div>
-                            </form>
-                        </div>
-                    @endif
-                </div>
-            </div>
+                        </form>
+                    </div>
+                @endif
+            </x-ui.card>
         </div>
 
         <!-- Sidebar -->
         <div class="space-y-6">
             <!-- Client Info Card -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b border-gray-200">
-                    <h3 class="text-sm font-semibold text-gray-800">Client Information</h3>
-                </div>
-                <div class="p-4">
-                    @if($feedback->client)
-                        <div class="flex items-center mb-4">
-                            @if($feedback->client->profilePic)
-                                <img src="{{ $feedback->client->getProfilePictureUrl() }}" class="w-16 h-16 rounded-full object-cover mr-3">
-                            @else
-                                <div class="w-16 h-16 rounded-full bg-primary-500 flex items-center justify-center text-white text-xl font-bold mr-3">
-                                    {{ substr($feedback->client->fullName, 0, 1) }}
-                                </div>
-                            @endif
-                            <div>
-                                <p class="font-semibold text-gray-900">{{ $feedback->client->fullName }}</p>
-                                <p class="text-sm text-gray-500">{{ ucfirst($feedback->client->role) }}</p>
+            <x-ui.card>
+                <x-slot:header>
+                    <div class="flex items-center gap-2">
+                        <x-lucide-user class="w-4 h-4 text-neutral-400" />
+                        <h3 class="text-sm font-medium text-neutral-700">Client Information</h3>
+                    </div>
+                </x-slot:header>
+
+                @if($feedback->client)
+                    <div class="flex items-center mb-4">
+                        @if($feedback->client->profilePic)
+                            <img src="{{ $feedback->client->getProfilePictureUrl() }}" class="w-14 h-14 rounded-full object-cover mr-3">
+                        @else
+                            <div class="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 text-xl font-semibold mr-3">
+                                {{ substr($feedback->client->fullName, 0, 1) }}
                             </div>
+                        @endif
+                        <div>
+                            <p class="font-medium text-neutral-700">{{ $feedback->client->fullName }}</p>
+                            <p class="text-sm text-neutral-400">{{ ucfirst($feedback->client->role) }}</p>
                         </div>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-envelope w-5 mr-2 text-gray-400"></i>
-                                <a href="mailto:{{ $feedback->client->email }}" class="hover:text-accent-500">{{ $feedback->client->email }}</a>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 text-sm">
+                            <x-lucide-mail class="w-4 h-4 text-neutral-400" />
+                            <a href="mailto:{{ $feedback->client->email }}" class="text-neutral-600 hover:text-primary-600 transition-colors">
+                                {{ $feedback->client->email }}
+                            </a>
+                        </div>
+                        @if($feedback->client->phone)
+                            <div class="flex items-center gap-3 text-sm">
+                                <x-lucide-phone class="w-4 h-4 text-neutral-400" />
+                                <a href="tel:{{ $feedback->client->phone }}" class="text-neutral-600 hover:text-primary-600 transition-colors">
+                                    {{ $feedback->client->phone }}
+                                </a>
                             </div>
-                            @if($feedback->client->phone)
-                                <div class="flex items-center text-gray-600">
-                                    <i class="fas fa-phone w-5 mr-2 text-gray-400"></i>
-                                    <a href="tel:{{ $feedback->client->phone }}" class="hover:text-accent-500">{{ $feedback->client->phone }}</a>
-                                </div>
-                            @endif
-                        </div>
-                    @else
-                        <p class="text-gray-500 italic">No client information available</p>
-                    @endif
-                </div>
-            </div>
+                        @endif
+                    </div>
+                @else
+                    <p class="text-neutral-400 text-sm italic">No client information available</p>
+                @endif
+            </x-ui.card>
 
             <!-- Project Team Info Card -->
             @if($feedback->project)
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b border-gray-200">
-                        <h3 class="text-sm font-semibold text-gray-800">Project Team</h3>
-                    </div>
-                    <div class="p-4">
-                        @if($feedback->project->assignments && $feedback->project->assignments->count() > 0)
-                            <div class="space-y-3">
-                                @foreach($feedback->project->assignments as $assignment)
-                                    <div class="flex items-center">
-                                        @if($assignment->adiutor->profilePic)
-                                            <img src="{{ $assignment->adiutor->getProfilePictureUrl() }}" class="w-10 h-10 rounded-full object-cover mr-3">
-                                        @else
-                                            <div class="w-10 h-10 rounded-full bg-accent-500 flex items-center justify-center text-white font-bold mr-3">
-                                                {{ substr($assignment->adiutor->fullName, 0, 1) }}
-                                            </div>
-                                        @endif
-                                        <div class="flex-1">
-                                            <p class="font-medium text-gray-900 text-sm">{{ $assignment->adiutor->fullName }}</p>
-                                            <p class="text-xs text-gray-500">{{ $assignment->adiutor->email }}</p>
+                <x-ui.card>
+                    <x-slot:header>
+                        <div class="flex items-center gap-2">
+                            <x-lucide-users class="w-4 h-4 text-neutral-400" />
+                            <h3 class="text-sm font-medium text-neutral-700">Project Team</h3>
+                        </div>
+                    </x-slot:header>
+
+                    @if($feedback->project->assignments && $feedback->project->assignments->count() > 0)
+                        <div class="space-y-3">
+                            @foreach($feedback->project->assignments as $assignment)
+                                <div class="flex items-center">
+                                    @if($assignment->adiutor->profilePic)
+                                        <img src="{{ $assignment->adiutor->getProfilePictureUrl() }}" class="w-10 h-10 rounded-full object-cover mr-3">
+                                    @else
+                                        <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold mr-3">
+                                            {{ substr($assignment->adiutor->fullName, 0, 1) }}
                                         </div>
+                                    @endif
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-medium text-neutral-700 text-sm truncate">{{ $assignment->adiutor->fullName }}</p>
+                                        <p class="text-xs text-neutral-400 truncate">{{ $assignment->adiutor->email }}</p>
                                     </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <p class="text-gray-500 text-sm italic">No team members assigned</p>
-                        @endif
-                    </div>
-                </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-neutral-400 text-sm italic">No team members assigned</p>
+                    @endif
+                </x-ui.card>
             @endif
 
             <!-- Metadata Card -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b border-gray-200">
-                    <h3 class="text-sm font-semibold text-gray-800">Metadata</h3>
-                </div>
-                <div class="p-4 space-y-3 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Type:</span>
-                        <span class="font-medium text-gray-900">{{ ucfirst($feedback->type ?? 'general') }}</span>
+            <x-ui.card>
+                <x-slot:header>
+                    <div class="flex items-center gap-2">
+                        <x-lucide-info class="w-4 h-4 text-neutral-400" />
+                        <h3 class="text-sm font-medium text-neutral-700">Metadata</h3>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Status:</span>
-                        <span class="font-medium text-gray-900">{{ ucfirst($feedback->status ?? 'pending') }}</span>
+                </x-slot:header>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-neutral-500">Type</span>
+                        <span class="text-sm font-medium text-neutral-700">{{ ucfirst($feedback->type ?? 'general') }}</span>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Submitted:</span>
-                        <span class="font-medium text-gray-900">{{ $feedback->created_at->format('M d, Y') }}</span>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-neutral-500">Status</span>
+                        <span class="text-sm font-medium text-neutral-700">{{ ucfirst($feedback->status ?? 'pending') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-neutral-500">Submitted</span>
+                        <span class="text-sm font-medium text-neutral-700">{{ $feedback->created_at->format('M d, Y') }}</span>
                     </div>
                     @if($feedback->updated_at != $feedback->created_at)
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Last Updated:</span>
-                            <span class="font-medium text-gray-900">{{ $feedback->updated_at->format('M d, Y') }}</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-neutral-500">Last Updated</span>
+                            <span class="text-sm font-medium text-neutral-700">{{ $feedback->updated_at->format('M d, Y') }}</span>
                         </div>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
         </div>
     </div>
 </div>

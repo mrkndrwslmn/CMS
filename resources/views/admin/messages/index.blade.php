@@ -3,199 +3,243 @@
 @section('title', 'Messages')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="p-6 lg:p-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Messages', 'icon' => 'message-square'],
+    ]" class="mb-6" />
+
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                </svg>
-                Messages
-            </h1>
-            <p class="mt-2 text-sm text-gray-600">Manage all project conversations</p>
-        </div>
+    <div class="mb-6">
+        <x-ui.page-header 
+            title="Messages" 
+            description="Manage all project conversations"
+        />
     </div>
 
     @if(session('success'))
-        <div class="mb-6 bg-green-50 border-l-4 border-green-500 rounded-lg p-4 flex items-start gap-3 animate-fade-in">
-            <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-            </svg>
+        <div class="mb-6 bg-success-50 border border-success-200 rounded-xl p-4 flex items-start gap-3">
+            <x-lucide-check-circle class="w-5 h-5 text-success-500 flex-shrink-0 mt-0.5" />
             <div class="flex-1">
-                <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                <p class="text-sm font-medium text-success-800">{{ session('success') }}</p>
             </div>
         </div>
     @endif
 
+    @php
+        // Merge conversations and group chats by project_id for unified view
+        $projectChatsArray = [];
+        
+        // Add direct conversations
+        foreach ($conversations as $conv) {
+            $projectId = $conv->project_id;
+            if (!isset($projectChatsArray[$projectId])) {
+                $projectChatsArray[$projectId] = [
+                    'project' => $conv->project,
+                    'client' => $conv->client,
+                    'direct' => null,
+                    'group' => null,
+                    'latest_activity' => null,
+                ];
+            }
+            $projectChatsArray[$projectId]['direct'] = $conv;
+            $latestDirect = $conv->last_message_at;
+            if (!$projectChatsArray[$projectId]['latest_activity'] || ($latestDirect && $latestDirect > $projectChatsArray[$projectId]['latest_activity'])) {
+                $projectChatsArray[$projectId]['latest_activity'] = $latestDirect;
+            }
+        }
+        
+        // Add group chats
+        foreach ($groupChats as $gc) {
+            $projectId = $gc->project_id;
+            if (!isset($projectChatsArray[$projectId])) {
+                $projectChatsArray[$projectId] = [
+                    'project' => $gc->project,
+                    'client' => $gc->project->client ?? null,
+                    'direct' => null,
+                    'group' => null,
+                    'latest_activity' => null,
+                ];
+            }
+            $projectChatsArray[$projectId]['group'] = $gc;
+            $latestGroup = $gc->last_message_at;
+            if (!$projectChatsArray[$projectId]['latest_activity'] || ($latestGroup && $latestGroup > $projectChatsArray[$projectId]['latest_activity'])) {
+                $projectChatsArray[$projectId]['latest_activity'] = $latestGroup;
+            }
+        }
+        
+        // Convert to collection and sort by latest activity
+        $projectChats = collect($projectChatsArray)->sortByDesc('latest_activity');
+        
+        // Calculate total unread
+        $totalUnread = $conversations->sum('unread_count_admin') + $groupChats->sum('my_unread_count');
+    @endphp
+
     <!-- Conversations Card -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <x-ui.card>
         <!-- Card Header -->
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900">All Conversations</h2>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
-                {{ $conversations->total() }} Total
-            </span>
+        <div class="px-6 py-4 border-b border-neutral-200 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-neutral-800">Project Conversations</h2>
+            <div class="flex items-center gap-3">
+                @if($totalUnread > 0)
+                    <x-ui.badge variant="error">
+                        {{ $totalUnread }} Unread
+                    </x-ui.badge>
+                @endif
+                <x-ui.badge variant="primary">
+                    {{ $projectChats->count() }} Projects
+                </x-ui.badge>
+            </div>
         </div>
 
         <!-- Card Body -->
-        <div class="divide-y divide-gray-200">
-            @if($conversations->isEmpty() && $groupChats->isEmpty())
+        <div class="divide-y divide-neutral-200">
+            @if($projectChats->isEmpty())
                 <div class="px-6 py-16 text-center">
-                    <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
-                    <p class="text-gray-500 text-base">No conversations yet</p>
-                    <p class="text-gray-400 text-sm mt-1">Conversations will appear here when clients start messaging</p>
+                    <x-lucide-message-square class="mx-auto w-16 h-16 text-neutral-300 mb-4" />
+                    <p class="text-neutral-500 text-base">No conversations yet</p>
+                    <p class="text-neutral-400 text-sm mt-1">Conversations will appear here when clients start messaging</p>
                 </div>
             @else
-                {{-- Direct Client Messages --}}
-                @foreach($conversations as $conversation)
-                    <a href="{{ route('admin.messages.show', $conversation->project_id) }}" 
-                       class="block px-6 py-4 hover:bg-gray-50 transition-colors duration-150 {{ $conversation->unread_count_admin > 0 ? 'bg-primary-50/30 border-l-4 border-l-primary-600' : '' }}">
-                        <div class="flex items-start justify-between gap-4">
-                            <!-- Left side -->
+                @foreach($projectChats as $projectId => $data)
+                    @php
+                        $project = $data['project'];
+                        $client = $data['client'];
+                        $direct = $data['direct'];
+                        $group = $data['group'];
+                        $hasUnread = ($direct?->unread_count_admin > 0) || ($group?->my_unread_count > 0);
+                    @endphp
+                    <div class="px-6 py-5 hover:bg-neutral-50/50 transition-colors {{ $hasUnread ? 'bg-primary-50/20' : '' }}">
+                        <!-- Project Header Row -->
+                        <div class="flex items-start justify-between gap-4 mb-4">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <h3 class="text-base font-semibold text-gray-900 truncate">
-                                        {{ $conversation->project->title }}
-                                    </h3>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        Direct
-                                    </span>
-                                    @if($conversation->unread_count_admin > 0)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
-                                            {{ $conversation->unread_count_admin }} New
-                                        </span>
-                                    @endif
-                                </div>
-                                
-                                <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                    <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span><span class="font-medium">Client:</span> {{ $conversation->client->fullName }}</span>
-                                </div>
-                                
-                                @if($conversation->lastMessage)
-                                    <div class="flex items-start gap-2 text-sm text-gray-500">
-                                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        <p class="truncate max-w-xl">
-                                            {{ Str::limit($conversation->lastMessage->message, 100) }}
-                                        </p>
+                                <div class="flex items-center gap-3 mb-1.5">
+                                    <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-primary-100 flex-shrink-0">
+                                        <x-lucide-folder-kanban class="w-5 h-5 text-primary-600" />
                                     </div>
-                                @endif
+                                    <div class="min-w-0">
+                                        <h3 class="text-base font-semibold text-neutral-800 truncate">
+                                            {{ $project->title }}
+                                        </h3>
+                                        <div class="flex items-center gap-3 text-sm text-neutral-500">
+                                            <span class="flex items-center gap-1.5">
+                                                <x-lucide-user class="w-3.5 h-3.5" />
+                                                {{ $client?->fullName ?? 'No client' }}
+                                            </span>
+                                            <span class="text-neutral-300">|</span>
+                                            <span>Project #{{ $projectId }}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-
-                            <!-- Right side -->
-                            <div class="flex flex-col items-end gap-2 flex-shrink-0">
-                                @if($conversation->last_message_at)
-                                    <div class="flex items-center gap-1.5 text-xs text-gray-500">
-                                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        {{ $conversation->last_message_at->diffForHumans() }}
+                            
+                            <!-- Time & Status -->
+                            <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+                                @if($data['latest_activity'])
+                                    <div class="flex items-center gap-1.5 text-xs text-neutral-500">
+                                        <x-lucide-clock class="w-3.5 h-3.5" />
+                                        {{ $data['latest_activity']->diffForHumans() }}
                                     </div>
                                 @endif
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path>
-                                    </svg>
-                                    Project #{{ $conversation->project_id }}
-                                </span>
+                                @if($hasUnread)
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-700">
+                                        <x-lucide-bell class="w-3 h-3" />
+                                        New messages
+                                    </span>
+                                @endif
                             </div>
                         </div>
-                    </a>
-                @endforeach
 
-                {{-- Group Chats --}}
-                @foreach($groupChats as $groupChat)
-                    <a href="{{ route('admin.messages.show', $groupChat->project_id) }}?tab=group" 
-                       class="block px-6 py-4 hover:bg-gray-50 transition-colors duration-150 {{ $groupChat->my_unread_count > 0 ? 'bg-green-50/30 border-l-4 border-l-green-600' : '' }}">
-                        <div class="flex items-start justify-between gap-4">
-                            <!-- Left side -->
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <h3 class="text-base font-semibold text-gray-900 truncate">
-                                        {{ $groupChat->project->title }}
-                                    </h3>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
-                                        </svg>
-                                        Group Chat
-                                    </span>
-                                    @if($groupChat->status === 'archived')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"></path>
-                                                <path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            Archived
-                                        </span>
-                                    @endif
-                                    @if($groupChat->my_unread_count > 0)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
-                                            {{ $groupChat->my_unread_count }} New
-                                        </span>
-                                    @endif
+                        <!-- Chat Channels Row -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 ml-13">
+                            <!-- Direct Message Channel -->
+                            <a href="{{ route('admin.messages.show', $projectId) }}" 
+                               class="group flex items-center gap-3 p-3 rounded-xl border transition-all
+                                      {{ $direct?->unread_count_admin > 0 
+                                         ? 'border-primary-200 bg-primary-50 hover:bg-primary-100' 
+                                         : 'border-neutral-200 bg-white hover:bg-neutral-50 hover:border-neutral-300' }}">
+                                <div class="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0
+                                            {{ $direct?->unread_count_admin > 0 ? 'bg-primary-200' : 'bg-neutral-100 group-hover:bg-neutral-200' }}">
+                                    <x-lucide-user class="w-4 h-4 {{ $direct?->unread_count_admin > 0 ? 'text-primary-700' : 'text-neutral-500' }}" />
                                 </div>
-                                
-                                <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                    <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
-                                    </svg>
-                                    <span><span class="font-medium">Members:</span> {{ $groupChat->members_count }}</span>
-                                </div>
-                                
-                                @if($groupChat->lastMessage)
-                                    <div class="flex items-start gap-2 text-sm text-gray-500">
-                                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        <p class="truncate max-w-xl">
-                                            <span class="font-medium">{{ $groupChat->lastMessage->sender->fullName }}:</span>
-                                            {{ Str::limit($groupChat->lastMessage->message, 100) }}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-sm font-medium {{ $direct?->unread_count_admin > 0 ? 'text-primary-800' : 'text-neutral-700' }}">
+                                            Direct Message
+                                        </span>
+                                        @if($direct?->unread_count_admin > 0)
+                                            <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold bg-primary-600 text-white">
+                                                {{ $direct->unread_count_admin }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @if($direct?->lastMessage)
+                                        <p class="text-xs text-neutral-500 truncate mt-0.5">
+                                            {{ Str::limit($direct->lastMessage->message, 50) }}
                                         </p>
-                                    </div>
-                                @endif
-                            </div>
+                                    @else
+                                        <p class="text-xs text-neutral-400 mt-0.5">No messages yet</p>
+                                    @endif
+                                </div>
+                                <x-lucide-chevron-right class="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0" />
+                            </a>
 
-                            <!-- Right side -->
-                            <div class="flex flex-col items-end gap-2 flex-shrink-0">
-                                @if($groupChat->last_message_at)
-                                    <div class="flex items-center gap-1.5 text-xs text-gray-500">
-                                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        {{ $groupChat->last_message_at->diffForHumans() }}
+                            <!-- Group Chat Channel -->
+                            <a href="{{ route('admin.messages.show', $projectId) }}?tab=group" 
+                               class="group flex items-center gap-3 p-3 rounded-xl border transition-all
+                                      {{ $group?->my_unread_count > 0 
+                                         ? 'border-success-200 bg-success-50 hover:bg-success-100' 
+                                         : 'border-neutral-200 bg-white hover:bg-neutral-50 hover:border-neutral-300' }}">
+                                <div class="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0
+                                            {{ $group?->my_unread_count > 0 ? 'bg-success-200' : 'bg-neutral-100 group-hover:bg-neutral-200' }}">
+                                    <x-lucide-users class="w-4 h-4 {{ $group?->my_unread_count > 0 ? 'text-success-700' : 'text-neutral-500' }}" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium {{ $group?->my_unread_count > 0 ? 'text-success-800' : 'text-neutral-700' }}">
+                                                Team Chat
+                                            </span>
+                                            @if($group?->status === 'archived')
+                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs bg-neutral-100 text-neutral-500">
+                                                    <x-lucide-archive class="w-2.5 h-2.5" />
+                                                    Archived
+                                                </span>
+                                            @endif
+                                        </div>
+                                        @if($group?->my_unread_count > 0)
+                                            <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold bg-success-600 text-white">
+                                                {{ $group->my_unread_count }}
+                                            </span>
+                                        @endif
                                     </div>
-                                @endif
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path>
-                                    </svg>
-                                    Project #{{ $groupChat->project_id }}
-                                </span>
-                            </div>
+                                    @if($group?->lastMessage)
+                                        <p class="text-xs text-neutral-500 truncate mt-0.5">
+                                            <span class="font-medium">{{ $group->lastMessage->sender->fullName }}:</span>
+                                            {{ Str::limit($group->lastMessage->message, 40) }}
+                                        </p>
+                                    @elseif($group)
+                                        <p class="text-xs text-neutral-400 mt-0.5">{{ $group->members_count }} members</p>
+                                    @else
+                                        <p class="text-xs text-neutral-400 mt-0.5">No group chat</p>
+                                    @endif
+                                </div>
+                                <x-lucide-chevron-right class="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0" />
+                            </a>
                         </div>
-                    </a>
+                    </div>
                 @endforeach
             @endif
         </div>
 
         <!-- Pagination -->
         @if(!$conversations->isEmpty())
-            <div class="px-6 py-4 border-t border-gray-200">
+            <div class="px-6 py-4 border-t border-neutral-200">
                 {{ $conversations->links() }}
             </div>
         @endif
-    </div>
+    </x-ui.card>
 </div>
 
 <script>

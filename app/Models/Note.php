@@ -10,24 +10,15 @@ class Note extends Model
 {
     use HasFactory;
 
-    protected $table = 'notes';
-    protected $primaryKey = 'noteID';
-
     /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'clientID',
-        'noteContent',
-        'addedBy',
-        'dateAdded',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     */
-    protected $casts = [
-        'dateAdded' => 'datetime',
+        'client_id',
+        'added_by',
+        'title',
+        'content',
+        'type',
     ];
 
     /**
@@ -35,15 +26,15 @@ class Note extends Model
      */
     public function client(): BelongsTo
     {
-        return $this->belongsTo(Client::class, 'clientID', 'clientID');
+        return $this->belongsTo(User::class, 'client_id');
     }
 
     /**
      * Get the user who added this note.
      */
-    public function addedBy(): BelongsTo
+    public function author(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'addedBy', 'userID');
+        return $this->belongsTo(User::class, 'added_by');
     }
 
     /**
@@ -51,8 +42,8 @@ class Note extends Model
      */
     public function getTruncatedContentAttribute(): string
     {
-        return strlen($this->noteContent) > 100 
-            ? substr($this->noteContent, 0, 100) . '...' 
-            : $this->noteContent;
+        return strlen($this->content) > 100 
+            ? substr($this->content, 0, 100) . '...' 
+            : $this->content;
     }
 }

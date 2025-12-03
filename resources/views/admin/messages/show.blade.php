@@ -3,97 +3,64 @@
 @section('title', 'Messages - ' . $project->title)
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="p-6 lg:p-8">
     <!-- Breadcrumb -->
-    <nav class="mb-6" aria-label="Breadcrumb">
-        <ol class="flex items-center gap-2 text-sm">
-            <li>
-                <a href="{{ route('admin.messages.index') }}" class="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path>
-                    </svg>
-                    Messages
-                </a>
-            </li>
-            <li>
-                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                </svg>
-            </li>
-            <li class="text-gray-900 font-medium truncate">{{ $project->title }}</li>
-        </ol>
-    </nav>
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Messages', 'route' => 'admin.messages.index', 'icon' => 'message-square'],
+        ['label' => $project->title, 'icon' => 'folder'],
+    ]" class="mb-6" />
 
     <!-- Chat Container -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <x-ui.card class="overflow-hidden">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-primary-600 to-accent-600 px-6 py-4">
+        <div class="bg-primary-600 px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-3 mb-2">
-                        <svg class="w-6 h-6 text-white/90" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path>
-                            <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path>
-                        </svg>
+                        <x-lucide-messages-square class="w-6 h-6 text-white/90" />
                         <h1 class="text-xl font-bold text-white truncate">{{ $project->title }}</h1>
                     </div>
                     <div class="flex items-center gap-4 text-sm text-white/80">
                         <div class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                            </svg>
+                            <x-lucide-user class="w-4 h-4" />
                             {{ $project->client->fullName }}
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path>
-                            </svg>
+                            <x-lucide-folder class="w-4 h-4" />
                             Project #{{ $project->id }}
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('admin.projects.show', $project->id) }}" 
-                   class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm font-medium backdrop-blur-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                    </svg>
+                <x-ui.button href="{{ route('admin.projects.show', $project->id) }}" variant="secondary" class="bg-white/10 hover:bg-white/20 text-white border-0">
+                    <x-lucide-external-link class="w-4 h-4" />
                     View Project
-                </a>
+                </x-ui.button>
             </div>
         </div>
 
         <!-- Chat Type Switcher -->
-        <div class="border-b border-gray-200 bg-white px-6 py-3">
+        <div class="border-b border-neutral-200 bg-white px-6 py-3">
             <div class="flex items-center gap-2">
                 <button id="direct-tab" onclick="switchChatType('direct')" 
                         class="chat-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                    </svg>
+                    <x-lucide-user class="w-4 h-4" />
                     Direct Message (Client)
                 </button>
                 <button id="group-tab" onclick="switchChatType('group')" 
                         class="chat-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
-                    </svg>
+                    <x-lucide-users class="w-4 h-4" />
                     Group Chat (Team)
-                    <span id="group-chat-status" class="hidden items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                        <svg class="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"></path>
-                            <path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                        </svg>
+                    <span id="group-chat-status" class="hidden items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600">
+                        <x-lucide-archive class="w-3 h-3" />
                         Archived
                     </span>
                 </button>
                 <!-- Archive Button (Admin Only, Group Chat Only) -->
                 <div class="ml-auto" id="group-actions" style="display: none;">
                     <button id="archive-btn" onclick="toggleArchiveGroupChat()" 
-                            class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-gray-100 hover:bg-gray-200 text-gray-700">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"></path>
-                            <path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                        </svg>
+                            class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-neutral-100 hover:bg-neutral-200 text-neutral-700">
+                        <x-lucide-archive class="w-4 h-4" />
                         <span id="archive-btn-text">Archive Chat</span>
                     </button>
                 </div>
@@ -104,39 +71,37 @@
         <div id="pinned-meeting-container"></div>
 
         <!-- Pending Meetings Section -->
-        <div id="pending-meetings-container" class="border-b border-gray-200 bg-amber-50"></div>
+        <div id="pending-meetings-container" class="border-b border-neutral-200 bg-warning-50"></div>
 
         <!-- Messages Container -->
         <div id="messages-container" 
-             class="h-[600px] overflow-y-auto bg-gray-50 p-6 scroll-smooth">
+             class="h-[600px] overflow-y-auto bg-neutral-50 p-6 scroll-smooth">
             <div class="flex items-center justify-center h-full">
                 <div class="text-center">
                     <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 mb-3">
-                        <svg class="w-6 h-6 text-primary-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
+                        <x-lucide-loader-2 class="w-6 h-6 text-primary-600 animate-spin" />
                     </div>
-                    <p class="text-sm text-gray-600">Loading messages...</p>
+                    <p class="text-sm text-neutral-600">Loading messages...</p>
                 </div>
             </div>
         </div>
 
         <!-- Message Input -->
-        <div class="border-t border-gray-200 bg-white p-4">
+        <div class="border-t border-neutral-200 bg-white p-4">
             <form id="message-form">
                 @csrf
                 <div class="space-y-3">
                     <div>
-                        <textarea 
+                        <x-ui.textarea 
                             id="message-textarea"
                             name="message" 
                             rows="3" 
                             placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
                             required
                             maxlength="5000"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm placeholder-gray-400"></textarea>
+                        />
                         <div class="mt-1 flex items-center justify-between">
-                            <span class="text-xs text-gray-500">
+                            <span class="text-xs text-neutral-500">
                                 <span id="char-count" class="font-medium">0</span>/5000 characters
                             </span>
                         </div>
@@ -144,10 +109,8 @@
                     
                     <div class="flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3">
-                            <label for="attachments" class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors text-sm font-medium text-gray-700">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                                </svg>
+                            <label for="attachments" class="inline-flex items-center gap-2 px-4 py-2.5 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors text-sm font-medium text-neutral-700">
+                                <x-lucide-paperclip class="w-4 h-4" />
                                 Attach Files
                             </label>
                             <input 
@@ -157,22 +120,20 @@
                                 multiple 
                                 class="hidden"
                                 accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
-                            <span class="text-xs text-gray-500">Max 10MB per file</span>
+                            <span class="text-xs text-neutral-500">Max 10MB per file</span>
                         </div>
                         
-                        <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md text-sm font-medium">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
-                            </svg>
+                        <x-ui.button type="submit" variant="primary">
+                            <x-lucide-send class="w-4 h-4" />
                             Send Message
-                        </button>
+                        </x-ui.button>
                     </div>
                     
                     <div id="selected-files" class="flex flex-wrap gap-2"></div>
                 </div>
             </form>
         </div>
-    </div>
+    </x-ui.card>
 </div>
 
 <style>
@@ -244,8 +205,8 @@
         const sendButton = messageForm.querySelector('button[type="submit"]');
         
         if (type === 'group') {
-            directTab.className = 'chat-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-gray-100 text-gray-600 hover:bg-gray-200';
-            groupTab.className = 'chat-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-green-100 text-green-800 ring-2 ring-green-300';
+            directTab.className = 'chat-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-neutral-100 text-neutral-600 hover:bg-neutral-200';
+            groupTab.className = 'chat-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-success-100 text-success-800 ring-2 ring-success-300';
             groupActions.style.display = 'block';
             
             // Update archive button based on status
@@ -258,7 +219,7 @@
                 messageInput.disabled = true;
                 messageInput.placeholder = 'This group chat has been archived. Messages cannot be sent.';
                 sendButton.disabled = true;
-                archiveBtn.className = 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-green-100 hover:bg-green-200 text-green-700';
+                archiveBtn.className = 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-success-100 hover:bg-success-200 text-success-700';
             } else {
                 archiveBtnText.textContent = 'Archive Chat';
                 groupStatusBadge.classList.add('hidden');
@@ -266,11 +227,11 @@
                 messageInput.disabled = false;
                 messageInput.placeholder = 'Type your message here... (Press Enter to send, Shift+Enter for new line)';
                 sendButton.disabled = false;
-                archiveBtn.className = 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-gray-100 hover:bg-gray-200 text-gray-700';
+                archiveBtn.className = 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-neutral-100 hover:bg-neutral-200 text-neutral-700';
             }
         } else {
-            directTab.className = 'chat-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-blue-100 text-blue-800 ring-2 ring-blue-300';
-            groupTab.className = 'chat-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-gray-100 text-gray-600 hover:bg-gray-200';
+            directTab.className = 'chat-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-primary-100 text-primary-800 ring-2 ring-primary-300';
+            groupTab.className = 'chat-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-neutral-100 text-neutral-600 hover:bg-neutral-200';
             groupActions.style.display = 'none';
             messageInput.disabled = false;
             messageInput.placeholder = 'Type your message here... (Press Enter to send, Shift+Enter for new line)';
@@ -352,11 +313,11 @@
         if (messages.length === 0) {
             messagesContainer.innerHTML = `
                 <div class="flex flex-col items-center justify-center h-full text-center">
-                    <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-16 h-16 text-neutral-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                     </svg>
-                    <p class="text-gray-500 text-base font-medium">No messages yet</p>
-                    <p class="text-gray-400 text-sm mt-1">Start the conversation!</p>
+                    <p class="text-neutral-500 text-base font-medium">No messages yet</p>
+                    <p class="text-neutral-400 text-sm mt-1">Start the conversation!</p>
                 </div>
             `;
             return;
@@ -376,7 +337,7 @@
             attachmentsHtml = message.attachments.map(att => `
                 <a href="/storage/${att.path}" 
                    download="${att.name}" 
-                   class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${isSender ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}">
+                   class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${isSender ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'}">
                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clip-rule="evenodd"></path>
                     </svg>
@@ -395,20 +356,20 @@
                                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
                                 </svg>
                             </div>
-                            <span class="text-xs font-medium text-gray-700">${escapeHtml(message.sender.fullName)}</span>
+                            <span class="text-xs font-medium text-neutral-700">${escapeHtml(message.sender.fullName)}</span>
                         </div>
                     ` : ''}
-                    <div class="rounded-2xl px-4 py-3 shadow-sm ${isSender ? 'bg-gradient-to-br from-primary-600 to-accent-600 text-white rounded-br-md' : 'bg-white border border-gray-200 text-gray-900 rounded-bl-md'}">
+                    <div class="rounded-2xl px-4 py-3 shadow-sm ${isSender ? 'bg-primary-600 text-white rounded-br-md' : 'bg-white border border-neutral-200 text-neutral-900 rounded-bl-md'}">
                         <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">${escapeHtml(message.message)}</p>
                         ${attachmentsHtml}
                     </div>
-                    <div class="flex items-center gap-1.5 mt-1.5 px-1 text-xs text-gray-500 ${isSender ? 'justify-end' : 'justify-start'}">
+                    <div class="flex items-center gap-1.5 mt-1.5 px-1 text-xs text-neutral-500 ${isSender ? 'justify-end' : 'justify-start'}">
                         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                         </svg>
                         <span>${formatTime(message.created_at)}</span>
                         ${message.status === 'read' && isSender ? `
-                            <svg class="w-3.5 h-3.5 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-3.5 h-3.5 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                             </svg>
                         ` : ''}
@@ -529,25 +490,23 @@
 
 <!-- Approve Meeting Modal -->
 <div id="approveMeetingModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
-        <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 flex items-center justify-between">
-            <h3 class="text-lg font-bold text-white">Approve Meeting</h3>
-            <button type="button" onclick="closeApproveMeetingModal()" class="text-white/80 hover:text-white">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full">
+        <div class="bg-success-600 px-6 py-4 rounded-t-2xl flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-white">Approve Meeting</h3>
+            <button type="button" onclick="closeApproveMeetingModal()" class="text-white/80 hover:text-white transition-colors">
+                <x-lucide-x class="w-5 h-5" />
             </button>
         </div>
         <div class="p-6">
-            <p class="text-gray-700 mb-4">Are you sure you want to approve this meeting? A Zoom link will be generated for the requested date and time.</p>
-            <div id="approve-meeting-details" class="bg-gray-50 rounded-lg p-4 mb-6 space-y-2 text-sm"></div>
+            <p class="text-neutral-700 mb-4">Are you sure you want to approve this meeting? A Zoom link will be generated for the requested date and time.</p>
+            <div id="approve-meeting-details" class="bg-neutral-50 rounded-xl p-4 mb-6 space-y-2 text-sm"></div>
             <div class="flex items-center gap-3">
-                <button type="button" onclick="closeApproveMeetingModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+                <x-ui.button type="button" onclick="closeApproveMeetingModal()" variant="secondary" class="flex-1">
                     Cancel
-                </button>
-                <button type="button" onclick="confirmApproveMeeting()" class="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md font-medium">
-                    Approve & Generate Zoom
-                </button>
+                </x-ui.button>
+                <x-ui.button type="button" onclick="confirmApproveMeeting()" variant="primary" class="flex-1 bg-success-600 hover:bg-success-700">
+                    Approve
+                </x-ui.button>
             </div>
         </div>
     </div>
@@ -555,47 +514,30 @@
 
 <!-- Reschedule Meeting Modal -->
 <div id="rescheduleMeetingModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
-            <h3 class="text-lg font-bold text-white">Reschedule Meeting</h3>
-            <button type="button" onclick="closeRescheduleMeetingModal()" class="text-white/80 hover:text-white">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-primary-600 px-6 py-4 rounded-t-2xl flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-white">Reschedule Meeting</h3>
+            <button type="button" onclick="closeRescheduleMeetingModal()" class="text-white/80 hover:text-white transition-colors">
+                <x-lucide-x class="w-5 h-5" />
             </button>
         </div>
         <form id="reschedule-meeting-form" class="p-6 space-y-4">
-            <div id="reschedule-meeting-current" class="bg-gray-50 rounded-lg p-4 space-y-2 text-sm"></div>
+            <div id="reschedule-meeting-current" class="bg-neutral-50 rounded-xl p-4 space-y-2 text-sm"></div>
             
-            <div>
-                <label for="reschedule-date" class="block text-sm font-medium text-gray-700 mb-1">
-                    New Date <span class="text-red-500">*</span>
-                </label>
-                <input type="date" id="reschedule-date" required min="{{ date('Y-m-d', strtotime('+1 day')) }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-            </div>
+            <x-ui.input type="date" label="New Date" id="reschedule-date" required min="{{ date('Y-m-d', strtotime('+1 day')) }}" />
             
-            <div>
-                <label for="reschedule-time" class="block text-sm font-medium text-gray-700 mb-1">
-                    New Time <span class="text-red-500">*</span>
-                </label>
-                <input type="time" id="reschedule-time" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-            </div>
+            <x-ui.input type="time" label="New Time" id="reschedule-time" required />
             
-            <div>
-                <label for="reschedule-notes" class="block text-sm font-medium text-gray-700 mb-1">
-                    Notes to Client (Optional)
-                </label>
-                <textarea id="reschedule-notes" rows="3" maxlength="500" placeholder="Explain why you're proposing a new time..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"></textarea>
-                <p class="text-xs text-gray-500 mt-1">Max 500 characters</p>
-            </div>
+            <x-ui.textarea label="Notes to Client (Optional)" id="reschedule-notes" rows="3" maxlength="500" placeholder="Explain why you're proposing a new time..." />
+            <p class="text-xs text-neutral-500 -mt-2">Max 500 characters</p>
             
             <div class="flex items-center gap-3 pt-4">
-                <button type="button" onclick="closeRescheduleMeetingModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+                <x-ui.button type="button" onclick="closeRescheduleMeetingModal()" variant="secondary" class="flex-1">
                     Cancel
-                </button>
-                <button type="submit" class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md font-medium">
+                </x-ui.button>
+                <x-ui.button type="submit" variant="primary" class="flex-1">
                     Propose New Time
-                </button>
+                </x-ui.button>
             </div>
         </form>
     </div>
@@ -603,35 +545,28 @@
 
 <!-- Reject Meeting Modal -->
 <div id="rejectMeetingModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
-        <div class="bg-gradient-to-r from-red-600 to-rose-600 px-6 py-4 flex items-center justify-between">
-            <h3 class="text-lg font-bold text-white">Reject Meeting</h3>
-            <button type="button" onclick="closeRejectMeetingModal()" class="text-white/80 hover:text-white">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full">
+        <div class="bg-error-600 px-6 py-4 rounded-t-2xl flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-white">Reject Meeting</h3>
+            <button type="button" onclick="closeRejectMeetingModal()" class="text-white/80 hover:text-white transition-colors">
+                <x-lucide-x class="w-5 h-5" />
             </button>
         </div>
         <form id="reject-meeting-form" class="p-6 space-y-4">
-            <p class="text-gray-700">Please provide a reason for rejecting this meeting request.</p>
+            <p class="text-neutral-700">Please provide a reason for rejecting this meeting request.</p>
             
-            <div id="reject-meeting-details" class="bg-gray-50 rounded-lg p-4 space-y-2 text-sm"></div>
+            <div id="reject-meeting-details" class="bg-neutral-50 rounded-xl p-4 space-y-2 text-sm"></div>
             
-            <div>
-                <label for="reject-notes" class="block text-sm font-medium text-gray-700 mb-1">
-                    Reason for Rejection <span class="text-red-500">*</span>
-                </label>
-                <textarea id="reject-notes" required rows="4" maxlength="500" placeholder="Explain why you're rejecting this meeting..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"></textarea>
-                <p class="text-xs text-gray-500 mt-1">Max 500 characters</p>
-            </div>
+            <x-ui.textarea label="Reason for Rejection" id="reject-notes" required rows="4" maxlength="500" placeholder="Explain why you're rejecting this meeting..." />
+            <p class="text-xs text-neutral-500 -mt-2">Max 500 characters</p>
             
             <div class="flex items-center gap-3 pt-4">
-                <button type="button" onclick="closeRejectMeetingModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+                <x-ui.button type="button" onclick="closeRejectMeetingModal()" variant="secondary" class="flex-1">
                     Cancel
-                </button>
-                <button type="submit" class="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md font-medium">
+                </x-ui.button>
+                <x-ui.button type="submit" variant="primary" class="flex-1 bg-error-600 hover:bg-error-700">
                     Reject Meeting
-                </button>
+                </x-ui.button>
             </div>
         </form>
     </div>
@@ -675,38 +610,38 @@
         container.classList.add('px-6', 'py-4');
         container.innerHTML = `
             <div class="flex items-start gap-3 mb-3">
-                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <svg class="w-5 h-5 text-warning-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                 </svg>
                 <div class="flex-1">
-                    <h3 class="text-sm font-bold text-gray-900 mb-1">Pending Meeting Requests (${pendingMeetings.length})</h3>
-                    <p class="text-xs text-gray-600">Review and approve, reschedule, or reject these meeting requests.</p>
+                    <h3 class="text-sm font-bold text-neutral-900 mb-1">Pending Meeting Requests (${pendingMeetings.length})</h3>
+                    <p class="text-xs text-neutral-600">Review and approve, reschedule, or reject these meeting requests.</p>
                 </div>
             </div>
             <div class="space-y-3">
                 ${pendingMeetings.map(meeting => `
-                    <div class="bg-white border-2 border-amber-200 rounded-lg p-4 shadow-sm">
+                    <div class="bg-white border-2 border-warning-200 rounded-xl p-4 shadow-sm">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex-1">
-                                <h4 class="font-semibold text-gray-900 mb-1">${escapeHtml(meeting.title)}</h4>
-                                <div class="space-y-1 text-sm text-gray-600">
+                                <h4 class="font-semibold text-neutral-900 mb-1">${escapeHtml(meeting.title)}</h4>
+                                <div class="space-y-1 text-sm text-neutral-600">
                                     <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                         </svg>
                                         <span>${formatDate(meeting.requested_date)} at ${meeting.requested_time}</span>
                                     </div>
-                                    ${meeting.description ? `<p class="text-xs text-gray-500 mt-2">${escapeHtml(meeting.description)}</p>` : ''}
+                                    ${meeting.description ? `<p class="text-xs text-neutral-500 mt-2">${escapeHtml(meeting.description)}</p>` : ''}
                                 </div>
                             </div>
                             <div class="flex flex-col gap-2">
-                                <button onclick="openApproveMeetingModal(${meeting.id})" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors">
+                                <button onclick="openApproveMeetingModal(${meeting.id})" class="px-3 py-1.5 bg-success-600 hover:bg-success-700 text-white rounded-lg text-xs font-medium transition-colors">
                                     Approve
                                 </button>
-                                <button onclick="openRescheduleMeetingModal(${meeting.id})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors">
+                                <button onclick="openRescheduleMeetingModal(${meeting.id})" class="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-xs font-medium transition-colors">
                                     Reschedule
                                 </button>
-                                <button onclick="openRejectMeetingModal(${meeting.id})" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-colors">
+                                <button onclick="openRejectMeetingModal(${meeting.id})" class="px-3 py-1.5 bg-error-600 hover:bg-error-700 text-white rounded-lg text-xs font-medium transition-colors">
                                     Reject
                                 </button>
                             </div>
@@ -756,7 +691,7 @@
         const scheduledDateTime = new Date(datePart + ' ' + meeting.scheduled_time);
         
         container.innerHTML = `
-            <div class="border-b border-gray-200 bg-gradient-to-r from-primary-50 to-accent-50 px-6 py-4">
+            <div class="border-b border-neutral-200 bg-primary-50 px-6 py-4">
                 <div class="flex items-start justify-between gap-4">
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-2">
@@ -765,24 +700,24 @@
                             </svg>
                             <span class="text-xs font-semibold text-primary-700 uppercase tracking-wide">Upcoming Meeting</span>
                         </div>
-                        <h4 class="text-lg font-bold text-gray-900 mb-2">${escapeHtml(meeting.title)}</h4>
-                        <div class="flex flex-col gap-2 text-sm text-gray-700">
+                        <h4 class="text-lg font-bold text-neutral-900 mb-2">${escapeHtml(meeting.title)}</h4>
+                        <div class="flex flex-col gap-2 text-sm text-neutral-700">
                             <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
                                 <span class="font-medium">${formatDateTime(scheduledDateTime)}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <span id="admin-meeting-countdown-${meeting.id}" class="text-accent-600 font-semibold"></span>
+                                <span id="admin-meeting-countdown-${meeting.id}" class="text-primary-600 font-semibold"></span>
                             </div>
                         </div>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <a href="${meeting.zoom_start_url}" target="_blank" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all">
+                        <a href="${meeting.zoom_start_url}" target="_blank" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold shadow-sm hover:shadow-md transition-all">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
                             </svg>
@@ -790,7 +725,7 @@
                         </a>
                         ${meeting.zoom_password ? `
                             <div class="text-xs text-center">
-                                <span class="text-gray-600">Password:</span>
+                                <span class="text-neutral-600">Password:</span>
                                 <code class="ml-1 px-2 py-1 bg-white rounded font-mono">${meeting.zoom_password}</code>
                             </div>
                         ` : ''}
@@ -811,10 +746,10 @@
                 const meeting = data.meetings.find(m => m.id === meetingId);
                 if (meeting) {
                     document.getElementById('approve-meeting-details').innerHTML = `
-                        <div><span class="font-medium text-gray-700">Title:</span> ${escapeHtml(meeting.title)}</div>
-                        <div><span class="font-medium text-gray-700">Date:</span> ${formatDate(meeting.requested_date)}</div>
-                        <div><span class="font-medium text-gray-700">Time:</span> ${meeting.requested_time}</div>
-                        ${meeting.description ? `<div><span class="font-medium text-gray-700">Agenda:</span> ${escapeHtml(meeting.description)}</div>` : ''}
+                        <div><span class="font-medium text-neutral-700">Title:</span> ${escapeHtml(meeting.title)}</div>
+                        <div><span class="font-medium text-neutral-700">Date:</span> ${formatDate(meeting.requested_date)}</div>
+                        <div><span class="font-medium text-neutral-700">Time:</span> ${meeting.requested_time}</div>
+                        ${meeting.description ? `<div><span class="font-medium text-neutral-700">Agenda:</span> ${escapeHtml(meeting.description)}</div>` : ''}
                     `;
                 }
             });
@@ -864,9 +799,9 @@
                 const meeting = data.meetings.find(m => m.id === meetingId);
                 if (meeting) {
                     document.getElementById('reschedule-meeting-current').innerHTML = `
-                        <div class="font-medium text-gray-700 mb-2">Current Request:</div>
-                        <div class="text-gray-600"><span class="font-medium">Title:</span> ${escapeHtml(meeting.title)}</div>
-                        <div class="text-gray-600"><span class="font-medium">Requested:</span> ${formatDate(meeting.requested_date)} at ${meeting.requested_time}</div>
+                        <div class="font-medium text-neutral-700 mb-2">Current Request:</div>
+                        <div class="text-neutral-600"><span class="font-medium">Title:</span> ${escapeHtml(meeting.title)}</div>
+                        <div class="text-neutral-600"><span class="font-medium">Requested:</span> ${formatDate(meeting.requested_date)} at ${meeting.requested_time}</div>
                     `;
                 }
             });
@@ -926,8 +861,8 @@
                 const meeting = data.meetings.find(m => m.id === meetingId);
                 if (meeting) {
                     document.getElementById('reject-meeting-details').innerHTML = `
-                        <div><span class="font-medium text-gray-700">Title:</span> ${escapeHtml(meeting.title)}</div>
-                        <div><span class="font-medium text-gray-700">Date:</span> ${formatDate(meeting.requested_date)} at ${meeting.requested_time}</div>
+                        <div><span class="font-medium text-neutral-700">Title:</span> ${escapeHtml(meeting.title)}</div>
+                        <div><span class="font-medium text-neutral-700">Date:</span> ${formatDate(meeting.requested_date)} at ${meeting.requested_time}</div>
                     `;
                 }
             });

@@ -43,7 +43,8 @@
             @endif
             
             @php
-                $href = $item['href'] ?? (isset($item['route']) ? route($item['route']) : null);
+                $routeParams = $item['routeParams'] ?? [];
+                $href = $item['href'] ?? (isset($item['route']) ? route($item['route'], $routeParams) : null);
                 $isLast = $index === count($items) - 1;
             @endphp
             

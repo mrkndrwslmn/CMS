@@ -1,99 +1,96 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Payment Management')
-@section('page-title', 'Payment Management')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="p-6 lg:p-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Payments', 'icon' => 'credit-card'],
+    ]" class="mb-6" />
+
     <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">Payment Management</h1>
-            <p class="text-gray-600 mt-1">Track and manage all payments</p>
-        </div>
-        <a href="{{ route('admin.payments.export', request()->query()) }}" 
-           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg inline-flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Export CSV
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <x-ui.page-header 
+            title="Payment Management" 
+            description="Track and manage all payments"
+        />
+        
+        <a href="{{ route('admin.payments.export', request()->query()) }}">
+            <x-ui.button variant="secondary">
+                <x-lucide-download class="w-4 h-4" />
+                Export CSV
+            </x-ui.button>
         </a>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm text-gray-600">Total Payments</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['total'] }}</p>
+                    <p class="text-sm text-neutral-500">Total Payments</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['total'] }}</p>
                 </div>
-                <div class="bg-blue-100 rounded-full p-3">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
+                <div class="p-3 bg-primary-50 rounded-xl">
+                    <x-lucide-credit-card class="w-5 h-5 text-primary-500" />
                 </div>
             </div>
-        </div>
+        </x-ui.card>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm text-gray-600">Pending</p>
-                    <p class="text-2xl font-bold text-yellow-600 mt-1">{{ $stats['pending'] }}</p>
-                    <p class="text-xs text-gray-500 mt-1">₱{{ number_format($stats['pending_amount'], 2) }}</p>
+                    <p class="text-sm text-neutral-500">Pending</p>
+                    <p class="text-2xl font-semibold text-warning-600 mt-1">{{ $stats['pending'] }}</p>
+                    <p class="text-xs text-neutral-400 mt-1">₱{{ number_format($stats['pending_amount'], 2) }}</p>
                 </div>
-                <div class="bg-yellow-100 rounded-full p-3">
-                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                <div class="p-3 bg-warning-50 rounded-xl">
+                    <x-lucide-clock class="w-5 h-5 text-warning-500" />
                 </div>
             </div>
-        </div>
+        </x-ui.card>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm text-gray-600">Confirmed</p>
-                    <p class="text-2xl font-bold text-green-600 mt-1">{{ $stats['confirmed'] }}</p>
+                    <p class="text-sm text-neutral-500">Confirmed</p>
+                    <p class="text-2xl font-semibold text-success-600 mt-1">{{ $stats['confirmed'] }}</p>
                 </div>
-                <div class="bg-green-100 rounded-full p-3">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                <div class="p-3 bg-success-50 rounded-xl">
+                    <x-lucide-check-circle class="w-5 h-5 text-success-500" />
                 </div>
             </div>
-        </div>
+        </x-ui.card>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm text-gray-600">Total Revenue</p>
-                    <p class="text-2xl font-bold text-green-600 mt-1">₱{{ number_format($stats['total_revenue'], 2) }}</p>
+                    <p class="text-sm text-neutral-500">Total Revenue</p>
+                    <p class="text-2xl font-semibold text-success-600 mt-1">₱{{ number_format($stats['total_revenue'], 2) }}</p>
                 </div>
-                <div class="bg-green-100 rounded-full p-3">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                <div class="p-3 bg-success-50 rounded-xl">
+                    <x-lucide-banknote class="w-5 h-5 text-success-500" />
                 </div>
             </div>
-        </div>
+        </x-ui.card>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <x-ui.card class="p-6 mb-6">
         <form method="GET" action="{{ route('admin.payments.index') }}" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <label class="block text-sm font-medium text-neutral-700 mb-1.5">Search</label>
                     <input type="text" name="search" value="{{ request('search') }}" 
                            placeholder="Reference, Transaction ID, Project..."
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                           class="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium text-neutral-700 mb-1.5">Status</label>
+                    <select name="status" class="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                         <option value="">All Statuses</option>
                         <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
@@ -104,8 +101,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                    <select name="payment_method" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium text-neutral-700 mb-1.5">Payment Method</label>
+                    <select name="payment_method" class="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                         <option value="">All Methods</option>
                         <option value="maya" {{ request('payment_method') == 'maya' ? 'selected' : '' }}>Maya</option>
                         <option value="bank_transfer" {{ request('payment_method') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
@@ -114,97 +111,101 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                    <label class="block text-sm font-medium text-neutral-700 mb-1.5">From Date</label>
                     <input type="date" name="date_from" value="{{ request('date_from') }}" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                           class="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                    <label class="block text-sm font-medium text-neutral-700 mb-1.5">To Date</label>
                     <input type="date" name="date_to" value="{{ request('date_to') }}" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                           class="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-2">
-                <a href="{{ route('admin.payments.index') }}" 
-                   class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                    Clear Filters
+            <div class="flex justify-end gap-3">
+                <a href="{{ route('admin.payments.index') }}">
+                    <x-ui.button type="button" variant="ghost">
+                        Clear Filters
+                    </x-ui.button>
                 </a>
-                <button type="submit" 
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                <x-ui.button type="submit" variant="primary">
+                    <x-lucide-filter class="w-4 h-4" />
                     Apply Filters
-                </button>
+                </x-ui.button>
             </div>
         </form>
-    </div>
+    </x-ui.card>
 
     <!-- Payments Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <x-ui.card class="overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <table class="w-full">
+                <thead class="bg-neutral-50 border-b border-neutral-100">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Reference</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Method</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="divide-y divide-neutral-100">
                     @forelse($payments as $payment)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr class="hover:bg-neutral-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
                             #{{ $payment->id }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $payment->serviceRequest->project_name ?? 'N/A' }}</div>
-                            <div class="text-xs text-gray-500">Request #{{ $payment->service_request_id }}</div>
+                            <div class="text-sm font-medium text-neutral-800">{{ $payment->serviceRequest->project_name ?? 'N/A' }}</div>
+                            <div class="text-xs text-neutral-400">Request #{{ $payment->service_request_id }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $payment->payment_reference }}</div>
+                            <div class="text-sm text-neutral-700">{{ $payment->payment_reference }}</div>
                             @if($payment->transaction_id)
-                            <div class="text-xs text-gray-500">TXN: {{ $payment->transaction_id }}</div>
+                            <div class="text-xs text-neutral-400">TXN: {{ $payment->transaction_id }}</div>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-neutral-800">
                             ₱{{ number_format($payment->amount, 2) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
                             <span class="capitalize">{{ str_replace('_', ' ', $payment->payment_method) }}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                @if($payment->status == 'confirmed') bg-green-100 text-green-800
-                                @elseif($payment->status == 'pending') bg-yellow-100 text-yellow-800
-                                @elseif($payment->status == 'failed') bg-red-100 text-red-800
-                                @elseif($payment->status == 'refunded') bg-blue-100 text-blue-800
-                                @else bg-gray-100 text-gray-800
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                @if($payment->status == 'confirmed') bg-success-100 text-success-700
+                                @elseif($payment->status == 'pending') bg-warning-100 text-warning-700
+                                @elseif($payment->status == 'failed') bg-error-100 text-error-700
+                                @elseif($payment->status == 'refunded') bg-primary-100 text-primary-700
+                                @else bg-neutral-100 text-neutral-600
                                 @endif">
                                 {{ ucfirst($payment->status) }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
                             {{ $payment->created_at->format('M d, Y') }}
-                            <div class="text-xs">{{ $payment->created_at->format('h:i A') }}</div>
+                            <div class="text-xs text-neutral-400">{{ $payment->created_at->format('h:i A') }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                             <a href="{{ route('admin.payments.show', $payment->id) }}" 
-                               class="text-blue-600 hover:text-blue-900">View Details</a>
+                               class="inline-flex items-center gap-1.5 text-primary-600 hover:text-primary-700 font-medium transition-colors">
+                                View Details
+                                <x-lucide-chevron-right class="w-4 h-4" />
+                            </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            <p class="mt-4 text-lg font-medium">No payments found</p>
-                            <p class="mt-2 text-sm">Try adjusting your filters</p>
+                        <td colspan="8" class="px-6 py-16 text-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-100 mb-4">
+                                <x-lucide-credit-card class="w-8 h-8 text-neutral-400" />
+                            </div>
+                            <p class="text-neutral-600 text-base font-medium">No payments found</p>
+                            <p class="text-neutral-400 text-sm mt-1">Try adjusting your filters</p>
                         </td>
                     </tr>
                     @endforelse
@@ -214,10 +215,10 @@
 
         <!-- Pagination -->
         @if($payments->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200">
+        <div class="px-6 py-4 border-t border-neutral-100">
             {{ $payments->links() }}
         </div>
         @endif
-    </div>
+    </x-ui.card>
 </div>
 @endsection

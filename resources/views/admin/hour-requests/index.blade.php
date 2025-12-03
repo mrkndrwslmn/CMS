@@ -3,106 +3,101 @@
 @section('title', 'Hour Increase Requests')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-2xl font-semibold text-gray-900">⏰ Hour Increase Requests</h1>
-        <p class="text-sm text-gray-500 mt-1">Review and manage adiutor requests for additional project hours</p>
-    </div>
+<div class="p-6 lg:p-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Hour Requests', 'icon' => 'clock'],
+    ]" class="mb-6" />
+
+    <!-- Page Header -->
+    <x-ui.page-header 
+        title="Hour Increase Requests" 
+        description="Review and manage adiutor requests for additional project hours"
+        class="mb-6"
+    />
 
     @if(session('success'))
-    <div class="mb-6 rounded-lg bg-green-50 border border-green-200 p-4">
-        <div class="flex">
-            <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <p class="ml-3 text-sm font-medium text-green-800">{{ session('success') }}</p>
+    <div class="mb-6 bg-success-50 border-l-4 border-success-500 text-success-700 p-4 rounded-lg">
+        <div class="flex items-center">
+            <x-lucide-check-circle class="w-5 h-5 text-success-500 mr-3" />
+            <p class="text-sm font-medium">{{ session('success') }}</p>
         </div>
     </div>
     @endif
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <div class="flex items-center justify-between">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm text-gray-500">Pending Review</p>
-                    <p class="text-3xl font-bold text-yellow-600">{{ $stats['pending'] }}</p>
+                    <p class="text-sm font-medium text-neutral-500">Pending Review</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['pending'] }}</p>
                 </div>
-                <div class="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                <div class="p-3 bg-warning-50 rounded-xl">
+                    <x-lucide-clock class="w-5 h-5 text-warning-500" />
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <div class="flex items-center justify-between">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm text-gray-500">Approved This Month</p>
-                    <p class="text-3xl font-bold text-green-600">{{ $stats['approved_this_month'] }}</p>
+                    <p class="text-sm font-medium text-neutral-500">Approved This Month</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['approved_this_month'] }}</p>
                 </div>
-                <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
+                <div class="p-3 bg-success-50 rounded-xl">
+                    <x-lucide-check class="w-5 h-5 text-success-500" />
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <div class="flex items-center justify-between">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm text-gray-500">Rejected This Month</p>
-                    <p class="text-3xl font-bold text-red-600">{{ $stats['rejected_this_month'] }}</p>
+                    <p class="text-sm font-medium text-neutral-500">Rejected This Month</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['rejected_this_month'] }}</p>
                 </div>
-                <div class="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                <div class="p-3 bg-error-50 rounded-xl">
+                    <x-lucide-x class="w-5 h-5 text-error-500" />
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-        <form method="GET" class="flex flex-wrap items-center gap-4">
-            <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
-                <select name="status" onchange="this.form.submit()"
-                        class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+    <x-ui.card class="mb-6">
+        <form method="GET" class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-sm font-medium text-neutral-700 mb-1.5">Status</label>
+                <x-ui.select name="status" onchange="this.form.submit()">
                     <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Pending</option>
                     <option value="approved" {{ $status === 'approved' ? 'selected' : '' }}>Approved</option>
                     <option value="rejected" {{ $status === 'rejected' ? 'selected' : '' }}>Rejected</option>
                     <option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
-                </select>
+                </x-ui.select>
             </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Adiutor</label>
-                <select name="adiutor_id" onchange="this.form.submit()"
-                        class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-neutral-700 mb-1.5">Adiutor</label>
+                <x-ui.select name="adiutor_id" onchange="this.form.submit()">
                     <option value="">All Adiutors</option>
                     @foreach($adiutors as $adiutor)
                     <option value="{{ $adiutor->id }}" {{ request('adiutor_id') == $adiutor->id ? 'selected' : '' }}>
                         {{ $adiutor->fullName }}
                     </option>
                     @endforeach
-                </select>
+                </x-ui.select>
             </div>
         </form>
-    </div>
+    </x-ui.card>
 
     <!-- Requests Table -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <x-ui.card>
         @if($requests->isEmpty())
-        <div class="p-12 text-center">
-            <div class="w-16 h-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+        <div class="py-12 text-center">
+            <div class="p-4 bg-neutral-50 rounded-full inline-flex mb-4">
+                <x-lucide-inbox class="w-12 h-12 text-neutral-300" />
             </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-1">No requests found</h3>
-            <p class="text-sm text-gray-500">
+            <h3 class="text-lg font-medium text-neutral-700 mb-1">No requests found</h3>
+            <p class="text-sm text-neutral-400">
                 @if($status === 'pending')
                 There are no pending hour increase requests.
                 @else
@@ -111,78 +106,94 @@
             </p>
         </div>
         @else
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Adiutor</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($requests as $request)
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 h-10 w-10">
-                                <img class="h-10 w-10 rounded-full object-cover" 
-                                     src="{{ $request->adiutor->getProfilePictureUrl() }}" 
-                                     alt="{{ $request->adiutor->fullName }}">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-neutral-50 border-b border-neutral-100">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Adiutor</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Hours</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-100">
+                    @foreach($requests as $request)
+                    <tr class="hover:bg-neutral-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <img class="h-10 w-10 rounded-full object-cover" 
+                                         src="{{ $request->adiutor->getProfilePictureUrl() }}" 
+                                         alt="{{ $request->adiutor->fullName }}">
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-neutral-700">{{ $request->adiutor->fullName }}</div>
+                                    <div class="text-sm text-neutral-400">{{ $request->adiutor->email }}</div>
+                                </div>
                             </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">{{ $request->adiutor->fullName }}</div>
-                                <div class="text-sm text-gray-500">{{ $request->adiutor->email }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-neutral-700">{{ $request->project->title ?? 'Unknown' }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm">
+                                <span class="text-neutral-500">{{ $request->current_max_hours }} hrs</span>
+                                <x-lucide-arrow-right class="w-3 h-3 inline mx-1 text-neutral-300" />
+                                <span class="font-semibold text-neutral-800">{{ $request->requested_max_hours }} hrs</span>
+                                <span class="text-xs text-primary-600 ml-1">(+{{ $request->hours_increase }})</span>
                             </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-sm text-gray-900">{{ $request->project->title ?? 'Unknown' }}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm">
-                            <span class="text-gray-500">{{ $request->current_max_hours }} hrs</span>
-                            <span class="text-gray-400 mx-1">→</span>
-                            <span class="font-semibold text-gray-900">{{ $request->requested_max_hours }} hrs</span>
-                            <span class="text-xs text-primary-600 ml-1">(+{{ $request->hours_increase }})</span>
-                        </div>
-                        <div class="text-xs text-gray-400 mt-1">
-                            {{ number_format($request->hours_already_tracked, 1) }} hrs tracked
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full {{ $request->status_badge_class }}">
-                            {{ $request->status_label }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $request->created_at->format('M d, Y') }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('admin.hour-requests.show', $request->id) }}" 
-                               class="text-primary-600 hover:text-primary-900">View</a>
-                            @if($request->isPending())
-                            <button type="button" 
-                                    onclick="quickApprove({{ $request->id }})"
-                                    class="text-green-600 hover:text-green-900">Approve</button>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+                            <div class="text-xs text-neutral-400 mt-1">
+                                {{ number_format($request->hours_already_tracked, 1) }} hrs tracked
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @php
+                                $statusVariants = [
+                                    'pending' => 'warning',
+                                    'approved' => 'success',
+                                    'rejected' => 'error',
+                                ];
+                                $variant = $statusVariants[$request->status] ?? 'neutral';
+                            @endphp
+                            <x-ui.badge :variant="$variant">
+                                {{ $request->status_label }}
+                            </x-ui.badge>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
+                            {{ $request->created_at->format('M d, Y') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('admin.hour-requests.show', $request->id) }}" 
+                                   class="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 transition-colors">
+                                    <x-lucide-eye class="w-4 h-4" />
+                                    View
+                                </a>
+                                @if($request->isPending())
+                                <button type="button" 
+                                        onclick="quickApprove({{ $request->id }})"
+                                        class="inline-flex items-center gap-1 text-sm text-success-600 hover:text-success-700 transition-colors">
+                                    <x-lucide-check class="w-4 h-4" />
+                                    Approve
+                                </button>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
 
         @if($requests->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div class="mt-6 pt-6 border-t border-neutral-100">
             {{ $requests->withQueryString()->links() }}
         </div>
         @endif
         @endif
-    </div>
+    </x-ui.card>
 </div>
 
 @push('scripts')
