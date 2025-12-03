@@ -6,7 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel') - Treis Adiutor CMS</title>
     
-    
     <!-- Favicon -->
     <link rel="icon" href="@yield('favicon', 'https://qzdtlrbpjudrvffrnory.supabase.co/storage/v1/object/public/Treis%20Adiutor//favico.ico')" type="image/x-icon">
     
@@ -14,9 +13,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
     
     <!-- Firebase Configuration -->
     <script>
@@ -38,464 +34,400 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <!-- Custom Admin Styles -->
     <style>
-        /* All styling is now handled by Tailwind CSS */
-        body {
-            font-family: 'Figtree', sans-serif;
-            background-color: #f9fafb;
-        }
-        
-        /* Alpine.js cloak */
-        [x-cloak] {
-            display: none !important;
-        }
-
-        /* Hide scrollbar while keeping scroll functionality */
-        nav.overflow-y-auto {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;      /* Firefox */
-        }
-
-        nav.overflow-y-auto::-webkit-scrollbar {
-            display: none;              /* Chrome, Safari and Opera */
-        }
+        [x-cloak] { display: none !important; }
+        nav.overflow-y-auto { -ms-overflow-style: none; scrollbar-width: none; }
+        nav.overflow-y-auto::-webkit-scrollbar { display: none; }
     </style>
     @stack('styles')
 </head>
-<body>
-    <div class="flex">
+<body class="bg-neutral-50 font-sans antialiased">
+    <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <div id="sidebar-wrapper" class="w-72 h-screen fixed left-0 bg-primary-700 text-white transition-transform duration-300 ease-in-out z-30 -translate-x-full md:translate-x-0 shadow-2xl">
+        <aside id="sidebar-wrapper" class="w-64 fixed inset-y-0 left-0 bg-white border-r border-neutral-100 shadow-sm transition-transform duration-300 ease-in-out z-30 -translate-x-full md:translate-x-0">
             <!-- Brand Header -->
-            <div class="py-5 px-6 border-b border-white/10 bg-black/10">
-                <a href="/" class="flex flex-col items-center group">
-                    <span class="text-2xl font-branding text-white tracking-wider mb-1 group-hover:text-secondary-300 transition-colors duration-300">
+            <div class="h-16 flex items-center justify-center border-b border-neutral-100 px-6">
+                <a href="/" class="flex items-center gap-2 group">
+                    <span class="text-xl font-branding text-primary-500 tracking-wide group-hover:text-primary-600 transition-colors">
                         TREIS ADIUTOR
                     </span>
-                    <span class="text-xs font-medium text-white/60 uppercase tracking-widest">Admin Panel</span>
                 </a>
             </div>
             
-            <nav class="mt-2 px-3 overflow-y-auto pb-6" style="max-height: calc(100vh - 100px);" x-data="sidebarNav()">
-                <!-- Dashboard - Featured -->
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center py-3.5 px-4 text-white/90 hover:text-white hover:bg-white/15 rounded-xl mb-3 font-medium transition-all duration-200 group {{ request()->routeIs('admin.dashboard') ? 'bg-white/20 text-white shadow-lg' : '' }}">
-                    <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg mr-3 group-hover:bg-white/20 transition-all duration-200 {{ request()->routeIs('admin.dashboard') ? 'bg-white/25' : '' }}">
-                        <i class="fas fa-home text-lg"></i>
-                    </div>
-                    <span class="text-sm">Dashboard</span>
+            <nav class="mt-4 px-3 overflow-y-auto pb-6" style="max-height: calc(100vh - 64px);" x-data="sidebarNav()">
+                <!-- Dashboard -->
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg mb-1 transition-all duration-200 {{ request()->routeIs('admin.dashboard') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                    <x-lucide-layout-dashboard class="w-5 h-5" />
+                    <span>Dashboard</span>
                 </a>
                 
-                <!-- Section Label -->
-                <div class="px-4 mb-2 mt-4">
-                    <span class="text-xs font-semibold text-white/40 uppercase tracking-wider">Management</span>
+                <!-- Section: Management -->
+                <div class="mt-6 mb-2 px-3">
+                    <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Management</span>
                 </div>
                 
-                <!-- User Management Section -->
-                <div class="mb-1.5">
-                    <button @click="toggle('users')" class="w-full flex items-center justify-between py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.users*', 'admin.clients*') ? 'bg-white/15 text-white' : '' }}">
-                        <div class="flex items-center">
-                            <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg mr-3 group-hover:bg-white/10 transition-all duration-200">
-                                <i class="fas fa-users-cog"></i>
-                            </div>
-                            <span class="text-sm font-medium">User Management</span>
+                <!-- User Management -->
+                <div class="mb-0.5">
+                    <button @click="toggle('users')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.users*', 'admin.clients*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                        <div class="flex items-center gap-3">
+                            <x-lucide-users class="w-5 h-5" />
+                            <span>Users</span>
                         </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="{ 'rotate-180': openSections.users }"></i>
+                        <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.users }" />
                     </button>
-                    <div x-show="openSections.users" x-collapse class="ml-3 mt-1.5 space-y-0.5">
-                        <a href="{{ route('admin.users.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.users*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-user w-4 mr-3 text-xs"></i>
+                    <div x-show="openSections.users" x-collapse class="mt-1 ml-8 space-y-0.5">
+                        <a href="{{ route('admin.users.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.users*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-user class="w-4 h-4" />
                             <span>All Users</span>
                         </a>
-                        <a href="{{ route('admin.clients.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.clients*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-user-tie w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.clients.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.clients*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-briefcase class="w-4 h-4" />
                             <span>Clients</span>
                         </a>
                     </div>
                 </div>
                 
-                <!-- Project Management Section -->
-                <div class="mb-1.5">
-                    <button @click="toggle('projects')" class="w-full flex items-center justify-between py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.requests*', 'admin.projects*', 'admin.tasks*', 'admin.budget-requests*', 'admin.revisions*') ? 'bg-white/15 text-white' : '' }}">
-                        <div class="flex items-center">
-                            <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg mr-3 group-hover:bg-white/10 transition-all duration-200">
-                                <i class="fas fa-project-diagram"></i>
-                            </div>
-                            <span class="text-sm font-medium">Projects</span>
+                <!-- Projects -->
+                <div class="mb-0.5">
+                    <button @click="toggle('projects')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.requests*', 'admin.projects*', 'admin.tasks*', 'admin.budget-requests*', 'admin.revisions*', 'admin.calendar*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                        <div class="flex items-center gap-3">
+                            <x-lucide-folder-kanban class="w-5 h-5" />
+                            <span>Projects</span>
                         </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="{ 'rotate-180': openSections.projects }"></i>
+                        <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.projects }" />
                     </button>
-                    <div x-show="openSections.projects" x-collapse class="ml-3 mt-1.5 space-y-0.5">
-                        <a href="{{ route('admin.requests.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.requests*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-clipboard-list w-4 mr-3 text-xs"></i>
+                    <div x-show="openSections.projects" x-collapse class="mt-1 ml-8 space-y-0.5">
+                        <a href="{{ route('admin.requests.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.requests*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-clipboard-list class="w-4 h-4" />
                             <span>Service Requests</span>
                         </a>
-                        <a href="{{ route('admin.projects.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.projects*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-folder-open w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.projects.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.projects*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-folder class="w-4 h-4" />
                             <span>Projects</span>
                         </a>
-                        <a href="{{ route('admin.tasks.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.tasks*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-tasks w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.tasks.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.tasks*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-check-square class="w-4 h-4" />
                             <span>Tasks</span>
                         </a>
-                        <a href="{{ route('admin.budget-requests.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.budget-requests*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-money-bill-wave w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.budget-requests.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.budget-requests*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-banknote class="w-4 h-4" />
                             <span>Budget Requests</span>
                         </a>
-                        <a href="{{ route('admin.revisions.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.revisions*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-redo w-4 mr-3 text-xs"></i>
-                            <span>Revision Requests</span>
+                        <a href="{{ route('admin.revisions.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.revisions*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-rotate-ccw class="w-4 h-4" />
+                            <span>Revisions</span>
                         </a>
-                        <a href="{{ route('admin.calendar.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.calendar*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-calendar-alt w-4 mr-3 text-xs"></i>
-                            <span>Project Calendar</span>
+                        <a href="{{ route('admin.calendar.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.calendar*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-calendar class="w-4 h-4" />
+                            <span>Calendar</span>
                         </a>
                     </div>
                 </div>
                 
-                <!-- Section Label -->
-                <div class="px-4 mb-2 mt-5">
-                    <span class="text-xs font-semibold text-white/40 uppercase tracking-wider">Financial</span>
+                <!-- Section: Financial -->
+                <div class="mt-6 mb-2 px-3">
+                    <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Financial</span>
                 </div>
                 
-                <!-- Financial Management Section -->
-                <div class="mb-1.5">
-                    <button @click="toggle('finance')" class="w-full flex items-center justify-between py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.payments*', 'admin.budget-requests*', 'admin.payouts*', 'admin.earnings-analytics*', 'admin.hour-requests*') ? 'bg-white/15 text-white' : '' }}">
-                        <div class="flex items-center">
-                            <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg mr-3 group-hover:bg-white/10 transition-all duration-200">
-                                <i class="fas fa-wallet"></i>
-                            </div>
-                            <span class="text-sm font-medium">Payments & Payouts</span>
+                <!-- Payments & Payouts -->
+                <div class="mb-0.5">
+                    <button @click="toggle('finance')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.payments*', 'admin.payouts*', 'admin.earnings-analytics*', 'admin.hour-requests*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                        <div class="flex items-center gap-3">
+                            <x-lucide-wallet class="w-5 h-5" />
+                            <span>Payments</span>
                         </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="{ 'rotate-180': openSections.finance }"></i>
+                        <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.finance }" />
                     </button>
-                    <div x-show="openSections.finance" x-collapse class="ml-3 mt-1.5 space-y-0.5">
-                        <a href="{{ route('admin.earnings-analytics.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.earnings-analytics*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-chart-pie w-4 mr-3 text-xs"></i>
-                            <span>Earnings Analytics</span>
+                    <div x-show="openSections.finance" x-collapse class="mt-1 ml-8 space-y-0.5">
+                        <a href="{{ route('admin.earnings-analytics.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.earnings-analytics*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-pie-chart class="w-4 h-4" />
+                            <span>Analytics</span>
                         </a>
-                        <a href="{{ route('admin.payments.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.payments*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-credit-card w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.payments.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.payments*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-credit-card class="w-4 h-4" />
                             <span>Payments</span>
                         </a>
-                        <a href="{{ route('admin.payouts.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.payouts*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-money-check-alt w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.payouts.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.payouts*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-landmark class="w-4 h-4" />
                             <span>Payouts</span>
                         </a>
-                        <a href="{{ route('admin.hour-requests.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.hour-requests*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-hourglass-half w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.hour-requests.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.hour-requests*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-clock class="w-4 h-4" />
                             <span>Hour Requests</span>
                         </a>
                     </div>
                 </div>
                 
-                <!-- Section Label -->
-                <div class="px-4 mb-2 mt-5">
-                    <span class="text-xs font-semibold text-white/40 uppercase tracking-wider">Engagement</span>
+                <!-- Section: Engagement -->
+                <div class="mt-6 mb-2 px-3">
+                    <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Engagement</span>
                 </div>
                 
-                <!-- Communication Section -->
-                <div class="mb-1.5">
-                    <button @click="toggle('communication')" class="w-full flex items-center justify-between py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.messages*', 'admin.feedback*', 'admin.announcements*') ? 'bg-white/15 text-white' : '' }}">
-                        <div class="flex items-center">
-                            <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg mr-3 group-hover:bg-white/10 transition-all duration-200">
-                                <i class="fas fa-comments"></i>
-                            </div>
-                            <span class="text-sm font-medium">Communication</span>
+                <!-- Communication -->
+                <div class="mb-0.5">
+                    <button @click="toggle('communication')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.messages*', 'admin.feedback*', 'admin.announcements*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                        <div class="flex items-center gap-3">
+                            <x-lucide-message-circle class="w-5 h-5" />
+                            <span>Communication</span>
                         </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="{ 'rotate-180': openSections.communication }"></i>
+                        <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.communication }" />
                     </button>
-                    <div x-show="openSections.communication" x-collapse class="ml-3 mt-1.5 space-y-0.5">
-                        <a href="{{ route('admin.messages.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.messages*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-envelope w-4 mr-3 text-xs"></i>
-                            <span class="flex-1">Messages</span>
+                    <div x-show="openSections.communication" x-collapse class="mt-1 ml-8 space-y-0.5">
+                        <a href="{{ route('admin.messages.index') }}" class="flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.messages*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <div class="flex items-center gap-2">
+                                <x-lucide-mail class="w-4 h-4" />
+                                <span>Messages</span>
+                            </div>
                             @if(auth()->user()->unreadMessagesCount() > 0)
-                                <span class="bg-secondary-400 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center ml-2">
+                                <span class="bg-primary-500 text-white text-xs font-medium rounded-full px-2 py-0.5">
                                     {{ auth()->user()->unreadMessagesCount() }}
                                 </span>
                             @endif
                         </a>
-                        <a href="{{ route('admin.feedback.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.feedback*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-star w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.feedback.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.feedback*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-star class="w-4 h-4" />
                             <span>Feedback</span>
                         </a>
-                        <a href="{{ route('admin.announcements.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.announcements*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-bullhorn w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.announcements.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.announcements*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-megaphone class="w-4 h-4" />
                             <span>Announcements</span>
                         </a>
                     </div>
                 </div>
                 
-                <!-- Coupons & Loyalty Section -->
-                <div class="mb-1.5">
-                    <button @click="toggle('rewards')" class="w-full flex items-center justify-between py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.coupons*', 'admin.loyalty*', 'admin.referrals*') ? 'bg-white/15 text-white' : '' }}">
-                        <div class="flex items-center">
-                            <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg mr-3 group-hover:bg-white/10 transition-all duration-200">
-                                <i class="fas fa-gift"></i>
-                            </div>
-                            <span class="text-sm font-medium">Rewards</span>
+                <!-- Rewards -->
+                <div class="mb-0.5">
+                    <button @click="toggle('rewards')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.coupons*', 'admin.loyalty*', 'admin.referrals*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                        <div class="flex items-center gap-3">
+                            <x-lucide-gift class="w-5 h-5" />
+                            <span>Rewards</span>
                         </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="{ 'rotate-180': openSections.rewards }"></i>
+                        <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.rewards }" />
                     </button>
-                    <div x-show="openSections.rewards" x-collapse class="ml-3 mt-1.5 space-y-0.5">
-                        <a href="{{ route('admin.coupons.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.coupons*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-ticket-alt w-4 mr-3 text-xs"></i>
+                    <div x-show="openSections.rewards" x-collapse class="mt-1 ml-8 space-y-0.5">
+                        <a href="{{ route('admin.coupons.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.coupons*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-ticket class="w-4 h-4" />
                             <span>Coupons</span>
                         </a>
-                        <a href="{{ route('admin.loyalty.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.loyalty*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-award w-4 mr-3 text-xs"></i>
-                            <span>Loyalty Program</span>
+                        <a href="{{ route('admin.loyalty.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.loyalty*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-award class="w-4 h-4" />
+                            <span>Loyalty</span>
                         </a>
-                        <a href="{{ route('admin.referrals.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.referrals*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-user-friends w-4 mr-3 text-xs"></i>
-                            <span>Referral System</span>
+                        <a href="{{ route('admin.referrals.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.referrals*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-users class="w-4 h-4" />
+                            <span>Referrals</span>
                         </a>
                     </div>
                 </div>
                 
-                <!-- Section Label -->
-                <div class="px-4 mb-2 mt-5">
-                    <span class="text-xs font-semibold text-white/40 uppercase tracking-wider">Content</span>
+                <!-- Section: Content -->
+                <div class="mt-6 mb-2 px-3">
+                    <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Content</span>
                 </div>
                 
-                <!-- Content Management Section -->
-                <div class="mb-1.5">
-                    <button @click="toggle('content')" class="w-full flex items-center justify-between py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.documents*', 'admin.templates*') ? 'bg-white/15 text-white' : '' }}">
-                        <div class="flex items-center">
-                            <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg mr-3 group-hover:bg-white/10 transition-all duration-200">
-                                <i class="fas fa-folder-open"></i>
-                            </div>
-                            <span class="text-sm font-medium">Content</span>
+                <!-- Content -->
+                <div class="mb-0.5">
+                    <button @click="toggle('content')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.documents*', 'admin.templates*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                        <div class="flex items-center gap-3">
+                            <x-lucide-file-text class="w-5 h-5" />
+                            <span>Content</span>
                         </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="{ 'rotate-180': openSections.content }"></i>
+                        <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.content }" />
                     </button>
-                    <div x-show="openSections.content" x-collapse class="ml-3 mt-1.5 space-y-0.5">
-                        <a href="{{ route('admin.documents.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.documents*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-file-alt w-4 mr-3 text-xs"></i>
+                    <div x-show="openSections.content" x-collapse class="mt-1 ml-8 space-y-0.5">
+                        <a href="{{ route('admin.documents.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.documents*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-file class="w-4 h-4" />
                             <span>Documents</span>
                         </a>
-                        <a href="{{ route('admin.templates.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.templates*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-layer-group w-4 mr-3 text-xs"></i>
-                            <span>Project Templates</span>
+                        <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.templates*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-layers class="w-4 h-4" />
+                            <span>Templates</span>
                         </a>
                     </div>
                 </div>
                 
-                <!-- Section Label -->
-                <div class="px-4 mb-2 mt-5">
-                    <span class="text-xs font-semibold text-white/40 uppercase tracking-wider">System & Analytics</span>
+                <!-- Section: System -->
+                <div class="mt-6 mb-2 px-3">
+                    <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">System</span>
                 </div>
                 
-                <!-- System Management Section -->
-                <div class="mb-1.5">
-                    <button @click="toggle('system')" class="w-full flex items-center justify-between py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.audit*', 'admin.notifications*') ? 'bg-white/15 text-white' : '' }}">
-                        <div class="flex items-center">
-                            <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg mr-3 group-hover:bg-white/10 transition-all duration-200">
-                                <i class="fas fa-cogs"></i>
-                            </div>
-                            <span class="text-sm font-medium">System</span>
+                <!-- System -->
+                <div class="mb-0.5">
+                    <button @click="toggle('system')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.audit*', 'admin.notifications*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                        <div class="flex items-center gap-3">
+                            <x-lucide-settings class="w-5 h-5" />
+                            <span>System</span>
                         </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="{ 'rotate-180': openSections.system }"></i>
+                        <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.system }" />
                     </button>
-                    <div x-show="openSections.system" x-collapse class="ml-3 mt-1.5 space-y-0.5">
-                        <a href="{{ route('admin.audit.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.audit*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-history w-4 mr-3 text-xs"></i>
+                    <div x-show="openSections.system" x-collapse class="mt-1 ml-8 space-y-0.5">
+                        <a href="{{ route('admin.audit.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.audit*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-history class="w-4 h-4" />
                             <span>Audit Logs</span>
                         </a>
-                        <a href="{{ route('admin.notifications.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm {{ request()->routeIs('admin.notifications*') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-bell w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.notifications.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.notifications*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-bell class="w-4 h-4" />
                             <span>Notifications</span>
                         </a>
                     </div>
                 </div>
                 
-                <!-- Analytics & Reports Section -->
-                <div class="mb-1.5">
-                    <button @click="toggle('analytics')" class="w-full flex items-center justify-between py-3 px-4 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.reports*') ? 'bg-white/15 text-white' : '' }}">
-                        <div class="flex items-center">
-                            <div class="w-9 h-9 flex items-center justify-center bg-white/5 rounded-lg mr-3 group-hover:bg-white/10 transition-all duration-200">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <span class="text-sm font-medium">Analytics</span>
+                <!-- Analytics -->
+                <div class="mb-0.5">
+                    <button @click="toggle('analytics')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.reports*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                        <div class="flex items-center gap-3">
+                            <x-lucide-bar-chart-3 class="w-5 h-5" />
+                            <span>Analytics</span>
                         </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="{ 'rotate-180': openSections.analytics }"></i>
+                        <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.analytics }" />
                     </button>
-                    <div x-show="openSections.analytics" x-collapse class="ml-3 mt-1.5 space-y-0.5">
-                        <a href="{{ route('admin.reports.index') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.reports.index') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-chart-area w-4 mr-3 text-xs"></i>
+                    <div x-show="openSections.analytics" x-collapse class="mt-1 ml-8 space-y-0.5">
+                        <a href="{{ route('admin.reports.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.index') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-activity class="w-4 h-4" />
                             <span>Overview</span>
                         </a>
-                        <a href="{{ route('admin.reports.dashboard') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.reports.dashboard') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-tachometer-alt w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.reports.dashboard') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.dashboard') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-gauge class="w-4 h-4" />
                             <span>Dashboard</span>
                         </a>
-                        <a href="{{ route('admin.reports.users') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.reports.users') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-users w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.reports.users') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.users') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-users class="w-4 h-4" />
                             <span>Users</span>
                         </a>
-                        <a href="{{ route('admin.reports.projects') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.reports.projects') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-project-diagram w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.reports.projects') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.projects') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-folder class="w-4 h-4" />
                             <span>Projects</span>
                         </a>
-                        <a href="{{ route('admin.reports.tasks') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.reports.tasks') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-tasks w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.reports.tasks') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.tasks') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-list-todo class="w-4 h-4" />
                             <span>Tasks</span>
                         </a>
-                        <a href="{{ route('admin.reports.requests') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.reports.requests') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-clipboard-list w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.reports.requests') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.requests') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-clipboard class="w-4 h-4" />
                             <span>Requests</span>
                         </a>
-                        <a href="{{ route('admin.reports.documents') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.reports.documents') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-file-alt w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.reports.documents') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.documents') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-file-text class="w-4 h-4" />
                             <span>Documents</span>
                         </a>
-                        <a href="{{ route('admin.reports.custom') }}" class="flex items-center py-2.5 px-4 ml-9 text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm transition-all duration-200 {{ request()->routeIs('admin.reports.custom') ? 'bg-white/10 text-white font-medium' : '' }}">
-                            <i class="fas fa-sliders-h w-4 mr-3 text-xs"></i>
+                        <a href="{{ route('admin.reports.custom') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.custom') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-sliders class="w-4 h-4" />
                             <span>Custom</span>
                         </a>
                     </div>
                 </div>
                 
                 <!-- Divider -->
-                <div class="my-6 border-t border-white/10"></div>
+                <div class="my-4 border-t border-neutral-100"></div>
                 
                 <!-- Profile -->
-                <a href="{{ route('admin.profile') }}" class="flex items-center py-3.5 px-4 text-white/90 hover:text-white hover:bg-white/15 rounded-xl mb-2 font-medium transition-all duration-200 group {{ request()->routeIs('admin.profile') ? 'bg-white/20 text-white shadow-lg' : '' }}">
-                    <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg mr-3 group-hover:bg-white/20 transition-all duration-200 {{ request()->routeIs('admin.profile') ? 'bg-white/25' : '' }}">
-                        <i class="fas fa-user-circle text-lg"></i>
-                    </div>
-                    <span class="text-sm">Profile</span>
+                <a href="{{ route('admin.profile') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.profile') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                    <x-lucide-user-circle class="w-5 h-5" />
+                    <span>Profile</span>
                 </a>
             </nav>
-        </div>
+        </aside>
 
-        <!-- Page Content -->
-        <div id="page-content-wrapper" class="flex-1 md:ml-72 min-h-screen transition-all duration-300 ease-in-out">
+        <!-- Main Content Area -->
+        <main id="page-content-wrapper" class="flex-1 md:ml-64 min-h-screen transition-all duration-300">
             <!-- Top Navigation -->
-            <nav class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-                <div>
-                    <button class="md:hidden text-gray-600 hover:text-gray-900" id="menu-toggle">
-                        <i class="fas fa-bars"></i>
+            <header class="h-16 bg-white border-b border-neutral-100 px-6 flex items-center justify-between sticky top-0 z-20">
+                <div class="flex items-center gap-4">
+                    <button class="md:hidden p-2 -ml-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors" id="menu-toggle">
+                        <x-lucide-menu class="w-5 h-5" />
                     </button>
-                    <h5 class="hidden md:block text-lg font-medium text-gray-800">
+                    <h1 class="text-lg font-semibold text-neutral-900">
                         @yield('page-title', 'Admin Panel')
-                    </h5>
+                    </h1>
                 </div>
 
-                <!-- Right Side - Notifications & User -->
-                <div class="flex items-center space-x-4">
-                    <!-- Notification Bell Component -->
+                <div class="flex items-center gap-3">
+                    <!-- Notification Bell -->
                     @include('components.notification-bell')
                     
                     <!-- User Dropdown -->
                     <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
-                        @if(Auth::user()->profilePic)
-                            <img src="{{ Auth::user()->getProfilePictureUrl() }}" class="rounded-full w-8 h-8 object-cover">
-                        @else
-                            <div class="bg-primary-500 rounded-full w-8 h-8 flex items-center justify-center">
-                                <span class="text-white font-medium">{{ substr(Auth::user()->fullName, 0, 1) }}</span>
-                            </div>
-                        @endif
-                        <span class="hidden md:block text-gray-800">{{ Auth::user()->fullName }}</span>
-                        <i class="fas fa-chevron-down text-xs"></i>
-                    </button>
-                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50" style="display: none;">
-                        <a href="{{ route('admin.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Profile
-                        </a>
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Settings
-                        </a>
-                        <div class="border-t border-gray-100 my-1"></div>
-                        <form method="POST" action="{{ route('admin.logout') }}">
-                            @csrf
-                            <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                </div>
-            </nav>
-
-            <!-- Main Content -->
-            <div class="p-6">
-                @if(session('success'))
-                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 alert" role="alert">
-                        <div class="flex items-center">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            <p>{{ session('success') }}</p>
-                            <button type="button" class="ml-auto" onclick="this.parentElement.parentElement.style.display='none'">
-                                <i class="fas fa-times"></i>
-                            </button>
+                        <button @click="open = !open" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-neutral-50 transition-colors">
+                            @if(Auth::user()->profilePic)
+                                <img src="{{ Auth::user()->getProfilePictureUrl() }}" class="w-8 h-8 rounded-full object-cover ring-2 ring-neutral-100">
+                            @else
+                                <div class="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center ring-2 ring-primary-100">
+                                    <span class="text-white text-sm font-medium">{{ substr(Auth::user()->fullName, 0, 1) }}</span>
+                                </div>
+                            @endif
+                            <span class="hidden md:block text-sm font-medium text-neutral-700">{{ Auth::user()->fullName }}</span>
+                            <x-lucide-chevron-down class="w-4 h-4 text-neutral-400" />
+                        </button>
+                        
+                        <div x-show="open" 
+                             @click.away="open = false" 
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-neutral-100 py-1 z-50" 
+                             style="display: none;">
+                            <a href="{{ route('admin.profile') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
+                                <x-lucide-user class="w-4 h-4 text-neutral-400" />
+                                Profile
+                            </a>
+                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
+                                <x-lucide-settings class="w-4 h-4 text-neutral-400" />
+                                Settings
+                            </a>
+                            <div class="border-t border-neutral-100 my-1"></div>
+                            <form method="POST" action="{{ route('admin.logout') }}">
+                                @csrf
+                                <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
+                                    <x-lucide-log-out class="w-4 h-4 text-neutral-400" />
+                                    Logout
+                                </button>
+                            </form>
                         </div>
                     </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="p-6 lg:p-8">
+                <!-- Flash Messages -->
+                @if(session('success'))
+                    <x-ui.alert type="success" dismissible class="mb-6">
+                        {{ session('success') }}
+                    </x-ui.alert>
                 @endif
 
                 @if(session('error'))
-                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 alert" role="alert">
-                        <div class="flex items-center">
-                            <i class="fas fa-exclamation-circle mr-2"></i>
-                            <p>{{ session('error') }}</p>
-                            <button type="button" class="ml-auto" onclick="this.parentElement.parentElement.style.display='none'">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
+                    <x-ui.alert type="error" dismissible class="mb-6">
+                        {{ session('error') }}
+                    </x-ui.alert>
                 @endif
 
                 @if(isset($errors) && is_object($errors) && $errors->any())
-                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 alert" role="alert">
-                        <div class="flex">
-                            <i class="fas fa-exclamation-triangle mr-2 mt-0.5"></i>
-                            <div>
-                                <ul class="list-disc ml-5">
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                            <button type="button" class="ml-auto" onclick="this.parentElement.parentElement.style.display='none'">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
+                    <x-ui.alert type="error" dismissible class="mb-6">
+                        <ul class="list-disc ml-4 space-y-1">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </x-ui.alert>
                 @endif
 
                 @yield('content')
             </div>
-        </div>
+        </main>
     </div>
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+    <!-- Scripts -->
     <script>
-        // Toggle sidebar on mobile
-        document.getElementById('menu-toggle').addEventListener('click', function() {
+        // Mobile sidebar toggle
+        document.getElementById('menu-toggle')?.addEventListener('click', function() {
             const sidebar = document.getElementById('sidebar-wrapper');
             sidebar.classList.toggle('-translate-x-full');
             sidebar.classList.toggle('translate-x-0');
-            
-            // Toggle content margin to adjust for sidebar
-            const content = document.getElementById('page-content-wrapper');
-            if (window.innerWidth >= 768) { // md breakpoint
-                content.classList.toggle('md:ml-0');
-                content.classList.toggle('md:ml-72');
-            }
         });
-
-        // Auto-hide alerts after 5 seconds
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                alert.style.display = 'none';
-            });
-        }, 5000);
 
         // Alpine.js sidebar navigation component
         function sidebarNav() {
@@ -511,44 +443,13 @@
                     analytics: {{ request()->routeIs('admin.reports*') ? 'true' : 'false' }}
                 },
                 toggle(section) {
-                    // If the section is currently closed, close all other sections first
                     if (!this.openSections[section]) {
-                        // Close all sections
                         Object.keys(this.openSections).forEach(key => {
                             this.openSections[key] = false;
-                            localStorage.setItem('admin_sidebar_' + key, false);
                         });
-                        // Then open the clicked section
                         this.openSections[section] = true;
-                        localStorage.setItem('admin_sidebar_' + section, true);
                     } else {
-                        // If clicking on an already open section, just close it
                         this.openSections[section] = false;
-                        localStorage.setItem('admin_sidebar_' + section, false);
-                    }
-                },
-                init() {
-                    // First check if any section should be open based on current route
-                    const routeBasedOpenSections = Object.keys(this.openSections).filter(section => this.openSections[section]);
-                    
-                    if (routeBasedOpenSections.length > 0) {
-                        // If there are route-based open sections, keep only the first one and close others
-                        const primarySection = routeBasedOpenSections[0];
-                        Object.keys(this.openSections).forEach(section => {
-                            this.openSections[section] = section === primarySection;
-                        });
-                    } else {
-                        // Restore state from localStorage, but ensure only one section is open
-                        let hasOpenSection = false;
-                        Object.keys(this.openSections).forEach(section => {
-                            const stored = localStorage.getItem('admin_sidebar_' + section);
-                            if (stored === 'true' && !hasOpenSection) {
-                                this.openSections[section] = true;
-                                hasOpenSection = true;
-                            } else {
-                                this.openSections[section] = false;
-                            }
-                        });
                     }
                 }
             }
@@ -556,5 +457,8 @@
     </script>
     
     @stack('scripts')
+    
+    <!-- Global Modal Container -->
+    <x-ui.modal-container />
 </body>
 </html>

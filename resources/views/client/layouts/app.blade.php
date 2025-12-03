@@ -9,9 +9,6 @@
     
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
     
     <!-- Firebase Configuration -->
     <script>
@@ -30,58 +27,30 @@
     
     <!-- Alpine.js for dropdown functionality -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
-    <style>
-        /* Mobile Menu Styles */
-        #mobile-menu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-in-out;
-        }
-        #mobile-menu.active {
-            max-height: 500px;
-        }
-
-        /* Text pulse animation for announcements */
-        @keyframes text-pulse {
-            0%, 100% {
-                color: rgba(255, 255, 255, 1);
-            }
-            50% {
-                color: rgba(255, 255, 255, 0.7);
-            }
-        }
-        
-        .announcement-text-pulse {
-            animation: text-pulse 1.5s ease-in-out infinite;
-        }
-    </style>
 </head>
 <body class="bg-neutral-50 antialiased min-h-screen flex flex-col">
     <!-- Announcements Banner - Full Width at Top -->
     @if(isset($announcements) && $announcements->count() > 0)
-        <div class="bg-gradient-to-r from-primary-600 to-accent-600 border-b border-primary-700 fixed top-0 left-0 right-0 z-50">
+        <div class="bg-primary-600 border-b border-primary-700 fixed top-0 left-0 right-0 z-50">
             @php $announcement = $announcements->first(); @endphp
             <div class="px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3">
-                <svg class="w-4 h-4 text-primary-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
-                </svg>
-                <div class="text-center announcement-text-pulse">
+                <x-lucide-megaphone class="w-4 h-4 text-primary-200 flex-shrink-0" />
+                <div class="text-center text-white">
                     <span class="font-semibold text-sm">{{ $announcement->title }}:</span>
-                    <span class="text-sm ml-2">{{ $announcement->content }}</span>
+                    <span class="text-sm ml-2 opacity-90">{{ $announcement->content }}</span>
                 </div>
             </div>
         </div>
     @endif
 
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm fixed left-0 right-0 z-40 border-b border-gray-200" style="top: 0;" id="main-nav">
+    <nav class="bg-white border-b border-neutral-100 fixed left-0 right-0 z-40" style="top: 0;" id="main-nav">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
                 <div class="flex items-center">
                     <a href="{{ route('client.dashboard') }}" class="flex items-center gap-2">
-                        <span class="text-xl font-branding bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+                        <span class="text-xl font-branding text-primary-600">
                             {{ config('app.name', 'CMS') }}
                         </span>
                     </a>
@@ -91,10 +60,8 @@
                 <div class="hidden md:flex items-center gap-3">
                     <!-- New Request Button -->
                     <a href="{{ route('client.requests.create') }}" 
-                       class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md text-sm font-medium">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm font-medium">
+                        <x-lucide-plus class="w-4 h-4" />
                         New Request
                     </a>
                     
@@ -104,95 +71,79 @@
                     <!-- Profile Menu Dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" 
-                                class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                                class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-neutral-50 transition-colors">
                             <img src="{{ auth()->user()->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->fullName) }}" 
                                  alt="{{ auth()->user()->fullName }}" 
-                                 class="w-8 h-8 rounded-full border-2 border-gray-200">
-                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
+                                 class="w-8 h-8 rounded-full ring-2 ring-neutral-100">
+                            <x-lucide-chevron-down class="w-4 h-4 text-neutral-400" />
                         </button>
                         
                         <!-- Dropdown Menu -->
                         <div x-show="open" 
                              @click.away="open = false"
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 transform scale-95"
-                             x-transition:enter-end="opacity-100 transform scale-100"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
                              x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="opacity-100 transform scale-100"
-                             x-transition:leave-end="opacity-0 transform scale-95"
-                             class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-neutral-100 py-2 z-50"
                              style="display: none;">
                             
                             <!-- User Info -->
-                            <div class="px-4 py-3 border-b border-gray-200">
-                                <p class="text-sm font-medium text-gray-900">{{ auth()->user()->fullName }}</p>
-                                <p class="text-xs text-gray-500 mt-0.5">{{ auth()->user()->email }}</p>
+                            <div class="px-4 py-3 border-b border-neutral-100">
+                                <p class="text-sm font-medium text-neutral-900">{{ auth()->user()->fullName }}</p>
+                                <p class="text-xs text-neutral-500 mt-0.5">{{ auth()->user()->email }}</p>
                             </div>
                             
                             <!-- Navigation Links -->
                             <div class="py-2">
                                 <a href="{{ route('client.dashboard') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.dashboard') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-layout-dashboard class="w-5 h-5" />
                                     Dashboard
                                 </a>
                                 
                                 <a href="{{ route('client.tasks') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.tasks') || request()->routeIs('client.projects.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.tasks') || request()->routeIs('client.projects.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-folder class="w-5 h-5" />
                                     My Projects
                                 </a>
                                 
                                 <a href="{{ route('client.requests') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.requests*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.requests*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-clipboard-list class="w-5 h-5" />
                                     Service Requests
                                 </a>
                                 
                                 <a href="{{ route('client.messages.index') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.messages.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.messages.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-message-circle class="w-5 h-5" />
                                     Messages
                                 </a>
                                 
                                 <a href="{{ route('client.payments.history') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.payments.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.payments.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-credit-card class="w-5 h-5" />
                                     Payments
                                 </a>
                                 
                                 <a href="{{ route('client.feedback') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.feedback') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.feedback') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-star class="w-5 h-5" />
                                     Feedback
                                 </a>
                             </div>
                             
                             <!-- Rewards & Benefits Section -->
-                            <div class="border-t border-gray-200 py-2">
+                            <div class="border-t border-neutral-100 py-2">
                                 <div class="px-4 py-2">
-                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rewards & Benefits</p>
+                                    <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Rewards & Benefits</p>
                                 </div>
                                 
                                 <a href="{{ route('client.referrals.dashboard') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.referrals.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.referrals.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-users class="w-5 h-5" />
                                     Referrals
                                     @php
                                         $pendingReferralsCount = Auth::user()->referralsMade()->where('status', 'pending')->count();
@@ -203,10 +154,8 @@
                                 </a>
                                 
                                 <a href="{{ route('client.coupons.index') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.coupons.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.coupons.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-ticket class="w-5 h-5" />
                                     Coupons
                                     @php
                                         $activeCouponsCount = Auth::user()->coupons()->where('status', 'active')->where('valid_until', '>', now())->count();
@@ -217,37 +166,31 @@
                                 </a>
                                 
                                 <a href="{{ route('client.loyalty.dashboard') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.loyalty.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.loyalty.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-award class="w-5 h-5" />
                                     Loyalty Program
                                     @php
                                         $userPoints = Auth::user()->loyalty_points ?? 0;
                                     @endphp
                                     @if($userPoints > 0)
-                                        <span class="ml-auto bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
+                                        <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
                                     @endif
                                 </a>
                             </div>
                             
                             <!-- Account Section -->
-                            <div class="border-t border-gray-200 py-2">
+                            <div class="border-t border-neutral-100 py-2">
                                 <a href="{{ route('client.profile') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
+                                    <x-lucide-user class="w-5 h-5" />
                                     My Profile
                                 </a>
                                 
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" 
-                                            class="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                        </svg>
+                                            class="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                        <x-lucide-log-out class="w-5 h-5" />
                                         Logout
                                     </button>
                                 </form>
@@ -261,92 +204,74 @@
                     <!-- Notifications Bell Component (Mobile) -->
                     @include('components.notification-bell')
                     
-                    <button type="button" onclick="toggleMobileMenu()" class="p-2 text-gray-600 hover:text-primary-600">
-                        <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                        <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                    <button type="button" onclick="toggleMobileMenu()" class="p-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors">
+                        <x-lucide-menu id="menu-icon" class="w-6 h-6" />
+                        <x-lucide-x id="close-icon" class="w-6 h-6 hidden" />
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Mobile Navigation -->
-        <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-200" style="max-height: 0; overflow: hidden;">
+        <div id="mobile-menu" class="md:hidden bg-white border-t border-neutral-100" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out;">
             <div class="px-4 py-3 space-y-1">
                 <!-- User Info -->
-                <div class="flex items-center gap-3 px-3 py-3 bg-gray-50 rounded-lg mb-3">
+                <div class="flex items-center gap-3 px-3 py-3 bg-neutral-50 rounded-xl mb-3">
                     <img src="{{ auth()->user()->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->fullName) }}" 
                          alt="{{ auth()->user()->fullName }}" 
-                         class="w-10 h-10 rounded-full border-2 border-gray-200">
+                         class="w-10 h-10 rounded-full ring-2 ring-neutral-200">
                     <div>
-                        <p class="text-sm font-medium text-gray-900">{{ auth()->user()->fullName }}</p>
-                        <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
+                        <p class="text-sm font-medium text-neutral-900">{{ auth()->user()->fullName }}</p>
+                        <p class="text-xs text-neutral-500">{{ auth()->user()->email }}</p>
                     </div>
                 </div>
                 
                 <!-- Navigation Links -->
                 <a href="{{ route('client.dashboard') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.dashboard') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-layout-dashboard class="w-5 h-5" />
                     Dashboard
                 </a>
                 
                 <a href="{{ route('client.tasks') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.tasks') || request()->routeIs('client.projects.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.tasks') || request()->routeIs('client.projects.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-folder class="w-5 h-5" />
                     My Projects
                 </a>
                 
                 <a href="{{ route('client.requests') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.requests*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.requests*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-clipboard-list class="w-5 h-5" />
                     Service Requests
                 </a>
                 
                 <a href="{{ route('client.messages.index') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.messages.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.messages.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-message-circle class="w-5 h-5" />
                     Messages
                 </a>
                 
                 <a href="{{ route('client.payments.history') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.payments.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.payments.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-credit-card class="w-5 h-5" />
                     Payments
                 </a>
                 
                 <a href="{{ route('client.feedback') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.feedback') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.feedback') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-star class="w-5 h-5" />
                     Feedback
                 </a>
                 
                 <!-- Rewards & Benefits Section -->
-                <div class="border-t border-gray-200 my-2 pt-2">
+                <div class="border-t border-neutral-100 my-2 pt-2">
                     <div class="px-3 py-2">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rewards & Benefits</p>
+                        <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Rewards & Benefits</p>
                     </div>
                     
                     <a href="{{ route('client.referrals.dashboard') }}" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.referrals.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.referrals.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                        <x-lucide-users class="w-5 h-5" />
                         Referrals
                         @php
                             $pendingReferralsCount = Auth::user()->referralsMade()->where('status', 'pending')->count();
@@ -357,10 +282,8 @@
                     </a>
                     
                     <a href="{{ route('client.coupons.index') }}" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.coupons.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
-                        </svg>
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.coupons.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                        <x-lucide-ticket class="w-5 h-5" />
                         Coupons
                         @php
                             $activeCouponsCount = Auth::user()->coupons()->where('status', 'active')->where('valid_until', '>', now())->count();
@@ -371,45 +294,37 @@
                     </a>
                     
                     <a href="{{ route('client.loyalty.dashboard') }}" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('client.loyalty.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                        </svg>
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.loyalty.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                        <x-lucide-star class="w-5 h-5" />
                         Loyalty Program
                         @php
                             $userPoints = Auth::user()->loyalty_points ?? 0;
                         @endphp
                         @if($userPoints > 0)
-                            <span class="ml-auto bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
+                            <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
                         @endif
                     </a>
                 </div>
                 
-                <div class="border-t border-gray-200 my-2 pt-2">
+                <div class="border-t border-neutral-200 my-2 pt-2">
                     <a href="{{ route('client.requests.create') }}" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gradient-to-r from-primary-600 to-accent-600 text-white font-medium">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+                        <x-lucide-plus class="w-5 h-5" />
                         New Request
                     </a>
                 </div>
                 
-                <div class="border-t border-gray-200 my-2 pt-2">
+                <div class="border-t border-neutral-200 my-2 pt-2">
                     <a href="{{ route('client.profile') }}" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50 transition-colors">
+                        <x-lucide-user class="w-5 h-5" />
                         My Profile
                     </a>
                     <form method="POST" action="{{ route('logout') }}" class="mt-1">
                         @csrf
                         <button type="submit" 
-                                class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-red-600 hover:bg-red-50">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                            </svg>
+                                class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+                            <x-lucide-log-out class="w-5 h-5" />
                             Logout
                         </button>
                     </form>
@@ -423,7 +338,7 @@
         <script>
             // Adjust main content padding based on announcements banner height
             document.addEventListener('DOMContentLoaded', function() {
-                const announcementsBanner = document.querySelector('.bg-gradient-to-r.from-primary-600.fixed');
+                const announcementsBanner = document.querySelector('.bg-primary-600.fixed');
                 const mainNav = document.getElementById('main-nav');
                 const mainContent = document.getElementById('main-content');
                 
@@ -437,17 +352,13 @@
         <!-- Flash Messages -->
         @if(session('success'))
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div class="bg-success-50 border border-success-200 text-success-800 px-4 py-3 rounded-lg">
-                    {{ session('success') }}
-                </div>
+                <x-ui.alert type="success">{{ session('success') }}</x-ui.alert>
             </div>
         @endif
 
         @if(session('error'))
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div class="bg-error-50 border border-error-200 text-error-800 px-4 py-3 rounded-lg">
-                    {{ session('error') }}
-                </div>
+                <x-ui.alert type="error">{{ session('error') }}</x-ui.alert>
             </div>
         @endif
 
@@ -504,22 +415,22 @@
                 } else {
                     container.innerHTML = `
                         <div class="text-center py-12">
-                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-16 h-16 text-neutral-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                             </svg>
-                            <p class="text-gray-500">No notifications yet</p>
-                            <p class="text-gray-400 text-sm mt-1">We'll notify you when something important happens</p>
+                            <p class="text-neutral-500">No notifications yet</p>
+                            <p class="text-neutral-400 text-sm mt-1">We'll notify you when something important happens</p>
                         </div>
                     `;
                 }
             } catch (error) {
                 console.error('Error loading notifications:', error);
-                container.innerHTML = `
+            container.innerHTML = `
                     <div class="text-center py-12">
                         <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <p class="text-gray-500">Failed to load notifications</p>
+                        <p class="text-neutral-500">Failed to load notifications</p>
                         <button onclick="loadNotifications()" class="mt-3 text-primary-600 hover:text-primary-700 text-sm font-medium">Try Again</button>
                     </div>
                 `;
@@ -535,16 +446,16 @@
                 const timeAgo = formatTimeAgo(notification.created_at);
                 
                 return `
-                    <div class="mb-3 p-4 rounded-lg border ${isUnread ? 'bg-primary-50 border-primary-200' : 'bg-white border-gray-200'} hover:shadow-sm transition-shadow">
+                    <div class="mb-3 p-4 rounded-lg border ${isUnread ? 'bg-primary-50 border-primary-200' : 'bg-white border-neutral-200'} hover:shadow-sm transition-shadow">
                         <div class="flex items-start gap-3">
-                            <div class="flex-shrink-0 w-10 h-10 rounded-full ${isUnread ? 'bg-primary-100' : 'bg-gray-100'} flex items-center justify-center">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-full ${isUnread ? 'bg-primary-100' : 'bg-neutral-100'} flex items-center justify-center">
                                 ${icon}
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900">${notification.data.title || 'Notification'}</p>
-                                <p class="text-sm text-gray-600 mt-1">${notification.data.message || ''}</p>
+                                <p class="text-sm font-medium text-neutral-900">${notification.data.title || 'Notification'}</p>
+                                <p class="text-sm text-neutral-600 mt-1">${notification.data.message || ''}</p>
                                 <div class="flex items-center gap-3 mt-2">
-                                    <span class="text-xs text-gray-500">${timeAgo}</span>
+                                    <span class="text-xs text-neutral-500">${timeAgo}</span>
                                     ${isUnread ? '<span class="text-xs font-medium text-primary-600">New</span>' : ''}
                                 </div>
                                 ${notification.data.action_url ? `
@@ -554,7 +465,7 @@
                                 ` : ''}
                             </div>
                             ${isUnread ? `
-                                <button onclick="markAsRead('${notification.id}')" class="flex-shrink-0 text-gray-400 hover:text-gray-600">
+                                <button onclick="markAsRead('${notification.id}')" class="flex-shrink-0 text-neutral-400 hover:text-neutral-600">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                                     </svg>
@@ -573,7 +484,7 @@
                 'request': '<svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path></svg>',
                 'message': '<svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path><path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path></svg>',
                 'meeting': '<svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg>',
-                'default': '<svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>'
+                'default': '<svg class="w-5 h-5 text-neutral-600" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>'
             };
             
             return icons[type] || icons.default;
@@ -612,5 +523,8 @@
     </script>
 
     @stack('scripts')
+    
+    <!-- Global Modal Container -->
+    <x-ui.modal-container />
 </body>
 </html>

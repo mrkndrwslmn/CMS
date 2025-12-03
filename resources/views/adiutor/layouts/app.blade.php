@@ -15,9 +15,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
-    
     <!-- Tailwind CSS (Local Build) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
@@ -37,58 +34,30 @@
             vapidKey: "{{ config('firebase.vapidKey') }}"
         };
     </script>
-
-    <style>
-        /* Mobile Menu Styles */
-        #mobile-menu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-in-out;
-        }
-        #mobile-menu.active {
-            max-height: 600px;
-        }
-
-        /* Text pulse animation for announcements */
-        @keyframes text-pulse {
-            0%, 100% {
-                color: rgba(255, 255, 255, 1);
-            }
-            50% {
-                color: rgba(255, 255, 255, 0.7);
-            }
-        }
-        
-        .announcement-text-pulse {
-            animation: text-pulse 1.5s ease-in-out infinite;
-        }
-    </style>
 </head>
 <body class="bg-neutral-50 antialiased min-h-screen flex flex-col">
     <!-- Announcements Banner - Full Width at Top -->
     @if(isset($announcements) && $announcements->count() > 0)
-        <div class="bg-gradient-to-r from-primary-600 to-accent-600 border-b border-primary-700 fixed top-0 left-0 right-0 z-50">
+        <div class="bg-primary-600 border-b border-primary-700 fixed top-0 left-0 right-0 z-50">
             @php $announcement = $announcements->first(); @endphp
             <div class="px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3">
-                <svg class="w-4 h-4 text-primary-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
-                </svg>
-                <div class="text-center announcement-text-pulse">
+                <x-lucide-megaphone class="w-4 h-4 text-primary-200 flex-shrink-0" />
+                <div class="text-center text-white">
                     <span class="font-semibold text-sm">{{ $announcement->title }}:</span>
-                    <span class="text-sm ml-2">{{ $announcement->content }}</span>
+                    <span class="text-sm ml-2 opacity-90">{{ $announcement->content }}</span>
                 </div>
             </div>
         </div>
     @endif
 
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm fixed left-0 right-0 z-40 border-b border-gray-200" style="top: 0;" id="main-nav">
+    <nav class="bg-white border-b border-neutral-100 fixed left-0 right-0 z-40" style="top: 0;" id="main-nav">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
                 <div class="flex items-center">
                     <a href="{{ route('adiutor.dashboard') }}" class="flex items-center gap-2">
-                        <span class="text-xl font-branding bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+                        <span class="text-xl font-branding text-primary-600">
                             {{ config('app.name', 'CMS') }}
                         </span>
                     </a>
@@ -99,18 +68,14 @@
                     <!-- Quick Actions -->
                     <div class="flex items-center gap-2">
                         <a href="{{ route('adiutor.projects.index') }}?action=new" 
-                           class="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-all shadow-sm hover:shadow-md text-sm font-medium">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                            </svg>
+                           class="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm font-medium">
+                            <x-lucide-folder-plus class="w-4 h-4" />
                             New Project
                         </a>
                         
                         <a href="{{ route('adiutor.tasks.index') }}?action=create" 
-                           class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-md transition-all shadow-sm hover:shadow-md text-sm font-medium">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
+                           class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50 rounded-lg transition-colors text-sm font-medium">
+                            <x-lucide-plus class="w-4 h-4" />
                             Add Task
                         </a>
                     </div>
@@ -121,152 +86,119 @@
                     <!-- Profile Menu Dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" 
-                                class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                                class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-neutral-50 transition-colors">
                             <img src="{{ auth()->user()->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->fullName) }}" 
                                  alt="{{ auth()->user()->fullName }}" 
-                                 class="w-8 h-8 rounded-full border-2 border-gray-200">
-                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
+                                 class="w-8 h-8 rounded-full ring-2 ring-neutral-100">
+                            <x-lucide-chevron-down class="w-4 h-4 text-neutral-400" />
                         </button>
                         
                         <!-- Dropdown Menu -->
                         <div x-show="open" 
                              @click.away="open = false"
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 transform scale-95"
-                             x-transition:enter-end="opacity-100 transform scale-100"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
                              x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="opacity-100 transform scale-100"
-                             x-transition:leave-end="opacity-0 transform scale-95"
-                             class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-neutral-100 py-2 z-50"
                              style="display: none;">
                             
                             <!-- User Info -->
-                            <div class="px-4 py-3 border-b border-gray-200">
-                                <p class="text-sm font-medium text-gray-900">{{ auth()->user()->fullName }}</p>
-                                <p class="text-xs text-gray-500 mt-0.5">{{ auth()->user()->email }}</p>
-                                <p class="text-xs text-blue-600 mt-1 font-medium">Adiutor Account</p>
+                            <div class="px-4 py-3 border-b border-neutral-100">
+                                <p class="text-sm font-medium text-neutral-900">{{ auth()->user()->fullName }}</p>
+                                <p class="text-xs text-neutral-500 mt-0.5">{{ auth()->user()->email }}</p>
+                                <p class="text-xs text-primary-600 mt-1 font-medium">Adiutor Account</p>
                             </div>
                             
                             <!-- Navigation Links -->
                             <div class="py-2">
                                 <a href="{{ route('adiutor.dashboard') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.dashboard') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-layout-dashboard class="w-5 h-5" />
                                     Dashboard
                                 </a>
                                 
                                 <a href="{{ route('adiutor.projects.index') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.projects.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.projects.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-folder class="w-5 h-5" />
                                     My Projects
                                 </a>
                                 
                                 <a href="{{ route('adiutor.tasks.index') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.tasks.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.tasks.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-check-square class="w-5 h-5" />
                                     My Tasks
                                 </a>
                                 
                 <a href="{{ route('adiutor.time-tracking.index') }}" 
-                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.time-tracking.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.time-tracking.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-clock class="w-5 h-5" />
                     Time Tracking
                 </a>
                 
                 <a href="{{ route('adiutor.earnings.index') }}" 
-                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.earnings.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.earnings.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-wallet class="w-5 h-5" />
                     My Earnings
                 </a>
                 
                 <a href="{{ route('adiutor.clients') }}" 
-                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.clients') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.clients') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-users class="w-5 h-5" />
                     Clients
                 </a>
                 
                 <a href="{{ route('adiutor.group-chats.index') }}" 
-                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.group-chats.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.group-chats.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-messages-square class="w-5 h-5" />
                     Group Chats
                 </a>
                 
-                <a href="{{ route('calendar.index') }}" 
-                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('calendar.*') ? 'bg-primary-50 text-primary-700' : '' }}">
                 <a href="{{ url('/calendar') }}" 
-                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->is('calendar*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->is('calendar*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-calendar class="w-5 h-5" />
                     Calendar
                 </a>
                                 <a href="{{ route('adiutor.revisions.index') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.revisions.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.revisions.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-rotate-ccw class="w-5 h-5" />
                                     Revisions
                                 </a>
                                 
                                 <a href="{{ route('adiutor.documents') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.documents') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.documents') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-file-text class="w-5 h-5" />
                                     Documents
                                 </a>
                                 
                                 <a href="{{ route('adiutor.feedback') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.feedback') ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.feedback') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-star class="w-5 h-5" />
                                     Feedback
                                 </a>
                             </div>
                             
                             <!-- Account Section -->
-                            <div class="border-t border-gray-200 py-2">
+                            <div class="border-t border-neutral-100 py-2">
                                 <a href="{{ route('adiutor.profile.show') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
+                                    <x-lucide-user class="w-5 h-5" />
                                     My Profile
                                 </a>
                                 
                                 <a href="{{ route('adiutor.profile.earnings') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    </svg>
+                                   class="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
+                                    <x-lucide-settings class="w-5 h-5" />
                                     Earnings Settings
                                 </a>
                                 
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" 
-                                            class="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                        </svg>
+                                            class="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                        <x-lucide-log-out class="w-5 h-5" />
                                         Logout
                                     </button>
                                 </form>
@@ -280,164 +212,126 @@
                     <!-- Notifications Bell Component (Mobile) -->
                     @include('components.notification-bell')
                     
-                    <button type="button" onclick="toggleMobileMenu()" class="p-2 text-gray-600 hover:text-primary-600">
-                        <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                        <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                    <button type="button" onclick="toggleMobileMenu()" class="p-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors">
+                        <x-lucide-menu id="menu-icon" class="w-6 h-6" />
+                        <x-lucide-x id="close-icon" class="w-6 h-6 hidden" />
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Mobile Navigation -->
-        <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-200" style="max-height: 0; overflow: hidden;">
+        <div id="mobile-menu" class="md:hidden bg-white border-t border-neutral-100" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out;">
             <div class="px-4 py-3 space-y-1">
                 <!-- User Info -->
-                <div class="flex items-center gap-3 px-3 py-3 bg-gray-50 rounded-lg mb-3">
+                <div class="flex items-center gap-3 px-3 py-3 bg-neutral-50 rounded-xl mb-3">
                     <img src="{{ auth()->user()->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->fullName) }}" 
                          alt="{{ auth()->user()->fullName }}" 
-                         class="w-10 h-10 rounded-full border-2 border-gray-200">
+                         class="w-10 h-10 rounded-full ring-2 ring-neutral-200">
                     <div>
-                        <p class="text-sm font-medium text-gray-900">{{ auth()->user()->fullName }}</p>
-                        <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
-                        <p class="text-xs text-blue-600 font-medium">Adiutor Account</p>
+                        <p class="text-sm font-medium text-neutral-900">{{ auth()->user()->fullName }}</p>
+                        <p class="text-xs text-neutral-500">{{ auth()->user()->email }}</p>
+                        <p class="text-xs text-primary-600 font-medium">Adiutor Account</p>
                     </div>
                 </div>
                 
                 <!-- Navigation Links -->
                 <a href="{{ route('adiutor.dashboard') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.dashboard') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-layout-dashboard class="w-5 h-5" />
                     Dashboard
                 </a>
                 
                 <a href="{{ route('adiutor.projects.index') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.projects.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.projects.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-folder class="w-5 h-5" />
                     My Projects
                 </a>
                 
                 <a href="{{ route('adiutor.tasks.index') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.tasks.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.tasks.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-check-square class="w-5 h-5" />
                     My Tasks
                 </a>
                 
                 <a href="{{ route('adiutor.time-tracking.index') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.time-tracking.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.time-tracking.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-clock class="w-5 h-5" />
                     Time Tracking
                 </a>
                 
                 <a href="{{ route('adiutor.earnings.index') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.earnings.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.earnings.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-wallet class="w-5 h-5" />
                     My Earnings
                 </a>
                 
                 <a href="{{ route('adiutor.clients') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.clients') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.clients') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-users class="w-5 h-5" />
                     Clients
                 </a>
                 
                 <a href="{{ route('adiutor.group-chats.index') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.group-chats.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.group-chats.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-messages-square class="w-5 h-5" />
                     Group Chats
                 </a>
                 
-                <a href="{{ route('calendar.index') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('calendar.*') ? 'bg-primary-50 text-primary-700' : '' }}">
                 <a href="{{ url('/calendar') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->is('calendar*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->is('calendar*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-calendar class="w-5 h-5" />
                     Calendar
                 </a>
                 
                 <a href="{{ route('adiutor.revisions.index') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.revisions.*') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.revisions.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-rotate-ccw class="w-5 h-5" />
                     Revisions
                 </a>
                 
                 <a href="{{ route('adiutor.documents') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.documents') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.documents') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-file-text class="w-5 h-5" />
                     Documents
                 </a>
                 
                 <a href="{{ route('adiutor.feedback') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 {{ request()->routeIs('adiutor.feedback') ? 'bg-primary-50 text-primary-700' : '' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                    </svg>
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.feedback') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-star class="w-5 h-5" />
                     Feedback
                 </a>
                 
-                <div class="border-t border-gray-200 my-2 pt-2">
+                <div class="border-t border-neutral-100 my-2 pt-2">
                     <a href="{{ route('adiutor.projects.index') }}?action=new" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium mb-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                        </svg>
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary-600 text-white font-medium mb-2">
+                        <x-lucide-folder-plus class="w-5 h-5" />
                         New Project
                     </a>
                     
                     <a href="{{ route('adiutor.tasks.index') }}?action=create" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gradient-to-r from-green-600 to-green-700 text-white font-medium">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg border border-neutral-200 text-neutral-700 font-medium hover:bg-neutral-50 transition-colors">
+                        <x-lucide-plus class="w-5 h-5" />
                         Add Task
                     </a>
                 </div>
                 
-                <div class="border-t border-gray-200 my-2 pt-2">
+                <div class="border-t border-neutral-100 my-2 pt-2">
                     <a href="{{ route('adiutor.profile.show') }}" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50 transition-colors">
+                        <x-lucide-user class="w-5 h-5" />
                         My Profile
                     </a>
                     <a href="{{ route('adiutor.profile.earnings') }}" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50 transition-colors">
+                        <x-lucide-settings class="w-5 h-5" />
                         Earnings Settings
                     </a>
                     <form method="POST" action="{{ route('logout') }}" class="mt-1">
                         @csrf
                         <button type="submit" 
-                                class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-red-600 hover:bg-red-50">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                            </svg>
+                                class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+                            <x-lucide-log-out class="w-5 h-5" />
                             Logout
                         </button>
                     </form>
@@ -451,7 +345,7 @@
         <script>
             // Adjust main content padding based on announcements banner height
             document.addEventListener('DOMContentLoaded', function() {
-                const announcementsBanner = document.querySelector('.bg-gradient-to-r.from-primary-600.fixed');
+                const announcementsBanner = document.querySelector('.bg-primary-600.fixed');
                 const mainNav = document.getElementById('main-nav');
                 const mainContent = document.getElementById('main-content');
                 
@@ -464,18 +358,18 @@
         </script>
         <!-- Flash Messages -->
         @if(session('success'))
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div class="bg-success-50 border border-success-200 text-success-800 px-4 py-3 rounded-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+                <x-ui.alert type="success" dismissible>
                     {{ session('success') }}
-                </div>
+                </x-ui.alert>
             </div>
         @endif
 
         @if(session('error'))
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div class="bg-error-50 border border-error-200 text-error-800 px-4 py-3 rounded-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+                <x-ui.alert type="error" dismissible>
                     {{ session('error') }}
-                </div>
+                </x-ui.alert>
             </div>
         @endif
 
@@ -642,5 +536,8 @@
     <!-- Page-specific scripts -->
     @yield('scripts')
     @stack('scripts')
+    
+    <!-- Global Modal Container -->
+    <x-ui.modal-container />
 </body>
 </html>
