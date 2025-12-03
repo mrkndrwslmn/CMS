@@ -5,35 +5,37 @@
 
 @section('content')
 <div class="px-6 py-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+        ['label' => 'Projects', 'url' => route('admin.projects.index'), 'icon' => 'folder-kanban'],
+        ['label' => 'Create Project', 'icon' => 'plus']
+    ]" class="mb-6" />
+
     <!-- Header Section -->
     <div class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-2xl font-semibold text-primary-600 mb-1">Create New Project</h1>
+            <h1 class="text-2xl font-semibold text-neutral-800 mb-1">Create New Project</h1>
             <p class="text-neutral-500">Create a project from a paid service request</p>
         </div>
-        
-        <a href="{{ route('admin.projects.index') }}" 
-           class="inline-flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
-            <i class="fas fa-arrow-left mr-2"></i>Back to Projects
-        </a>
     </div>
 
     @if($serviceRequests->isEmpty())
     <!-- No Service Requests Available -->
-    <div class="bg-white rounded-lg shadow-sm p-8 text-center">
-        <div class="w-16 h-16 bg-warning-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-exclamation-triangle text-warning-600 text-2xl"></i>
+    <x-ui.card class="p-8 text-center">
+        <div class="w-16 h-16 bg-warning-50 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <x-lucide-alert-triangle class="w-8 h-8 text-warning-600" />
         </div>
         <h3 class="text-lg font-semibold text-neutral-800 mb-2">No Paid Service Requests Available</h3>
         <p class="text-neutral-500 mb-6">There are no paid service requests that haven't been converted to projects yet.</p>
-        <a href="{{ route('admin.service-requests.index') }}" 
-           class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-            <i class="fas fa-clipboard-list mr-2"></i>View Service Requests
-        </a>
-    </div>
+        <x-ui.button variant="primary" href="{{ route('admin.requests.index') }}">
+            <x-lucide-clipboard-list class="w-4 h-4" />
+            View Service Requests
+        </x-ui.button>
+    </x-ui.card>
     @else
     <!-- Create Form -->
-    <div class="bg-white rounded-lg shadow-sm">
+    <x-ui.card>
         <form action="{{ route('admin.projects.store') }}" method="POST">
             @csrf
 
@@ -48,7 +50,7 @@
                         </label>
                         <select id="service_request_id" 
                                 name="service_request_id" 
-                                class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('service_request_id') border-error-500 @enderror"
+                                class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors @error('service_request_id') border-error-500 @enderror"
                                 required
                                 onchange="populateServiceRequestDetails()">
                             <option value="">-- Select a Service Request --</option>
@@ -70,7 +72,7 @@
                     </div>
 
                     <!-- Selected Service Request Details -->
-                    <div id="serviceRequestDetails" class="mt-4 p-4 bg-neutral-50 rounded-lg hidden">
+                    <div id="serviceRequestDetails" class="mt-4 p-4 bg-neutral-50 rounded-xl hidden">
                         <h4 class="text-sm font-medium text-neutral-700 mb-2">Service Request Details</h4>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
@@ -90,7 +92,7 @@
                 </div>
 
                 <!-- Basic Information -->
-                <div class="border-t border-neutral-200 pt-6">
+                <div class="border-t border-neutral-100 pt-6">
                     <h3 class="text-lg font-semibold text-neutral-800 mb-4">Project Information</h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -103,7 +105,7 @@
                                    id="title" 
                                    name="title" 
                                    value="{{ old('title') }}"
-                                   class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('title') border-error-500 @enderror"
+                                   class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors @error('title') border-error-500 @enderror"
                                    placeholder="Enter project title"
                                    required>
                             @error('title')
@@ -118,7 +120,7 @@
                             </label>
                             <select id="priority" 
                                     name="priority" 
-                                    class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('priority') border-error-500 @enderror"
+                                    class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors @error('priority') border-error-500 @enderror"
                                     required>
                                 <option value="low" {{ old('priority') == 'low' ? 'selected' : '' }}>Low</option>
                                 <option value="medium" {{ old('priority', 'medium') == 'medium' ? 'selected' : '' }}>Medium</option>
@@ -140,7 +142,7 @@
                                    name="deadline" 
                                    value="{{ old('deadline') }}"
                                    min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                                   class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('deadline') border-error-500 @enderror">
+                                   class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors @error('deadline') border-error-500 @enderror">
                             @error('deadline')
                                 <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
                             @enderror
@@ -154,7 +156,7 @@
                             <textarea id="description" 
                                       name="description" 
                                       rows="5"
-                                      class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('description') border-error-500 @enderror"
+                                      class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors @error('description') border-error-500 @enderror"
                                       placeholder="Enter project description and details"
                                       required>{{ old('description') }}</textarea>
                             @error('description')
@@ -165,7 +167,7 @@
                 </div>
 
                 <!-- Budget Information -->
-                <div class="border-t border-neutral-200 pt-6">
+                <div class="border-t border-neutral-100 pt-6">
                     <h3 class="text-lg font-semibold text-neutral-800 mb-4">Budget Information</h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -182,7 +184,7 @@
                                        value="{{ old('budget') }}"
                                        step="0.01"
                                        min="0"
-                                       class="w-full pl-8 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('budget') border-error-500 @enderror"
+                                       class="w-full pl-8 pr-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors @error('budget') border-error-500 @enderror"
                                        placeholder="0.00"
                                        required>
                             </div>
@@ -199,7 +201,7 @@
                             </label>
                             <select id="budget_type" 
                                     name="budget_type" 
-                                    class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('budget_type') border-error-500 @enderror"
+                                    class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors @error('budget_type') border-error-500 @enderror"
                                     required>
                                 <option value="fixed" {{ old('budget_type', 'fixed') == 'fixed' ? 'selected' : '' }}>Fixed Price</option>
                                 <option value="hourly" {{ old('budget_type') == 'hourly' ? 'selected' : '' }}>Hourly Rate</option>
@@ -212,7 +214,7 @@
                 </div>
 
                 <!-- Requirements & Skills (Optional) -->
-                <div class="border-t border-neutral-200 pt-6">
+                <div class="border-t border-neutral-100 pt-6">
                     <h3 class="text-lg font-semibold text-neutral-800 mb-4">Requirements & Skills <span class="text-sm font-normal text-neutral-500">(Optional)</span></h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -224,7 +226,7 @@
                             <textarea id="requirements" 
                                       name="requirements" 
                                       rows="6"
-                                      class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('requirements') border-error-500 @enderror"
+                                      class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors @error('requirements') border-error-500 @enderror"
                                       placeholder='["Requirement 1", "Requirement 2", "Requirement 3"]'>{{ old('requirements') }}</textarea>
                             <p class="mt-1 text-xs text-neutral-500">Enter as JSON array format</p>
                             @error('requirements')
@@ -240,7 +242,7 @@
                             <textarea id="skills_required" 
                                       name="skills_required" 
                                       rows="6"
-                                      class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('skills_required') border-error-500 @enderror"
+                                      class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors @error('skills_required') border-error-500 @enderror"
                                       placeholder='["PHP", "Laravel", "JavaScript"]'>{{ old('skills_required') }}</textarea>
                             <p class="mt-1 text-xs text-neutral-500">Enter as JSON array format</p>
                             @error('skills_required')
@@ -252,32 +254,32 @@
             </div>
 
             <!-- Form Actions -->
-            <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-200 flex justify-between items-center rounded-b-lg">
-                <a href="{{ route('admin.projects.index') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-lg transition-colors">
-                    <i class="fas fa-times mr-2"></i>Cancel
-                </a>
+            <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-100 flex justify-between items-center rounded-b-2xl">
+                <x-ui.button variant="secondary" href="{{ route('admin.projects.index') }}">
+                    <x-lucide-x class="w-4 h-4" />
+                    Cancel
+                </x-ui.button>
                 
-                <button type="submit" 
-                        class="inline-flex items-center px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                    <i class="fas fa-plus mr-2"></i>Create Project
-                </button>
+                <x-ui.button type="submit" variant="primary">
+                    <x-lucide-plus class="w-4 h-4" />
+                    Create Project
+                </x-ui.button>
             </div>
         </form>
-    </div>
+    </x-ui.card>
 
     <!-- Info Card -->
-    <div class="mt-6 bg-info-50 border border-info-200 rounded-lg p-4">
+    <div class="mt-6 bg-info-50 border border-info-200 rounded-2xl p-4">
         <div class="flex items-start">
-            <i class="fas fa-info-circle text-info-600 mt-1 mr-3"></i>
+            <x-lucide-info class="w-5 h-5 text-info-600 mt-0.5 mr-3 flex-shrink-0" />
             <div>
                 <h4 class="font-semibold text-info-800 mb-2">Creating a Project</h4>
                 <ul class="text-sm text-info-700 space-y-1">
-                    <li>• Projects can only be created from paid service requests</li>
-                    <li>• The project budget will be populated from the approved service request budget</li>
-                    <li>• Once created, the project will be in "Active" status and ready for task assignment</li>
-                    <li>• You can assign Adiutors to the project after creation</li>
-                    <li>• All fields marked with <span class="text-error-600">*</span> are required</li>
+                    <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> Projects can only be created from paid service requests</li>
+                    <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> The project budget will be populated from the approved service request budget</li>
+                    <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> Once created, the project will be in "Active" status and ready for task assignment</li>
+                    <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> You can assign Adiutors to the project after creation</li>
+                    <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> All fields marked with <span class="text-error-600">*</span> are required</li>
                 </ul>
             </div>
         </div>
