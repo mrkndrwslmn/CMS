@@ -4,122 +4,128 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="timeTracker()">
+    <!-- Breadcrumb Navigation -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
+        ['label' => 'Time Tracking', 'icon' => 'clock'],
+    ]" />
+
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-neutral-900">Time Tracking</h1>
-        <p class="text-neutral-600 mt-2">Track your time spent on project tasks and manage your work hours.</p>
+        <h1 class="text-2xl font-semibold text-neutral-800">Time Tracking</h1>
+        <p class="text-neutral-500 mt-2">Track your time spent on project tasks and manage your work hours.</p>
     </div>
 
     <!-- Active Timer Card -->
-    <div class="glass-card p-6 mb-8" x-show="activeTimer.active">
+    <x-ui.card class="p-6 mb-8" x-show="activeTimer.active">
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center">
-                    <i class="fas fa-play text-white"></i>
+                <div class="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
+                    <x-lucide-play class="w-6 h-6 text-white" />
                 </div>
                 <div>
-                    <h3 class="text-lg font-semibold text-neutral-900" x-text="activeTimer.timer ? activeTimer.timer.task_name : 'No active timer'"></h3>
-                    <p class="text-neutral-600" x-text="activeTimer.timer ? activeTimer.timer.project_name : ''"></p>
-                    <p class="text-sm text-neutral-500" x-text="activeTimer.timer ? activeTimer.timer.description : ''"></p>
+                    <h3 class="text-lg font-semibold text-neutral-800" x-text="activeTimer.timer ? activeTimer.timer.task_name : 'No active timer'"></h3>
+                    <p class="text-neutral-500" x-text="activeTimer.timer ? activeTimer.timer.project_name : ''"></p>
+                    <p class="text-sm text-neutral-400" x-text="activeTimer.timer ? activeTimer.timer.description : ''"></p>
                 </div>
             </div>
             <div class="text-right">
-                <div class="text-2xl font-bold text-primary-600" x-text="formatTime(activeTimer.elapsed)">00:00:00</div>
+                <div class="text-2xl font-semibold text-primary-600" x-text="formatTime(activeTimer.elapsed)">00:00:00</div>
                 <p class="text-sm text-neutral-500">Running time</p>
-                <button @click="stopTimer()" 
-                        class="mt-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
-                    <i class="fas fa-stop mr-2"></i>Stop Timer
-                </button>
+                <x-ui.button @click="stopTimer()" variant="danger" size="sm" class="mt-2">
+                    <x-lucide-square class="w-4 h-4 mr-2" />
+                    Stop Timer
+                </x-ui.button>
             </div>
         </div>
-    </div>
+    </x-ui.card>
 
     <!-- Start Timer Card -->
-    <div class="glass-card p-6 mb-8" x-show="!activeTimer.active">
-        <h3 class="text-lg font-semibold text-neutral-900 mb-4">Start New Timer</h3>
+    <x-ui.card class="p-6 mb-8" x-show="!activeTimer.active">
+        <h3 class="text-lg font-semibold text-neutral-800 mb-4">Start New Timer</h3>
         
         <form @submit.prevent="startTimer()" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="task_id" class="block text-sm font-medium text-neutral-700 mb-1">Select Task <span class="text-red-500">*</span></label>
+                    <label for="task_id" class="block text-sm font-medium text-neutral-700 mb-1">Select Task <span class="text-error-500">*</span></label>
                     <select id="task_id" x-model="newTimer.task_id" required
-                            class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                            class="w-full px-4 py-2.5 border border-neutral-300 rounded-xl bg-white text-sm text-neutral-700 focus:ring-2 focus:ring-primary-100 focus:border-primary-500 transition-colors"
                             @change="console.log('Task selected:', newTimer.task_id)">
                         <option value="">Choose a task...</option>
                         @foreach($availableTasks as $task)
                             <option value="{{ $task->taskID }}">{{ $task->project->title }} - {{ $task->taskTitle }}</option>
                         @endforeach
                     </select>
-                    <p class="text-xs text-gray-500 mt-1">Available tasks: {{ count($availableTasks) }}</p>
+                    <p class="text-xs text-neutral-500 mt-1">Available tasks: {{ count($availableTasks) }}</p>
                 </div>
                 
                 <div>
                     <label for="description" class="block text-sm font-medium text-neutral-700 mb-1">Description (Optional)</label>
                     <input type="text" id="description" x-model="newTimer.description" 
                            placeholder="What are you working on?"
-                           class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                           class="w-full px-4 py-2.5 border border-neutral-300 rounded-xl bg-white text-sm text-neutral-700 focus:ring-2 focus:ring-primary-100 focus:border-primary-500 transition-colors">
                 </div>
             </div>
             
-            <button type="submit" :disabled="!newTimer.task_id || loading" 
-                    class="flex items-center px-6 py-2 bg-green-500 hover:bg-green-600 disabled:bg-neutral-300 text-white rounded-lg transition-colors">
-                <i class="fas fa-play mr-2"></i>
+            <x-ui.button type="submit" :disabled="!newTimer.task_id || loading" variant="success">
+                <x-lucide-play class="w-4 h-4 mr-2" />
                 <span x-text="loading ? 'Starting...' : 'Start Timer'"></span>
-            </button>
+            </x-ui.button>
         </form>
-    </div>
+    </x-ui.card>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <!-- Today's Hours -->
-        <div class="glass-card p-6">
-            <div class="flex items-center justify-between">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-neutral-500 text-sm font-medium">Today's Hours</p>
-                    <p class="text-2xl font-bold text-neutral-900">{{ number_format($todayHours, 1) }}h</p>
+                    <p class="text-sm font-medium text-neutral-500">Today's Hours</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ number_format($todayHours, 1) }}h</p>
                 </div>
-                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-calendar-day text-blue-600"></i>
+                <div class="p-3 bg-primary-50 rounded-xl">
+                    <x-lucide-calendar class="w-5 h-5 text-primary-500" />
                 </div>
             </div>
-        </div>
+        </x-ui.card>
         
         <!-- This Week -->
-        <div class="glass-card p-6">
-            <div class="flex items-center justify-between">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-neutral-500 text-sm font-medium">This Week</p>
-                    <p class="text-2xl font-bold text-neutral-900">{{ number_format($weekHours, 1) }}h</p>
+                    <p class="text-sm font-medium text-neutral-500">This Week</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ number_format($weekHours, 1) }}h</p>
                 </div>
-                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-calendar-week text-green-600"></i>
+                <div class="p-3 bg-success-50 rounded-xl">
+                    <x-lucide-calendar-days class="w-5 h-5 text-success-500" />
                 </div>
             </div>
-        </div>
+        </x-ui.card>
         
         <!-- This Month -->
-        <div class="glass-card p-6">
-            <div class="flex items-center justify-between">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-neutral-500 text-sm font-medium">This Month</p>
-                    <p class="text-2xl font-bold text-neutral-900">{{ number_format($monthHours, 1) }}h</p>
+                    <p class="text-sm font-medium text-neutral-500">This Month</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ number_format($monthHours, 1) }}h</p>
                 </div>
-                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-calendar-alt text-purple-600"></i>
+                <div class="p-3 bg-primary-50 rounded-xl">
+                    <x-lucide-calendar-range class="w-5 h-5 text-primary-500" />
                 </div>
             </div>
-        </div>
+        </x-ui.card>
     </div>
 
     <!-- Recent Time Entries -->
-    <div class="glass-card">
+    <x-ui.card>
         <div class="p-6 border-b border-neutral-200">
             <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-neutral-900">Recent Time Entries</h3>
+                <h3 class="text-lg font-semibold text-neutral-800">Recent Time Entries</h3>
                 <div class="flex items-center space-x-2">
-                    <button @click="loadEntries()" class="px-3 py-1 text-sm bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
-                        <i class="fas fa-refresh mr-1"></i>Refresh
-                    </button>
+                    <x-ui.button @click="loadEntries()" variant="secondary" size="sm">
+                        <x-lucide-refresh-cw class="w-4 h-4 mr-1" />
+                        Refresh
+                    </x-ui.button>
                 </div>
             </div>
         </div>
@@ -136,26 +142,26 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-neutral-200">
+                <tbody class="bg-white divide-y divide-neutral-100">
                     @forelse($currentWeekEntries as $entry)
-                        <tr class="hover:bg-neutral-50">
+                        <tr class="hover:bg-neutral-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div>
-                                    <div class="text-sm font-medium text-neutral-900">{{ $entry->task->taskTitle }}</div>
+                                    <div class="text-sm font-medium text-neutral-800">{{ $entry->task->taskTitle }}</div>
                                     <div class="text-sm text-neutral-500">{{ $entry->task->project->title }}</div>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                <div class="text-sm text-neutral-900">
+                                <div class="text-sm text-neutral-700">
                                     {{ $entry->description ?: 'No description' }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-neutral-900">
+                                <div class="text-sm font-medium text-neutral-800">
                                     @if($entry->duration_minutes)
                                         {{ floor($entry->duration_minutes / 60) }}h {{ $entry->duration_minutes % 60 }}m
                                     @else
-                                        <span class="text-orange-500">Running...</span>
+                                        <span class="text-warning-500">Running...</span>
                                     @endif
                                 </div>
                             </td>
@@ -164,27 +170,21 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($entry->is_approved)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <span class="w-1.5 h-1.5 mr-1.5 bg-green-400 rounded-full"></span>
-                                        Approved
-                                    </span>
+                                    <x-ui.badge variant="success">Approved</x-ui.badge>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        <span class="w-1.5 h-1.5 mr-1.5 bg-yellow-400 rounded-full"></span>
-                                        Pending
-                                    </span>
+                                    <x-ui.badge variant="warning">Pending</x-ui.badge>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 @if(!$entry->is_approved && $entry->end_time)
                                     <div class="flex items-center space-x-2">
                                         <button @click="editEntry({{ $entry->id }})" 
-                                                class="text-indigo-600 hover:text-indigo-900 transition-colors" title="Edit">
-                                            <i class="fas fa-edit"></i>
+                                                class="text-primary-600 hover:text-primary-700 transition-colors" title="Edit">
+                                            <x-lucide-pencil class="w-4 h-4" />
                                         </button>
                                         <button @click="deleteEntry({{ $entry->id }})" 
-                                                class="text-red-600 hover:text-red-900 transition-colors" title="Delete">
-                                            <i class="fas fa-trash"></i>
+                                                class="text-error-600 hover:text-error-700 transition-colors" title="Delete">
+                                            <x-lucide-trash-2 class="w-4 h-4" />
                                         </button>
                                     </div>
                                 @else
@@ -196,9 +196,9 @@
                         <tr>
                             <td colspan="6" class="px-6 py-12 text-center">
                                 <div class="text-neutral-500">
-                                    <i class="fas fa-clock text-2xl mb-2"></i>
-                                    <p>No time entries for this week yet.</p>
-                                    <p class="text-sm">Start a timer to begin tracking your work!</p>
+                                    <x-lucide-clock class="w-8 h-8 mx-auto mb-2 text-neutral-400" />
+                                    <p class="text-neutral-600">No time entries for this week yet.</p>
+                                    <p class="text-sm text-neutral-500">Start a timer to begin tracking your work!</p>
                                 </div>
                             </td>
                         </tr>
@@ -206,17 +206,22 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </x-ui.card>
 
     <!-- Success/Error Messages -->
     <div x-show="message.show" x-transition 
-         :class="message.type === 'success' ? 'bg-green-500' : 'bg-red-500'"
-         class="fixed top-4 right-4 z-50 text-white px-6 py-3 rounded-lg shadow-lg">
+         :class="message.type === 'success' ? 'bg-success-500' : 'bg-error-500'"
+         class="fixed top-4 right-4 z-50 text-white px-6 py-3 rounded-xl shadow-lg">
         <div class="flex items-center">
-            <i :class="message.type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'" class="mr-2"></i>
+            <template x-if="message.type === 'success'">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </template>
+            <template x-if="message.type !== 'success'">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </template>
             <span x-text="message.text"></span>
             <button @click="message.show = false" class="ml-4 text-white/80 hover:text-white">
-                <i class="fas fa-times"></i>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
     </div>

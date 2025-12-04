@@ -3,27 +3,27 @@
 @section('title', 'Reset Password - Treis Adiutor')
 
 @section('content')
-<div class="min-h-screen bg-primary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-neutral-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="w-full max-w-md">
-        <div class="rounded-2xl overflow-hidden shadow-lg bg-white border border-primary-100">
+        <div class="rounded-2xl overflow-hidden shadow-sm bg-white border border-neutral-100">
             <div class="p-8 md:p-12">
                 <!-- Header -->
                 <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 mb-4">
-                        <i class="fas fa-lock text-primary-600 text-2xl"></i>
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-50 mb-4">
+                        <x-lucide-lock class="w-7 h-7 text-primary-600" />
                     </div>
-                    <h1 class="heading-serif text-3xl font-bold text-primary-900 mb-2">Reset Password</h1>
-                    <p class="text-primary-600 text-sm">Create a new secure password for your account.</p>
+                    <h1 class="text-2xl font-semibold text-neutral-800 mb-2">Reset Password</h1>
+                    <p class="text-neutral-500 text-sm">Create a new secure password for your account.</p>
                 </div>
                 
                 <!-- Error Message -->
                 @if($errors->any())
-                    <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
+                    <div class="mb-6 p-4 rounded-xl bg-error-50 border border-error-200">
                         <div class="flex items-start">
-                            <i class="fas fa-exclamation-circle text-red-500 mt-0.5 mr-3"></i>
+                            <x-lucide-alert-circle class="w-5 h-5 text-error-500 mt-0.5 mr-3 flex-shrink-0" />
                             <div class="flex-1">
                                 @foreach($errors->all() as $error)
-                                    <p class="text-red-700 text-sm">{{ $error }}</p>
+                                    <p class="text-error-700 text-sm">{{ $error }}</p>
                                 @endforeach
                             </div>
                         </div>
@@ -39,55 +39,57 @@
                     
                     <!-- Email (display only) -->
                     <div>
-                        <label class="block text-sm font-semibold text-primary-900 mb-2">Email Address</label>
-                        <div class="w-full px-4 py-3 text-sm rounded-lg border border-primary-200 bg-gray-100 text-primary-700">
+                        <label class="block text-sm font-medium text-neutral-700 mb-1.5">Email Address</label>
+                        <div class="w-full px-4 py-2.5 text-sm rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-600">
                             {{ $email }}
                         </div>
                     </div>
                     
                     <!-- New Password -->
                     <div>
-                        <label for="password" class="block text-sm font-semibold text-primary-900 mb-2">New Password</label>
+                        <label for="password" class="block text-sm font-medium text-neutral-700 mb-1.5">New Password</label>
                         <div class="relative">
                             <input 
                                 type="password" 
                                 id="password" 
                                 name="password" 
-                                placeholder="••••••••" 
+                                placeholder="Enter your new password" 
                                 required
                                 minlength="8"
-                                class="w-full px-4 py-3 text-sm rounded-lg border border-primary-200 bg-primary-50 text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('password') border-red-500 bg-red-50 focus:ring-red-500 @enderror"
+                                class="w-full px-4 py-2.5 text-sm rounded-lg border border-neutral-200 bg-white text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all @error('password') border-error-500 bg-error-50 focus:ring-error-500/20 @enderror"
                             >
                             <button 
                                 type="button" 
-                                class="absolute inset-y-0 right-0 px-4 flex items-center text-primary-500 hover:text-primary-700 transition-colors focus:outline-none"
+                                class="absolute inset-y-0 right-0 px-4 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors focus:outline-none"
                                 onclick="togglePassword('password', 'toggleIcon1')"
                             >
-                                <i id="toggleIcon1" class="fas fa-eye text-sm"></i>
+                                <x-lucide-eye id="toggleIcon1Eye" class="w-4 h-4" />
+                                <x-lucide-eye-off id="toggleIcon1EyeOff" class="w-4 h-4 hidden" />
                             </button>
                         </div>
-                        <p class="mt-2 text-xs text-primary-600">Must be at least 8 characters long</p>
+                        <p class="mt-1.5 text-xs text-neutral-500">Must be at least 8 characters long</p>
                     </div>
                     
                     <!-- Confirm Password -->
                     <div>
-                        <label for="password_confirmation" class="block text-sm font-semibold text-primary-900 mb-2">Confirm New Password</label>
+                        <label for="password_confirmation" class="block text-sm font-medium text-neutral-700 mb-1.5">Confirm New Password</label>
                         <div class="relative">
                             <input 
                                 type="password" 
                                 id="password_confirmation" 
                                 name="password_confirmation" 
-                                placeholder="••••••••" 
+                                placeholder="Confirm your new password" 
                                 required
                                 minlength="8"
-                                class="w-full px-4 py-3 text-sm rounded-lg border border-primary-200 bg-primary-50 text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                                class="w-full px-4 py-2.5 text-sm rounded-lg border border-neutral-200 bg-white text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                             >
                             <button 
                                 type="button" 
-                                class="absolute inset-y-0 right-0 px-4 flex items-center text-primary-500 hover:text-primary-700 transition-colors focus:outline-none"
+                                class="absolute inset-y-0 right-0 px-4 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors focus:outline-none"
                                 onclick="togglePassword('password_confirmation', 'toggleIcon2')"
                             >
-                                <i id="toggleIcon2" class="fas fa-eye text-sm"></i>
+                                <x-lucide-eye id="toggleIcon2Eye" class="w-4 h-4" />
+                                <x-lucide-eye-off id="toggleIcon2EyeOff" class="w-4 h-4 hidden" />
                             </button>
                         </div>
                     </div>
@@ -95,7 +97,7 @@
                     <!-- Password Strength Indicator -->
                     <div id="password-strength" class="hidden">
                         <div class="flex items-center gap-2 mb-2">
-                            <div class="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden">
+                            <div class="flex-1 h-2 rounded-full bg-neutral-200 overflow-hidden">
                                 <div id="strength-bar" class="h-full transition-all duration-300" style="width: 0%"></div>
                             </div>
                             <span id="strength-text" class="text-xs font-medium"></span>
@@ -105,7 +107,7 @@
                     <!-- Submit Button -->
                     <button 
                         type="submit" 
-                        class="btn-primary w-full py-3"
+                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all"
                         id="submit-btn"
                     >
                         Reset Password
@@ -114,7 +116,7 @@
                     <!-- Back to Login -->
                     <div class="text-center pt-2">
                         <a href="{{ route('login') }}" class="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors">
-                            <i class="fas fa-arrow-left mr-2 text-xs"></i>
+                            <x-lucide-arrow-left class="w-4 h-4 mr-2" />
                             Back to Login
                         </a>
                     </div>
@@ -127,17 +129,18 @@
 
 @push('scripts')
 <script>
-function togglePassword(inputId, iconId) {
+function togglePassword(inputId, iconPrefix) {
     const pwd = document.getElementById(inputId);
-    const icon = document.getElementById(iconId);
+    const iconEye = document.getElementById(iconPrefix + 'Eye');
+    const iconEyeOff = document.getElementById(iconPrefix + 'EyeOff');
     if (pwd.type === 'password') {
         pwd.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
+        iconEye.classList.add('hidden');
+        iconEyeOff.classList.remove('hidden');
     } else {
         pwd.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
+        iconEye.classList.remove('hidden');
+        iconEyeOff.classList.add('hidden');
     }
 }
 
@@ -174,20 +177,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (/[^a-zA-Z0-9]/.test(password)) strength += 12.5;
         
         if (strength < 40) {
-            color = 'bg-red-500';
+            color = 'bg-error-500';
             text = 'Weak';
         } else if (strength < 70) {
-            color = 'bg-yellow-500';
+            color = 'bg-warning-500';
             text = 'Medium';
         } else {
-            color = 'bg-green-500';
+            color = 'bg-success-500';
             text = 'Strong';
         }
         
         strengthBar.style.width = strength + '%';
         strengthBar.className = 'h-full transition-all duration-300 ' + color;
         strengthText.textContent = text;
-        strengthText.className = 'text-xs font-medium ' + (color === 'bg-red-500' ? 'text-red-600' : color === 'bg-yellow-500' ? 'text-yellow-600' : 'text-green-600');
+        strengthText.className = 'text-xs font-medium ' + (color === 'bg-error-500' ? 'text-error-600' : color === 'bg-warning-500' ? 'text-warning-600' : 'text-success-600');
     });
     
     // Form submission
