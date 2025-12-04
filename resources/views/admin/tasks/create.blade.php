@@ -6,35 +6,40 @@
 
 @section('content')
 <div class="min-h-screen">
-    <!-- Sticky Header with Back Button -->
-    <div class="sticky top-0 z-40">
-        <div class="max-w-8xl mx-auto px-6 py-4 flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-neutral-900">Create New Task</h1>
-                <p class="text-sm text-neutral-500 mt-0.5">Fill in the details to create a new task</p>
-            </div>
-            
-            <a href="{{ route('admin.tasks.index') }}" 
-               class="inline-flex items-center px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 hover:bg-neutral-50 rounded-lg transition-all">
-                <i class="fas fa-arrow-left mr-2"></i>
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+        ['label' => 'Tasks', 'url' => route('admin.tasks.index'), 'icon' => 'list-checks'],
+        ['label' => 'Create Task', 'icon' => 'plus']
+    ]" class="mb-4" />
+
+    <!-- Page Header -->
+    <x-ui.page-header 
+        title="Create New Task" 
+        subtitle="Fill in the details to create a new task"
+        class="mb-6"
+    >
+        <x-slot name="actions">
+            <x-ui.button href="{{ route('admin.tasks.index') }}" variant="secondary">
+                <x-lucide-arrow-left class="w-4 h-4 mr-2" />
                 Back
-            </a>
-        </div>
-    </div>
+            </x-ui.button>
+        </x-slot>
+    </x-ui.page-header>
 
     <!-- Main Content -->
-    <div class="max-w-8xl mx-auto px-6 py-8">
+    <div class="max-w-8xl mx-auto">
         <!-- Alert Messages -->
         @if(session('success'))
             <div class="mb-6 p-4 bg-success-50 border border-success-200 text-success-700 rounded-lg flex items-center animate-fade-in">
-                <i class="fas fa-check-circle text-success-500 text-lg mr-3"></i>
+                <x-lucide-check-circle class="w-5 h-5 text-success-500 mr-3" />
                 <p class="font-medium">{{ session('success') }}</p>
             </div>
         @endif
 
         @if(session('error'))
             <div class="mb-6 p-4 bg-error-50 border border-error-200 text-error-700 rounded-lg flex items-center animate-fade-in">
-                <i class="fas fa-exclamation-circle text-error-500 text-lg mr-3"></i>
+                <x-lucide-alert-circle class="w-5 h-5 text-error-500 mr-3" />
                 <p class="font-medium">{{ session('error') }}</p>
             </div>
         @endif
@@ -46,11 +51,11 @@
             <div class="lg:col-span-2 space-y-6">
                 
                 <!-- Project & Assignment Card -->
-                <div class="bg-white rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                    <div class="px-6 py-4 border-b border-neutral-200">
+                <x-ui.card>
+                    <div class="px-6 py-4 border-b border-neutral-100">
                         <div class="flex items-center">
                             <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-project-diagram text-primary-600 text-sm"></i>
+                                <x-lucide-folder-kanban class="w-4 h-4 text-primary-600" />
                             </div>
                             <h2 class="text-lg font-semibold text-neutral-900">Project & Assignment</h2>
                         </div>
@@ -62,7 +67,7 @@
                             <input type="hidden" name="project_id" value="{{ $preSelectedProject->id }}">
                             <div class="flex items-center justify-between p-4 bg-primary-50 border border-primary-200 rounded-lg">
                                 <div class="flex items-center flex-1">
-                                    <i class="fas fa-lock text-primary-500 mr-3"></i>
+                                    <x-lucide-lock class="w-5 h-5 text-primary-500 mr-3" />
                                     <div>
                                         <p class="font-semibold text-neutral-900 text-sm">{{ $preSelectedProject->title }}</p>
                                         @if($preSelectedProject->client)
@@ -88,7 +93,7 @@
                                 </select>
                                 @error('project_id')
                                     <p class="text-error-500 text-xs mt-1.5 flex items-center">
-                                        <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                        <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                     </p>
                                 @enderror
                             </div>
@@ -106,7 +111,7 @@
                             </select>
                             @error('assignedTo')
                                 <p class="text-error-500 text-xs mt-1.5 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
@@ -123,19 +128,19 @@
                             </select>
                             @error('phase_id')
                                 <p class="text-error-500 text-xs mt-1.5 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
                     </div>
-                </div>
+                </x-ui.card>
 
                 <!-- Task Details Card -->
-                <div class="bg-white rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                    <div class="px-6 py-4 border-b border-neutral-200">
+                <x-ui.card>
+                    <div class="px-6 py-4 border-b border-neutral-100">
                         <div class="flex items-center">
                             <div class="w-8 h-8 bg-accent-100 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-clipboard-list text-accent-600 text-sm"></i>
+                                <x-lucide-clipboard-list class="w-4 h-4 text-accent-600" />
                             </div>
                             <h2 class="text-lg font-semibold text-neutral-900">Task Details</h2>
                         </div>
@@ -154,7 +159,7 @@
                                    required>
                             @error('taskTitle')
                                 <p class="text-error-500 text-xs mt-1.5 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
@@ -169,7 +174,7 @@
                                       placeholder="What needs to be accomplished?">{{ old('taskDescription') }}</textarea>
                             @error('taskDescription')
                                 <p class="text-error-500 text-xs mt-1.5 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
@@ -184,22 +189,22 @@
                                       placeholder="Any additional context...">{{ old('notes') }}</textarea>
                             @error('notes')
                                 <p class="text-error-500 text-xs mt-1.5 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
 
             <!-- Settings Sidebar -->
             <div class="lg:col-span-1">
-                <div class="bg-white rounded-xl border border-neutral-200 shadow-sm sticky top-24">
+                <x-ui.card class="sticky top-24">
                     <!-- Settings Header -->
-                    <div class="px-6 py-4 border-b border-neutral-200">
+                    <div class="px-6 py-4 border-b border-neutral-100">
                         <div class="flex items-center">
                             <div class="w-8 h-8 bg-warning-100 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-sliders-h text-warning-600 text-sm"></i>
+                                <x-lucide-sliders-horizontal class="w-4 h-4 text-warning-600" />
                             </div>
                             <h2 class="text-lg font-semibold text-neutral-900">Settings</h2>
                         </div>
@@ -215,14 +220,14 @@
                             </label>
                             <select name="status" id="status" required
                                     class="w-full px-3 py-2 text-sm border-2 border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all @error('status') border-error-500 @enderror">
-                                <option value="pending" {{ old('status') === 'pending' ? 'selected' : '' }}>📋 Pending</option>
-                                <option value="in_progress" {{ old('status') === 'in_progress' ? 'selected' : '' }}>🚀 In Progress</option>
-                                <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>✅ Completed</option>
-                                <option value="cancelled" {{ old('status') === 'cancelled' ? 'selected' : '' }}>❌ Cancelled</option>
+                                <option value="pending" {{ old('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="in_progress" {{ old('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                                <option value="cancelled" {{ old('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                             </select>
                             @error('status')
                                 <p class="text-error-500 text-xs mt-1 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
@@ -234,20 +239,20 @@
                             </label>
                             <select name="priority" id="priority" required
                                     class="w-full px-3 py-2 text-sm border-2 border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all @error('priority') border-error-500 @enderror">
-                                <option value="low" {{ old('priority', 'medium') === 'low' ? 'selected' : '' }}>🟢 Low</option>
-                                <option value="medium" {{ old('priority', 'medium') === 'medium' ? 'selected' : '' }}>🟡 Medium</option>
-                                <option value="high" {{ old('priority', 'medium') === 'high' ? 'selected' : '' }}>🟠 High</option>
-                                <option value="urgent" {{ old('priority', 'medium') === 'urgent' ? 'selected' : '' }}>🔴 Urgent</option>
+                                <option value="low" {{ old('priority', 'medium') === 'low' ? 'selected' : '' }}>Low</option>
+                                <option value="medium" {{ old('priority', 'medium') === 'medium' ? 'selected' : '' }}>Medium</option>
+                                <option value="high" {{ old('priority', 'medium') === 'high' ? 'selected' : '' }}>High</option>
+                                <option value="urgent" {{ old('priority', 'medium') === 'urgent' ? 'selected' : '' }}>Urgent</option>
                             </select>
                             @error('priority')
                                 <p class="text-error-500 text-xs mt-1 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
 
                         <!-- Divider -->
-                        <div class="border-t border-neutral-200 my-3"></div>
+                        <div class="border-t border-neutral-100 my-3"></div>
 
                         <!-- Starting Date -->
                         <div>
@@ -259,7 +264,7 @@
                                    value="{{ old('starting_date') }}">
                             @error('starting_date')
                                 <p class="text-error-500 text-xs mt-1 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
@@ -274,7 +279,7 @@
                                    value="{{ old('deadline') }}">
                             @error('deadline')
                                 <p class="text-error-500 text-xs mt-1 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
@@ -292,7 +297,7 @@
                             </div>
                             @error('max_hours')
                                 <p class="text-error-500 text-xs mt-1 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
@@ -310,7 +315,7 @@
                             </div>
                             @error('allocated_budget')
                                 <p class="text-error-500 text-xs mt-1 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
@@ -325,25 +330,24 @@
                                    value="{{ old('completedAt') }}">
                             @error('completedAt')
                                 <p class="text-error-500 text-xs mt-1 flex items-center">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                    <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
                                 </p>
                             @enderror
                         </div>
                     </div>
 
                     <!-- Settings Footer with Action Buttons -->
-                    <div class="px-6 py-4 border-t border-neutral-200 bg-neutral-50 space-y-3">
-                        <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                            <i class="fas fa-plus-circle mr-2"></i>
+                    <div class="px-6 py-4 border-t border-neutral-100 bg-neutral-50 space-y-3 rounded-b-2xl">
+                        <x-ui.button type="submit" variant="primary" class="w-full justify-center">
+                            <x-lucide-plus-circle class="w-4 h-4 mr-2" />
                             Create Task
-                        </button>
-                        <button type="button" onclick="window.history.back()"
-                                class="w-full inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 hover:bg-neutral-50 rounded-lg transition-all">
-                            <i class="fas fa-times mr-2"></i>
+                        </x-ui.button>
+                        <x-ui.button type="button" variant="secondary" onclick="window.history.back()" class="w-full justify-center">
+                            <x-lucide-x class="w-4 h-4 mr-2" />
                             Cancel
-                        </button>
+                        </x-ui.button>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
         </form>
     </div>

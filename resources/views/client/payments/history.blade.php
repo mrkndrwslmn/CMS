@@ -3,97 +3,74 @@
 @section('title', 'Payment History')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Breadcrumb Navigation -->
-        <nav class="mb-8">
-            <ol class="flex items-center space-x-2 text-sm text-gray-600">
-                <li>
-                    <a href="{{ route('client.dashboard') }}" class="hover:text-primary-600 transition-colors">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                        </svg>
-                    </a>
-                </li>
-                <li class="flex items-center">
-                    <svg class="w-4 h-4 text-gray-400 mx-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span class="font-medium text-primary-600">Payment History</span>
-                </li>
-            </ol>
-        </nav>
+<div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'client.dashboard', 'icon' => 'home'],
+        ['label' => 'Payment History', 'icon' => 'credit-card'],
+    ]" />
 
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-2xl font-semibold text-gray-900">Payment History</h1>
-            <p class="text-gray-600 mt-1">Track your payment transactions and invoices</p>
-        </div>
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-neutral-800">Payment History</h1>
+        <p class="text-sm text-neutral-500 mt-1">Track your payment transactions and invoices</p>
+    </div>
 
-        <!-- Statistics Cards -->
-        <div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- Total Payments -->
-                <div class="bg-white/90 backdrop-blur-sm rounded-xl border border-neutral-200/60 p-6 shadow-sm">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-gradient-to-br from-primary-100 to-accent-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold text-neutral-900">{{ $stats['total'] }}</p>
-                            <p class="text-sm text-neutral-600">Total Payments</p>
-                        </div>
+    <!-- Statistics Cards -->
+    <div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Payments -->
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-neutral-500">Total Payments</p>
+                        <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['total'] }}</p>
                     </div>
-                </div>
-
-                <!-- Confirmed Payments -->
-                <div class="bg-white/90 backdrop-blur-sm rounded-xl border border-neutral-200/60 p-6 shadow-sm">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-gradient-to-br from-success-100 to-success-200 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold text-neutral-900">{{ $stats['confirmed'] }}</p>
-                            <p class="text-sm text-neutral-600">Confirmed</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pending Payments -->
-                <div class="bg-white/90 backdrop-blur-sm rounded-xl border border-neutral-200/60 p-6 shadow-sm">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-gradient-to-br from-warning-100 to-warning-200 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold text-neutral-900">{{ $stats['pending'] }}</p>
-                            <p class="text-sm text-neutral-600">Pending</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total Spent -->
-                <div class="bg-white/90 backdrop-blur-sm rounded-xl border border-neutral-200/60 p-6 shadow-sm">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-gradient-to-br from-accent-100 to-secondary-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold text-neutral-900">₱{{ number_format($stats['total_spent'], 2) }}</p>
-                            <p class="text-sm text-neutral-600">Total Spent</p>
-                        </div>
+                    <div class="p-3 bg-neutral-50 rounded-xl">
+                        <x-lucide-receipt class="w-5 h-5 text-neutral-400" />
                     </div>
                 </div>
             </div>
 
-            <!-- Filters -->
+            <!-- Confirmed Payments -->
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-neutral-500">Confirmed</p>
+                        <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['confirmed'] }}</p>
+                    </div>
+                    <div class="p-3 bg-success-50 rounded-xl">
+                        <x-lucide-check-circle class="w-5 h-5 text-success-500" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Payments -->
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-neutral-500">Pending</p>
+                        <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['pending'] }}</p>
+                    </div>
+                    <div class="p-3 bg-warning-50 rounded-xl">
+                        <x-lucide-clock class="w-5 h-5 text-warning-500" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Spent -->
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-neutral-500">Total Spent</p>
+                        <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($stats['total_spent'], 2) }}</p>
+                    </div>
+                    <div class="p-3 bg-primary-50 rounded-xl">
+                        <x-lucide-wallet class="w-5 h-5 text-primary-500" />
+                    </div>
+                </div>
+            </div>
+        </div>            <!-- Filters -->
             <div class="bg-white/90 backdrop-blur-sm rounded-xl border border-neutral-200/60 p-6 shadow-sm mb-6">
                 <form method="GET" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -139,7 +116,8 @@
                         <!-- Filter Button -->
                         <div class="flex items-end">
                             <button type="submit" 
-                                    class="w-full px-4 py-2 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md">
+                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors">
+                                <x-lucide-filter class="w-4 h-4" />
                                 Filter
                             </button>
                         </div>
@@ -149,9 +127,7 @@
                         <div class="flex justify-end">
                             <a href="{{ route('client.payments.history') }}" 
                             class="inline-flex items-center gap-2 px-4 py-2 text-neutral-600 hover:text-neutral-800 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
+                                <x-lucide-x class="w-4 h-4" />
                                 Clear Filters
                             </a>
                         </div>
@@ -164,13 +140,11 @@
                 @if($payments->isEmpty())
                     <!-- Empty State -->
                     <div class="flex flex-col items-center justify-center py-16 px-8 text-center">
-                        <div class="w-16 h-16 bg-gradient-to-br from-primary-100 to-accent-100 rounded-2xl flex items-center justify-center mb-6">
-                            <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                            </svg>
+                        <div class="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mb-6">
+                            <x-lucide-receipt class="w-8 h-8 text-neutral-400" />
                         </div>
-                        <h3 class="text-lg font-semibold text-neutral-900 mb-2">No payments found</h3>
-                        <p class="text-neutral-600 mb-6 max-w-sm">
+                        <h3 class="text-lg font-semibold text-neutral-800 mb-2">No payments found</h3>
+                        <p class="text-neutral-500 mb-6 max-w-sm">
                             @if(request()->hasAny(['search', 'status', 'date_from', 'date_to']))
                                 No payments match your current filters. Try adjusting your search criteria.
                             @else
@@ -179,10 +153,8 @@
                         </p>
                         @if(request()->hasAny(['search', 'status', 'date_from', 'date_to']))
                             <a href="{{ route('client.payments.history') }}" 
-                            class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
+                               class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors">
+                                <x-lucide-x class="w-4 h-4" />
                                 Clear Filters
                             </a>
                         @endif
@@ -203,14 +175,12 @@
                             </thead>
                             <tbody class="divide-y divide-neutral-100">
                                 @foreach($payments as $payment)
-                                    <tr class="hover:bg-gradient-to-r hover:from-primary-50/30 hover:to-accent-50/20 transition-all duration-200">
+                                    <tr class="hover:bg-neutral-50 transition-colors">
                                         <!-- Payment Details -->
                                         <td class="px-6 py-4">
                                             <div class="flex items-start gap-3">
-                                                <div class="w-10 h-10 bg-gradient-to-br from-neutral-100 to-neutral-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                                                    </svg>
+                                                <div class="w-10 h-10 bg-neutral-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                                    <x-lucide-receipt class="w-5 h-5 text-neutral-500" />
                                                 </div>
                                                 <div>
                                                     <p class="font-semibold text-neutral-900">{{ $payment->payment_reference }}</p>
@@ -260,19 +230,14 @@
                                         <td class="px-6 py-4 text-right">
                                             <div class="flex items-center justify-end gap-2">
                                                 <a href="{{ route('client.payments.show', $payment->id) }}" 
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-all duration-200 text-sm font-medium">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                                    </svg>
+                                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors text-sm font-medium">
+                                                    <x-lucide-eye class="w-4 h-4" />
                                                     View
                                                 </a>
                                                 @if($payment->status === 'confirmed')
                                                     <a href="{{ route('client.payments.receipt', $payment->id) }}" 
-                                                    class="inline-flex items-center gap-1 px-3 py-1.5 text-accent-600 hover:text-accent-700 hover:bg-accent-50 rounded-lg transition-all duration-200 text-sm font-medium">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                        </svg>
+                                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-neutral-600 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors text-sm font-medium">
+                                                        <x-lucide-download class="w-4 h-4" />
                                                         Receipt
                                                     </a>
                                                 @endif

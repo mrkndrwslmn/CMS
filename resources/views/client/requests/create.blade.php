@@ -9,13 +9,19 @@
 
 @section('content')
 
-    <div class="max-w-7xl mx-auto pt-32">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Breadcrumb -->
+        <x-ui.breadcrumb :items="[
+            ['label' => 'Service Requests', 'url' => route('client.requests'), 'icon' => 'file-text'],
+            ['label' => 'Create Request', 'icon' => 'plus']
+        ]" class="mb-6" />
+
         <!-- Header -->
         <div class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-neutral-900 mb-4">Get Started with Your Project</h1>
-            <p class="text-lg text-neutral-600">Tell us about your needs and we'll match you with the perfect Adiutor</p>
+            <h1 class="text-2xl font-semibold text-neutral-800 mb-4">Get Started with Your Project</h1>
+            <p class="text-neutral-600">Tell us about your needs and we'll match you with the perfect Adiutor</p>
             @if(!$isLoggedIn)
-                <p class="text-sm text-primary-600 mt-2">✨ No account? No problem! We'll create one for you automatically.</p>
+                <p class="text-sm text-primary-600 mt-2">No account? No problem! We'll create one for you automatically.</p>
             @endif
         </div>
 
@@ -23,12 +29,10 @@
         <div id="service-preselected-notice" class="hidden mb-8 max-w-4xl mx-auto">
             <div class="bg-primary-50 border-l-4 border-primary-500 p-6 rounded-lg">
                 <div class="flex">
-                    <svg class="w-6 h-6 text-primary-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                    <x-lucide-info class="w-6 h-6 text-primary-500 mr-3 flex-shrink-0" />
                     <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-primary-900 mb-2">Service Pre-selected</h3>
-                        <p class="text-primary-700">We've pre-filled some details based on the service you selected. Feel free to modify any information to match your specific needs.</p>
+                        <h3 class="text-base font-semibold text-primary-900 mb-2">Service Pre-selected</h3>
+                        <p class="text-sm text-primary-700">We've pre-filled some details based on the service you selected. Feel free to modify any information to match your specific needs.</p>
                     </div>
                 </div>
             </div>
@@ -38,18 +42,19 @@
         @if(session('credentials'))
             <div class="bg-success-50 border-l-4 border-success-500 p-6 mb-8 rounded-lg">
                 <div class="flex">
-                    <svg class="w-6 h-6 text-success-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                    <x-lucide-check-circle class="w-6 h-6 text-success-500 mr-3" />
                     <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-success-900 mb-2">Request Submitted Successfully!</h3>
-                        <p class="text-success-700 mb-4">Your account has been created. Here are your credentials:</p>
+                        <h3 class="text-base font-semibold text-success-900 mb-2">Request Submitted Successfully!</h3>
+                        <p class="text-sm text-success-700 mb-4">Your account has been created. Here are your credentials:</p>
                         <div class="bg-white p-4 rounded border border-success-200">
                             <p class="text-sm"><strong>Email:</strong> {{ session('credentials.email') }}</p>
                             <p class="text-sm"><strong>Password:</strong> <code class="bg-neutral-100 px-2 py-1 rounded">{{ session('credentials.password') }}</code></p>
                         </div>
-                        <p class="text-sm text-success-600 mt-3">💌 These credentials have also been sent to your email.</p>
-                        <a href="{{ route('login') }}" class="btn-primary mt-4 inline-block">Login Now</a>
+                        <p class="text-sm text-success-600 mt-3 flex items-center">
+                            <x-lucide-mail class="w-4 h-4 mr-1" />
+                            These credentials have also been sent to your email.
+                        </p>
+                        <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 mt-4">Login Now</a>
                     </div>
                 </div>
             </div>
@@ -59,11 +64,9 @@
         @if(session('success') && !session('credentials'))
             <div class="bg-success-50 border-l-4 border-success-500 p-6 mb-8 rounded-lg">
                 <div class="flex">
-                    <svg class="w-6 h-6 text-success-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                    <x-lucide-check-circle class="w-6 h-6 text-success-500 mr-3" />
                     <div>
-                        <h3 class="text-lg font-semibold text-success-900">{{ session('success') }}</h3>
+                        <h3 class="text-base font-semibold text-success-900">{{ session('success') }}</h3>
                     </div>
                 </div>
             </div>
@@ -73,12 +76,10 @@
         @if($errors->any())
             <div class="bg-error-50 border-l-4 border-error-500 p-6 mb-8 rounded-lg">
                 <div class="flex">
-                    <svg class="w-6 h-6 text-error-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                    <x-lucide-alert-circle class="w-6 h-6 text-error-500 mr-3" />
                     <div>
-                        <h3 class="text-lg font-semibold text-error-900 mb-2">Please fix the following errors:</h3>
-                        <ul class="list-disc list-inside text-error-700">
+                        <h3 class="text-base font-semibold text-error-900 mb-2">Please fix the following errors:</h3>
+                        <ul class="list-disc list-inside text-sm text-error-700">
                             @foreach($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -99,11 +100,9 @@
 
             @if(!$isLoggedIn)
             <!-- Contact Information -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-neutral-200">
-                <h2 class="text-xl font-semibold text-neutral-900 mb-6 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <h2 class="text-lg font-medium text-neutral-700 mb-6 flex items-center">
+                    <x-lucide-user class="w-5 h-5 mr-2 text-primary-600" />
                     Your Contact Information
                 </h2>
                 
@@ -168,9 +167,9 @@
                                 class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('contact_method') border-error-300 @enderror" 
                                 required>
                             <option value="">Select a method</option>
-                            <option value="email" {{ old('contact_method') === 'email' ? 'selected' : '' }}>📧 Email</option>
-                            <option value="messenger" {{ old('contact_method') === 'messenger' ? 'selected' : '' }}>💬 Facebook Messenger</option>
-                            <option value="phone" {{ old('contact_method') === 'phone' ? 'selected' : '' }}>📞 Phone</option>
+                            <option value="email" {{ old('contact_method') === 'email' ? 'selected' : '' }}>Email</option>
+                            <option value="messenger" {{ old('contact_method') === 'messenger' ? 'selected' : '' }}>Facebook Messenger</option>
+                            <option value="phone" {{ old('contact_method') === 'phone' ? 'selected' : '' }}>Phone</option>
                         </select>
                         @error('contact_method')
                             <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
@@ -202,11 +201,9 @@
             @endif
 
             <!-- Service Request Details -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-neutral-200">
-                <h2 class="text-xl font-semibold text-neutral-900 mb-6 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <h2 class="text-lg font-medium text-neutral-700 mb-6 flex items-center">
+                    <x-lucide-file-text class="w-5 h-5 mr-2 text-primary-600" />
                     Project Details
                 </h2>
                 
@@ -238,9 +235,9 @@
                                 class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('service_type') border-error-300 @enderror" 
                                 required>
                             <option value="">Select a service type</option>
-                            <option value="Programming" {{ old('service_type') === 'Programming' ? 'selected' : '' }}>💻 Programming & Development</option>
-                            <option value="Editing & Arts" {{ old('service_type') === 'Editing & Arts' ? 'selected' : '' }}>🎨 Editing & Creative Arts</option>
-                            <option value="Writing" {{ old('service_type') === 'Writing' ? 'selected' : '' }}>✍️ Writing & Content</option>
+                            <option value="Programming" {{ old('service_type') === 'Programming' ? 'selected' : '' }}>Programming & Development</option>
+                            <option value="Editing & Arts" {{ old('service_type') === 'Editing & Arts' ? 'selected' : '' }}>Editing & Creative Arts</option>
+                            <option value="Writing" {{ old('service_type') === 'Writing' ? 'selected' : '' }}>Writing & Content</option>
                         </select>
                         @error('service_type')
                             <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
@@ -258,9 +255,9 @@
                                 class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('contact_method') border-error-300 @enderror" 
                                 required>
                             <option value="">Select a method</option>
-                            <option value="email" {{ old('contact_method') === 'email' ? 'selected' : '' }}>📧 Email</option>
-                            <option value="messenger" {{ old('contact_method') === 'messenger' ? 'selected' : '' }}>💬 Facebook Messenger</option>
-                            <option value="phone" {{ old('contact_method') === 'phone' ? 'selected' : '' }}>📞 Phone</option>
+                            <option value="email" {{ old('contact_method') === 'email' ? 'selected' : '' }}>Email</option>
+                            <option value="messenger" {{ old('contact_method') === 'messenger' ? 'selected' : '' }}>Facebook Messenger</option>
+                            <option value="phone" {{ old('contact_method') === 'phone' ? 'selected' : '' }}>Phone</option>
                         </select>
                         @error('contact_method')
                             <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
@@ -338,11 +335,9 @@
             </div>
 
             <!-- Additional Notes -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-neutral-200">
-                <h2 class="text-xl font-semibold text-neutral-900 mb-6 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
-                    </svg>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <h2 class="text-lg font-medium text-neutral-700 mb-6 flex items-center">
+                    <x-lucide-message-square class="w-5 h-5 mr-2 text-primary-600" />
                     Additional Notes
                 </h2>
                 
@@ -362,11 +357,9 @@
             </div>
 
             <!-- File Attachments -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-neutral-200">
-                <h2 class="text-xl font-semibold text-neutral-900 mb-6 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                    </svg>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <h2 class="text-lg font-medium text-neutral-700 mb-6 flex items-center">
+                    <x-lucide-paperclip class="w-5 h-5 mr-2 text-primary-600" />
                     Attachments (Optional)
                 </h2>
                 
@@ -374,11 +367,9 @@
                     <label for="file_upload" class="block text-sm font-medium text-neutral-700 mb-2">
                         Upload relevant files
                     </label>
-                    <div class="mt-2 flex justify-center px-6 pt-8 pb-8 border-2 border-neutral-300 border-dashed rounded-lg hover:border-primary-400 transition-all duration-200 bg-neutral-50/50">
+                    <div class="mt-2 flex justify-center px-6 pt-8 pb-8 border-2 border-neutral-300 border-dashed rounded-lg hover:border-primary-400 transition-all duration-200 bg-neutral-50">
                         <div class="space-y-2 text-center">
-                            <svg class="mx-auto h-12 w-12 text-neutral-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
+                            <x-lucide-upload-cloud class="mx-auto h-12 w-12 text-neutral-400" />
                             <div class="flex text-sm text-neutral-600 justify-center">
                                 <label for="file_upload" class="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 px-2 py-1">
                                     <span>Choose files</span>
@@ -405,10 +396,8 @@
 
             <!-- Submit Button -->
             <div class="flex items-center justify-center pt-4">
-                <button type="submit" class="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center text-lg">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
+                <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center text-lg">
+                    <x-lucide-send class="w-5 h-5 mr-2" />
                     Submit Request
                 </button>
             </div>

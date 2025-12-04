@@ -72,6 +72,7 @@ class LoyaltyController extends Controller
     public function transactions(Request $request)
     {
         $user = Auth::user();
+        $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
 
         $query = $user->loyaltyTransactions()
             ->with(['serviceRequest', 'payment', 'coupon']);
@@ -91,14 +92,15 @@ class LoyaltyController extends Controller
 
         $transactions = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        // Get summary statistics
-        $summary = [
+        // Get summary statistics (named $stats to match what the view expects)
+        $stats = [
             'total_earned' => $user->loyaltyTransactions()->earned()->sum('points'),
-            'total_redeemed' => $user->loyaltyTransactions()->redeemed()->sum('points'),
-            'total_expired' => $user->loyaltyTransactions()->where('transaction_type', 'expired')->sum('points'),
+            'total_redeemed' => abs($user->loyaltyTransactions()->redeemed()->sum('points')),
+            'total_expired' => abs($user->loyaltyTransactions()->where('transaction_type', 'expired')->sum('points')),
+            'available_points' => $loyaltyPoint->available_points,
         ];
 
-        return view('client.loyalty.transactions', compact('transactions', 'summary'));
+        return view('client.loyalty.transactions', compact('transactions', 'stats'));
     }
 
     /**

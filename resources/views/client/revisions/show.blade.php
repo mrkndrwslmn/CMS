@@ -1,32 +1,37 @@
 @extends('client.layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 py-8 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-neutral-50 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-5xl mx-auto">
+        <!-- Breadcrumb -->
+        <x-ui.breadcrumb :items="[
+            ['label' => 'Dashboard', 'route' => 'client.dashboard', 'icon' => 'home'],
+            ['label' => 'Revision Requests', 'route' => 'client.revisions.index', 'icon' => 'git-pull-request'],
+            ['label' => 'Request #' . $revision->id]
+        ]" />
+
         <!-- Back Button -->
         <div class="mb-6">
-            <a href="{{ route('client.revisions.index') }}" class="inline-flex items-center text-primary-600 hover:text-primary-700 font-semibold transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                </svg>
+            <a href="{{ route('client.revisions.index') }}" class="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors">
+                <x-lucide-arrow-left class="w-4 h-4 mr-1.5" />
                 Back to Revision Requests
             </a>
         </div>
 
         <!-- Page Header -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 mb-6">
             <div class="flex items-start justify-between mb-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-neutral-900 mb-2">
+                    <h1 class="text-2xl font-semibold text-neutral-800 mb-2">
                         Revision Request #{{ $revision->id }}
                     </h1>
-                    <p class="text-neutral-600">
+                    <p class="text-sm text-neutral-600">
                         @if($revision->document)
-                            For document: <span class="font-semibold">{{ $revision->document->fileName }}</span>
+                            For document: <span class="font-medium">{{ $revision->document->fileName }}</span>
                         @elseif($revision->task)
-                            For task: <span class="font-semibold">{{ $revision->task->taskTitle }}</span>
+                            For task: <span class="font-medium">{{ $revision->task->taskTitle }}</span>
                         @elseif($revision->project)
-                            For project: <span class="font-semibold">{{ $revision->project->title }}</span>
+                            For project: <span class="font-medium">{{ $revision->project->title }}</span>
                         @endif
                     </p>
                 </div>
@@ -34,16 +39,17 @@
                 <!-- Status Badge -->
                 @php
                     $statusConfig = [
-                        'pending' => ['bg' => 'bg-warning-100', 'text' => 'text-warning-800', 'label' => 'Pending Review', 'icon' => '⏳'],
-                        'approved' => ['bg' => 'bg-info-100', 'text' => 'text-info-800', 'label' => 'Approved', 'icon' => '✓'],
-                        'rejected' => ['bg' => 'bg-error-100', 'text' => 'text-error-800', 'label' => 'Rejected', 'icon' => '✗'],
-                        'completed' => ['bg' => 'bg-success-100', 'text' => 'text-success-800', 'label' => 'Completed', 'icon' => '✅'],
-                        'cancelled' => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-800', 'label' => 'Cancelled', 'icon' => '⊘'],
+                        'pending' => ['bg' => 'bg-warning-100', 'text' => 'text-warning-800', 'label' => 'Pending Review', 'icon' => 'clock'],
+                        'approved' => ['bg' => 'bg-info-100', 'text' => 'text-info-800', 'label' => 'Approved', 'icon' => 'check'],
+                        'rejected' => ['bg' => 'bg-error-100', 'text' => 'text-error-800', 'label' => 'Rejected', 'icon' => 'x'],
+                        'completed' => ['bg' => 'bg-success-100', 'text' => 'text-success-800', 'label' => 'Completed', 'icon' => 'check-circle'],
+                        'cancelled' => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-800', 'label' => 'Cancelled', 'icon' => 'ban'],
                     ];
                     $config = $statusConfig[$revision->status] ?? $statusConfig['pending'];
                 @endphp
-                <span class="px-4 py-2 rounded-lg text-sm font-bold {{ $config['bg'] }} {{ $config['text'] }}">
-                    {{ $config['icon'] }} {{ $config['label'] }}
+                <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium {{ $config['bg'] }} {{ $config['text'] }}">
+                    <x-dynamic-component :component="'lucide-' . $config['icon']" class="w-4 h-4 mr-1.5" />
+                    {{ $config['label'] }}
                 </span>
             </div>
 
@@ -71,8 +77,8 @@
         </div>
 
         <!-- Revision Details -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h2 class="text-xl font-bold text-neutral-900 mb-4">Revision Details</h2>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold text-neutral-800 mb-4">Revision Details</h2>
             
             <div class="space-y-4">
                 <div>
@@ -96,15 +102,15 @@
 
         <!-- Assignment Information -->
         @if($revision->assignedAdiutor)
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <h2 class="text-xl font-bold text-neutral-900 mb-4">Assignment</h2>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 mb-6">
+                <h2 class="text-lg font-semibold text-neutral-800 mb-4">Assignment</h2>
                 <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gradient-to-r from-primary-500 to-accent-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                    <div class="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
                         {{ substr($revision->assignedAdiutor->fullName, 0, 1) }}
                     </div>
                     <div>
-                        <p class="font-semibold text-neutral-900">{{ $revision->assignedAdiutor->fullName }}</p>
-                        <p class="text-sm text-neutral-600">Assigned Adiutor</p>
+                        <p class="font-medium text-neutral-800">{{ $revision->assignedAdiutor->fullName }}</p>
+                        <p class="text-sm text-neutral-500">Assigned Adiutor</p>
                     </div>
                 </div>
             </div>
@@ -112,8 +118,8 @@
 
         <!-- Admin Review -->
         @if($revision->reviewedBy)
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <h2 class="text-xl font-bold text-neutral-900 mb-4">Admin Review</h2>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 mb-6">
+                <h2 class="text-lg font-semibold text-neutral-800 mb-4">Admin Review</h2>
                 
                 <div class="space-y-3">
                     <div>
@@ -140,8 +146,11 @@
 
         <!-- Completion Information -->
         @if($revision->status === 'completed' && $revision->completedBy)
-            <div class="bg-success-50 border-2 border-success-200 rounded-xl shadow-lg p-6 mb-6">
-                <h2 class="text-xl font-bold text-success-900 mb-4">✅ Completion Details</h2>
+            <div class="bg-success-50 border border-success-200 rounded-2xl p-6 mb-6">
+                <h2 class="text-lg font-semibold text-success-800 mb-4 flex items-center">
+                    <x-lucide-check-circle class="w-5 h-5 mr-2" />
+                    Completion Details
+                </h2>
                 
                 <div class="space-y-3">
                     <div>
@@ -158,14 +167,12 @@
         @endif
 
         <!-- Actions -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
             <div class="flex flex-wrap gap-3">
                 @if($revision->project_id)
                     <a href="{{ route('client.projects.show', $revision->project_id) }}" 
-                       class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-600 text-white font-bold rounded-lg hover:from-primary-600 hover:to-accent-700 transition-all shadow-lg hover:shadow-xl">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                        </svg>
+                       class="inline-flex items-center px-5 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors">
+                        <x-lucide-folder class="w-4 h-4 mr-2" />
                         View Project
                     </a>
                 @endif
@@ -174,10 +181,8 @@
                     <form action="{{ route('client.revisions.cancel', $revision->id) }}" method="POST" 
                           onsubmit="return confirm('Are you sure you want to cancel this revision request?');">
                         @csrf
-                        <button type="submit" class="inline-flex items-center px-6 py-3 bg-neutral-200 text-neutral-700 font-bold rounded-lg hover:bg-neutral-300 transition-colors">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
+                        <button type="submit" class="inline-flex items-center px-5 py-2.5 bg-neutral-100 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-200 transition-colors">
+                            <x-lucide-x class="w-4 h-4 mr-2" />
                             Cancel Request
                         </button>
                     </form>

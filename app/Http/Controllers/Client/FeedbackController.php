@@ -24,7 +24,7 @@ class FeedbackController extends Controller
             ->first();
 
         if ($existingFeedback) {
-            return redirect()->route('client.feedback')
+            return redirect()->route('client.feedback.index')
                 ->with('error', 'You have already submitted feedback for this project.');
         }
 
@@ -44,7 +44,7 @@ class FeedbackController extends Controller
             ->first();
 
         if ($existingFeedback) {
-            return redirect()->route('client.feedback')
+            return redirect()->route('client.feedback.index')
                 ->with('error', 'You have already submitted feedback for this project.');
         }
 
@@ -115,7 +115,7 @@ class FeedbackController extends Controller
             }
         }
 
-        return redirect()->route('client.feedback')
+        return redirect()->route('client.feedback,index')
             ->with('success', 'Thank you for your feedback! It has been submitted successfully.');
     }
 }

@@ -1,84 +1,109 @@
-@extends('admin.layouts.app')
+                        @extends('admin.layouts.app')
 
 @section('title', 'Manage Referral Codes - Admin Dashboard')
 
 @section('content')
-<div class="container-fluid px-4 py-6">
+<div class="px-6 py-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Referrals', 'route' => 'admin.referrals.index', 'icon' => 'gift'],
+        ['label' => 'Codes', 'icon' => 'qr-code'],
+    ]" class="mb-6" />
+
     <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <div>
-            <h1 class="heading-serif text-3xl text-primary-700 mb-2">Referral Codes Management</h1>
-            <p class="text-neutral-600">View and manage all referral codes</p>
+            <h1 class="text-2xl font-semibold text-neutral-800 mb-1">Referral Codes Management</h1>
+            <p class="text-neutral-500">View and manage all referral codes</p>
         </div>
-        <div class="flex gap-3">
-            <a href="{{ route('admin.referrals.index') }}" class="btn-secondary">
-                <i class="fas fa-chart-line mr-2"></i>Analytics Dashboard
-            </a>
-            <button onclick="exportCodes()" class="btn-primary">
-                <i class="fas fa-download mr-2"></i>Export Codes
-            </button>
+        <div class="flex flex-wrap gap-3">
+            <x-ui.button variant="secondary" href="{{ route('admin.referrals.index') }}">
+                <x-lucide-bar-chart-2 class="w-4 h-4" />
+                Analytics Dashboard
+            </x-ui.button>
+            <x-ui.button variant="primary" onclick="exportCodes()">
+                <x-lucide-download class="w-4 h-4" />
+                Export Codes
+            </x-ui.button>
         </div>
     </div>
 
     <!-- Summary Stats -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div class="glass-card p-6">
-            <div class="flex items-center justify-between mb-2">
-                <i class="fas fa-code text-3xl text-primary-600"></i>
-                <span class="text-xs font-semibold text-neutral-500 uppercase">Total Codes</span>
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm text-neutral-500 mb-1">Total Codes</p>
+                    <h3 class="text-2xl font-semibold text-neutral-800">{{ number_format($stats['total_codes']) }}</h3>
+                </div>
+                <div class="p-3 bg-primary-50 rounded-xl">
+                    <x-lucide-qr-code class="w-5 h-5 text-primary-500" />
+                </div>
             </div>
-            <h3 class="text-2xl font-bold text-primary-700">{{ number_format($stats['total_codes']) }}</h3>
-        </div>
+        </x-ui.card>
 
-        <div class="glass-card p-6">
-            <div class="flex items-center justify-between mb-2">
-                <i class="fas fa-check-circle text-3xl text-green-600"></i>
-                <span class="text-xs font-semibold text-neutral-500 uppercase">Active</span>
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm text-neutral-500 mb-1">Active</p>
+                    <h3 class="text-2xl font-semibold text-neutral-800">{{ number_format($stats['active_codes']) }}</h3>
+                </div>
+                <div class="p-3 bg-success-50 rounded-xl">
+                    <x-lucide-check-circle class="w-5 h-5 text-success-500" />
+                </div>
             </div>
-            <h3 class="text-2xl font-bold text-green-700">{{ number_format($stats['active_codes']) }}</h3>
-        </div>
+        </x-ui.card>
 
-        <div class="glass-card p-6">
-            <div class="flex items-center justify-between mb-2">
-                <i class="fas fa-users text-3xl text-blue-600"></i>
-                <span class="text-xs font-semibold text-neutral-500 uppercase">Total Uses</span>
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm text-neutral-500 mb-1">Total Uses</p>
+                    <h3 class="text-2xl font-semibold text-neutral-800">{{ number_format($stats['total_uses']) }}</h3>
+                </div>
+                <div class="p-3 bg-info-50 rounded-xl">
+                    <x-lucide-users class="w-5 h-5 text-info-500" />
+                </div>
             </div>
-            <h3 class="text-2xl font-bold text-blue-700">{{ number_format($stats['total_uses']) }}</h3>
-        </div>
+        </x-ui.card>
 
-        <div class="glass-card p-6">
-            <div class="flex items-center justify-between mb-2">
-                <i class="fas fa-percentage text-3xl text-purple-600"></i>
-                <span class="text-xs font-semibold text-neutral-500 uppercase">Avg Conversion</span>
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm text-neutral-500 mb-1">Avg Conversion</p>
+                    <h3 class="text-2xl font-semibold text-neutral-800">{{ number_format($stats['avg_conversion'], 1) }}%</h3>
+                </div>
+                <div class="p-3 bg-purple-50 rounded-xl">
+                    <x-lucide-percent class="w-5 h-5 text-purple-500" />
+                </div>
             </div>
-            <h3 class="text-2xl font-bold text-purple-700">{{ number_format($stats['avg_conversion'], 1) }}%</h3>
-        </div>
+        </x-ui.card>
     </div>
 
     <!-- Filters -->
-    <div class="glass-card p-6 mb-6">
+    <x-ui.card class="p-6 mb-6">
         <form method="GET" action="{{ route('admin.referrals.codes') }}" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Search -->
                 <div>
-                    <label for="search" class="block text-sm font-semibold text-neutral-700 mb-2">Search</label>
+                    <label for="search" class="block text-sm font-medium text-neutral-700 mb-2">Search</label>
                     <input 
                         type="text" 
                         id="search" 
                         name="search" 
                         value="{{ request('search') }}"
                         placeholder="Code or user name..."
-                        class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        class="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors"
                     >
                 </div>
 
                 <!-- Status Filter -->
                 <div>
-                    <label for="status" class="block text-sm font-semibold text-neutral-700 mb-2">Status</label>
+                    <label for="status" class="block text-sm font-medium text-neutral-700 mb-2">Status</label>
                     <select 
                         id="status" 
                         name="status"
-                        class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        class="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors"
                     >
                         <option value="">All Statuses</option>
                         <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
@@ -88,11 +113,11 @@
 
                 <!-- Sort By -->
                 <div>
-                    <label for="sort" class="block text-sm font-semibold text-neutral-700 mb-2">Sort By</label>
+                    <label for="sort" class="block text-sm font-medium text-neutral-700 mb-2">Sort By</label>
                     <select 
                         id="sort" 
                         name="sort"
-                        class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        class="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors"
                     >
                         <option value="created_at" {{ request('sort', 'created_at') === 'created_at' ? 'selected' : '' }}>Date Created</option>
                         <option value="total_referrals" {{ request('sort') === 'total_referrals' ? 'selected' : '' }}>Total Referrals</option>
@@ -103,7 +128,7 @@
 
                 <!-- Min Referrals -->
                 <div>
-                    <label for="min_referrals" class="block text-sm font-semibold text-neutral-700 mb-2">Min Referrals</label>
+                    <label for="min_referrals" class="block text-sm font-medium text-neutral-700 mb-2">Min Referrals</label>
                     <input 
                         type="number" 
                         id="min_referrals" 
@@ -111,79 +136,83 @@
                         value="{{ request('min_referrals') }}"
                         placeholder="0"
                         min="0"
-                        class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        class="w-full px-4 py-2.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors"
                     >
                 </div>
             </div>
 
             <!-- Filter Actions -->
-            <div class="flex justify-between items-center pt-2">
-                <div class="text-sm text-neutral-600">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
+                <div class="text-sm text-neutral-500">
                     Showing {{ $codes->firstItem() ?? 0 }} to {{ $codes->lastItem() ?? 0 }} of {{ $codes->total() }} codes
                 </div>
                 <div class="flex gap-3">
-                    <a href="{{ route('admin.referrals.codes') }}" class="btn-secondary btn-sm">
-                        <i class="fas fa-redo mr-2"></i>Clear Filters
-                    </a>
-                    <button type="submit" class="btn-primary btn-sm">
-                        <i class="fas fa-search mr-2"></i>Apply Filters
-                    </button>
+                    <x-ui.button variant="secondary" href="{{ route('admin.referrals.codes') }}" size="sm">
+                        <x-lucide-rotate-ccw class="w-4 h-4" />
+                        Clear Filters
+                    </x-ui.button>
+                    <x-ui.button type="submit" variant="primary" size="sm">
+                        <x-lucide-search class="w-4 h-4" />
+                        Apply Filters
+                    </x-ui.button>
                 </div>
             </div>
         </form>
-    </div>
+    </x-ui.card>
 
     <!-- Codes Table -->
-    <div class="glass-card overflow-hidden">
+    <x-ui.card class="overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-neutral-200">
                 <thead class="bg-neutral-50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider">Code</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider">Owner</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-neutral-600 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-neutral-600 uppercase tracking-wider">Total Referrals</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-neutral-600 uppercase tracking-wider">Pending</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-neutral-600 uppercase tracking-wider">Successful</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-neutral-600 uppercase tracking-wider">Conversion</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-neutral-600 uppercase tracking-wider">Total Earnings</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-neutral-600 uppercase tracking-wider">Last Used</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-neutral-600 uppercase tracking-wider">Actions</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Code</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Owner</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Total Referrals</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Pending</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Successful</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Conversion</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Total Earnings</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Last Used</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-neutral-100">
                     @forelse($codes as $code)
-                    <tr class="hover:bg-primary-50 transition-colors">
+                    <tr class="hover:bg-neutral-50 transition-colors">
                         <td class="px-4 py-3">
-                            <code class="px-3 py-1.5 bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 rounded-lg text-sm font-mono font-bold">
+                            <code class="px-3 py-1.5 text-primary-800 rounded-lg text-sm font-mono font-semibold">
                                 {{ $code->code }}
                             </code>
                         </td>
                         <td class="px-4 py-3">
                             <div>
-                                <p class="font-semibold text-neutral-800">{{ $code->user->fullName }}</p>
-                                <p class="text-xs text-neutral-600">{{ $code->user->email }}</p>
+                                <p class="font-medium text-neutral-800">{{ $code->user->fullName }}</p>
+                                <p class="text-xs text-neutral-500">{{ $code->user->email }}</p>
                             </div>
                         </td>
                         <td class="px-4 py-3 text-center">
                             @if($code->is_active)
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                                <i class="fas fa-check-circle mr-1"></i>Active
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
+                                <x-lucide-check-circle class="w-3 h-3 mr-1" />
+                                Active
                             </span>
                             @else
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                                <i class="fas fa-times-circle mr-1"></i>Inactive
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-700">
+                                <x-lucide-x-circle class="w-3 h-3 mr-1" />
+                                Inactive
                             </span>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <span class="text-lg font-bold text-primary-700">{{ $code->total_referrals }}</span>
+                            <span class="text-lg font-semibold text-primary-700">{{ $code->total_referrals }}</span>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <span class="text-lg font-bold text-yellow-700">{{ $code->pending_referrals }}</span>
+                            <span class="text-lg font-semibold text-warning-700">{{ $code->pending_referrals }}</span>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <span class="text-lg font-bold text-green-700">{{ $code->successful_referrals }}</span>
+                            <span class="text-lg font-semibold text-success-700">{{ $code->successful_referrals }}</span>
                         </td>
                         <td class="px-4 py-3 text-center">
                             @php
@@ -193,26 +222,26 @@
                             @endphp
                             <div class="flex items-center justify-center gap-2">
                                 <div class="w-16 bg-neutral-200 rounded-full h-2">
-                                    <div class="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full" 
+                                    <div class="bg-success-500 h-2 rounded-full" 
                                          style="width: {{ $conversionRate }}%"></div>
                                 </div>
-                                <span class="text-sm font-semibold text-neutral-700">{{ number_format($conversionRate, 1) }}%</span>
+                                <span class="text-sm font-medium text-neutral-700">{{ number_format($conversionRate, 1) }}%</span>
                             </div>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="text-sm">
-                                <p class="font-bold text-purple-700">{{ number_format($code->lifetime_earnings_points) }}</p>
-                                <p class="text-xs text-neutral-600">points</p>
+                                <p class="font-semibold text-purple-700">{{ number_format($code->lifetime_earnings_points) }}</p>
+                                <p class="text-xs text-neutral-500">points</p>
                             </div>
                         </td>
                         <td class="px-4 py-3 text-center">
                             @if($code->last_used_at)
                             <div class="text-sm">
                                 <p class="text-neutral-800">{{ $code->last_used_at->format('M d, Y') }}</p>
-                                <p class="text-xs text-neutral-600">{{ $code->last_used_at->diffForHumans() }}</p>
+                                <p class="text-xs text-neutral-500">{{ $code->last_used_at->diffForHumans() }}</p>
                             </div>
                             @else
-                            <span class="text-sm text-neutral-500">Never</span>
+                            <span class="text-sm text-neutral-400">Never</span>
                             @endif
                         </td>
                         <td class="px-4 py-3">
@@ -220,7 +249,7 @@
                                 <a href="{{ route('admin.users.show', $code->user->id) }}" 
                                    class="text-primary-600 hover:text-primary-700"
                                    title="View User">
-                                    <i class="fas fa-user"></i>
+                                    <x-lucide-user class="w-4 h-4" />
                                 </a>
                                 <form method="POST" 
                                       action="{{ route('admin.referrals.codes.toggle', $code->id) }}" 
@@ -229,9 +258,13 @@
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" 
-                                            class="{{ $code->is_active ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700' }}"
+                                            class="{{ $code->is_active ? 'text-error-600 hover:text-error-700' : 'text-success-600 hover:text-success-700' }}"
                                             title="{{ $code->is_active ? 'Deactivate' : 'Activate' }}">
-                                        <i class="fas fa-{{ $code->is_active ? 'ban' : 'check-circle' }}"></i>
+                                        @if($code->is_active)
+                                            <x-lucide-ban class="w-4 h-4" />
+                                        @else
+                                            <x-lucide-check-circle class="w-4 h-4" />
+                                        @endif
                                     </button>
                                 </form>
                             </div>
@@ -240,7 +273,9 @@
                     @empty
                     <tr>
                         <td colspan="10" class="px-4 py-12 text-center">
-                            <i class="fas fa-code text-neutral-300 text-5xl mb-4"></i>
+                            <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <x-lucide-qr-code class="w-8 h-8 text-neutral-400" />
+                            </div>
                             <p class="text-neutral-600 text-lg">No referral codes found</p>
                             <p class="text-neutral-500 text-sm mt-2">Codes are generated automatically when users access their referral dashboard</p>
                         </td>
@@ -256,42 +291,52 @@
             {{ $codes->links() }}
         </div>
         @endif
-    </div>
+    </x-ui.card>
 
     <!-- Performance Insights -->
     @if($codes->count() > 0)
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <!-- Top Performing Codes -->
-        <div class="glass-card p-6">
-            <h3 class="text-lg font-bold text-primary-700 mb-4">Top Performing Codes</h3>
-            <div class="space-y-3">
-                @foreach($codes->sortByDesc('successful_referrals')->take(5) as $topCode)
-                <div class="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-transparent rounded-lg">
-                    <div class="flex items-center gap-3">
-                        <code class="px-2 py-1 bg-primary-100 text-primary-700 rounded text-sm font-mono">{{ $topCode->code }}</code>
-                        <span class="text-sm text-neutral-700">{{ $topCode->user->fullName }}</span>
-                    </div>
-                    <span class="text-lg font-bold text-green-700">{{ $topCode->successful_referrals }}</span>
+        <x-ui.card>
+            <div class="p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <x-lucide-trophy class="w-5 h-5 text-success-600" />
+                    <h3 class="text-lg font-semibold text-neutral-800">Top Performing Codes</h3>
                 </div>
-                @endforeach
+                <div class="space-y-3">
+                    @foreach($codes->sortByDesc('successful_referrals')->take(5) as $topCode)
+                    <div class="flex items-center justify-between p-3 bg-success-50 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <code class="px-2 py-1 text-primary-700 rounded text-sm font-mono">{{ $topCode->code }}</code>
+                            <span class="text-sm text-neutral-700">{{ $topCode->user->fullName }}</span>
+                        </div>
+                        <span class="text-lg font-semibold text-success-700">{{ $topCode->successful_referrals }}</span>
+                    </div>
+                    @endforeach
+                </div>
             </div>
-        </div>
+        </x-ui.card>
 
         <!-- Recently Used Codes -->
-        <div class="glass-card p-6">
-            <h3 class="text-lg font-bold text-primary-700 mb-4">Recently Used Codes</h3>
-            <div class="space-y-3">
-                @foreach($codes->whereNotNull('last_used_at')->sortByDesc('last_used_at')->take(5) as $recentCode)
-                <div class="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-transparent rounded-lg">
-                    <div class="flex items-center gap-3">
-                        <code class="px-2 py-1 bg-primary-100 text-primary-700 rounded text-sm font-mono">{{ $recentCode->code }}</code>
-                        <span class="text-sm text-neutral-700">{{ $recentCode->user->fullName }}</span>
-                    </div>
-                    <span class="text-sm text-neutral-600">{{ $recentCode->last_used_at->diffForHumans() }}</span>
+        <x-ui.card>
+            <div class="p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <x-lucide-clock class="w-5 h-5 text-info-600" />
+                    <h3 class="text-lg font-semibold text-neutral-800">Recently Used Codes</h3>
                 </div>
-                @endforeach
+                <div class="space-y-3">
+                    @foreach($codes->whereNotNull('last_used_at')->sortByDesc('last_used_at')->take(5) as $recentCode)
+                    <div class="flex items-center justify-between p-3 bg-info-50 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <code class="px-2 py-1 text-primary-700 rounded text-sm font-mono">{{ $recentCode->code }}</code>
+                            <span class="text-sm text-neutral-700">{{ $recentCode->user->fullName }}</span>
+                        </div>
+                        <span class="text-sm text-neutral-600">{{ $recentCode->last_used_at->diffForHumans() }}</span>
+                    </div>
+                    @endforeach
+                </div>
             </div>
-        </div>
+        </x-ui.card>
     </div>
     @endif
 </div>

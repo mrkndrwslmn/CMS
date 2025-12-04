@@ -63,24 +63,60 @@ class LoyaltyController extends Controller
     {
         $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
 
-        // Get user statistics
-        $stats = $this->loyaltyService->getUserStatistics($user);
+        // Get user statistics from service
+        $serviceStats = $this->loyaltyService->getUserStatistics($user);
+        
+        // Calculate additional stats for the view
+        $totalEarned = $user->loyaltyTransactions()->earned()->sum('points');
+        $totalRedeemed = abs($user->loyaltyTransactions()->redeemed()->sum('points'));
+        $totalExpired = abs($user->loyaltyTransactions()->expired()->sum('points'));
+        
+        // Calculate tier progress percentage
+        $allTiers = $this->loyaltyService->getAllTiers();
+        $tierProgress = 0;
+        if ($serviceStats['next_tier']) {
+            $currentTierPoints = $allTiers[$loyaltyPoint->tier]['points'] ?? 0;
+            $nextTierPoints = $allTiers[$serviceStats['next_tier']]['points'] ?? 0;
+            $tierRange = $nextTierPoints - $currentTierPoints;
+            $progressInTier = $loyaltyPoint->lifetime_earned - $currentTierPoints;
+            $tierProgress = $tierRange > 0 ? min(100, ($progressInTier / $tierRange) * 100) : 100;
+        }
+        
+        // Build stats array matching what the view expects
+        $stats = [
+            'total_earned' => $totalEarned,
+            'total_redeemed' => $totalRedeemed,
+            'total_expired' => $totalExpired,
+            'expiring_soon' => $serviceStats['expiring_soon'],
+            'next_tier' => $serviceStats['next_tier'],
+            'points_to_next_tier' => $serviceStats['points_to_next_tier'],
+            'tier_progress' => $tierProgress,
+        ];
 
-        // Get recent transactions
-        $transactions = $user->loyaltyTransactions()
+        // Get recent transactions (view expects $recentTransactions)
+        $recentTransactions = $user->loyaltyTransactions()
             ->with(['serviceRequest', 'payment', 'coupon'])
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->limit(10)
+            ->get();
+
+        // Get expiring points (view expects $expiringPoints)
+        $expiringPoints = $user->loyaltyTransactions()
+            ->earned()
+            ->where('expires_at', '<=', now()->addDays(30))
+            ->where('expires_at', '>', now())
+            ->orderBy('expires_at', 'asc')
+            ->get();
 
         // Get tier benefits
         $currentTierBenefits = $this->loyaltyService->getTierBenefits($loyaltyPoint->tier);
-        $allTiers = $this->loyaltyService->getAllTiers();
 
         return view('admin.loyalty.show', compact(
             'user',
             'loyaltyPoint',
             'stats',
-            'transactions',
+            'recentTransactions',
+            'expiringPoints',
             'currentTierBenefits',
             'allTiers'
         ));

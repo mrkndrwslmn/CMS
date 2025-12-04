@@ -21,33 +21,33 @@
         <!-- Print Actions -->
         <div class="no-print mb-6 flex justify-between items-center">
             <a href="{{ route('client.payments.show', $payment->id) }}" 
-               class="inline-flex items-center gap-2 px-4 py-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 rounded-lg transition-all duration-200">
+               class="inline-flex items-center gap-2 px-4 py-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 rounded-lg transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
                 Back to Payment Details
             </a>
             <button onclick="window.print()" 
-                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md">
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H9.5a2 2 0 01-2-2V5a2 2 0 00-2-2H3a2 2 0 00-2 2v4a2 2 0 002 2h2.5a2 2 0 012 2v4a2 2 0 002 2H17z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                 </svg>
                 Print Receipt
             </button>
         </div>
 
         <!-- Receipt -->
-        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border">
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-neutral-200">
             <!-- Header -->
-            <div class="bg-gradient-to-r from-primary-600 to-accent-600 p-8 text-white receipt-pattern">
+            <div class="bg-primary-600 p-8 text-white">
                 <div class="flex items-start justify-between">
                     <div>
                         <h1 class="text-3xl font-bold mb-2">TREIS ADIUTOR</h1>
                         <p class="text-primary-100 text-lg">Digital Innovation Solutions</p>
                         <div class="mt-4 space-y-1 text-sm text-primary-100">
-                            <p>📧 contact@treisadiutor.com</p>
-                            <p>🌐 www.treisadiutor.com</p>
-                            <p>📱 +63 (XXX) XXX-XXXX</p>
+                            <p>contact@treisadiutor.com</p>
+                            <p>www.treisadiutor.com</p>
+                            <p>+63 (XXX) XXX-XXXX</p>
                         </div>
                     </div>
                     <div class="text-right">
@@ -103,7 +103,7 @@
                 @if($payment->serviceRequest)
                     <div class="mb-8">
                         <h3 class="text-lg font-semibold text-neutral-900 mb-4 border-b border-neutral-200 pb-2">Project Information:</h3>
-                        <div class="bg-gradient-to-r from-primary-50/50 to-accent-50/30 rounded-xl p-6 border border-primary-100/50">
+                        <div class="bg-neutral-50 rounded-xl p-6 border border-neutral-100">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <p class="text-sm text-neutral-600 mb-1">Project Name</p>

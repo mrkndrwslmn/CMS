@@ -3,63 +3,55 @@
 @section('title', 'Leave Feedback')
 
 @section('content')
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-4xl mx-auto px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'client.dashboard', 'icon' => 'home'],
+        ['label' => 'Feedback', 'route' => 'client.feedback', 'icon' => 'message-square'],
+        ['label' => 'Leave Feedback', 'icon' => 'star'],
+    ]" />
+
     <!-- Header -->
-    <div class="mb-10">
-        <div class="flex items-center mb-4">
-            <a href="{{ route('client.feedback') }}" class="text-primary-600 hover:text-primary-700 mr-4 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-            </a>
-            <h1 class="text-3xl font-bold text-primary-700">Rate This Project</h1>
-        </div>
-        <p class="text-neutral-600 mt-2">Share your feedback to help us improve our services and recognize great work</p>
+    <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-neutral-800">Rate This Project</h1>
+        <p class="text-sm text-neutral-500 mt-1">Share your feedback to help us improve our services and recognize great work</p>
     </div>
 
     <!-- Project Information -->
-    <div class="bg-white rounded-xl border border-neutral-200 p-6 mb-8">
-        <h2 class="text-xl font-bold text-primary-700 mb-6">Project Details</h2>
+    <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 mb-8">
+        <h2 class="text-lg font-medium text-neutral-700 mb-6">Project Details</h2>
         <div class="flex items-start space-x-6">
             <div class="flex-1">
-                <h3 class="text-lg font-bold text-primary-700 mb-2">{{ $project->title }}</h3>
-                <p class="text-neutral-600 text-sm mb-4 leading-relaxed">{{ $project->description }}</p>
+                <h3 class="text-base font-medium text-neutral-700 mb-2">{{ $project->title }}</h3>
+                <p class="text-sm text-neutral-500 mb-4 leading-relaxed">{{ $project->description }}</p>
                 
                 <div class="space-y-3 text-sm">
                     @if($project->assignments->count() > 0)
                         <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                            <span class="text-neutral-600">Team: 
+                            <x-lucide-users class="w-4 h-4 text-neutral-400" />
+                            <span class="text-neutral-500">Team: 
                                 @foreach($project->assignments as $index => $assignment)
-                                    <span class="font-semibold text-primary-700">{{ $assignment->adiutor->fullName }}</span>{{ $index < $project->assignments->count() - 1 ? ', ' : '' }}
+                                    <span class="font-medium text-neutral-700">{{ $assignment->adiutor->fullName }}</span>{{ $index < $project->assignments->count() - 1 ? ', ' : '' }}
                                 @endforeach
                             </span>
                         </div>
                     @endif
 
                     <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        <span class="text-neutral-600">Completed: <span class="font-semibold text-primary-700">{{ $project->updated_at->format('M j, Y') }}</span></span>
+                        <x-lucide-calendar class="w-4 h-4 text-neutral-400" />
+                        <span class="text-neutral-500">Completed: <span class="font-medium text-neutral-700">{{ $project->updated_at->format('M j, Y') }}</span></span>
                     </div>
 
                     @if($project->budget)
                         <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                            </svg>
-                            <span class="text-neutral-600">Budget: <span class="font-semibold text-primary-700">₱{{ number_format($project->budget, 2) }}</span></span>
+                            <x-lucide-peso-sign class="w-4 h-4 text-neutral-400" />
+                            <span class="text-neutral-500">Budget: <span class="font-medium text-neutral-700">₱{{ number_format($project->budget, 2) }}</span></span>
                         </div>
                     @endif
 
                     <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span class="px-3 py-1 rounded-lg text-xs font-bold bg-success-50 text-success-700 border border-success-200">Completed</span>
+                        <x-lucide-check-circle class="w-4 h-4 text-success-500" />
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">Completed</span>
                     </div>
                 </div>
             </div>
@@ -68,14 +60,14 @@
             @if($project->assignments->count() > 0)
                 <div class="flex-shrink-0 flex -space-x-2">
                     @foreach($project->assignments->take(3) as $assignment)
-                        <img src="{{ $assignment->adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($assignment->adiutor->fullName) . '&background=4F46E5&color=fff' }}" 
+                        <img src="{{ $assignment->adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($assignment->adiutor->fullName) . '&background=2563EB&color=fff' }}" 
                              alt="{{ $assignment->adiutor->fullName }}" 
-                             class="w-12 h-12 rounded-full border-2 border-white"
+                             class="w-10 h-10 rounded-full border-2 border-white"
                              title="{{ $assignment->adiutor->fullName }}">
                     @endforeach
                     @if($project->assignments->count() > 3)
-                        <div class="w-12 h-12 rounded-full border-2 border-white bg-primary-100 flex items-center justify-center">
-                            <span class="text-xs font-semibold text-primary-700">+{{ $project->assignments->count() - 3 }}</span>
+                        <div class="w-10 h-10 rounded-full border-2 border-white bg-neutral-100 flex items-center justify-center">
+                            <span class="text-xs font-medium text-neutral-600">+{{ $project->assignments->count() - 3 }}</span>
                         </div>
                     @endif
                 </div>
@@ -88,12 +80,12 @@
         @csrf
 
         <!-- Overall Rating -->
-        <div class="bg-white rounded-xl border border-neutral-200 p-6">
-            <h2 class="text-xl font-bold text-primary-700 mb-6">Overall Rating</h2>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <h2 class="text-lg font-medium text-neutral-700 mb-6">Overall Rating</h2>
             
             <div class="mb-6">
-                <label class="block text-sm font-semibold text-neutral-700 mb-3">
-                    How would you rate your overall experience? <span class="text-error-600">*</span>
+                <label class="block text-sm font-medium text-neutral-700 mb-3">
+                    How would you rate your overall experience? <span class="text-error-500">*</span>
                 </label>
                 <div class="flex items-center space-x-2">
                     @for($i = 1; $i <= 5; $i++)
@@ -113,14 +105,14 @@
         </div>
 
         <!-- Detailed Ratings -->
-        <div class="bg-white rounded-xl border border-neutral-200 p-6">
-            <h2 class="text-xl font-bold text-primary-700 mb-6">Detailed Ratings</h2>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <h2 class="text-lg font-medium text-neutral-700 mb-6">Detailed Ratings</h2>
             
             <div class="space-y-6">
                 <!-- Quality Rating -->
                 <div>
-                    <label class="block text-sm font-semibold text-neutral-700 mb-3">
-                        Quality of Work <span class="text-error-600">*</span>
+                    <label class="block text-sm font-medium text-neutral-700 mb-3">
+                        Quality of Work <span class="text-error-500">*</span>
                     </label>
                     <div class="flex items-center space-x-2">
                         @for($i = 1; $i <= 5; $i++)
@@ -140,8 +132,8 @@
 
                 <!-- Communication Rating -->
                 <div>
-                    <label class="block text-sm font-semibold text-neutral-700 mb-3">
-                        Communication <span class="text-error-600">*</span>
+                    <label class="block text-sm font-medium text-neutral-700 mb-3">
+                        Communication <span class="text-error-500">*</span>
                     </label>
                     <div class="flex items-center space-x-2">
                         @for($i = 1; $i <= 5; $i++)
@@ -161,8 +153,8 @@
 
                 <!-- Timeliness Rating -->
                 <div>
-                    <label class="block text-sm font-semibold text-neutral-700 mb-3">
-                        Timeliness <span class="text-error-600">*</span>
+                    <label class="block text-sm font-medium text-neutral-700 mb-3">
+                        Timeliness <span class="text-error-500">*</span>
                     </label>
                     <div class="flex items-center space-x-2">
                         @for($i = 1; $i <= 5; $i++)
@@ -183,17 +175,17 @@
         </div>
 
         <!-- Written Feedback -->
-        <div class="bg-white rounded-xl border border-neutral-200 p-6">
-            <h2 class="text-xl font-bold text-primary-700 mb-6">Written Feedback</h2>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <h2 class="text-lg font-medium text-neutral-700 mb-6">Written Feedback</h2>
             
             <div>
-                <label for="comment" class="block text-sm font-semibold text-neutral-700 mb-2">
-                    Please share your detailed feedback about this project <span class="text-error-600">*</span>
+                <label for="comment" class="block text-sm font-medium text-neutral-700 mb-2">
+                    Please share your detailed feedback about this project <span class="text-error-500">*</span>
                 </label>
                 <textarea id="comment" 
                           name="comment" 
                           rows="6" 
-                          class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors @error('comment') border-error-300 @enderror" 
+                          class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all @error('comment') border-error-300 @enderror" 
                           placeholder="Tell us about your experience with this project. What went well? What could be improved? How was the team's performance?"
                           required>{{ old('comment') }}</textarea>
                 @error('comment')
@@ -203,8 +195,8 @@
         </div>
 
         <!-- Additional Options -->
-        <div class="bg-white rounded-xl border border-neutral-200 p-6">
-            <h2 class="text-xl font-bold text-primary-700 mb-6">Additional Options</h2>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <h2 class="text-lg font-medium text-neutral-700 mb-6">Additional Options</h2>
             
             <div class="space-y-4">
                 <!-- Would Recommend -->
@@ -214,8 +206,8 @@
                            type="checkbox" 
                            value="1" 
                            {{ old('would_recommend') ? 'checked' : '' }}
-                           class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded">
-                    <label for="would_recommend" class="ml-2 block text-sm text-neutral-900">
+                           class="h-4 w-4 text-primary-600 focus:ring-primary-500/20 border-neutral-200 rounded">
+                    <label for="would_recommend" class="ml-2 block text-sm text-neutral-600">
                         I would work with this team again
                     </label>
                 </div>
@@ -227,8 +219,8 @@
                            type="checkbox" 
                            value="1" 
                            {{ old('public') ? 'checked' : '' }}
-                           class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded">
-                    <label for="public" class="ml-2 block text-sm text-neutral-900">
+                           class="h-4 w-4 text-primary-600 focus:ring-primary-500/20 border-neutral-200 rounded">
+                    <label for="public" class="ml-2 block text-sm text-neutral-600">
                         Make this review public (visible on team member profiles)
                     </label>
                 </div>
@@ -236,15 +228,13 @@
         </div>
 
         <!-- Form Actions -->
-        <div class="bg-white rounded-xl border border-neutral-200 p-6">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
             <div class="flex items-center justify-between">
-                <a href="{{ route('client.feedback') }}" class="px-6 py-3 border-2 border-neutral-300 text-neutral-700 font-semibold rounded-lg hover:bg-neutral-50 transition-colors">
+                <a href="{{ route('client.feedback') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-neutral-700 text-sm font-medium rounded-lg border border-neutral-200 shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all">
                     Cancel
                 </a>
-                <button type="submit" class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                    </svg>
+                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
+                    <x-lucide-star class="w-4 h-4" />
                     Submit Feedback
                 </button>
             </div>

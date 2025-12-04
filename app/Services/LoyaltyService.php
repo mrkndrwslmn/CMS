@@ -588,10 +588,9 @@ class LoyaltyService
                 $user = $transaction->user;
                 $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
 
-                // Deduct expired points
-                $loyaltyPoint->adjustPoints(
-                    -$transaction->points,
-                    'points_expired',
+                // Deduct expired points using the proper expiration method
+                $loyaltyPoint->expirePoints(
+                    $transaction->points,
                     "Points expired from transaction #{$transaction->id}"
                 );
 

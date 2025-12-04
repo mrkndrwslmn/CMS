@@ -4,13 +4,17 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Service Requests', 'url' => route('client.requests'), 'icon' => 'file-text'],
+        ['label' => $request->project_name]
+    ]" />
+
     <!-- Success/Error Messages -->
     @if(session('success'))
         <div class="mb-6 bg-success-50 border-l-4 border-success-500 p-4 rounded-r-lg shadow-sm">
             <div class="flex items-center">
-                <svg class="w-5 h-5 text-success-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
+                <x-lucide-check-circle class="w-5 h-5 text-success-500 mr-3" />
                 <p class="text-sm font-semibold text-success-800">{{ session('success') }}</p>
             </div>
         </div>
@@ -19,9 +23,7 @@
     @if(session('error') || $errors->any())
         <div class="mb-6 bg-error-50 border-l-4 border-error-500 p-4 rounded-r-lg shadow-sm">
             <div class="flex items-start">
-                <svg class="w-5 h-5 text-error-500 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
+                <x-lucide-alert-circle class="w-5 h-5 text-error-500 mr-3 mt-0.5" />
                 <div>
                     @if(session('error'))
                         <p class="text-sm font-semibold text-error-800">{{ session('error') }}</p>
@@ -42,9 +44,7 @@
     <!-- Back Button -->
     <div class="mb-6">
         <a href="{{ route('client.requests') }}" class="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium transition-colors">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
+            <x-lucide-arrow-left class="w-5 h-5 mr-2" />
             Back to Service Requests
         </a>
     </div>
@@ -81,15 +81,12 @@
                 <!-- Meta Information -->
                 <div class="flex flex-wrap items-center gap-4 text-sm text-neutral-600">
                     <div class="flex items-center space-x-2">
-                        <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
+                        <x-lucide-clock class="w-4 h-4 text-neutral-400" />
                         <span>Created {{ \Carbon\Carbon::parse($request->created_at)->format('M j, Y') }}</span>
                     </div>
                     <span class="text-neutral-300">•</span>
                     <div class="flex items-center space-x-2">
-                        <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"/>
+                        <x-lucide-briefcase class="w-4 h-4 text-neutral-400" />
                         </svg>
                         <span>{{ ucfirst(str_replace('_', ' ', $request->service_type)) }}</span>
                     </div>
@@ -102,9 +99,7 @@
                     <!-- View Project Button (shown when project exists) -->
                     <a href="{{ route('client.projects.show', $project->id) }}" 
                        class="inline-flex items-center justify-center px-6 py-2.5 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
+                        <x-lucide-folder-open class="w-5 h-5 mr-2" />
                         View Project
                     </a>
                 @endif
@@ -112,17 +107,13 @@
                 @if($request->status === 'pending')
                     <a href="{{ route('client.requests.edit', $request->id) }}" 
                        class="inline-flex items-center justify-center px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50 transition-colors">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
+                        <x-lucide-pencil class="w-5 h-5 mr-2" />
                         Edit Request
                     </a>
                 @elseif($request->status === 'approved' || $request->status === 'pending_payment')
                     <a href="{{ route('client.maya.checkout', $request->id) }}" 
                        class="inline-flex items-center justify-center px-6 py-2.5 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                        </svg>
+                        <x-lucide-credit-card class="w-5 h-5 mr-2" />
                         Pay with Maya
                     </a>
                 @endif
@@ -135,9 +126,7 @@
         <!-- Priority -->
         <div class="bg-white rounded-lg shadow-sm p-5 text-center">
             <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-neutral-100 mb-3">
-                <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                </svg>
+                <x-lucide-arrow-up class="w-5 h-5 text-neutral-600" />
             </div>
             <p class="text-xs text-neutral-500 font-medium mb-1">Priority</p>
             <p class="text-base font-semibold text-neutral-900">{{ ucfirst($request->priority) }}</p>
@@ -147,9 +136,7 @@
         @if($request->approved_budget ?? $request->estimated_budget)
             <div class="bg-white rounded-lg shadow-sm p-5 text-center">
                 <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-50 mb-3">
-                    <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                    </svg>
+                    <x-lucide-circle-dollar-sign class="w-5 h-5 text-primary-500" />
                 </div>
                 @if($request->approved_budget && $request->payment_type)
                     @php
@@ -164,7 +151,7 @@
                         @if($remainingBalance > 0)
                             <p class="text-xs text-neutral-600 font-medium mt-1">₱{{ number_format($remainingBalance, 0) }} remaining</p>
                         @else
-                            <p class="text-xs text-primary-600 font-medium mt-1">✓ Fully Paid</p>
+                            <p class="text-xs text-primary-600 font-medium mt-1">Fully Paid</p>
                         @endif
                     @elseif($currentDue > 0)
                         <!-- Show current amount due if nothing paid yet -->
@@ -186,9 +173,7 @@
         @if($request->deadline)
             <div class="bg-white rounded-lg shadow-sm p-5 text-center">
                 <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-neutral-100 mb-3">
-                    <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
+                    <x-lucide-calendar class="w-5 h-5 text-neutral-600" />
                 </div>
                 <p class="text-xs text-neutral-500 font-medium mb-1">Deadline</p>
                 <p class="text-sm font-semibold text-neutral-900">
@@ -208,9 +193,7 @@
         @if($request->applied_coupon_id && $request->appliedCoupon)
             <div class="bg-white rounded-lg shadow-sm p-5 text-center border border-primary-200">
                 <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-50 mb-3">
-                    <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
-                    </svg>
+                    <x-lucide-ticket class="w-5 h-5 text-primary-500" />
                 </div>
                 <p class="text-xs text-neutral-500 font-medium mb-1">Coupon Applied</p>
                 <p class="text-sm font-semibold text-neutral-900 font-mono">{{ $request->appliedCoupon->code }}</p>
@@ -220,9 +203,7 @@
                 <p class="text-xs text-neutral-600 mt-1">{{ $request->appliedCoupon->getDiscountLabel() }}</p>
                 @if(!$request->appliedCoupon->isValid())
                     <p class="text-xs text-neutral-600 mt-1">
-                        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                        </svg>
+                        <x-lucide-alert-circle class="w-3 h-3 inline mr-1" />
                         Expired
                     </p>
                 @endif
@@ -233,7 +214,7 @@
         @if($request->loyalty_discount_amount > 0)
             <div class="bg-white rounded-lg shadow-sm p-5 text-center border border-primary-200">
                 <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-50 mb-3">
-                    <i class="fas fa-medal text-primary-500"></i>
+                    <x-lucide-award class="w-5 h-5 text-primary-500" />
                 </div>
                 <p class="text-xs text-neutral-500 font-medium mb-1">Loyalty Discount</p>
                 <p class="text-sm font-semibold text-primary-600">-₱{{ number_format($request->loyalty_discount_amount, 2) }}</p>
@@ -246,9 +227,7 @@
         <!-- Contact Method -->
         <div class="bg-white rounded-lg shadow-sm p-5 text-center">
             <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-neutral-100 mb-3">
-                <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
+                <x-lucide-mail class="w-5 h-5 text-neutral-600" />
             </div>
             <p class="text-xs text-neutral-500 font-medium mb-1">Contact</p>
             <p class="text-sm font-semibold text-neutral-900">{{ ucfirst($request->contact_method) }}</p>
@@ -263,9 +242,7 @@
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div class="p-6">
                     <h3 class="text-base font-semibold text-neutral-900 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
+                        <x-lucide-file-text class="w-5 h-5 mr-2 text-neutral-600" />
                         Project Description
                     </h3>
                     <div class="prose prose-neutral prose-sm max-w-none">
@@ -279,9 +256,7 @@
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6">
                         <h3 class="text-base font-semibold text-neutral-900 mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                            </svg>
+                            <x-lucide-clipboard-check class="w-5 h-5 mr-2 text-neutral-600" />
                             Project Expectations
                         </h3>
                         <div class="prose prose-neutral prose-sm max-w-none">
@@ -296,9 +271,7 @@
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6">
                         <h3 class="text-base font-semibold text-neutral-900 mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
-                            </svg>
+                            <x-lucide-message-square class="w-5 h-5 mr-2 text-neutral-600" />
                             Additional Notes
                         </h3>
                         <div class="prose prose-neutral prose-sm max-w-none">
@@ -313,9 +286,7 @@
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6">
                         <h3 class="text-base font-semibold text-neutral-900 mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                            </svg>
+                            <x-lucide-paperclip class="w-5 h-5 mr-2 text-neutral-600" />
                             Attachments
                             <span class="ml-2 bg-neutral-100 text-neutral-700 px-2 py-1 rounded-full text-xs font-bold">{{ count($attachments) }}</span>
                         </h3>
@@ -324,9 +295,7 @@
                                 <div class="flex items-center justify-between p-4 border border-neutral-200 rounded-lg hover:border-neutral-300 hover:shadow-sm transition-all">
                                     <div class="flex items-center flex-1 min-w-0">
                                         <div class="flex-shrink-0 w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center mr-3">
-                                            <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
+                                            <x-lucide-file class="w-5 h-5 text-neutral-600" />
                                         </div>
                                         <div class="min-w-0">
                                             <p class="text-sm font-semibold text-neutral-900 truncate">{{ $attachment->original_filename }}</p>
@@ -335,9 +304,7 @@
                                     </div>
                                     <a href="{{ route('client.requests.attachment.download', [$request->id, $attachment->id]) }}" 
                                        class="ml-4 inline-flex items-center px-4 py-2 border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50 hover:text-neutral-900 transition-all text-sm">
-                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                        </svg>
+                                        <x-lucide-download class="w-4 h-4 mr-1.5" />
                                         Download
                                     </a>
                                 </div>
@@ -351,9 +318,7 @@
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div class="p-6">
                     <h3 class="text-base font-semibold text-neutral-900 mb-6 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
+                        <x-lucide-clock class="w-5 h-5 mr-2 text-neutral-600" />
                         Request Timeline
                     </h3>
                     <div class="relative space-y-6">
@@ -364,9 +329,7 @@
                         <div class="relative flex items-start">
                             <div class="flex-shrink-0">
                                 <div class="w-8 h-8 bg-neutral-700 rounded-full flex items-center justify-center shadow-md ring-4 ring-white">
-                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                    </svg>
+                                    <x-lucide-plus class="w-4 h-4 text-white" />
                                 </div>
                             </div>
                             <div class="ml-4 border border-neutral-200 rounded-lg p-4 flex-1 bg-white">
@@ -380,13 +343,11 @@
                             <div class="relative flex items-start">
                                 <div class="flex-shrink-0">
                                     <div class="w-8 h-8 {{ $request->status === 'rejected' ? 'bg-error-600' : 'bg-neutral-700' }} rounded-full flex items-center justify-center shadow-md ring-4 ring-white">
-                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            @if($request->status === 'rejected')
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                            @else
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                            @endif
-                                        </svg>
+                                        @if($request->status === 'rejected')
+                                            <x-lucide-x class="w-4 h-4 text-white" />
+                                        @else
+                                            <x-lucide-check class="w-4 h-4 text-white" />
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="ml-4 border border-neutral-200 rounded-lg p-4 flex-1 bg-white">
@@ -408,9 +369,7 @@
                             <div class="relative flex items-start">
                                 <div class="flex-shrink-0">
                                     <div class="w-8 h-8 bg-neutral-700 rounded-full flex items-center justify-center shadow-md ring-4 ring-white">
-                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                                        </svg>
+                                        <x-lucide-circle-dollar-sign class="w-4 h-4 text-white" />
                                     </div>
                                 </div>
                                 <div class="ml-4 border border-neutral-200 rounded-lg p-4 flex-1 bg-white">
@@ -434,17 +393,13 @@
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6">
                         <div class="inline-flex items-center justify-center w-12 h-12 bg-primary-50 rounded-full mb-4">
-                            <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                            <x-lucide-check-circle class="w-6 h-6 text-primary-500" />
                         </div>
                         <h3 class="text-lg font-semibold text-neutral-900 mb-2">Project Active</h3>
                         <p class="text-sm text-neutral-600 mb-4">Your request has been converted to an active project.</p>
                         <a href="{{ route('client.projects.show', $project->id) }}" 
                            class="inline-flex items-center justify-center px-5 py-2.5 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors w-full">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
+                            <x-lucide-folder-open class="w-5 h-5 mr-2" />
                             View Project Details
                         </a>
                         <div class="mt-4 pt-4 border-t border-neutral-200">
@@ -471,13 +426,11 @@
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6">
                         <div class="inline-flex items-center justify-center w-12 h-12 bg-primary-50 rounded-full mb-4">
-                            <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                @if($remainingBalance > 0)
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                                @else
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                @endif
-                            </svg>
+                            @if($remainingBalance > 0)
+                                <x-lucide-credit-card class="w-6 h-6 text-primary-500" />
+                            @else
+                                <x-lucide-check-circle class="w-6 h-6 text-primary-500" />
+                            @endif
                         </div>
                         
                         <h3 class="text-lg font-semibold text-neutral-900 mb-4">
@@ -510,9 +463,7 @@
                                 @if($request->coupon_discount_amount > 0)
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-neutral-600">
-                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
-                                        </svg>
+                                        <x-lucide-ticket class="w-4 h-4 inline mr-1" />
                                         Coupon Discount:
                                     </span>
                                     <span class="text-sm font-semibold text-primary-600">-₱{{ number_format($request->coupon_discount_amount, 2) }}</span>
@@ -522,9 +473,7 @@
                                 @if($request->loyalty_discount_amount > 0)
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-neutral-600">
-                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                                        </svg>
+                                        <x-lucide-star class="w-4 h-4 inline mr-1" />
                                         Loyalty Discount:
                                     </span>
                                     <span class="text-sm font-semibold text-primary-600">-₱{{ number_format($request->loyalty_discount_amount, 2) }}</span>
@@ -645,9 +594,7 @@
                             
                             <a href="{{ route('client.maya.checkout', $request->id) }}" 
                                class="inline-flex items-center justify-center px-5 py-2.5 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors w-full">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
+                                <x-lucide-wallet class="w-5 h-5 mr-2" />
                                 Pay Now
                             </a>
                             
@@ -658,9 +605,7 @@
                             @endif
                         @else
                             <div class="bg-primary-50 rounded-lg p-4 text-center border border-primary-200">
-                                <svg class="w-10 h-10 text-primary-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
+                                <x-lucide-check-circle class="w-10 h-10 text-primary-500 mx-auto mb-2" />
                                 <p class="text-sm font-semibold text-neutral-900">All Payments Complete!</p>
                                 <p class="text-xs text-neutral-600 mt-1">Thank you for your payment</p>
                             </div>
@@ -672,9 +617,7 @@
                 <div class="bg-white rounded-lg shadow-sm border-l-4 border-primary-500 overflow-hidden">
                     <div class="p-6">
                         <div class="inline-flex items-center justify-center w-12 h-12 bg-primary-50 rounded-full mb-4">
-                            <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                            </svg>
+                            <x-lucide-credit-card class="w-6 h-6 text-primary-500" />
                         </div>
                         <h3 class="text-lg font-semibold text-neutral-900 mb-2">Payment Required</h3>
                         <p class="text-2xl font-semibold text-neutral-900 mb-4">₱{{ number_format($request->approved_budget, 2) }}</p>
@@ -747,9 +690,7 @@
                         
                         <a href="{{ route('client.maya.checkout', $request->id) }}" 
                            class="inline-flex items-center justify-center px-5 py-2.5 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors w-full">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
+                            <x-lucide-wallet class="w-5 h-5 mr-2" />
                             Pay Now
                         </a>
                     </div>
@@ -760,9 +701,7 @@
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div class="bg-neutral-50 border-b border-neutral-200 p-4">
                     <h3 class="text-base font-semibold text-neutral-900 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
+                        <x-lucide-info class="w-5 h-5 mr-2 text-neutral-600" />
                         Request Information
                     </h3>
                 </div>
@@ -770,8 +709,7 @@
                     <div class="pb-4 border-b border-neutral-200">
                         <dt class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Service Type</dt>
                         <dd class="text-sm font-bold text-neutral-900 flex items-center">
-                            <svg class="w-4 h-4 text-primary-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"/>
+                            <x-lucide-briefcase class="w-4 h-4 text-primary-500 mr-2" />
                             </svg>
                             {{ ucfirst(str_replace('_', ' ', $request->service_type)) }}
                         </dd>
@@ -808,9 +746,7 @@
                             </dd>
                             @if(\Carbon\Carbon::parse($request->deadline)->isPast())
                                 <dd class="text-xs text-error-600 font-medium mt-1 flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                    </svg>
+                                    <x-lucide-alert-triangle class="w-3 h-3 mr-1" />
                                     Past Due
                                 </dd>
                             @else
@@ -837,18 +773,14 @@
                                 <!-- Show discounts -->
                                 @if($request->coupon_discount_amount > 0)
                                     <dd class="text-xs text-success-600 flex items-center mt-1">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
-                                        </svg>
+                                        <x-lucide-ticket class="w-3 h-3 mr-1" />
                                         Coupon: -₱{{ number_format($request->coupon_discount_amount, 2) }}
                                     </dd>
                                 @endif
                                 
                                 @if($request->loyalty_discount_amount > 0)
                                     <dd class="text-xs text-warning-600 flex items-center mt-1">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                                        </svg>
+                                        <x-lucide-star class="w-3 h-3 mr-1" />
                                         Loyalty: -₱{{ number_format($request->loyalty_discount_amount, 2) }}
                                     </dd>
                                 @endif
@@ -891,12 +823,10 @@
 
             <!-- Payment Instructions (if applicable) -->
             @if($request->payment_instructions && ($request->status === 'pending_payment' || $request->status === 'approved'))
-                <div class="glass-card overflow-hidden border-2 border-warning-300">
-                    <div class="bg-gradient-to-r from-warning-500 to-warning-600 p-4">
+                <div class="bg-white rounded-2xl border border-warning-300 shadow-sm overflow-hidden">
+                    <div class="bg-warning-500 p-4">
                         <h3 class="text-lg font-bold text-white flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                            <x-lucide-info class="w-5 h-5 mr-2" />
                             Payment Instructions
                         </h3>
                     </div>
@@ -910,16 +840,14 @@
 
             <!-- Admin Notes -->
             @if($request->admin_notes)
-                <div class="glass-card overflow-hidden">
-                    <div class="bg-gradient-to-r from-accent-500 to-accent-600 p-4">
+                <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
+                    <div class="bg-primary-600 p-4">
                         <h3 class="text-lg font-bold text-white flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
+                            <x-lucide-file-text class="w-5 h-5 mr-2" />
                             Notes from Admin
                         </h3>
                     </div>
-                    <div class="p-6 bg-gradient-to-br from-accent-50 to-white">
+                    <div class="p-6 bg-primary-50">
                         <div class="prose prose-sm max-w-none">
                             <p class="text-sm text-neutral-700 leading-relaxed whitespace-pre-line">{{ $request->admin_notes }}</p>
                         </div>

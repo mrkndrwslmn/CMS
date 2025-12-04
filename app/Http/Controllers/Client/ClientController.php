@@ -372,7 +372,7 @@ class ClientController extends Controller
                 return $feedback;
             });
         
-        return view('client.feedback', compact('user', 'stats', 'completedFeedback', 'pendingFeedback'));
+        return view('client.feedback.index', compact('user', 'stats', 'completedFeedback', 'pendingFeedback'));
     }
 
     /**

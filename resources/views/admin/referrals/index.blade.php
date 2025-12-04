@@ -3,253 +3,274 @@
 @section('title', 'Referral Analytics - Admin Dashboard')
 
 @section('content')
-<div class="container-fluid px-4 py-6">
+<div class="px-6 py-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Referrals', 'icon' => 'gift'],
+    ]" class="mb-6" />
+
     <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <div>
-            <h1 class="heading-serif text-3xl text-primary-700 mb-2">Referral System Analytics</h1>
-            <p class="text-neutral-600">Monitor referral performance and manage referral codes</p>
+            <h1 class="text-2xl font-semibold text-neutral-800 mb-1">Referral System Analytics</h1>
+            <p class="text-neutral-500">Monitor referral performance and manage referral codes</p>
         </div>
-        <div class="flex gap-3">
-            <a href="{{ route('admin.referrals.list') }}" class="btn-secondary">
-                <i class="fas fa-list mr-2"></i>View All Referrals
-            </a>
-            <a href="{{ route('admin.referrals.codes') }}" class="btn-secondary">
-                <i class="fas fa-code mr-2"></i>Manage Codes
-            </a>
-            <button onclick="exportData()" class="btn-primary">
-                <i class="fas fa-download mr-2"></i>Export Report
-            </button>
+        <div class="flex flex-wrap gap-3">
+            <x-ui.button variant="secondary" href="{{ route('admin.referrals.list') }}">
+                <x-lucide-list class="w-4 h-4" />
+                View All Referrals
+            </x-ui.button>
+            <x-ui.button variant="secondary" href="{{ route('admin.referrals.codes') }}">
+                <x-lucide-qr-code class="w-4 h-4" />
+                Manage Codes
+            </x-ui.button>
+            <x-ui.button variant="primary" onclick="exportData()">
+                <x-lucide-download class="w-4 h-4" />
+                Export Report
+            </x-ui.button>
         </div>
     </div>
 
     <!-- Summary Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <!-- Total Referrals -->
-        <div class="glass-card p-6 hover-lift">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-users text-white text-xl"></i>
-                </div>
-                <span class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Total Referrals</span>
-            </div>
-            <div class="flex items-end justify-between">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <h3 class="text-3xl font-bold text-primary-700">{{ number_format($stats['total_referrals']) }}</h3>
-                    <p class="text-sm text-neutral-600 mt-1">All time</p>
+                    <p class="text-sm text-neutral-500 mb-1">Total Referrals</p>
+                    <h3 class="text-2xl font-semibold text-neutral-800">{{ number_format($stats['total_referrals']) }}</h3>
+                    <p class="text-sm text-neutral-500 mt-1">All time</p>
                 </div>
-                @if($stats['referral_growth'] != 0)
-                <span class="text-sm font-semibold {{ $stats['referral_growth'] > 0 ? 'text-green-600' : 'text-red-600' }}">
-                    <i class="fas fa-{{ $stats['referral_growth'] > 0 ? 'arrow-up' : 'arrow-down' }} mr-1"></i>
-                    {{ abs($stats['referral_growth']) }}%
-                </span>
-                @endif
+                <div class="p-3 bg-primary-50 rounded-xl">
+                    <x-lucide-users class="w-5 h-5 text-primary-500" />
+                </div>
             </div>
-        </div>
+            @if($stats['referral_growth'] != 0)
+            <div class="mt-3 flex items-center text-sm {{ $stats['referral_growth'] > 0 ? 'text-success-600' : 'text-error-600' }}">
+                @if($stats['referral_growth'] > 0)
+                    <x-lucide-trending-up class="w-4 h-4 mr-1" />
+                @else
+                    <x-lucide-trending-down class="w-4 h-4 mr-1" />
+                @endif
+                {{ abs($stats['referral_growth']) }}% from last month
+            </div>
+            @endif
+        </x-ui.card>
 
         <!-- Successful Referrals -->
-        <div class="glass-card p-6 hover-lift">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-check-circle text-white text-xl"></i>
-                </div>
-                <span class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Completed</span>
-            </div>
-            <div class="flex items-end justify-between">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <h3 class="text-3xl font-bold text-green-700">{{ number_format($stats['successful_referrals']) }}</h3>
-                    <p class="text-sm text-neutral-600 mt-1">{{ number_format($stats['conversion_rate'], 1) }}% conversion</p>
+                    <p class="text-sm text-neutral-500 mb-1">Completed</p>
+                    <h3 class="text-2xl font-semibold text-neutral-800">{{ number_format($stats['successful_referrals']) }}</h3>
+                    <p class="text-sm text-neutral-500 mt-1">{{ number_format($stats['conversion_rate'], 1) }}% conversion</p>
+                </div>
+                <div class="p-3 bg-success-50 rounded-xl">
+                    <x-lucide-check-circle class="w-5 h-5 text-success-500" />
                 </div>
             </div>
-        </div>
+        </x-ui.card>
 
         <!-- Pending Referrals -->
-        <div class="glass-card p-6 hover-lift">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-clock text-white text-xl"></i>
-                </div>
-                <span class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Pending</span>
-            </div>
-            <div class="flex items-end justify-between">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <h3 class="text-3xl font-bold text-yellow-700">{{ number_format($stats['pending_referrals']) }}</h3>
-                    <p class="text-sm text-neutral-600 mt-1">Awaiting payment</p>
+                    <p class="text-sm text-neutral-500 mb-1">Pending</p>
+                    <h3 class="text-2xl font-semibold text-neutral-800">{{ number_format($stats['pending_referrals']) }}</h3>
+                    <p class="text-sm text-neutral-500 mt-1">Awaiting payment</p>
+                </div>
+                <div class="p-3 bg-warning-50 rounded-xl">
+                    <x-lucide-clock class="w-5 h-5 text-warning-500" />
                 </div>
             </div>
-        </div>
+        </x-ui.card>
 
         <!-- Total Rewards -->
-        <div class="glass-card p-6 hover-lift">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-gift text-white text-xl"></i>
-                </div>
-                <span class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Total Rewards</span>
-            </div>
-            <div class="flex items-end justify-between">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <h3 class="text-3xl font-bold text-purple-700">{{ number_format($stats['total_rewards']) }}</h3>
-                    <p class="text-sm text-neutral-600 mt-1">Points distributed</p>
+                    <p class="text-sm text-neutral-500 mb-1">Total Rewards</p>
+                    <h3 class="text-2xl font-semibold text-neutral-800">{{ number_format($stats['total_rewards']) }}</h3>
+                    <p class="text-sm text-neutral-500 mt-1">Points distributed</p>
+                </div>
+                <div class="p-3 bg-purple-50 rounded-xl">
+                    <x-lucide-gift class="w-5 h-5 text-purple-500" />
                 </div>
             </div>
-        </div>
+        </x-ui.card>
     </div>
 
     <!-- Charts Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Referral Trend Chart -->
-        <div class="glass-card p-6">
-            <h3 class="text-lg font-bold text-primary-700 mb-4">Referral Trends (Last 6 Months)</h3>
+        <x-ui.card class="p-6">
+            <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+                <x-lucide-trending-up class="w-5 h-5 text-primary-500" />
+                Referral Trends (Last 6 Months)
+            </h3>
             <canvas id="referralTrendChart" height="250"></canvas>
-        </div>
+        </x-ui.card>
 
         <!-- Status Distribution -->
-        <div class="glass-card p-6">
-            <h3 class="text-lg font-bold text-primary-700 mb-4">Referral Status Distribution</h3>
+        <x-ui.card class="p-6">
+            <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+                <x-lucide-pie-chart class="w-5 h-5 text-primary-500" />
+                Referral Status Distribution
+            </h3>
             <canvas id="statusDistributionChart" height="250"></canvas>
-        </div>
+        </x-ui.card>
     </div>
 
     <!-- Conversion Funnel & Top Referrers -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Conversion Funnel -->
-        <div class="glass-card p-6">
-            <h3 class="text-lg font-bold text-primary-700 mb-4">Conversion Funnel</h3>
+        <x-ui.card class="p-6">
+            <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+                <x-lucide-filter class="w-5 h-5 text-primary-500" />
+                Conversion Funnel
+            </h3>
             <div class="space-y-4">
                 <!-- Signups -->
                 <div>
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-semibold text-neutral-700">Total Signups</span>
-                        <span class="text-sm font-bold text-primary-700">{{ number_format($stats['total_referrals']) }}</span>
+                        <span class="text-sm font-medium text-neutral-700">Total Signups</span>
+                        <span class="text-sm font-semibold text-primary-700">{{ number_format($stats['total_referrals']) }}</span>
                     </div>
                     <div class="w-full bg-neutral-200 rounded-full h-3">
-                        <div class="bg-gradient-to-r from-primary-500 to-primary-600 h-3 rounded-full" style="width: 100%"></div>
+                        <div class="bg-primary-500 h-3 rounded-full" style="width: 100%"></div>
                     </div>
                 </div>
 
                 <!-- Completed -->
                 <div>
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-semibold text-neutral-700">First Payment Made</span>
-                        <span class="text-sm font-bold text-green-700">{{ number_format($stats['successful_referrals']) }}</span>
+                        <span class="text-sm font-medium text-neutral-700">First Payment Made</span>
+                        <span class="text-sm font-semibold text-success-700">{{ number_format($stats['successful_referrals']) }}</span>
                     </div>
                     <div class="w-full bg-neutral-200 rounded-full h-3">
-                        <div class="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full" 
+                        <div class="bg-success-500 h-3 rounded-full" 
                              style="width: {{ $stats['total_referrals'] > 0 ? ($stats['successful_referrals'] / $stats['total_referrals'] * 100) : 0 }}%"></div>
                     </div>
-                    <p class="text-xs text-neutral-600 mt-1">{{ number_format($stats['conversion_rate'], 1) }}% conversion rate</p>
+                    <p class="text-xs text-neutral-500 mt-1">{{ number_format($stats['conversion_rate'], 1) }}% conversion rate</p>
                 </div>
 
                 <!-- Rewarded -->
                 <div>
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-semibold text-neutral-700">Rewards Distributed</span>
-                        <span class="text-sm font-bold text-purple-700">{{ number_format($stats['successful_referrals']) }}</span>
+                        <span class="text-sm font-medium text-neutral-700">Rewards Distributed</span>
+                        <span class="text-sm font-semibold text-purple-700">{{ number_format($stats['successful_referrals']) }}</span>
                     </div>
                     <div class="w-full bg-neutral-200 rounded-full h-3">
-                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full" 
+                        <div class="bg-purple-500 h-3 rounded-full" 
                              style="width: {{ $stats['total_referrals'] > 0 ? ($stats['successful_referrals'] / $stats['total_referrals'] * 100) : 0 }}%"></div>
                     </div>
-                    <p class="text-xs text-neutral-600 mt-1">{{ number_format($stats['total_rewards']) }} total points</p>
+                    <p class="text-xs text-neutral-500 mt-1">{{ number_format($stats['total_rewards']) }} total points</p>
                 </div>
 
                 <!-- Drop-off Rate -->
-                <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div class="flex items-center">
-                        <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                <div class="mt-4 p-3 bg-warning-50 border border-warning-200 rounded-xl">
+                    <div class="flex items-center gap-2">
+                        <x-lucide-alert-triangle class="w-5 h-5 text-warning-600 flex-shrink-0" />
                         <div>
-                            <p class="text-sm font-semibold text-yellow-800">Drop-off Rate</p>
-                            <p class="text-xs text-yellow-700">{{ number_format(100 - $stats['conversion_rate'], 1) }}% of referred users haven't made their first payment</p>
+                            <p class="text-sm font-semibold text-warning-800">Drop-off Rate</p>
+                            <p class="text-xs text-warning-700">{{ number_format(100 - $stats['conversion_rate'], 1) }}% of referred users haven't made their first payment</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </x-ui.card>
 
         <!-- Top Referrers Leaderboard -->
-        <div class="glass-card p-6">
-            <h3 class="text-lg font-bold text-primary-700 mb-4">
+        <x-ui.card class="p-6">
+            <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+                <x-lucide-trophy class="w-5 h-5 text-primary-500" />
                 Top Referrers
-                <span class="text-sm font-normal text-neutral-600">(Last 30 Days)</span>
+                <span class="text-sm font-normal text-neutral-500">(Last 30 Days)</span>
             </h3>
-            <div class="space-y-4">
+            <div class="space-y-3">
                 @forelse($topReferrers as $index => $referrer)
-                <div class="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50 to-transparent rounded-lg hover-lift">
+                <div class="flex items-center justify-between p-3 bg-neutral-50 hover:bg-neutral-100 rounded-xl transition-colors">
                     <div class="flex items-center gap-3">
                         <div class="flex-shrink-0">
                             @if($index === 0)
-                            <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center">
-                                <i class="fas fa-crown text-white text-lg"></i>
+                            <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <x-lucide-crown class="w-5 h-5 text-yellow-600" />
                             </div>
                             @elseif($index === 1)
-                            <div class="w-10 h-10 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center">
-                                <i class="fas fa-medal text-white text-lg"></i>
+                            <div class="w-10 h-10 bg-neutral-200 rounded-full flex items-center justify-center">
+                                <x-lucide-medal class="w-5 h-5 text-neutral-600" />
                             </div>
                             @elseif($index === 2)
-                            <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center">
-                                <i class="fas fa-medal text-white text-lg"></i>
+                            <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                                <x-lucide-medal class="w-5 h-5 text-orange-600" />
                             </div>
                             @else
-                            <div class="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-500 rounded-full flex items-center justify-center text-white font-bold">
+                            <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-semibold text-sm">
                                 {{ $index + 1 }}
                             </div>
                             @endif
                         </div>
                         <div>
-                            <p class="font-semibold text-neutral-800">{{ $referrer->fullName }}</p>
-                            <p class="text-xs text-neutral-600">{{ $referrer->email }}</p>
+                            <p class="font-medium text-neutral-800">{{ $referrer->fullName }}</p>
+                            <p class="text-xs text-neutral-500">{{ $referrer->email }}</p>
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-lg font-bold text-primary-700">{{ $referrer->successful_referrals }}</p>
-                        <p class="text-xs text-neutral-600">referrals</p>
+                        <p class="text-lg font-semibold text-primary-700">{{ $referrer->successful_referrals }}</p>
+                        <p class="text-xs text-neutral-500">referrals</p>
                     </div>
                 </div>
                 @empty
                 <div class="text-center py-8">
-                    <i class="fas fa-users text-neutral-300 text-4xl mb-3"></i>
-                    <p class="text-neutral-600">No referrers yet</p>
+                    <div class="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <x-lucide-users class="w-6 h-6 text-neutral-400" />
+                    </div>
+                    <p class="text-neutral-500">No referrers yet</p>
                 </div>
                 @endforelse
             </div>
-        </div>
+        </x-ui.card>
     </div>
 
     <!-- Recent Activity -->
-    <div class="glass-card p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-primary-700">Recent Referral Activity</h3>
-            <a href="{{ route('admin.referrals.list') }}" class="text-sm text-primary-600 hover:text-primary-700 font-semibold">
-                View All <i class="fas fa-arrow-right ml-1"></i>
+    <x-ui.card>
+        <div class="px-6 py-4 border-b border-neutral-100 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                <x-lucide-activity class="w-5 h-5 text-primary-500" />
+                Recent Referral Activity
+            </h3>
+            <a href="{{ route('admin.referrals.list') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-1">
+                View All
+                <x-lucide-arrow-right class="w-4 h-4" />
             </a>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-neutral-200">
-                <thead>
+                <thead class="bg-neutral-50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider">Referrer</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider">Referred User</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider">Code</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider">Rewards</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider">Date</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-neutral-600 uppercase tracking-wider">Actions</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Referrer</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Referred User</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Code</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Rewards</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Date</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-100">
                     @forelse($recentReferrals as $referral)
-                    <tr class="hover:bg-primary-50 transition-colors">
+                    <tr class="hover:bg-neutral-50 transition-colors">
                         <td class="px-4 py-3">
                             <div>
-                                <p class="font-semibold text-neutral-800">{{ $referral->referrer->fullName }}</p>
-                                <p class="text-xs text-neutral-600">{{ $referral->referrer->email }}</p>
+                                <p class="font-medium text-neutral-800">{{ $referral->referrer->fullName }}</p>
+                                <p class="text-xs text-neutral-500">{{ $referral->referrer->email }}</p>
                             </div>
                         </td>
                         <td class="px-4 py-3">
                             <div>
-                                <p class="font-semibold text-neutral-800">{{ $referral->referred->fullName }}</p>
-                                <p class="text-xs text-neutral-600">{{ $referral->referred->email }}</p>
+                                <p class="font-medium text-neutral-800">{{ $referral->referred->fullName }}</p>
+                                <p class="text-xs text-neutral-500">{{ $referral->referred->email }}</p>
                             </div>
                         </td>
                         <td class="px-4 py-3">
@@ -257,55 +278,60 @@
                         </td>
                         <td class="px-4 py-3">
                             @if($referral->status === 'pending')
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
-                                <i class="fas fa-clock mr-1"></i>Pending
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-700">
+                                <x-lucide-clock class="w-3 h-3 mr-1" />
+                                Pending
                             </span>
                             @elseif($referral->status === 'completed')
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                                <i class="fas fa-check mr-1"></i>Completed
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-100 text-info-700">
+                                <x-lucide-check class="w-3 h-3 mr-1" />
+                                Completed
                             </span>
                             @elseif($referral->status === 'rewarded')
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                                <i class="fas fa-gift mr-1"></i>Rewarded
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
+                                <x-lucide-gift class="w-3 h-3 mr-1" />
+                                Rewarded
                             </span>
                             @endif
                         </td>
                         <td class="px-4 py-3">
                             @if($referral->status === 'rewarded')
                             <div class="text-sm">
-                                <p class="font-semibold text-green-700">{{ number_format($referral->earned_points) }} pts</p>
+                                <p class="font-medium text-success-700">{{ number_format($referral->earned_points) }} pts</p>
                                 @if($referral->referrerCoupon)
-                                <p class="text-xs text-neutral-600">+ {{ $referral->referrerCoupon->discount_value }}% coupon</p>
+                                <p class="text-xs text-neutral-500">+ {{ $referral->referrerCoupon->discount_value }}% coupon</p>
                                 @endif
                             </div>
                             @else
-                            <span class="text-sm text-neutral-500">—</span>
+                            <span class="text-sm text-neutral-400">-</span>
                             @endif
                         </td>
                         <td class="px-4 py-3">
                             <div class="text-sm">
                                 <p class="text-neutral-800">{{ $referral->created_at->format('M d, Y') }}</p>
-                                <p class="text-xs text-neutral-600">{{ $referral->created_at->diffForHumans() }}</p>
+                                <p class="text-xs text-neutral-500">{{ $referral->created_at->diffForHumans() }}</p>
                             </div>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <a href="{{ route('admin.referrals.show', $referral->id) }}" class="text-primary-600 hover:text-primary-700">
-                                <i class="fas fa-eye"></i>
+                                <x-lucide-eye class="w-4 h-4" />
                             </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
                         <td colspan="7" class="px-4 py-8 text-center">
-                            <i class="fas fa-inbox text-neutral-300 text-4xl mb-3"></i>
-                            <p class="text-neutral-600">No referral activity yet</p>
+                            <div class="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <x-lucide-inbox class="w-6 h-6 text-neutral-400" />
+                            </div>
+                            <p class="text-neutral-500">No referral activity yet</p>
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
+    </x-ui.card>
 </div>
 
 @push('scripts')

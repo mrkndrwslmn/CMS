@@ -44,7 +44,7 @@
             
             @php
                 $routeParams = $item['routeParams'] ?? [];
-                $href = $item['href'] ?? (isset($item['route']) ? route($item['route'], $routeParams) : null);
+                $href = $item['href'] ?? $item['url'] ?? (isset($item['route']) ? route($item['route'], $routeParams) : null);
                 $isLast = $index === count($items) - 1;
             @endphp
             

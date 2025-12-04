@@ -23,10 +23,10 @@
 }">
     <!-- Alert Messages -->
     @if(session('success'))
-        <div class="bg-success-50 border-l-4 border-success-500 text-success-700 p-6 rounded-lg shadow-sm mb-6">
+        <div class="bg-success-50 border-l-4 border-success-500 text-success-700 p-6 rounded-2xl shadow-sm mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <i class="fas fa-check-circle text-success-500 text-xl"></i>
+                    <x-lucide-check-circle class="w-6 h-6 text-success-500" />
                 </div>
                 <div class="ml-3">
                     <p class="text-success-700">{{ session('success') }}</p>
@@ -36,10 +36,10 @@
     @endif
 
     @if(session('error'))
-        <div class="bg-error-50 border-l-4 border-error-500 text-error-700 p-6 rounded-lg shadow-sm mb-6">
+        <div class="bg-error-50 border-l-4 border-error-500 text-error-700 p-6 rounded-2xl shadow-sm mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-circle text-error-500 text-xl"></i>
+                    <x-lucide-alert-circle class="w-6 h-6 text-error-500" />
                 </div>
                 <div class="ml-3">
                     <p class="text-error-700">{{ session('error') }}</p>
@@ -90,15 +90,15 @@
                     $priorityBadgeClass = $priorityBadgeClasses[$requestPriority] ?? 'bg-neutral-100 text-neutral-800';
                     
                     $priorityIcons = [
-                        'low' => 'fa-arrow-down',
-                        'medium' => 'fa-minus',
-                        'high' => 'fa-arrow-up',
-                        'urgent' => 'fa-exclamation'
+                        'low' => 'arrow-down',
+                        'medium' => 'minus',
+                        'high' => 'arrow-up',
+                        'urgent' => 'alert-triangle'
                     ];
-                    $priorityIcon = $priorityIcons[$requestPriority] ?? 'fa-circle';
+                    $priorityIcon = $priorityIcons[$requestPriority] ?? 'circle';
                 @endphp
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $priorityBadgeClass }}">
-                    <i class="fas {{ $priorityIcon }} mr-1.5 text-xs"></i>
+                    <x-dynamic-component :component="'lucide-' . $priorityIcon" class="w-3.5 h-3.5 mr-1.5" />
                     {{ ucfirst($requestPriority) }} Priority
                 </span>
             </div>
@@ -108,7 +108,7 @@
             </h1>
             
             <div class="text-neutral-500 flex items-center">
-                <i class="fas fa-calendar-alt mr-2"></i>
+                <x-lucide-calendar class="w-4 h-4 mr-2" />
                 <span>Submitted {{ isset($request['submissionDate']) ? date('F d, Y', strtotime($request['submissionDate'])) : 
                 (isset($request['submission_date']) ? date('F d, Y', strtotime($request['submission_date'])) : 
                 date('F d, Y', strtotime($request['created_at']))) }}</span>
@@ -116,35 +116,55 @@
         </div>
         
         <div class="mt-4 sm:mt-0 flex flex-wrap gap-3">
-            <a href="{{ route('admin.requests.index') }}" 
-               class="inline-flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Requests
-            </a>
+            <x-ui.button 
+                href="{{ route('admin.requests.index') }}" 
+                variant="secondary"
+                class="inline-flex items-center gap-2"
+            >
+                <x-lucide-arrow-left class="w-4 h-4" />
+                Back to Requests
+            </x-ui.button>
             
             @if($requestStatus === 'pending')
-                <button type="button" 
-                        @click="openApproveModal()"
-                        class="inline-flex items-center px-4 py-2 bg-success-500 hover:bg-success-600 text-white rounded-lg transition-colors">
-                    <i class="fas fa-check mr-2"></i>Approve
-                </button>
-                <button type="button" 
-                        @click="openRejectModal()"
-                        class="inline-flex items-center px-4 py-2 bg-error-500 hover:bg-error-600 text-white rounded-lg transition-colors">
-                    <i class="fas fa-times mr-2"></i>Reject
-                </button>
+                <x-ui.button 
+                    type="button" 
+                    @click="openApproveModal()"
+                    variant="success"
+                    class="inline-flex items-center gap-2"
+                >
+                    <x-lucide-check class="w-4 h-4" />
+                    Approve
+                </x-ui.button>
+                <x-ui.button 
+                    type="button" 
+                    @click="openRejectModal()"
+                    variant="danger"
+                    class="inline-flex items-center gap-2"
+                >
+                    <x-lucide-x class="w-4 h-4" />
+                    Reject
+                </x-ui.button>
             @elseif($requestStatus === 'approved' || $requestStatus === 'pending_payment')
-                <a href="{{ route('client.maya.checkout', $request['id']) }}" 
-                   target="_blank"
-                   class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                    <i class="fas fa-credit-card mr-2"></i>View Payment Link
-                </a>
+                <x-ui.button 
+                    href="{{ route('client.maya.checkout', $request['id']) }}" 
+                    target="_blank"
+                    variant="primary"
+                    class="inline-flex items-center gap-2"
+                >
+                    <x-lucide-credit-card class="w-4 h-4" />
+                    View Payment Link
+                </x-ui.button>
             @elseif($requestStatus === 'rejected')
                 <form action="{{ route('admin.requests.reopen', $request['id']) }}" method="POST" class="inline">
                     @csrf
-                    <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-warning-500 hover:bg-warning-600 text-white rounded-lg transition-colors">
-                        <i class="fas fa-redo-alt mr-2"></i>Reopen
-                    </button>
+                    <x-ui.button 
+                        type="submit"
+                        variant="warning"
+                        class="inline-flex items-center gap-2"
+                    >
+                        <x-lucide-rotate-ccw class="w-4 h-4" />
+                        Reopen
+                    </x-ui.button>
                 </form>
             @endif
         </div>
@@ -155,7 +175,7 @@
         <!-- Left Column: Request Details -->
         <div class="lg:col-span-2">
             <!-- Request Details Card -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <x-ui.card class="mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
                     <h2 class="text-lg font-semibold text-primary-500">Request Details</h2>
                 </div>
@@ -254,13 +274,13 @@
                                             <span class="{{ $isPast ? 'text-error-600' : ($isClose ? 'text-warning-600' : 'text-neutral-600') }}">
                                                 {{ $deadline->format('M d, Y') }}
                                                 @if($isPast)
-                                                    <span class="block text-xs mt-1">
-                                                        <i class="fas fa-exclamation-circle"></i> 
+                                                    <span class="flex items-center text-xs mt-1">
+                                                        <x-lucide-alert-circle class="w-3 h-3 mr-1" />
                                                         {{ $deadline->diffForHumans() }}
                                                     </span>
                                                 @elseif($isClose)
-                                                    <span class="block text-xs mt-1">
-                                                        <i class="fas fa-clock"></i> 
+                                                    <span class="flex items-center text-xs mt-1">
+                                                        <x-lucide-clock class="w-3 h-3 mr-1" />
                                                         {{ $deadline->diffForHumans() }}
                                                     </span>
                                                 @endif
@@ -292,21 +312,21 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </x-ui.card>
             
             <!-- Payment Information Card (Maya automatic payment info) -->
             @if($requestStatus === 'approved' || $requestStatus === 'pending_payment')
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6 border-2 border-primary-200">
+            <x-ui.card class="mb-6 border-2 border-primary-200">
                 <div class="px-6 py-4 border-b border-primary-200 bg-primary-50">
                     <h2 class="text-lg font-semibold text-primary-700 flex items-center">
-                        <i class="fas fa-credit-card mr-2"></i>
+                        <x-lucide-credit-card class="w-5 h-5 mr-2" />
                         Payment Information
                     </h2>
                 </div>
                 <div class="p-6">
-                    <div class="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-4">
+                    <div class="bg-primary-50 border border-primary-200 rounded-xl p-4 mb-4">
                         <div class="flex items-center mb-3">
-                            <i class="fas fa-info-circle text-primary-600 mr-2"></i>
+                            <x-lucide-info class="w-5 h-5 text-primary-600 mr-2" />
                             <p class="text-primary-800 font-medium">This request uses Maya automatic payment gateway</p>
                         </div>
                         <p class="text-primary-700 text-sm">Client will pay via Maya, and the payment will be automatically verified. Once confirmed, the project will be created automatically.</p>
@@ -344,9 +364,9 @@
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-3">Payment Status</h3>
                             <div class="space-y-3">
-                                <div class="bg-warning-50 border border-warning-200 rounded-lg p-4">
+                                <div class="bg-warning-50 border border-warning-200 rounded-xl p-4">
                                     <div class="flex items-center text-warning-800">
-                                        <i class="fas fa-clock mr-2"></i>
+                                        <x-lucide-clock class="w-5 h-5 mr-2" />
                                         <span class="font-medium">Waiting for Client Payment</span>
                                     </div>
                                     <p class="text-warning-700 text-sm mt-2">Client needs to complete payment via Maya</p>
@@ -355,11 +375,11 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </x-ui.card>
             @endif
             
             <!-- Attached Files -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <x-ui.card class="mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
                     <h2 class="text-lg font-semibold text-primary-500">Attached Files</h2>
                 </div>
@@ -367,23 +387,23 @@
                     @if(isset($request['files']) && count($request['files']) > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             @foreach($request['files'] as $file)
-                                <div class="bg-neutral-50 rounded-lg p-4 flex items-center">
+                                <div class="bg-neutral-50 rounded-xl p-4 flex items-center">
                                     @php
                                         $extension = strtolower(pathinfo($file['filename'], PATHINFO_EXTENSION));
                                         
-                                        $iconClass = match($extension) {
-                                            'pdf' => 'fas fa-file-pdf text-error-600',
-                                            'doc', 'docx' => 'fas fa-file-word text-blue-600',
-                                            'xls', 'xlsx' => 'fas fa-file-excel text-success-600',
-                                            'ppt', 'pptx' => 'fas fa-file-powerpoint text-orange-600',
-                                            'jpg', 'jpeg', 'png', 'gif' => 'fas fa-file-image text-purple-600',
-                                            'zip', 'rar' => 'fas fa-file-archive text-warning-600',
-                                            default => 'fas fa-file text-neutral-600'
+                                        $iconInfo = match($extension) {
+                                            'pdf' => ['icon' => 'file-text', 'color' => 'text-error-600'],
+                                            'doc', 'docx' => ['icon' => 'file-text', 'color' => 'text-info-600'],
+                                            'xls', 'xlsx' => ['icon' => 'file-spreadsheet', 'color' => 'text-success-600'],
+                                            'ppt', 'pptx' => ['icon' => 'file-text', 'color' => 'text-orange-600'],
+                                            'jpg', 'jpeg', 'png', 'gif' => ['icon' => 'image', 'color' => 'text-purple-600'],
+                                            'zip', 'rar' => ['icon' => 'archive', 'color' => 'text-warning-600'],
+                                            default => ['icon' => 'file', 'color' => 'text-neutral-600']
                                         };
                                     @endphp
                                     
                                     <div class="h-10 w-10 flex-shrink-0 flex items-center justify-center">
-                                        <i class="{{ $iconClass }} text-xl"></i>
+                                        <x-dynamic-component :component="'lucide-' . $iconInfo['icon']" class="w-6 h-6 {{ $iconInfo['color'] }}" />
                                     </div>
                                     
                                     <div class="ml-4 flex-1 min-w-0">
@@ -400,25 +420,25 @@
                                     
                                     <a href="{{ route('admin.requests.download-file', ['request' => $request['id'], 'file' => $file['id']]) }}" 
                                        class="ml-4 p-2 text-neutral-500 hover:text-primary-600 rounded-full hover:bg-primary-50">
-                                        <i class="fas fa-download"></i>
+                                        <x-lucide-download class="w-5 h-5" />
                                     </a>
                                 </div>
                             @endforeach
                         </div>
                     @else
                         <div class="text-center py-8">
-                            <div class="bg-neutral-50 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-file-alt text-neutral-400 text-xl"></i>
+                            <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <x-lucide-file-text class="w-8 h-8 text-neutral-400" />
                             </div>
                             <h3 class="text-neutral-500 text-base">No files attached</h3>
                             <p class="text-neutral-400 text-sm mt-1">This request doesn't have any attached files</p>
                         </div>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
 
             <!-- Associated Tasks -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <x-ui.card class="mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
                     <h2 class="text-lg font-semibold text-primary-500">Associated Tasks</h2>
                 </div>
@@ -478,15 +498,15 @@
                                                     $priorityClass = $priorityClasses[$taskPriority] ?? 'bg-neutral-100 text-neutral-800';
                                                     
                                                     $priorityIcons = [
-                                                        'low' => '<i class="fas fa-arrow-down mr-1 text-xs"></i>',
-                                                        'medium' => '<i class="fas fa-minus mr-1 text-xs"></i>',
-                                                        'high' => '<i class="fas fa-arrow-up mr-1 text-xs"></i>',
-                                                        'urgent' => '<i class="fas fa-exclamation mr-1 text-xs"></i>',
+                                                        'low' => 'arrow-down',
+                                                        'medium' => 'minus',
+                                                        'high' => 'arrow-up',
+                                                        'urgent' => 'alert-triangle',
                                                     ];
-                                                    $priorityIcon = $priorityIcons[$taskPriority] ?? '';
+                                                    $priorityIcon = $priorityIcons[$taskPriority] ?? 'circle';
                                                 @endphp
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $priorityClass }}">
-                                                    {!! $priorityIcon !!}
+                                                    <x-dynamic-component :component="'lucide-' . $priorityIcon" class="w-3 h-3 mr-1" />
                                                     {{ ucfirst($taskPriority) }}
                                                 </span>
                                             </td>
@@ -494,7 +514,7 @@
                                                 @if(!empty($task['adiutor_id']))
                                                     <div class="flex items-center">
                                                         <div class="h-6 w-6 rounded-full bg-neutral-200 text-neutral-600 flex items-center justify-center mr-2">
-                                                            <i class="fas fa-user text-xs"></i>
+                                                            <x-lucide-user class="w-3 h-3" />
                                                         </div>
                                                         <span>{{ \App\Models\User::find($task['adiutor_id'])?->fullName ?? 'Adiutor #' . $task['adiutor_id'] }}</span>
                                                     </div>
@@ -512,30 +532,33 @@
                         </div>
                     @else
                         <div class="text-center py-8">
-                            <div class="bg-neutral-50 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-tasks text-neutral-400 text-xl"></i>
+                            <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <x-lucide-list-todo class="w-8 h-8 text-neutral-400" />
                             </div>
                             <h3 class="text-neutral-500 text-base">No tasks created</h3>
                             <p class="text-neutral-400 text-sm mt-1">There are no tasks associated with this request yet</p>
                             
                             @if($requestStatus === 'approved')
-                                <button type="button" 
-                                        @click="openCreateTaskModal()"
-                                        class="mt-4 inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                                    <i class="fas fa-plus mr-2"></i>
+                                <x-ui.button 
+                                    type="button" 
+                                    @click="openCreateTaskModal()"
+                                    variant="primary"
+                                    class="mt-4 inline-flex items-center gap-2"
+                                >
+                                    <x-lucide-plus class="w-4 h-4" />
                                     Create Task
-                                </button>
+                                </x-ui.button>
                             @endif
                         </div>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
         </div>
         
         <!-- Right Column: Client Info, Admin Notes -->
         <div class="lg:col-span-1">
             <!-- Client Info Card -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <x-ui.card class="mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
                     <h2 class="text-lg font-semibold text-primary-500">Client Information</h2>
                 </div>
@@ -543,12 +566,12 @@
                     @if(isset($request['client']))
                         <div class="flex items-center mb-6">
                             <div class="bg-primary-100 h-12 w-12 rounded-full flex items-center justify-center text-primary-600 mr-4">
-                                <i class="fas fa-user text-xl"></i>
+                                <x-lucide-user class="w-6 h-6" />
                             </div>
                             <div>
                                 <h3 class="text-lg font-medium text-neutral-900">{{ $request['client']['full_name'] ?? $request['client']['name'] ?? 'Client #' . $request['client']['id'] }}</h3>
-                                <div class="text-neutral-500">
-                                    <i class="fas fa-envelope mr-2"></i>{{ $request['client']['email'] ?? 'No email' }}
+                                <div class="text-neutral-500 flex items-center">
+                                    <x-lucide-mail class="w-4 h-4 mr-2" />{{ $request['client']['email'] ?? 'No email' }}
                                 </div>
                             </div>
                         </div>
@@ -557,7 +580,7 @@
                             @if(!empty($request['client']['phone_number']))
                                 <div class="flex">
                                     <div class="w-8 flex-shrink-0 text-neutral-400">
-                                        <i class="fas fa-phone"></i>
+                                        <x-lucide-phone class="w-4 h-4" />
                                     </div>
                                     <div>
                                         <div class="text-sm font-medium text-neutral-500">Phone</div>
@@ -569,7 +592,7 @@
                             @if(!empty($request['company_name']))
                                 <div class="flex">
                                     <div class="w-8 flex-shrink-0 text-neutral-400">
-                                        <i class="fas fa-building"></i>
+                                        <x-lucide-building-2 class="w-4 h-4" />
                                     </div>
                                     <div>
                                         <div class="text-sm font-medium text-neutral-500">Company</div>
@@ -580,7 +603,7 @@
                             
                             <div class="flex">
                                 <div class="w-8 flex-shrink-0 text-neutral-400">
-                                    <i class="fas fa-calendar"></i>
+                                    <x-lucide-calendar class="w-4 h-4" />
                                 </div>
                                 <div>
                                     <div class="text-sm font-medium text-neutral-500">Client Since</div>
@@ -593,23 +616,23 @@
                             <a href="{{ route('admin.clients.show', $request['client']['id']) }}" 
                                class="inline-flex items-center text-primary-600 hover:text-primary-700">
                                 <span>View Client Profile</span>
-                                <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                                <x-lucide-chevron-right class="w-4 h-4 ml-1" />
                             </a>
                         </div>
                     @else
                         <div class="text-center py-6">
-                            <div class="bg-neutral-50 rounded-full h-12 w-12 flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-user text-neutral-400"></i>
+                            <div class="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <x-lucide-user class="w-6 h-6 text-neutral-400" />
                             </div>
                             <h3 class="text-neutral-500 text-base">No client information</h3>
                             <p class="text-neutral-400 text-sm mt-1">This request is not associated with a client</p>
                         </div>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
             
             <!-- Admin Notes -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <x-ui.card class="mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
                     <h2 class="text-lg font-semibold text-primary-500">Admin Notes</h2>
                 </div>
@@ -618,18 +641,19 @@
                         @csrf
                         <div class="mb-3">
                             <textarea name="note" rows="3" required
-                                      class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                      class="w-full rounded-xl border border-neutral-300 px-3 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
                                       placeholder="Add a note about this request..."></textarea>
                         </div>
                         <div class="flex justify-end">
-                            <button type="submit" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                                <i class="fas fa-plus mr-2"></i>Add Note
-                            </button>
+                            <x-ui.button type="submit" variant="primary" class="inline-flex items-center gap-2">
+                                <x-lucide-plus class="w-4 h-4" />
+                                Add Note
+                            </x-ui.button>
                         </div>
                     </form>
                     
                     @if(!empty($request['admin_notes']))
-                        <div class="bg-neutral-50 rounded-lg p-4 text-neutral-800 whitespace-pre-line text-sm">
+                        <div class="bg-neutral-50 rounded-xl p-4 text-neutral-800 whitespace-pre-line text-sm">
                             {!! nl2br(e($request['admin_notes'])) !!}
                         </div>
                     @else
@@ -641,13 +665,13 @@
                     @if($requestStatus === 'rejected' && !empty($request['rejection_reason']))
                         <div class="mt-6">
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Rejection Reason</h3>
-                            <div class="bg-error-50 text-error-700 rounded-lg p-4 text-sm">
+                            <div class="bg-error-50 text-error-700 rounded-xl p-4 text-sm">
                                 {{ $request['rejection_reason'] }}
                             </div>
                         </div>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
         </div>
     </div>
 
@@ -664,13 +688,13 @@
         <!-- Center modal -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         
-        <div x-show="showApproveModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
+        <div x-show="showApproveModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
             <form action="{{ route('admin.requests.approve', $request['id']) }}" method="POST">
                 @csrf
                 <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4 flex justify-between items-center">
                     <h5 class="text-lg font-semibold text-neutral-800">Approve Request</h5>
                     <button type="button" @click="showApproveModal = false" class="text-neutral-500 hover:text-neutral-700 focus:outline-none">
-                        <i class="fas fa-times"></i>
+                        <x-lucide-x class="w-5 h-5" />
                     </button>
                 </div>
                 <div class="modal-body p-6" x-data="{
@@ -746,9 +770,9 @@
                     }
                 }" x-init="init()">
                     <!-- Budget and Payment Section -->
-                    <div class="bg-primary-50 rounded-lg p-4 mb-5">
+                    <div class="bg-primary-50 rounded-xl p-4 mb-5">
                         <h3 class="text-neutral-800 font-medium mb-3 flex items-center">
-                            <i class="fas fa-dollar-sign mr-2 text-primary-600"></i>
+                            <x-lucide-circle-dollar-sign class="w-5 h-5 mr-2 text-primary-600" />
                             Budget & Payment
                         </h3>
                         
@@ -822,8 +846,9 @@
                             <div class="flex items-center justify-between mb-3">
                                 <h4 class="font-medium text-neutral-800">Configure Phases</h4>
                                 <button type="button" @click="addPhase()" 
-                                        class="text-sm px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                                    <i class="fas fa-plus mr-1"></i>Add Phase
+                                        class="text-sm px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors inline-flex items-center gap-1">
+                                    <x-lucide-plus class="w-3.5 h-3.5" />
+                                    Add Phase
                                 </button>
                             </div>
                             
@@ -837,7 +862,7 @@
                                             <button type="button" @click="removePhase(index)" 
                                                     x-show="milestonePhases.length > 1"
                                                     class="text-error-600 hover:text-error-700 text-sm">
-                                                <i class="fas fa-times"></i>
+                                                <x-lucide-x class="w-4 h-4" />
                                             </button>
                                         </div>
                                         <div class="grid grid-cols-2 gap-2">
@@ -879,8 +904,8 @@
                                       :class="isPercentageValid() ? 'text-success-700' : 'text-warning-700'"
                                       x-text="getTotalPercentage() + '%'"></span>
                             </div>
-                            <p class="text-xs text-neutral-600 mt-2" x-show="!isPercentageValid()">
-                                <i class="fas fa-exclamation-triangle text-warning-600 mr-1"></i>
+                            <p class="text-xs text-neutral-600 mt-2 flex items-center" x-show="!isPercentageValid()">
+                                <x-lucide-alert-triangle class="w-3.5 h-3.5 text-warning-600 mr-1" />
                                 Percentages must total exactly 100%
                             </p>
                         </div>
@@ -918,7 +943,7 @@
                     </div>
                     
                     <!-- Coupon Assignment Section -->
-                    <div class="bg-success-50 rounded-lg p-4 mb-5" x-data="{
+                    <div class="bg-success-50 rounded-xl p-4 mb-5" x-data="{
                         assignCoupon: false,
                         couponType: 'existing',
                         discountType: 'percentage',
@@ -926,7 +951,7 @@
                         couponCode: ''
                     }">
                         <h3 class="text-neutral-800 font-medium mb-3 flex items-center">
-                            <i class="fas fa-ticket-alt mr-2 text-success-600"></i>
+                            <x-lucide-ticket class="w-5 h-5 mr-2 text-success-600" />
                             Coupon Assignment (Optional)
                         </h3>
                         
@@ -1031,7 +1056,7 @@
                                 </div>
                                 
                                 <p class="text-xs text-info-600 flex items-start">
-                                    <i class="fas fa-info-circle mr-1 mt-0.5"></i>
+                                    <x-lucide-info class="w-3.5 h-3.5 mr-1 mt-0.5 flex-shrink-0" />
                                     <span>A unique coupon code will be generated and assigned specifically to this client for this request.</span>
                                 </p>
                             </div>
@@ -1108,9 +1133,10 @@
                     <button type="button" @click="showApproveModal = false" class="px-4 py-2 border border-neutral-300 bg-white text-neutral-700 rounded-lg hover:bg-neutral-100 mr-3">
                         Cancel
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-success-500 hover:bg-success-600 text-white rounded-lg transition-colors">
-                        <i class="fas fa-check mr-2"></i>Approve Request
-                    </button>
+                    <x-ui.button type="submit" variant="success" class="inline-flex items-center gap-2">
+                        <x-lucide-check class="w-4 h-4" />
+                        Approve Request
+                    </x-ui.button>
                 </div>
             </form>
         </div>
@@ -1130,27 +1156,27 @@
         <!-- Center modal -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         
-        <div x-show="showRejectModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
+        <div x-show="showRejectModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
             <form action="{{ route('admin.requests.reject', $request['id']) }}" method="POST">
                 @csrf
                 <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4 flex justify-between items-center">
                     <h5 class="text-lg font-semibold text-neutral-800">Reject Request</h5>
                     <button type="button" @click="showRejectModal = false" class="text-neutral-500 hover:text-neutral-700 focus:outline-none">
-                        <i class="fas fa-times"></i>
+                        <x-lucide-x class="w-5 h-5" />
                     </button>
                 </div>
                 <div class="p-6">
                     <div class="mb-5">
                         <label for="rejection_reason" class="block text-sm font-medium text-neutral-700 mb-1">Rejection Reason *</label>
                         <textarea id="rejection_reason" name="rejection_reason" rows="3" required
-                                  class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                  class="w-full rounded-xl border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
                                   placeholder="Please provide a reason for rejecting this request..."></textarea>
                     </div>
                     
                     <div class="mb-5">
                         <label for="reject_admin_notes" class="block text-sm font-medium text-neutral-700 mb-1">Additional Notes</label>
                         <textarea id="reject_admin_notes" name="admin_notes" rows="3" 
-                                  class="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                  class="w-full rounded-xl border border-neutral-300 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
                                   placeholder="Add any additional notes..."></textarea>
                     </div>
                 </div>
@@ -1158,9 +1184,10 @@
                     <button type="button" @click="showRejectModal = false" class="px-4 py-2 border border-neutral-300 bg-white text-neutral-700 rounded-lg hover:bg-neutral-100 mr-3">
                         Cancel
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-error-500 hover:bg-error-600 text-white rounded-lg transition-colors">
-                        <i class="fas fa-times mr-2"></i>Reject Request
-                    </button>
+                    <x-ui.button type="submit" variant="danger" class="inline-flex items-center gap-2">
+                        <x-lucide-x class="w-4 h-4" />
+                        Reject Request
+                    </x-ui.button>
                 </div>
             </form>
         </div>
@@ -1180,7 +1207,7 @@
         <!-- Center modal -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         
-        <div x-show="showCreateTaskModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
+        <div x-show="showCreateTaskModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
             <form action="{{ route('admin.requests.approve', $request['id']) }}" method="POST">
                 @csrf
                 <input type="hidden" name="create_task" value="1">
@@ -1188,14 +1215,14 @@
                 <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4 flex justify-between items-center">
                     <h5 class="text-lg font-semibold text-neutral-800">Create Task</h5>
                     <button type="button" @click="showCreateTaskModal = false" class="text-neutral-500 hover:text-neutral-700 focus:outline-none">
-                        <i class="fas fa-times"></i>
+                        <x-lucide-x class="w-5 h-5" />
                     </button>
                 </div>
                 <div class="p-6">
                     <div class="mb-5">
                         <label for="new_task_title" class="block text-sm font-medium text-neutral-700 mb-1">Task Title *</label>
                         <input type="text" id="new_task_title" name="task_title" required
-                               class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                               class="w-full rounded-xl border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
                                placeholder="Enter task title" 
                                value="{{ isset($request['title']) ? 'Task for: ' . $request['title'] : 'New task for request #' . $request['id'] }}">
                     </div>
@@ -1203,7 +1230,7 @@
                     <div class="mb-5">
                         <label for="new_task_description" class="block text-sm font-medium text-neutral-700 mb-1">Description *</label>
                         <textarea id="new_task_description" name="task_description" rows="3" required
-                                  class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                                  class="w-full rounded-xl border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
                                   placeholder="Enter task description">{{ 'Based on client request #' . $request['id'] }}</textarea>
                     </div>
                     
@@ -1211,7 +1238,7 @@
                         <div>
                             <label for="new_task_priority" class="block text-sm font-medium text-neutral-700 mb-1">Priority *</label>
                             <select id="new_task_priority" name="task_priority" required
-                                    class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                                    class="w-full rounded-xl border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
                                 <option value="low">Low</option>
                                 <option value="medium" selected>Medium</option>
                                 <option value="high">High</option>
@@ -1222,14 +1249,14 @@
                         <div>
                             <label for="new_task_due_date" class="block text-sm font-medium text-neutral-700 mb-1">Due Date</label>
                             <input type="date" id="new_task_due_date" name="task_due_date" 
-                                   class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                                   class="w-full rounded-xl border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
                         </div>
                     </div>
                     
                     <div class="mt-4">
                         <label for="new_adiutor_id" class="block text-sm font-medium text-neutral-700 mb-1">Assign To (Optional)</label>
                         <select id="new_adiutor_id" name="adiutor_id" 
-                                class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                                class="w-full rounded-xl border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
                             <option value="">Select an Adiutor</option>
                             @foreach(\App\Models\User::where('role', 'adiutor')->orderBy('fullName')->get() as $adiutor)
                                 <option value="{{ $adiutor->id }}">{{ $adiutor->fullName }}</option>
@@ -1241,9 +1268,10 @@
                     <button type="button" @click="showCreateTaskModal = false" class="px-4 py-2 border border-neutral-300 bg-white text-neutral-700 rounded-lg hover:bg-neutral-100 mr-3">
                         Cancel
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Create Task
-                    </button>
+                    <x-ui.button type="submit" variant="primary" class="inline-flex items-center gap-2">
+                        <x-lucide-plus class="w-4 h-4" />
+                        Create Task
+                    </x-ui.button>
                 </div>
             </form>
         </div>

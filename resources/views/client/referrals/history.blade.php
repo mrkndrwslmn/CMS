@@ -4,11 +4,17 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Referrals', 'url' => route('client.referrals.dashboard'), 'icon' => 'gift'],
+        ['label' => 'History']
+    ]" class="mb-6" />
+
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-neutral-900">📋 Referral History</h1>
+                <h1 class="text-3xl font-bold text-neutral-900">Referral History</h1>
                 <p class="mt-2 text-neutral-600">Track all your referrals and their status</p>
             </div>
         </div>
@@ -19,31 +25,23 @@
         <div class="border-b border-neutral-200">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                 <a href="{{ route('client.referrals.dashboard') }}" 
-                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
+                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors inline-flex items-center">
+                    <x-lucide-home class="w-5 h-5 mr-2" />
                     Dashboard
                 </a>
                 <a href="{{ route('client.referrals.credits') }}" 
-                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors inline-flex items-center">
+                    <x-lucide-circle-dollar-sign class="w-5 h-5 mr-2" />
                     Credits & Withdrawals
                 </a>
                 <a href="{{ route('client.referrals.history') }}" 
-                   class="border-primary-500 text-primary-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                   class="border-primary-500 text-primary-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm inline-flex items-center">
+                    <x-lucide-clock class="w-5 h-5 mr-2" />
                     History
                 </a>
                 <a href="{{ route('client.referrals.share') }}" 
-                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                    </svg>
+                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors inline-flex items-center">
+                    <x-lucide-share-2 class="w-5 h-5 mr-2" />
                     Share
                 </a>
             </nav>
@@ -51,7 +49,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-neutral-100 p-4 mb-6">
         <form method="GET" action="{{ route('client.referrals.history') }}" class="flex flex-wrap gap-4 items-end">
             <!-- Search -->
             <div class="flex-1 min-w-[200px]">
@@ -86,8 +84,9 @@
             <div class="flex gap-2">
                 <button 
                     type="submit" 
-                    class="px-4 py-2 bg-gradient-to-r from-primary-500 to-accent-600 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300"
+                    class="inline-flex items-center px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
                 >
+                    <x-lucide-filter class="w-4 h-4 mr-2" />
                     Apply Filters
                 </button>
                 <a 
@@ -109,13 +108,13 @@
     @if($referrals->count() > 0)
         <div class="space-y-4">
             @foreach($referrals as $referral)
-                <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 hover:shadow-md transition-shadow">
                     <div class="flex items-start justify-between">
                         <!-- Left Side: User Info -->
                         <div class="flex items-start space-x-4 flex-1">
                             <!-- Avatar -->
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                                <div class="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
                                     {{ substr($referral->referred->fullName ?? 'U', 0, 1) }}
                                 </div>
                             </div>
@@ -128,24 +127,17 @@
                                     </h3>
                                     @if($referral->status === 'rewarded')
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
+                                            <x-lucide-check-circle class="w-3 h-3 mr-1" />
                                             Rewarded
                                         </span>
                                     @elseif($referral->status === 'completed')
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
+                                            <x-lucide-check-circle class="w-3 h-3 mr-1" />
                                             Completed
                                         </span>
                                     @elseif($referral->status === 'pending')
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-700">
-                                            <svg class="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
+                                            <x-lucide-loader-2 class="w-3 h-3 mr-1 animate-spin" />
                                             Pending
                                         </span>
                                     @else
@@ -163,9 +155,7 @@
                                 <div class="space-y-2">
                                     <!-- Signup -->
                                     <div class="flex items-center text-sm">
-                                        <svg class="w-4 h-4 mr-2 text-success-500" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                        </svg>
+                                        <x-lucide-check-circle class="w-4 h-4 mr-2 text-success-500" />
                                         <span class="text-neutral-600">Signed up on 
                                             <span class="font-medium text-neutral-900">
                                                 {{ $referral->referred_user_signup_at?->format('M d, Y h:i A') ?? $referral->created_at->format('M d, Y h:i A') }}
@@ -176,9 +166,7 @@
                                     <!-- Payment -->
                                     @if($referral->referred_user_payment_at)
                                         <div class="flex items-center text-sm">
-                                            <svg class="w-4 h-4 mr-2 text-success-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
+                                            <x-lucide-check-circle class="w-4 h-4 mr-2 text-success-500" />
                                             <span class="text-neutral-600">Made payment on 
                                                 <span class="font-medium text-neutral-900">
                                                     {{ $referral->referred_user_payment_at->format('M d, Y h:i A') }}
@@ -187,9 +175,7 @@
                                         </div>
                                     @else
                                         <div class="flex items-center text-sm">
-                                            <svg class="w-4 h-4 mr-2 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                            </svg>
+                                            <x-lucide-x-circle class="w-4 h-4 mr-2 text-neutral-400" />
                                             <span class="text-neutral-500">Payment pending</span>
                                         </div>
                                     @endif
@@ -197,9 +183,7 @@
                                     <!-- Reward -->
                                     @if($referral->rewarded_at)
                                         <div class="flex items-center text-sm">
-                                            <svg class="w-4 h-4 mr-2 text-success-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
+                                            <x-lucide-check-circle class="w-4 h-4 mr-2 text-success-500" />
                                             <span class="text-neutral-600">Rewarded on 
                                                 <span class="font-medium text-neutral-900">
                                                     {{ $referral->rewarded_at->format('M d, Y h:i A') }}
@@ -231,9 +215,7 @@
 
                             @if($referral->referrerCoupon)
                                 <div class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-accent-100 text-accent-700">
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z"/>
-                                    </svg>
+                                    <x-lucide-ticket class="w-3 h-3 mr-1" />
                                     {{ $referral->referrerCoupon->discount_percentage }}% Coupon
                                 </div>
                             @endif
@@ -249,11 +231,9 @@
         </div>
     @else
         <!-- Empty State -->
-        <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-12 text-center">
+        <div class="bg-white rounded-2xl shadow-sm border border-neutral-100 p-12 text-center">
             <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
+                <x-lucide-users class="w-8 h-8 text-neutral-400" />
             </div>
             <h3 class="text-lg font-semibold text-neutral-900 mb-2">No Referrals Yet</h3>
             <p class="text-neutral-600 mb-6 max-w-md mx-auto">
@@ -261,11 +241,9 @@
             </p>
             <a 
                 href="{{ route('client.referrals.share') }}" 
-                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+                class="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg shadow-sm hover:bg-primary-700 hover:-translate-y-0.5 transition-all duration-300"
             >
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                </svg>
+                <x-lucide-share-2 class="w-5 h-5 mr-2" />
                 Start Referring Now
             </a>
         </div>

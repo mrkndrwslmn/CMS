@@ -29,7 +29,7 @@
                 @endphp
                 
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $config['class'] }} mr-3">
-                    @php $statusIcon = 'x-lucide-' . $config['icon']; @endphp
+                    @php $statusIcon = 'lucide-' . $config['icon']; @endphp
                     <x-dynamic-component :component="$statusIcon" class="w-3.5 h-3.5 mr-1.5" />
                     {{ $config['label'] }}
                 </span>
@@ -45,7 +45,7 @@
                         $pConfig = $priorityConfig[$project->priority] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'icon' => 'circle'];
                     @endphp
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $pConfig['class'] }}">
-                        @php $priorityIcon = 'x-lucide-' . $pConfig['icon']; @endphp
+                        @php $priorityIcon = 'lucide-' . $pConfig['icon']; @endphp
                         <x-dynamic-component :component="$priorityIcon" class="w-3.5 h-3.5 mr-1.5" />
                         {{ ucfirst($project->priority) }} Priority
                     </span>

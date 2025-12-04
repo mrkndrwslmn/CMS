@@ -203,6 +203,33 @@ class LoyaltyPoint extends Model
     }
 
     /**
+     * Expire points (system-level, no user required)
+     */
+    public function expirePoints(
+        int $points,
+        string $description
+    ): LoyaltyTransaction {
+        $balanceBefore = $this->available_points;
+
+        DB::transaction(function () use ($points) {
+            $this->decrement('total_points', abs($points));
+            $this->decrement('available_points', abs($points));
+        });
+
+        $balanceAfter = $balanceBefore - abs($points);
+
+        return LoyaltyTransaction::create([
+            'user_id' => $this->user_id,
+            'transaction_type' => 'expired',
+            'points' => -abs($points),
+            'balance_before' => $balanceBefore,
+            'balance_after' => $balanceAfter,
+            'source' => 'points_expired',
+            'description' => $description,
+        ]);
+    }
+
+    /**
      * Calculate current tier based on lifetime earned points
      */
     public function calculateTier(): string

@@ -6,30 +6,33 @@
 @include('admin.tasks.helpers')
 
 @section('content')
-<div class="px-6 py-8">
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-neutral-900">
-                Edit Task
-            </h1>
-            <p class="text-neutral-500 mt-2">Update task information and details</p>
-        </div>
-        
-        <div class="mt-4 sm:mt-0">
-            <a href="{{ route('admin.tasks.index') }}" 
-               class="inline-flex items-center px-5 py-2.5 bg-white border border-neutral-300 hover:border-neutral-400 text-neutral-700 rounded-lg transition-all shadow-sm hover:shadow">
-                <i class="fas fa-arrow-left mr-2"></i>
+<div class="min-h-screen">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+        ['label' => 'Tasks', 'url' => route('admin.tasks.index'), 'icon' => 'list-checks'],
+        ['label' => 'Edit Task', 'icon' => 'pencil']
+    ]" class="mb-4" />
+
+    <!-- Page Header -->
+    <x-ui.page-header 
+        title="Edit Task" 
+        subtitle="Update task information and details"
+        class="mb-6"
+    >
+        <x-slot name="actions">
+            <x-ui.button href="{{ route('admin.tasks.index') }}" variant="secondary">
+                <x-lucide-arrow-left class="w-4 h-4 mr-2" />
                 Back to Tasks
-            </a>
-        </div>
-    </div>
+            </x-ui.button>
+        </x-slot>
+    </x-ui.page-header>
 
     <!-- Alert Messages -->
     @if(session('success'))
         <div class="bg-success-50 border-l-4 border-success-500 text-success-700 p-4 rounded-lg shadow-sm mb-6">
             <div class="flex items-center">
-                <i class="fas fa-check-circle text-success-500 text-xl mr-3"></i>
+                <x-lucide-check-circle class="w-5 h-5 text-success-500 mr-3" />
                 <p class="font-medium">{{ session('success') }}</p>
             </div>
         </div>
@@ -38,7 +41,7 @@
     @if(session('error'))
         <div class="bg-error-50 border-l-4 border-error-500 text-error-700 p-4 rounded-lg shadow-sm mb-6">
             <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-error-500 text-xl mr-3"></i>
+                <x-lucide-alert-circle class="w-5 h-5 text-error-500 mr-3" />
                 <p class="font-medium">{{ session('error') }}</p>
             </div>
         </div>
@@ -50,11 +53,11 @@
         @method('PATCH')
         
         <!-- Project Selection Section -->
-        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
-            <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4">
+        <x-ui.card>
+            <div class="bg-neutral-50 border-b border-neutral-100 px-6 py-4 rounded-t-2xl">
                 <div class="flex items-center">
                     <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
-                        <i class="fas fa-project-diagram text-primary-600"></i>
+                        <x-lucide-folder-kanban class="w-5 h-5 text-primary-600" />
                     </div>
                     <div>
                         <h2 class="text-lg font-semibold text-neutral-900">Project & Assignment</h2>
@@ -77,14 +80,14 @@
                                 <option value="{{ $project->id }}" {{ old('project_id', $task->project_id) == $project->id ? 'selected' : '' }}>
                                     {{ $project->title }}
                                     @if($project->client)
-                                        • {{ $project->client->fullName }}
+                                        - {{ $project->client->fullName }}
                                     @endif
                                 </option>
                             @endforeach
                         </select>
                         @error('project_id')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
@@ -93,8 +96,8 @@
                     <div id="phaseFieldContainer" class="md:col-span-2" style="display: none;">
                         <label for="phase_id" class="block text-sm font-semibold text-neutral-700 mb-2">
                             Project Phase <span class="text-error-500">*</span>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-700 ml-2">
-                                <i class="fas fa-layer-group mr-1"></i> Milestone Payment
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-700 ml-2">
+                                <x-lucide-layers class="w-3 h-3" /> Milestone Payment
                             </span>
                         </label>
                         <select name="phase_id" id="phase_id" 
@@ -104,11 +107,11 @@
                         </select>
                         @error('phase_id')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
-                        <p class="text-xs text-neutral-500 mt-2">
-                            <i class="fas fa-info-circle text-secondary-500"></i> 
+                        <p class="text-xs text-neutral-500 mt-2 flex items-center gap-1">
+                            <x-lucide-info class="w-3 h-3 text-secondary-500" />
                             This task will be associated with the selected project phase for milestone-based delivery
                         </p>
                     </div>
@@ -129,23 +132,23 @@
                         </select>
                         @error('assignedTo')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
-                        <p class="text-xs text-neutral-500 mt-2">
-                            <i class="fas fa-users text-neutral-400"></i> 
+                        <p class="text-xs text-neutral-500 mt-2 flex items-center gap-1">
+                            <x-lucide-users class="w-3 h-3 text-neutral-400" />
                             Only team members assigned to this project
                         </p>
                     </div>
                 </div>
             </div>
-        </div>
+        </x-ui.card>
         <!-- Task Details Section -->
-        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
-            <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4">
+        <x-ui.card>
+            <div class="bg-neutral-50 border-b border-neutral-100 px-6 py-4 rounded-t-2xl">
                 <div class="flex items-center">
                     <div class="w-10 h-10 bg-accent-100 rounded-lg flex items-center justify-center mr-3">
-                        <i class="fas fa-clipboard-list text-accent-600"></i>
+                        <x-lucide-clipboard-list class="w-5 h-5 text-accent-600" />
                     </div>
                     <div>
                         <h2 class="text-lg font-semibold text-neutral-900">Task Details</h2>
@@ -168,7 +171,7 @@
                                required>
                         @error('taskTitle')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
@@ -183,7 +186,7 @@
                                   placeholder="Provide detailed description of what needs to be accomplished...">{{ old('taskDescription', $task->taskDescription) }}</textarea>
                         @error('taskDescription')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
@@ -199,7 +202,7 @@
                                   placeholder="Any additional context, requirements, or comments...">{{ old('notes', $task->notes) }}</textarea>
                         @error('notes')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
@@ -216,21 +219,21 @@
                                   placeholder="Notes about task completion (deliverables, results, etc.)...">{{ old('completion_notes', $task->completion_notes) }}</textarea>
                         @error('completion_notes')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
                     @endif
                 </div>
             </div>
-        </div>
+        </x-ui.card>
 
         <!-- Task Settings Section -->
-        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
-            <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4">
+        <x-ui.card>
+            <div class="bg-neutral-50 border-b border-neutral-100 px-6 py-4 rounded-t-2xl">
                 <div class="flex items-center">
                     <div class="w-10 h-10 bg-warning-100 rounded-lg flex items-center justify-center mr-3">
-                        <i class="fas fa-sliders-h text-warning-600"></i>
+                        <x-lucide-sliders-horizontal class="w-5 h-5 text-warning-600" />
                     </div>
                     <div>
                         <h2 class="text-lg font-semibold text-neutral-900">Task Settings</h2>
@@ -249,21 +252,21 @@
                         <select name="status" id="status" required
                                 class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all @error('status') border-error-500 @enderror">
                             <option value="pending" {{ old('status', $task->status) === 'pending' ? 'selected' : '' }}>
-                                ⏳ Pending
+                                Pending
                             </option>
                             <option value="in_progress" {{ old('status', $task->status) === 'in_progress' ? 'selected' : '' }}>
-                                🔄 In Progress
+                                In Progress
                             </option>
                             <option value="completed" {{ old('status', $task->status) === 'completed' ? 'selected' : '' }}>
-                                ✅ Completed
+                                Completed
                             </option>
                             <option value="cancelled" {{ old('status', $task->status) === 'cancelled' ? 'selected' : '' }}>
-                                ❌ Cancelled
+                                Cancelled
                             </option>
                         </select>
                         @error('status')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
@@ -276,21 +279,21 @@
                         <select name="priority" id="priority" required
                                 class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all @error('priority') border-error-500 @enderror">
                             <option value="low" {{ old('priority', $task->priority) === 'low' ? 'selected' : '' }}>
-                                🔵 Low Priority
+                                Low Priority
                             </option>
                             <option value="medium" {{ old('priority', $task->priority) === 'medium' ? 'selected' : '' }}>
-                                🟡 Medium Priority
+                                Medium Priority
                             </option>
                             <option value="high" {{ old('priority', $task->priority) === 'high' ? 'selected' : '' }}>
-                                🟠 High Priority
+                                High Priority
                             </option>
                             <option value="urgent" {{ old('priority', $task->priority) === 'urgent' ? 'selected' : '' }}>
-                                🔴 Urgent
+                                Urgent
                             </option>
                         </select>
                         @error('priority')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
@@ -305,7 +308,7 @@
                                value="{{ old('deadline', $task->deadline ? $task->deadline->format('Y-m-d') : '') }}">
                         @error('deadline')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
@@ -323,7 +326,7 @@
                         </div>
                         @error('allocated_budget')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
@@ -341,7 +344,7 @@
                         </div>
                         @error('actual_cost')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
@@ -356,7 +359,7 @@
                                value="{{ old('progress_percentage', $task->progress_percentage ?? 0) }}" placeholder="0">
                         @error('progress_percentage')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
                     </div>
@@ -371,48 +374,42 @@
                                value="{{ old('completedAt', $task->completedAt ? $task->completedAt->format('Y-m-d') : '') }}">
                         @error('completedAt')
                             <p class="text-error-500 text-sm mt-2 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i> {{ $message }}
+                                <x-lucide-alert-circle class="w-4 h-4 mr-1" /> {{ $message }}
                             </p>
                         @enderror
-                        <p class="text-xs text-neutral-500 mt-2">
-                            <i class="fas fa-info-circle text-neutral-400"></i> 
+                        <p class="text-xs text-neutral-500 mt-2 flex items-center gap-1">
+                            <x-lucide-info class="w-3 h-3 text-neutral-400" />
                             Leave blank if task is not completed yet
                         </p>
                     </div>
                 </div>
             </div>
-        </div>
+        </x-ui.card>
             <!-- Form Actions -->
             <div class="flex items-center justify-between pt-4">
-                <button type="button" onclick="window.history.back()"
-                        class="inline-flex items-center px-6 py-3 bg-white border-2 border-neutral-300 hover:border-neutral-400 text-neutral-700 font-medium rounded-lg transition-all shadow-sm hover:shadow">
-                    <i class="fas fa-times mr-2"></i>
+                <x-ui.button type="button" variant="secondary" onclick="window.history.back()">
+                    <x-lucide-x class="w-4 h-4 mr-2" />
                     Cancel
-                </button>
-                <button type="submit" class="inline-flex items-center px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                    <i class="fas fa-save mr-2"></i>
+                </x-ui.button>
+                <x-ui.button type="submit" variant="primary">
+                    <x-lucide-save class="w-4 h-4 mr-2" />
                     Save Changes
-                </button>
+                </x-ui.button>
             </div>
         </form>
 
     <!-- Associated Documents Section -->
-    <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
-        <div class="bg-gradient-to-r from-neutral-700 to-neutral-800 p-4">
+    <x-ui.card class="mt-6">
+        <div class="bg-neutral-50 border-b border-neutral-100 px-6 py-4 rounded-t-2xl">
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                    </svg>
+                <h3 class="text-lg font-bold text-neutral-800 flex items-center gap-2">
+                    <x-lucide-folder-open class="w-5 h-5 text-primary-500" />
                     Associated Documents
                 </h3>
-                <a href="{{ route('admin.documents.create', ['taskID' => $task->taskID]) }}" 
-                   class="inline-flex items-center px-4 py-2 bg-white text-neutral-800 font-medium rounded-lg hover:bg-neutral-100 transition-colors shadow-sm hover:shadow-md">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
+                <x-ui.button href="{{ route('admin.documents.create', ['taskID' => $task->taskID]) }}" variant="primary" size="sm">
+                    <x-lucide-plus class="w-4 h-4 mr-2" />
                     Add Document
-                </a>
+                </x-ui.button>
             </div>
         </div>
         
@@ -427,17 +424,17 @@
                                 @php
                                     $extension = strtolower(pathinfo($document->fileName, PATHINFO_EXTENSION));
                                     $iconConfig = match($extension) {
-                                        'pdf' => ['color' => 'text-red-600', 'bg' => 'bg-red-100', 'icon' => 'fa-file-pdf'],
-                                        'doc', 'docx' => ['color' => 'text-blue-600', 'bg' => 'bg-blue-100', 'icon' => 'fa-file-word'],
-                                        'xls', 'xlsx' => ['color' => 'text-green-600', 'bg' => 'bg-green-100', 'icon' => 'fa-file-excel'],
-                                        'ppt', 'pptx' => ['color' => 'text-orange-600', 'bg' => 'bg-orange-100', 'icon' => 'fa-file-powerpoint'],
-                                        'jpg', 'jpeg', 'png', 'gif', 'svg' => ['color' => 'text-purple-600', 'bg' => 'bg-purple-100', 'icon' => 'fa-file-image'],
-                                        'zip', 'rar', '7z' => ['color' => 'text-yellow-600', 'bg' => 'bg-yellow-100', 'icon' => 'fa-file-archive'],
-                                        default => ['color' => 'text-neutral-600', 'bg' => 'bg-neutral-100', 'icon' => 'fa-file']
+                                        'pdf' => ['color' => 'text-error-600', 'bg' => 'bg-error-100', 'icon' => 'file-text'],
+                                        'doc', 'docx' => ['color' => 'text-info-600', 'bg' => 'bg-info-100', 'icon' => 'file-text'],
+                                        'xls', 'xlsx' => ['color' => 'text-success-600', 'bg' => 'bg-success-100', 'icon' => 'file-spreadsheet'],
+                                        'ppt', 'pptx' => ['color' => 'text-warning-600', 'bg' => 'bg-warning-100', 'icon' => 'file-presentation'],
+                                        'jpg', 'jpeg', 'png', 'gif', 'svg' => ['color' => 'text-secondary-600', 'bg' => 'bg-secondary-100', 'icon' => 'image'],
+                                        'zip', 'rar', '7z' => ['color' => 'text-warning-600', 'bg' => 'bg-warning-100', 'icon' => 'archive'],
+                                        default => ['color' => 'text-neutral-600', 'bg' => 'bg-neutral-100', 'icon' => 'file']
                                     };
                                 @endphp
                                 <div class="w-10 h-10 rounded-lg {{ $iconConfig['bg'] }} flex items-center justify-center">
-                                    <i class="fas {{ $iconConfig['icon'] }} {{ $iconConfig['color'] }}"></i>
+                                    <x-dynamic-component :component="'lucide-' . $iconConfig['icon']" class="w-5 h-5 {{ $iconConfig['color'] }}" />
                                 </div>
                             </div>
 
@@ -447,11 +444,11 @@
                                 <div class="flex flex-wrap items-center gap-2 text-xs text-neutral-500 mt-1">
                                     @if($document->description)
                                         <span class="truncate max-w-xs">{{ $document->description }}</span>
-                                        <span class="text-neutral-300">•</span>
+                                        <span class="text-neutral-300">-</span>
                                     @endif
                                     @if($document->uploadedBy)
                                         <span>Uploaded by {{ $document->uploadedBy->fullName }}</span>
-                                        <span class="text-neutral-300">•</span>
+                                        <span class="text-neutral-300">-</span>
                                     @endif
                                     <span>{{ $document->created_at->format('M d, Y') }}</span>
                                 </div>
@@ -460,27 +457,19 @@
 
                         <!-- Actions -->
                         <div class="flex-shrink-0 ml-4 flex items-center space-x-2">
-                            <a href="{{ route('admin.documents.download', $document->documentID) }}" 
-                               class="inline-flex items-center px-3 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-sm hover:shadow-md"
-                               title="Download">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                </svg>
+                            <x-ui.button href="{{ route('admin.documents.download', $document->documentID) }}" variant="primary" size="sm">
+                                <x-lucide-download class="w-4 h-4 mr-1" />
                                 Download
-                            </a>
+                            </x-ui.button>
                             
                             <form action="{{ route('admin.documents.destroy', $document->documentID) }}" method="POST" class="inline-block">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" 
-                                        onclick="return confirm('Are you sure you want to delete this document?')" 
-                                        class="inline-flex items-center px-3 py-2 bg-error-600 text-white text-sm font-medium rounded-lg hover:bg-error-700 transition-colors shadow-sm hover:shadow-md"
-                                        title="Delete">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
+                                <x-ui.button type="submit" variant="danger" size="sm"
+                                        onclick="return confirm('Are you sure you want to delete this document?')">
+                                    <x-lucide-trash-2 class="w-4 h-4 mr-1" />
                                     Delete
-                                </button>
+                                </x-ui.button>
                             </form>
                         </div>
                     </div>
@@ -489,16 +478,14 @@
             @else
                 <div class="text-center py-12">
                     <div class="bg-neutral-50 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                        </svg>
+                        <x-lucide-file class="w-8 h-8 text-neutral-400" />
                     </div>
                     <h3 class="text-neutral-500 font-medium">No documents attached</h3>
                     <p class="text-neutral-400 text-sm mt-1">Upload documents to associate with this task</p>
                 </div>
             @endif
         </div>
-    </div>
+    </x-ui.card>
 </div>
 
 @endsection

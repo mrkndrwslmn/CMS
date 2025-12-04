@@ -5,66 +5,71 @@
 
 @section('content')
 <div class="px-6 py-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Home', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+        ['label' => 'Inbox', 'url' => '#', 'icon' => 'inbox'],
+        ['label' => 'Revisions', 'url' => route('admin.revisions.index'), 'icon' => 'rotate-ccw'],
+        ['label' => 'Request #' . $revision->id]
+    ]" class="mb-6" />
     
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
-            <div class="flex items-center mb-2">
+            <div class="flex items-center gap-2 mb-2">
                 @php
                     $statusConfig = [
-                        'pending' => ['class' => 'bg-warning-100 text-warning-800', 'label' => 'Pending Review', 'icon' => 'fa-clock'],
-                        'approved' => ['class' => 'bg-success-100 text-success-800', 'label' => 'Approved', 'icon' => 'fa-check-circle'],
-                        'rejected' => ['class' => 'bg-error-100 text-error-800', 'label' => 'Rejected', 'icon' => 'fa-times-circle'],
-                        'completed' => ['class' => 'bg-primary-100 text-primary-800', 'label' => 'Completed', 'icon' => 'fa-check-double'],
-                        'cancelled' => ['class' => 'bg-neutral-100 text-neutral-800', 'label' => 'Cancelled', 'icon' => 'fa-ban'],
+                        'pending' => ['class' => 'bg-warning-100 text-warning-800', 'label' => 'Pending Review', 'icon' => 'clock'],
+                        'approved' => ['class' => 'bg-success-100 text-success-800', 'label' => 'Approved', 'icon' => 'check-circle'],
+                        'rejected' => ['class' => 'bg-error-100 text-error-800', 'label' => 'Rejected', 'icon' => 'x-circle'],
+                        'completed' => ['class' => 'bg-primary-100 text-primary-800', 'label' => 'Completed', 'icon' => 'check-check'],
+                        'cancelled' => ['class' => 'bg-neutral-100 text-neutral-800', 'label' => 'Cancelled', 'icon' => 'circle-slash'],
                     ];
-                    $config = $statusConfig[$revision->status] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'label' => ucfirst($revision->status), 'icon' => 'fa-circle'];
+                    $config = $statusConfig[$revision->status] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'label' => ucfirst($revision->status), 'icon' => 'circle'];
                 @endphp
                 
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $config['class'] }} mr-3">
-                    <i class="fas {{ $config['icon'] }} mr-1.5 text-xs"></i>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm font-medium {{ $config['class'] }}">
+                    <x-dynamic-component :component="'lucide-' . $config['icon']" class="w-3.5 h-3.5" />
                     {{ $config['label'] }}
                 </span>
                 
                 @if($revision->priority === 'urgent' || $revision->priority === 'high')
                     @php
                         $priorityConfig = [
-                            'high' => ['class' => 'bg-orange-100 text-orange-800', 'icon' => 'fa-arrow-up'],
-                            'urgent' => ['class' => 'bg-error-100 text-error-800', 'icon' => 'fa-exclamation-circle'],
+                            'high' => ['class' => 'bg-orange-100 text-orange-800', 'icon' => 'arrow-up'],
+                            'urgent' => ['class' => 'bg-error-100 text-error-800', 'icon' => 'alert-triangle'],
                         ];
-                        $pConfig = $priorityConfig[$revision->priority] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'icon' => 'fa-circle'];
+                        $pConfig = $priorityConfig[$revision->priority] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'icon' => 'circle'];
                     @endphp
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $pConfig['class'] }}">
-                        <i class="fas {{ $pConfig['icon'] }} mr-1.5 text-xs"></i>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm font-medium {{ $pConfig['class'] }}">
+                        <x-dynamic-component :component="'lucide-' . $pConfig['icon']" class="w-3.5 h-3.5" />
                         {{ ucfirst($revision->priority) }} Priority
                     </span>
                 @endif
             </div>
             
-            <h1 class="text-2xl font-semibold text-primary-600 mb-1">Revision Request #{{ $revision->id }}</h1>
-            
-            <div class="text-neutral-500 flex items-center">
-                <i class="fas fa-user mr-2"></i>
-                <span>Requested by {{ $revision->requestedBy->fullName ?? 'N/A' }} on {{ $revision->created_at->format('F d, Y') }}</span>
-            </div>
+            <x-ui.page-header 
+                title="Revision Request #{{ $revision->id }}"
+                subtitle="Requested by {{ $revision->requestedBy->fullName ?? 'N/A' }} on {{ $revision->created_at->format('F d, Y') }}"
+            />
         </div>
         
         <div class="mt-4 sm:mt-0 flex flex-wrap gap-3">
-            <a href="{{ route('admin.revisions.index') }}" 
-               class="inline-flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Revisions
-            </a>
+            <x-ui.button href="{{ route('admin.revisions.index') }}" variant="secondary" class="inline-flex items-center gap-2">
+                <x-lucide-arrow-left class="w-4 h-4" />
+                Back to Revisions
+            </x-ui.button>
             
             @if($revision->status === 'pending')
-                <button onclick="document.getElementById('approveModal').classList.remove('hidden')"
-                        class="inline-flex items-center px-4 py-2 bg-success-500 hover:bg-success-600 text-white rounded-lg transition-colors">
-                    <i class="fas fa-check-circle mr-2"></i>Approve
-                </button>
+                <x-ui.button type="button" variant="success" onclick="document.getElementById('approveModal').classList.remove('hidden')" class="inline-flex items-center gap-2">
+                    <x-lucide-check-circle class="w-4 h-4" />
+                    Approve
+                </x-ui.button>
                 
-                <button onclick="document.getElementById('rejectModal').classList.remove('hidden')"
-                        class="inline-flex items-center px-4 py-2 bg-error-500 hover:bg-error-600 text-white rounded-lg transition-colors">
-                    <i class="fas fa-times-circle mr-2"></i>Reject
-                </button>
+                <x-ui.button type="button" variant="danger" onclick="document.getElementById('rejectModal').classList.remove('hidden')" class="inline-flex items-center gap-2">
+                    <x-lucide-x-circle class="w-4 h-4" />
+                    Reject
+                </x-ui.button>
             @endif
         </div>
     </div>
@@ -75,10 +80,11 @@
         <div class="lg:col-span-2 space-y-6">
             
             <!-- Request Details Card -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">
-                        <i class="fas fa-info-circle mr-2"></i>Request Details
+            <x-ui.card>
+                <div class="px-6 py-4 border-b border-neutral-100">
+                    <h2 class="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+                        <x-lucide-info class="w-5 h-5 text-primary-500" />
+                        Request Details
                     </h2>
                 </div>
                 <div class="p-6">
@@ -87,16 +93,19 @@
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Source Type</h3>
                             <div class="flex items-center">
                                 @if($revision->source_type === 'project')
-                                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-800">
-                                        <i class="fas fa-project-diagram mr-2"></i>Project Revision
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-primary-100 text-primary-800">
+                                        <x-lucide-folder-kanban class="w-4 h-4" />
+                                        Project Revision
                                     </span>
                                 @elseif($revision->source_type === 'task')
-                                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-100 text-purple-800">
-                                        <i class="fas fa-tasks mr-2"></i>Task Revision
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-info-100 text-info-800">
+                                        <x-lucide-list-checks class="w-4 h-4" />
+                                        Task Revision
                                     </span>
                                 @elseif($revision->source_type === 'document')
-                                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-800">
-                                        <i class="fas fa-file-alt mr-2"></i>Document Revision
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-neutral-100 text-neutral-800">
+                                        <x-lucide-file-text class="w-4 h-4" />
+                                        Document Revision
                                     </span>
                                 @endif
                             </div>
@@ -106,16 +115,19 @@
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Priority Level</h3>
                             <div class="flex items-center">
                                 @if($revision->priority === 'urgent')
-                                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-error-100 text-error-800">
-                                        <i class="fas fa-exclamation-circle mr-2"></i>Urgent
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-error-100 text-error-800">
+                                        <x-lucide-alert-triangle class="w-4 h-4" />
+                                        Urgent
                                     </span>
                                 @elseif($revision->priority === 'high')
-                                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-orange-100 text-orange-800">
-                                        <i class="fas fa-arrow-up mr-2"></i>High
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-orange-100 text-orange-800">
+                                        <x-lucide-arrow-up class="w-4 h-4" />
+                                        High
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700">
-                                        <i class="fas fa-minus mr-2"></i>Normal
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-neutral-100 text-neutral-700">
+                                        <x-lucide-minus class="w-4 h-4" />
+                                        Normal
                                     </span>
                                 @endif
                             </div>
@@ -123,16 +135,16 @@
                         
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Requested Date</h3>
-                            <div class="flex items-center text-neutral-800">
-                                <i class="fas fa-calendar-plus text-neutral-400 mr-2"></i>
+                            <div class="flex items-center gap-2 text-neutral-800">
+                                <x-lucide-calendar-plus class="w-4 h-4 text-neutral-400" />
                                 {{ $revision->created_at->format('M d, Y h:i A') }}
                             </div>
                         </div>
                         
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Due Date</h3>
-                            <div class="flex items-center text-neutral-800">
-                                <i class="fas fa-calendar-check text-neutral-400 mr-2"></i>
+                            <div class="flex items-center gap-2 text-neutral-800">
+                                <x-lucide-calendar-check class="w-4 h-4 text-neutral-400" />
                                 @if($revision->requested_due_date)
                                     {{ \Carbon\Carbon::parse($revision->requested_due_date)->format('M d, Y') }}
                                 @else
@@ -142,13 +154,14 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </x-ui.card>
 
             <!-- Revision Reason Card -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">
-                        <i class="fas fa-comment-alt mr-2"></i>Revision Reason
+            <x-ui.card>
+                <div class="px-6 py-4 border-b border-neutral-100">
+                    <h2 class="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+                        <x-lucide-message-square class="w-5 h-5 text-primary-500" />
+                        Revision Reason
                     </h2>
                 </div>
                 <div class="p-6">
@@ -156,96 +169,98 @@
                         {{ $revision->reason }}
                     </div>
                 </div>
-            </div>
+            </x-ui.card>
 
             <!-- Related Items Card -->
             @if($revision->project || $revision->task || $revision->document)
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">
-                        <i class="fas fa-link mr-2"></i>Related Items
+            <x-ui.card>
+                <div class="px-6 py-4 border-b border-neutral-100">
+                    <h2 class="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+                        <x-lucide-link class="w-5 h-5 text-primary-500" />
+                        Related Items
                     </h2>
                 </div>
                 <div class="p-6 space-y-4">
                     @if($revision->project)
-                    <div class="flex items-start p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex items-start p-4 bg-primary-50 rounded-lg border border-primary-200">
                         <div class="flex-shrink-0">
-                            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-project-diagram text-white"></i>
+                            <div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center">
+                                <x-lucide-folder-kanban class="w-5 h-5 text-white" />
                             </div>
                         </div>
                         <div class="ml-4 flex-1">
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-1">Project</h3>
                             <a href="{{ route('admin.projects.show', $revision->project->id) }}" 
-                               class="text-lg font-medium text-blue-700 hover:text-blue-900 inline-flex items-center">
+                               class="text-lg font-medium text-primary-700 hover:text-primary-900 inline-flex items-center gap-2">
                                 {{ $revision->project->projectName }}
-                                <i class="fas fa-external-link-alt ml-2 text-sm"></i>
+                                <x-lucide-external-link class="w-4 h-4" />
                             </a>
                         </div>
                     </div>
                     @endif
 
                     @if($revision->task)
-                    <div class="flex items-start p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div class="flex items-start p-4 bg-info-50 rounded-lg border border-info-200">
                         <div class="flex-shrink-0">
-                            <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-tasks text-white"></i>
+                            <div class="w-10 h-10 bg-info-500 rounded-xl flex items-center justify-center">
+                                <x-lucide-list-checks class="w-5 h-5 text-white" />
                             </div>
                         </div>
                         <div class="ml-4 flex-1">
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-1">Task</h3>
                             <a href="{{ route('admin.tasks.show', $revision->task->taskID) }}" 
-                               class="text-lg font-medium text-purple-700 hover:text-purple-900 inline-flex items-center">
+                               class="text-lg font-medium text-info-700 hover:text-info-900 inline-flex items-center gap-2">
                                 {{ $revision->task->taskTitle }}
-                                <i class="fas fa-external-link-alt ml-2 text-sm"></i>
+                                <x-lucide-external-link class="w-4 h-4" />
                             </a>
                         </div>
                     </div>
                     @endif
 
                     @if($revision->document)
-                    <div class="flex items-start p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex items-start p-4 bg-neutral-50 rounded-lg border border-neutral-200">
                         <div class="flex-shrink-0">
-                            <div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-file-alt text-white"></i>
+                            <div class="w-10 h-10 bg-neutral-500 rounded-xl flex items-center justify-center">
+                                <x-lucide-file-text class="w-5 h-5 text-white" />
                             </div>
                         </div>
                         <div class="ml-4 flex-1">
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-1">Document</h3>
                             <a href="{{ route('admin.documents.show', $revision->document->documentID) }}" 
-                               class="text-lg font-medium text-gray-700 hover:text-gray-900 inline-flex items-center">
+                               class="text-lg font-medium text-neutral-700 hover:text-neutral-900 inline-flex items-center gap-2">
                                 {{ $revision->document->fileName }}
-                                <i class="fas fa-external-link-alt ml-2 text-sm"></i>
+                                <x-lucide-external-link class="w-4 h-4" />
                             </a>
                         </div>
                     </div>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
             @endif
 
             <!-- Admin Review Card -->
             @if($revision->status !== 'pending' && $revision->status !== 'cancelled')
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">
-                        <i class="fas fa-user-shield mr-2"></i>Admin Review
+            <x-ui.card>
+                <div class="px-6 py-4 border-b border-neutral-100">
+                    <h2 class="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+                        <x-lucide-shield-check class="w-5 h-5 text-primary-500" />
+                        Admin Review
                     </h2>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Reviewed By</h3>
-                            <div class="flex items-center text-neutral-800">
-                                <i class="fas fa-user-check text-neutral-400 mr-2"></i>
+                            <div class="flex items-center gap-2 text-neutral-800">
+                                <x-lucide-user-check class="w-4 h-4 text-neutral-400" />
                                 {{ $revision->reviewedBy->fullName ?? 'N/A' }}
                             </div>
                         </div>
                         
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Reviewed On</h3>
-                            <div class="flex items-center text-neutral-800">
-                                <i class="fas fa-clock text-neutral-400 mr-2"></i>
+                            <div class="flex items-center gap-2 text-neutral-800">
+                                <x-lucide-clock class="w-4 h-4 text-neutral-400" />
                                 @if($revision->reviewed_at)
                                     {{ \Carbon\Carbon::parse($revision->reviewed_at)->format('M d, Y h:i A') }}
                                 @else
@@ -257,8 +272,8 @@
                         @if($revision->status === 'approved' && $revision->assignedAdiutor)
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Assigned To</h3>
-                            <div class="flex items-center text-neutral-800">
-                                <i class="fas fa-user-tag text-neutral-400 mr-2"></i>
+                            <div class="flex items-center gap-2 text-neutral-800">
+                                <x-lucide-user-cog class="w-4 h-4 text-neutral-400" />
                                 {{ $revision->assignedAdiutor->fullName }}
                             </div>
                         </div>
@@ -267,8 +282,8 @@
                         @if($revision->approved_due_date)
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Approved Due Date</h3>
-                            <div class="flex items-center text-neutral-800">
-                                <i class="fas fa-calendar-alt text-neutral-400 mr-2"></i>
+                            <div class="flex items-center gap-2 text-neutral-800">
+                                <x-lucide-calendar class="w-4 h-4 text-neutral-400" />
                                 {{ \Carbon\Carbon::parse($revision->approved_due_date)->format('M d, Y') }}
                             </div>
                         </div>
@@ -284,31 +299,32 @@
                     </div>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
             @endif
 
             <!-- Completion Details Card -->
             @if($revision->status === 'completed')
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-neutral-200 bg-success-50">
-                    <h2 class="text-lg font-semibold text-success-700">
-                        <i class="fas fa-check-double mr-2"></i>Completion Details
+            <x-ui.card>
+                <div class="px-6 py-4 border-b border-neutral-100 bg-success-50">
+                    <h2 class="text-lg font-semibold text-success-700 flex items-center gap-2">
+                        <x-lucide-check-check class="w-5 h-5" />
+                        Completion Details
                     </h2>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Completed By</h3>
-                            <div class="flex items-center text-neutral-800">
-                                <i class="fas fa-user-check text-neutral-400 mr-2"></i>
+                            <div class="flex items-center gap-2 text-neutral-800">
+                                <x-lucide-user-check class="w-4 h-4 text-neutral-400" />
                                 {{ $revision->completedBy->fullName ?? 'N/A' }}
                             </div>
                         </div>
                         
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Completed On</h3>
-                            <div class="flex items-center text-neutral-800">
-                                <i class="fas fa-clock text-neutral-400 mr-2"></i>
+                            <div class="flex items-center gap-2 text-neutral-800">
+                                <x-lucide-clock class="w-4 h-4 text-neutral-400" />
                                 @if($revision->completed_at)
                                     {{ \Carbon\Carbon::parse($revision->completed_at)->format('M d, Y h:i A') }}
                                 @else
@@ -327,7 +343,7 @@
                     </div>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
             @endif
 
         </div>
@@ -337,34 +353,36 @@
             
             <!-- Client Information Card -->
             @if($revision->requestedBy)
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-neutral-200">
-                    <h3 class="text-lg font-semibold text-primary-500">
-                        <i class="fas fa-user mr-2"></i>Client Information
+            <x-ui.card>
+                <div class="px-6 py-4 border-b border-neutral-100">
+                    <h3 class="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+                        <x-lucide-user class="w-5 h-5 text-primary-500" />
+                        Client Information
                     </h3>
                 </div>
                 <div class="p-6">
                     <div class="text-center mb-4">
                         <div class="w-20 h-20 bg-primary-100 rounded-full mx-auto flex items-center justify-center mb-3">
-                            <i class="fas fa-user text-3xl text-primary-600"></i>
+                            <x-lucide-user class="w-10 h-10 text-primary-600" />
                         </div>
                         <h4 class="text-lg font-semibold text-neutral-900">{{ $revision->requestedBy->fullName }}</h4>
                         <p class="text-sm text-neutral-500">{{ $revision->requestedBy->email }}</p>
                     </div>
                     
-                    <a href="{{ route('admin.clients.show', $revision->requestedBy->id) }}" 
-                       class="block w-full text-center bg-primary-500 hover:bg-primary-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
-                        <i class="fas fa-eye mr-2"></i>View Client Profile
-                    </a>
+                    <x-ui.button href="{{ route('admin.clients.show', $revision->requestedBy->id) }}" variant="primary" class="w-full inline-flex items-center justify-center gap-2">
+                        <x-lucide-eye class="w-4 h-4" />
+                        View Client Profile
+                    </x-ui.button>
                 </div>
-            </div>
+            </x-ui.card>
             @endif
 
             <!-- Status Timeline Card -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-neutral-200">
-                    <h3 class="text-lg font-semibold text-primary-500">
-                        <i class="fas fa-history mr-2"></i>Status Timeline
+            <x-ui.card>
+                <div class="px-6 py-4 border-b border-neutral-100">
+                    <h3 class="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+                        <x-lucide-history class="w-5 h-5 text-primary-500" />
+                        Status Timeline
                     </h3>
                 </div>
                 <div class="p-6">
@@ -372,8 +390,8 @@
                         <!-- Created -->
                         <div class="flex items-start">
                             <div class="flex-shrink-0">
-                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-plus text-white text-xs"></i>
+                                <div class="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                                    <x-lucide-plus class="w-4 h-4 text-white" />
                                 </div>
                             </div>
                             <div class="ml-3">
@@ -387,7 +405,11 @@
                         <div class="flex items-start">
                             <div class="flex-shrink-0">
                                 <div class="w-8 h-8 {{ $revision->status === 'approved' ? 'bg-success-500' : 'bg-error-500' }} rounded-full flex items-center justify-center">
-                                    <i class="fas {{ $revision->status === 'approved' ? 'fa-check' : 'fa-times' }} text-white text-xs"></i>
+                                    @if($revision->status === 'approved')
+                                        <x-lucide-check class="w-4 h-4 text-white" />
+                                    @else
+                                        <x-lucide-x class="w-4 h-4 text-white" />
+                                    @endif
                                 </div>
                             </div>
                             <div class="ml-3">
@@ -402,7 +424,7 @@
                         <div class="flex items-start">
                             <div class="flex-shrink-0">
                                 <div class="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-check-double text-white text-xs"></i>
+                                    <x-lucide-check-check class="w-4 h-4 text-white" />
                                 </div>
                             </div>
                             <div class="ml-3">
@@ -413,45 +435,46 @@
                         @endif
                     </div>
                 </div>
-            </div>
+            </x-ui.card>
 
             <!-- Quick Actions Card -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-neutral-200">
-                    <h3 class="text-lg font-semibold text-primary-500">
-                        <i class="fas fa-bolt mr-2"></i>Quick Actions
+            <x-ui.card>
+                <div class="px-6 py-4 border-b border-neutral-100">
+                    <h3 class="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+                        <x-lucide-zap class="w-5 h-5 text-primary-500" />
+                        Quick Actions
                     </h3>
                 </div>
                 <div class="p-6 space-y-3">
                     @if($revision->project)
-                    <a href="{{ route('admin.projects.show', $revision->project->id) }}" 
-                       class="block w-full text-center bg-neutral-100 hover:bg-neutral-200 text-neutral-700 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
-                        <i class="fas fa-project-diagram mr-2"></i>View Project
-                    </a>
+                    <x-ui.button href="{{ route('admin.projects.show', $revision->project->id) }}" variant="secondary" class="w-full inline-flex items-center justify-center gap-2">
+                        <x-lucide-folder-kanban class="w-4 h-4" />
+                        View Project
+                    </x-ui.button>
                     @endif
 
                     @if($revision->task)
-                    <a href="{{ route('admin.tasks.show', $revision->task->taskID) }}" 
-                       class="block w-full text-center bg-neutral-100 hover:bg-neutral-200 text-neutral-700 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
-                        <i class="fas fa-tasks mr-2"></i>View Task
-                    </a>
+                    <x-ui.button href="{{ route('admin.tasks.show', $revision->task->taskID) }}" variant="secondary" class="w-full inline-flex items-center justify-center gap-2">
+                        <x-lucide-list-checks class="w-4 h-4" />
+                        View Task
+                    </x-ui.button>
                     @endif
 
                     @if($revision->document)
-                    <a href="{{ route('admin.documents.show', $revision->document->documentID) }}" 
-                       class="block w-full text-center bg-neutral-100 hover:bg-neutral-200 text-neutral-700 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
-                        <i class="fas fa-file-alt mr-2"></i>View Document
-                    </a>
+                    <x-ui.button href="{{ route('admin.documents.show', $revision->document->documentID) }}" variant="secondary" class="w-full inline-flex items-center justify-center gap-2">
+                        <x-lucide-file-text class="w-4 h-4" />
+                        View Document
+                    </x-ui.button>
                     @endif
 
                     @if($revision->requestedBy)
-                    <a href="{{ route('admin.clients.show', $revision->requestedBy->id) }}" 
-                       class="block w-full text-center bg-neutral-100 hover:bg-neutral-200 text-neutral-700 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
-                        <i class="fas fa-user mr-2"></i>View Client
-                    </a>
+                    <x-ui.button href="{{ route('admin.clients.show', $revision->requestedBy->id) }}" variant="secondary" class="w-full inline-flex items-center justify-center gap-2">
+                        <x-lucide-user class="w-4 h-4" />
+                        View Client
+                    </x-ui.button>
                     @endif
                 </div>
-            </div>
+            </x-ui.card>
 
         </div>
     </div>
@@ -459,29 +482,30 @@
 
 <!-- Approve Modal -->
 <div id="approveModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl max-w-lg w-full shadow-xl">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-xl">
         <form action="{{ route('admin.revisions.approve', $revision->id) }}" method="POST">
             @csrf
-            <div class="px-6 py-5 border-b border-neutral-200">
+            <div class="px-6 py-5 border-b border-neutral-100">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-neutral-900">
-                        <i class="fas fa-check-circle text-success-500 mr-2"></i>Approve Revision Request
+                    <h3 class="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+                        <x-lucide-check-circle class="w-5 h-5 text-success-500" />
+                        Approve Revision Request
                     </h3>
                     <button type="button" 
                             onclick="document.getElementById('approveModal').classList.add('hidden')"
                             class="text-neutral-400 hover:text-neutral-600">
-                        <i class="fas fa-times text-xl"></i>
+                        <x-lucide-x class="w-5 h-5" />
                     </button>
                 </div>
             </div>
             <div class="px-6 py-5 space-y-4">                
                 <div>
-                    <label for="assigned_adiutor_id" class="block text-sm font-medium text-neutral-700 mb-2">
-                        Assign Adiutor <span class="text-error-500">*</span>
-                    </label>
-                    <select name="assigned_adiutor_id" id="assigned_adiutor_id" 
-                            class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-primary-500" 
-                            required>
+                    <x-ui.select 
+                        name="assigned_adiutor_id" 
+                        id="assigned_adiutor_id" 
+                        label="Assign Adiutor"
+                        required
+                    >
                         <option value="">Select Adiutor</option>
                         @foreach($adiutors as $adiutor)
                             <option value="{{ $adiutor->id }}" 
@@ -492,25 +516,26 @@
                                 @endif
                             </option>
                         @endforeach
-                    </select>
+                    </x-ui.select>
                     @if($revision->source_type === 'task' && $revision->task && $revision->task->assignedTo)
-                        <p class="mt-1 text-xs text-blue-600">
-                            <i class="fas fa-info-circle mr-1"></i>
+                        <p class="mt-1 text-xs text-info-600 flex items-center gap-1">
+                            <x-lucide-info class="w-3 h-3" />
                             This task is currently assigned to {{ $revision->task->assignedUser ? $revision->task->assignedUser->fullName : 'an adiutor' }}
                         </p>
                     @endif
                 </div>
                 <div>
-                    <label for="approved_due_date" class="block text-sm font-medium text-neutral-700 mb-2">
-                        Due Date
-                    </label>
-                    <input type="date" name="approved_due_date" id="approved_due_date" 
-                           value="{{ $revision->requested_due_date ? $revision->requested_due_date->format('Y-m-d') : '' }}"
-                           class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-primary-500" 
-                           min="{{ date('Y-m-d') }}">
+                    <x-ui.input 
+                        type="date" 
+                        name="approved_due_date" 
+                        id="approved_due_date" 
+                        label="Due Date"
+                        :value="$revision->requested_due_date ? $revision->requested_due_date->format('Y-m-d') : ''"
+                        min="{{ date('Y-m-d') }}"
+                    />
                     @if($revision->requested_due_date)
-                        <p class="mt-1 text-xs text-neutral-600">
-                            <i class="fas fa-calendar-alt mr-1"></i>
+                        <p class="mt-1 text-xs text-neutral-600 flex items-center gap-1">
+                            <x-lucide-calendar class="w-3 h-3" />
                             Client requested: {{ $revision->requested_due_date->format('M d, Y') }}
                         </p>
                     @endif
@@ -520,15 +545,15 @@
                         Notes (Optional)
                     </label>
                     <textarea name="admin_notes" id="admin_notes" rows="3" 
-                              class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-primary-500" 
+                              class="w-full border-neutral-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-primary-500" 
                               placeholder="Add any notes or instructions for the adiutor..."></textarea>
                 </div>
                 
                 <!-- Task Selection for Project-based Revisions -->
                 @if($revision->source_type === 'project' && $revision->project)
                     <div class="border-t pt-4">
-                        <label class="block text-sm font-semibold text-neutral-900 mb-3">
-                            <i class="fas fa-tasks text-primary-500 mr-2"></i>
+                        <label class="text-sm font-semibold text-neutral-900 mb-3 flex items-center gap-2">
+                            <x-lucide-list-checks class="w-4 h-4 text-primary-500" />
                             Select Tasks to Reopen (Optional)
                         </label>
                         <p class="text-xs text-neutral-600 mb-3">
@@ -598,15 +623,14 @@
                     </div>
                 @endif
             </div>
-            <div class="px-6 py-4 bg-neutral-50 rounded-b-xl flex justify-end space-x-3">
-                <button type="button" 
-                        onclick="document.getElementById('approveModal').classList.add('hidden')"
-                        class="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors">
+            <div class="px-6 py-4 bg-neutral-50 rounded-b-2xl flex justify-end space-x-3">
+                <x-ui.button type="button" variant="secondary" onclick="document.getElementById('approveModal').classList.add('hidden')">
                     Cancel
-                </button>
-                <button type="submit" class="px-4 py-2 text-sm font-medium bg-success-500 text-white rounded-lg hover:bg-success-600 transition-colors">
-                    <i class="fas fa-check-circle mr-2"></i>Approve Request
-                </button>
+                </x-ui.button>
+                <x-ui.button type="submit" variant="success" class="inline-flex items-center gap-2">
+                    <x-lucide-check-circle class="w-4 h-4" />
+                    Approve Request
+                </x-ui.button>
             </div>
         </form>
     </div>
@@ -614,18 +638,19 @@
 
 <!-- Reject Modal -->
 <div id="rejectModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl max-w-lg w-full shadow-xl">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-xl">
         <form action="{{ route('admin.revisions.reject', $revision->id) }}" method="POST">
             @csrf
-            <div class="px-6 py-5 border-b border-neutral-200">
+            <div class="px-6 py-5 border-b border-neutral-100">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-neutral-900">
-                        <i class="fas fa-times-circle text-error-500 mr-2"></i>Reject Revision Request
+                    <h3 class="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+                        <x-lucide-x-circle class="w-5 h-5 text-error-500" />
+                        Reject Revision Request
                     </h3>
                     <button type="button" 
                             onclick="document.getElementById('rejectModal').classList.add('hidden')"
                             class="text-neutral-400 hover:text-neutral-600">
-                        <i class="fas fa-times text-xl"></i>
+                        <x-lucide-x class="w-5 h-5" />
                     </button>
                 </div>
             </div>
@@ -635,23 +660,23 @@
                         Reason for Rejection <span class="text-error-500">*</span>
                     </label>
                     <textarea name="admin_notes" id="reject_notes" rows="4" 
-                              class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-primary-500" 
+                              class="w-full border-neutral-300 rounded-lg shadow-sm focus:border-primary-500 focus:ring-primary-500" 
                               required 
                               placeholder="Explain why this revision request is being rejected..."></textarea>
-                    <p class="mt-2 text-xs text-neutral-500">
-                        <i class="fas fa-info-circle mr-1"></i>This will be visible to the client.
+                    <p class="mt-2 text-xs text-neutral-500 flex items-center gap-1">
+                        <x-lucide-info class="w-3 h-3" />
+                        This will be visible to the client.
                     </p>
                 </div>
             </div>
-            <div class="px-6 py-4 bg-neutral-50 rounded-b-xl flex justify-end space-x-3">
-                <button type="button" 
-                        onclick="document.getElementById('rejectModal').classList.add('hidden')"
-                        class="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors">
+            <div class="px-6 py-4 bg-neutral-50 rounded-b-2xl flex justify-end space-x-3">
+                <x-ui.button type="button" variant="secondary" onclick="document.getElementById('rejectModal').classList.add('hidden')">
                     Cancel
-                </button>
-                <button type="submit" class="px-4 py-2 text-sm font-medium bg-error-500 text-white rounded-lg hover:bg-error-600 transition-colors">
-                    <i class="fas fa-times-circle mr-2"></i>Reject Request
-                </button>
+                </x-ui.button>
+                <x-ui.button type="submit" variant="danger" class="inline-flex items-center gap-2">
+                    <x-lucide-x-circle class="w-4 h-4" />
+                    Reject Request
+                </x-ui.button>
             </div>
         </form>
     </div>
