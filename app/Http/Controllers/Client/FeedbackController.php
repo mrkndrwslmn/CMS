@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\StoreFeedbackRequest;
+use App\Models\Feedback;
 use App\Models\Project;
 use App\Models\ProjectFeedback;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use App\Notifications\FeedbackReceivedNotification;
@@ -71,8 +71,8 @@ class FeedbackController extends Controller
             'client_id' => auth()->id(),
             'rating' => $averageRating,
             'message' => $detailedMessage,
-            'type' => 'service',
-            'status' => 'reviewed',
+            'type' => Feedback::TYPE_SERVICE,
+            'status' => Feedback::STATUS_REVIEWED,
             'category' => 'project_completion'
         ]);
 
