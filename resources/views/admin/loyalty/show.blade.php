@@ -37,31 +37,29 @@
                 <div class="p-8">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <!-- Available Points -->
-                        <div class="text-center">
-                            <p class="text-sm text-neutral-600 mb-2">Available Points</p>
-                            <p class="text-5xl font-bold text-primary-600 mb-2">{{ number_format($loyaltyPoint->available_points) }}</p>
-                            <p class="text-sm text-neutral-500">Current Balance</p>
-                        </div>
+                        <x-loyalty.points-display 
+                            :points="$loyaltyPoint->available_points" 
+                            label="Available Points"
+                            size="lg"
+                        >
+                            Current Balance
+                        </x-loyalty.points-display>
 
                         <!-- Current Tier -->
                         <div class="text-center border-x border-neutral-200">
                             <p class="text-sm text-neutral-600 mb-2">Current Tier</p>
-                            <div class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-2xl font-bold
-                                {{ $loyaltyPoint->tier === 'platinum' ? 'bg-info-100 text-info-700' : '' }}
-                                {{ $loyaltyPoint->tier === 'gold' ? 'bg-warning-100 text-warning-700' : '' }}
-                                {{ $loyaltyPoint->tier === 'silver' ? 'bg-neutral-200 text-neutral-700' : '' }}
-                                {{ $loyaltyPoint->tier === 'bronze' ? 'bg-orange-100 text-orange-700' : '' }}">
-                                <x-lucide-award class="w-6 h-6" />
-                                {{ ucfirst($loyaltyPoint->tier) }}
-                            </div>
+                            <x-loyalty.tier-badge :tier="$loyaltyPoint->tier" size="xl" />
                         </div>
 
                         <!-- Lifetime Stats -->
-                        <div class="text-center">
-                            <p class="text-sm text-neutral-600 mb-2">Lifetime Earned</p>
-                            <p class="text-5xl font-bold text-success-600 mb-2">{{ number_format($loyaltyPoint->lifetime_earned) }}</p>
-                            <p class="text-sm text-neutral-500">{{ number_format($loyaltyPoint->lifetime_redeemed) }} redeemed</p>
-                        </div>
+                        <x-loyalty.points-display 
+                            :points="$loyaltyPoint->lifetime_earned" 
+                            label="Lifetime Earned"
+                            type="earned"
+                            size="lg"
+                        >
+                            {{ number_format($loyaltyPoint->lifetime_redeemed) }} redeemed
+                        </x-loyalty.points-display>
                     </div>
                 </div>
             </x-ui.card>

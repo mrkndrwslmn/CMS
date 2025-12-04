@@ -13,6 +13,73 @@ class Feedback extends Model
     protected $table = 'feedbacks';
 
     /**
+     * Feedback status constants.
+     */
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_REVIEWED = 'reviewed';
+    public const STATUS_IN_PROGRESS = 'in_progress';
+    public const STATUS_RESOLVED = 'resolved';
+    public const STATUS_CLOSED = 'closed';
+
+    /**
+     * Feedback type constants.
+     */
+    public const TYPE_GENERAL = 'general';
+    public const TYPE_SERVICE = 'service';
+    public const TYPE_TECHNICAL = 'technical';
+    public const TYPE_COMPLAINT = 'complaint';
+    public const TYPE_SUGGESTION = 'suggestion';
+
+    /**
+     * Feedback priority constants.
+     */
+    public const PRIORITY_LOW = 'low';
+    public const PRIORITY_MEDIUM = 'medium';
+    public const PRIORITY_HIGH = 'high';
+    public const PRIORITY_URGENT = 'urgent';
+
+    /**
+     * Get all available statuses.
+     */
+    public static function statuses(): array
+    {
+        return [
+            self::STATUS_PENDING,
+            self::STATUS_REVIEWED,
+            self::STATUS_IN_PROGRESS,
+            self::STATUS_RESOLVED,
+            self::STATUS_CLOSED,
+        ];
+    }
+
+    /**
+     * Get all available types.
+     */
+    public static function types(): array
+    {
+        return [
+            self::TYPE_GENERAL,
+            self::TYPE_SERVICE,
+            self::TYPE_TECHNICAL,
+            self::TYPE_COMPLAINT,
+            self::TYPE_SUGGESTION,
+        ];
+    }
+
+    /**
+     * Get all available priorities.
+     */
+    public static function priorities(): array
+    {
+        return [
+            self::PRIORITY_LOW,
+            self::PRIORITY_MEDIUM,
+            self::PRIORITY_HIGH,
+            self::PRIORITY_URGENT,
+        ];
+    }
+
+    /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\HourIncreaseRequest;
 use App\Models\User;
+use App\Notifications\HourIncreaseReviewedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -111,7 +112,8 @@ class HourIncreaseRequestController extends Controller
 
             DB::commit();
 
-            // TODO: Notify adiutor about approval
+            // Notify adiutor about approval
+            $this->notifyAdiutor($hourRequest, 'approved');
 
             return redirect()->route('admin.hour-requests.index')
                 ->with('success', "Hour increase request approved. New max hours: {$request->approved_hours}");
@@ -148,7 +150,8 @@ class HourIncreaseRequestController extends Controller
 
             DB::commit();
 
-            // TODO: Notify adiutor about rejection
+            // Notify adiutor about rejection
+            $this->notifyAdiutor($hourRequest, 'rejected');
 
             return redirect()->route('admin.hour-requests.index')
                 ->with('success', 'Hour increase request rejected.');
@@ -183,6 +186,9 @@ class HourIncreaseRequestController extends Controller
 
             DB::commit();
 
+            // Notify adiutor about approval
+            $this->notifyAdiutor($hourRequest, 'approved');
+
             return response()->json([
                 'success' => true,
                 'message' => 'Request approved successfully.',
@@ -195,6 +201,36 @@ class HourIncreaseRequestController extends Controller
                 'success' => false,
                 'message' => 'Failed to approve request.',
             ], 500);
+        }
+    }
+
+    /**
+     * Notify the adiutor about the review decision
+     *
+     * @param HourIncreaseRequest $hourRequest
+     * @param string $status 'approved' or 'rejected'
+     */
+    protected function notifyAdiutor(HourIncreaseRequest $hourRequest, string $status): void
+    {
+        try {
+            // Reload the model to ensure we have fresh data with relationships
+            $hourRequest->load('adiutor', 'project');
+
+            if ($hourRequest->adiutor) {
+                $hourRequest->adiutor->notify(new HourIncreaseReviewedNotification($hourRequest, $status));
+                
+                \Log::info('Hour increase review notification sent to adiutor', [
+                    'adiutor_id' => $hourRequest->adiutor_id,
+                    'request_id' => $hourRequest->id,
+                    'status' => $status,
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to notify adiutor about hour increase review', [
+                'adiutor_id' => $hourRequest->adiutor_id,
+                'request_id' => $hourRequest->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

@@ -91,6 +91,106 @@
                     </div>
                 </div>
 
+                <!-- Project Template Selection -->
+                @if(isset($templates) && $templates->count() > 0)
+                <div class="border-t border-neutral-100 pt-6">
+                    <h3 class="text-lg font-semibold text-neutral-800 mb-4">
+                        <x-lucide-layout-template class="w-5 h-5 inline-block mr-1 text-primary-600" />
+                        Project Template <span class="text-sm font-normal text-neutral-500">(Optional)</span>
+                    </h3>
+                    
+                    <div>
+                        <label for="template_id" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Select a Template
+                        </label>
+                        <select id="template_id" 
+                                name="template_id" 
+                                class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors @error('template_id') border-error-500 @enderror"
+                                onchange="onTemplateChange()">
+                            <option value="">-- No Template (Start from scratch) --</option>
+                            @php $currentCategory = null; @endphp
+                            @foreach($templates as $template)
+                                @if($currentCategory !== $template->category)
+                                    @if($currentCategory !== null)
+                                        </optgroup>
+                                    @endif
+                                    <optgroup label="{{ ucwords(str_replace('-', ' ', $template->category)) }}">
+                                    @php $currentCategory = $template->category; @endphp
+                                @endif
+                                <option value="{{ $template->id }}" 
+                                        data-tasks="{{ json_encode($template->default_tasks ?? []) }}"
+                                        data-milestones="{{ json_encode($template->milestones_template ?? []) }}"
+                                        data-skills="{{ json_encode($template->skills_required ?? []) }}"
+                                        data-budget-type="{{ $template->budget_type }}"
+                                        data-duration="{{ $template->estimated_duration_days }}"
+                                        data-description="{{ $template->description }}"
+                                        {{ old('template_id') == $template->id ? 'selected' : '' }}>
+                                    {{ $template->name }} 
+                                    @if($template->estimated_duration_days)
+                                        ({{ $template->duration }})
+                                    @endif
+                                </option>
+                            @endforeach
+                            @if($currentCategory !== null)
+                                </optgroup>
+                            @endif
+                        </select>
+                        @error('template_id')
+                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Template Details Preview -->
+                    <div id="templateDetails" class="mt-4 p-4 bg-primary-50 border border-primary-100 rounded-xl hidden">
+                        <h4 class="text-sm font-semibold text-primary-800 mb-3 flex items-center">
+                            <x-lucide-info class="w-4 h-4 mr-1.5" />
+                            Template Preview
+                        </h4>
+                        <p id="templateDescription" class="text-sm text-primary-700 mb-4"></p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Tasks Preview -->
+                            <div id="templateTasksPreview" class="hidden">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-primary-800">
+                                        <x-lucide-list-checks class="w-4 h-4 inline mr-1" />
+                                        Default Tasks (<span id="taskCount">0</span>)
+                                    </span>
+                                    <label class="flex items-center gap-2 text-xs">
+                                        <input type="checkbox" name="apply_template_tasks" value="1" checked
+                                               class="w-4 h-4 text-primary-600 border-primary-300 rounded focus:ring-primary-500">
+                                        Apply tasks
+                                    </label>
+                                </div>
+                                <ul id="taskList" class="text-xs text-primary-600 space-y-1 max-h-32 overflow-y-auto"></ul>
+                            </div>
+                            
+                            <!-- Milestones Preview -->
+                            <div id="templateMilestonesPreview" class="hidden">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-primary-800">
+                                        <x-lucide-flag class="w-4 h-4 inline mr-1" />
+                                        Milestones (<span id="milestoneCount">0</span>)
+                                    </span>
+                                    <label class="flex items-center gap-2 text-xs">
+                                        <input type="checkbox" name="apply_template_milestones" value="1" checked
+                                               class="w-4 h-4 text-primary-600 border-primary-300 rounded focus:ring-primary-500">
+                                        Apply milestones
+                                    </label>
+                                </div>
+                                <ul id="milestoneList" class="text-xs text-primary-600 space-y-1 max-h-32 overflow-y-auto"></ul>
+                            </div>
+                        </div>
+
+                        <!-- Skills Preview -->
+                        <div id="templateSkillsPreview" class="mt-3 hidden">
+                            <span class="text-sm font-medium text-primary-800">Required Skills:</span>
+                            <div id="skillTags" class="flex flex-wrap gap-1 mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 <!-- Basic Information -->
                 <div class="border-t border-neutral-100 pt-6">
                     <h3 class="text-lg font-semibold text-neutral-800 mb-4">Project Information</h3>
@@ -277,6 +377,7 @@
                 <ul class="text-sm text-info-700 space-y-1">
                     <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> Projects can only be created from paid service requests</li>
                     <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> The project budget will be populated from the approved service request budget</li>
+                    <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> <strong>Use a template</strong> to automatically create tasks and milestones for your project</li>
                     <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> Once created, the project will be in "Active" status and ready for task assignment</li>
                     <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> You can assign Adiutors to the project after creation</li>
                     <li class="flex items-center gap-2"><x-lucide-circle class="w-1.5 h-1.5" /> All fields marked with <span class="text-error-600">*</span> are required</li>
@@ -322,9 +423,102 @@
         }
     }
 
+    function onTemplateChange() {
+        const select = document.getElementById('template_id');
+        const detailsDiv = document.getElementById('templateDetails');
+        const budgetTypeSelect = document.getElementById('budget_type');
+        const skillsInput = document.getElementById('skills_required');
+        
+        if (!select || !select.value) {
+            if (detailsDiv) detailsDiv.classList.add('hidden');
+            return;
+        }
+        
+        const selectedOption = select.options[select.selectedIndex];
+        const tasks = JSON.parse(selectedOption.dataset.tasks || '[]');
+        const milestones = JSON.parse(selectedOption.dataset.milestones || '[]');
+        const skills = JSON.parse(selectedOption.dataset.skills || '[]');
+        const budgetType = selectedOption.dataset.budgetType;
+        const description = selectedOption.dataset.description || '';
+        
+        // Show template details
+        detailsDiv.classList.remove('hidden');
+        document.getElementById('templateDescription').textContent = description;
+        
+        // Update budget type if template has one
+        if (budgetType && budgetTypeSelect) {
+            budgetTypeSelect.value = budgetType;
+        }
+        
+        // Auto-populate skills if empty
+        if (skills.length > 0 && skillsInput && !skillsInput.value) {
+            skillsInput.value = JSON.stringify(skills);
+        }
+        
+        // Show tasks preview
+        const tasksPreview = document.getElementById('templateTasksPreview');
+        const taskList = document.getElementById('taskList');
+        const taskCount = document.getElementById('taskCount');
+        
+        if (tasks.length > 0) {
+            tasksPreview.classList.remove('hidden');
+            taskCount.textContent = tasks.length;
+            taskList.innerHTML = tasks.map(task => 
+                `<li class="flex items-start gap-1">
+                    <span class="inline-block w-1.5 h-1.5 bg-primary-400 rounded-full mt-1.5 flex-shrink-0"></span>
+                    <span>${escapeHtml(task.title)} 
+                        <span class="text-primary-400">(${task.priority || 'medium'}, ${task.estimated_hours || '?'}h)</span>
+                    </span>
+                </li>`
+            ).join('');
+        } else {
+            tasksPreview.classList.add('hidden');
+        }
+        
+        // Show milestones preview
+        const milestonesPreview = document.getElementById('templateMilestonesPreview');
+        const milestoneList = document.getElementById('milestoneList');
+        const milestoneCount = document.getElementById('milestoneCount');
+        
+        if (milestones.length > 0) {
+            milestonesPreview.classList.remove('hidden');
+            milestoneCount.textContent = milestones.length;
+            milestoneList.innerHTML = milestones.map(ms => 
+                `<li class="flex items-start gap-1">
+                    <span class="inline-block w-1.5 h-1.5 bg-primary-400 rounded-full mt-1.5 flex-shrink-0"></span>
+                    <span>${escapeHtml(ms.phase_name)} 
+                        <span class="text-primary-400">(${ms.percentage}%)</span>
+                    </span>
+                </li>`
+            ).join('');
+        } else {
+            milestonesPreview.classList.add('hidden');
+        }
+        
+        // Show skills preview
+        const skillsPreview = document.getElementById('templateSkillsPreview');
+        const skillTags = document.getElementById('skillTags');
+        
+        if (skills.length > 0) {
+            skillsPreview.classList.remove('hidden');
+            skillTags.innerHTML = skills.map(skill => 
+                `<span class="inline-block px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs">${escapeHtml(skill)}</span>`
+            ).join('');
+        } else {
+            skillsPreview.classList.add('hidden');
+        }
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     // Run on page load if service request is already selected
     document.addEventListener('DOMContentLoaded', function() {
         populateServiceRequestDetails();
+        onTemplateChange();
     });
 
     // Auto-format JSON fields on blur

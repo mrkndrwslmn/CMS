@@ -17,15 +17,22 @@
             title="Client Management" 
             description="Manage all clients and their projects"
         />
-        <a href="{{ route('admin.clients.create') }}">
-            <x-ui.button icon="plus">
-                Add New Client
-            </x-ui.button>
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('admin.clients.export', request()->only(['status', 'date_from', 'date_to'])) }}">
+                <x-ui.button variant="secondary" icon="download">
+                    Export CSV
+                </x-ui.button>
+            </a>
+            <a href="{{ route('admin.clients.create') }}">
+                <x-ui.button icon="plus">
+                    Add New Client
+                </x-ui.button>
+            </a>
+        </div>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
         <x-ui.stat-card 
             label="Total Clients" 
             :value="$stats['total_clients']" 
@@ -49,6 +56,14 @@
             icon="folder-kanban"
             iconBg="warning"
         />
+        <a href="{{ route('admin.clients.archived') }}" class="block">
+            <x-ui.stat-card 
+                label="Archived Clients" 
+                :value="$stats['archived_clients'] ?? 0" 
+                icon="archive"
+                iconBg="neutral"
+            />
+        </a>
     </div>
 
     <!-- Filters and Search -->
@@ -59,7 +74,7 @@
                 <h3 class="text-lg font-medium text-neutral-700">Filters</h3>
             </div>
             <form method="GET" action="{{ route('admin.clients.index') }}">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
                     <div>
                         <label for="search" class="block text-sm font-medium text-neutral-700 mb-1.5">Search</label>
                         <x-ui.input 
@@ -67,7 +82,7 @@
                             name="search" 
                             id="search" 
                             icon="search"
-                            placeholder="Search by name, email, or phone..." 
+                            placeholder="Name, email, phone..." 
                             :value="request('search')"
                         />
                     </div>
@@ -79,6 +94,24 @@
                             <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
                             <option value="banned" {{ request('status') == 'banned' ? 'selected' : '' }}>Banned</option>
                         </x-ui.select>
+                    </div>
+                    <div>
+                        <label for="date_from" class="block text-sm font-medium text-neutral-700 mb-1.5">Joined From</label>
+                        <x-ui.input 
+                            type="date" 
+                            name="date_from" 
+                            id="date_from" 
+                            :value="request('date_from')"
+                        />
+                    </div>
+                    <div>
+                        <label for="date_to" class="block text-sm font-medium text-neutral-700 mb-1.5">Joined To</label>
+                        <x-ui.input 
+                            type="date" 
+                            name="date_to" 
+                            id="date_to" 
+                            :value="request('date_to')"
+                        />
                     </div>
                     <div>
                         <label for="sort" class="block text-sm font-medium text-neutral-700 mb-1.5">Sort By</label>
@@ -105,17 +138,55 @@
     </x-ui.card>
 
     <!-- Clients Table -->
-    <x-ui.card class="mb-6">
+    <x-ui.card class="mb-6" x-data="{ 
+        selectedClients: [],
+        selectAll: false,
+        toggleSelectAll() {
+            if (this.selectAll) {
+                this.selectedClients = [...document.querySelectorAll('input[name=\'client_checkbox\']')].map(el => el.value);
+            } else {
+                this.selectedClients = [];
+            }
+        }
+    }">
         <div class="px-6 py-4 border-b border-neutral-100">
-            <div class="flex items-center gap-2">
-                <x-lucide-users class="w-5 h-5 text-neutral-400" />
-                <h3 class="text-lg font-medium text-neutral-700">Clients List</h3>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <x-lucide-users class="w-5 h-5 text-neutral-400" />
+                    <h3 class="text-lg font-medium text-neutral-700">Clients List</h3>
+                </div>
+                <!-- Bulk Actions -->
+                <div x-show="selectedClients.length > 0" x-cloak class="flex items-center gap-3">
+                    <span class="text-sm text-neutral-600" x-text="selectedClients.length + ' selected'"></span>
+                    <form method="POST" action="{{ route('admin.clients.bulk-action') }}" class="flex items-center gap-2">
+                        @csrf
+                        <template x-for="id in selectedClients" :key="id">
+                            <input type="hidden" name="client_ids[]" :value="id">
+                        </template>
+                        <select name="action" required class="text-sm border-neutral-200 rounded-lg focus:ring-primary-500 focus:border-primary-500">
+                            <option value="">Select Action</option>
+                            <option value="activate">Activate</option>
+                            <option value="deactivate">Deactivate</option>
+                            <option value="ban">Ban</option>
+                            <option value="archive">Archive</option>
+                        </select>
+                        <x-ui.button type="submit" size="sm" onclick="return confirm('Are you sure you want to perform this action on the selected clients?')">
+                            Apply
+                        </x-ui.button>
+                    </form>
+                </div>
             </div>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-neutral-50 border-b border-neutral-100">
                     <tr>
+                        <th scope="col" class="px-6 py-3 text-left">
+                            <input type="checkbox" 
+                                   x-model="selectAll" 
+                                   @change="toggleSelectAll()"
+                                   class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                        </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Client</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Contact Info</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Projects</th>
@@ -127,6 +198,13 @@
                 <tbody class="divide-y divide-neutral-100">
                     @forelse($clients as $client)
                     <tr class="hover:bg-neutral-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" 
+                                   name="client_checkbox"
+                                   value="{{ $client->id }}"
+                                   x-model="selectedClients"
+                                   class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
@@ -145,10 +223,10 @@
                         <td class="px-6 py-4">
                             <div class="flex flex-wrap gap-1.5">
                                 <x-ui.badge type="info">
-                                    {{ $client->tasks->count() }} Tasks
+                                    {{ $client->created_projects_count ?? 0 }} Projects
                                 </x-ui.badge>
                                 <x-ui.badge type="neutral">
-                                    {{ $client->forms->count() }} Forms
+                                    {{ $client->service_requests_count ?? 0 }} Requests
                                 </x-ui.badge>
                             </div>
                         </td>
@@ -197,7 +275,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12">
+                        <td colspan="7" class="px-6 py-12">
                             <x-ui.empty-state 
                                 icon="users"
                                 title="No clients found"

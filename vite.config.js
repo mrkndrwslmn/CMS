@@ -8,7 +8,8 @@ export default defineConfig({
             input: [
                 'resources/css/app.css', 
                 'resources/js/app.js',
-                'resources/js/messaging.js'
+                'resources/js/messaging.js',
+                'resources/js/firebase-auth.js'
             ],
             refresh: true,
         }),

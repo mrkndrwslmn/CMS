@@ -92,11 +92,23 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is active
+     * Check if user is active.
+     * 
+     * Returns false if status is null or any value other than 'active'.
      */
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    /**
+     * Get the user's status, defaulting to 'inactive' if null.
+     *
+     * @return string
+     */
+    public function getStatusAttribute($value): string
+    {
+        return $value ?? 'inactive';
     }
 
     /**

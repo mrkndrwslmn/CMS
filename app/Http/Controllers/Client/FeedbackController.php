@@ -3,69 +3,52 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\StoreFeedbackRequest;
 use App\Models\Project;
 use App\Models\ProjectFeedback;
 use App\Models\User;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 use App\Notifications\FeedbackReceivedNotification;
 
 class FeedbackController extends Controller
 {
-    public function create($projectId)
+    /**
+     * Show the feedback creation form for a completed project.
+     *
+     * @param int $projectId
+     * @return View|RedirectResponse
+     */
+    public function create(int $projectId): View|RedirectResponse
     {
-        $project = Project::with(['assignments.adiutor'])
-            ->where('client_id', auth()->id())
-            ->where('status', 'completed')
-            ->findOrFail($projectId);
+        $project = $this->getCompletedProjectForClient($projectId);
 
-        // Check if feedback already exists for this project
-        $existingFeedback = ProjectFeedback::where('project_id', $projectId)
-            ->where('client_id', auth()->id())
-            ->first();
-
-        if ($existingFeedback) {
-            return redirect()->route('client.feedback.index')
+        if ($this->feedbackExistsForProject($projectId)) {
+            return redirect()->route('client.feedback')
                 ->with('error', 'You have already submitted feedback for this project.');
         }
 
         return view('client.feedback.create', compact('project'));
     }
 
-    public function store(Request $request, $projectId)
+    /**
+     * Store feedback for a completed project.
+     *
+     * @param StoreFeedbackRequest $request
+     * @param int $projectId
+     * @return RedirectResponse
+     */
+    public function store(StoreFeedbackRequest $request, int $projectId): RedirectResponse
     {
-        $project = Project::with(['assignments.adiutor'])
-            ->where('client_id', auth()->id())
-            ->where('status', 'completed')
-            ->findOrFail($projectId);
+        $project = $this->getCompletedProjectForClient($projectId);
 
-        // Check if feedback already exists for this project
-        $existingFeedback = ProjectFeedback::where('project_id', $projectId)
-            ->where('client_id', auth()->id())
-            ->first();
-
-        if ($existingFeedback) {
-            return redirect()->route('client.feedback.index')
+        if ($this->feedbackExistsForProject($projectId)) {
+            return redirect()->route('client.feedback')
                 ->with('error', 'You have already submitted feedback for this project.');
         }
 
-        // Validate project feedback (no adiutor_id needed)
-        $validated = $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
-            'quality_rating' => 'required|integer|min:1|max:5',
-            'communication_rating' => 'required|integer|min:1|max:5',
-            'timeliness_rating' => 'required|integer|min:1|max:5',
-            'comment' => 'required|string|max:1000',
-            'would_recommend' => 'boolean',
-            'public' => 'boolean'
-        ]);
-
-        // Calculate average rating from detailed ratings
-        $averageRating = round((
-            $validated['rating'] + 
-            $validated['quality_rating'] + 
-            $validated['communication_rating'] + 
-            $validated['timeliness_rating']
-        ) / 4);
+        $validated = $request->validated();
+        $averageRating = $request->averageRating();
 
         // Build comprehensive message with all feedback details
         $detailedMessage = "Overall Experience: {$validated['rating']}/5 stars\n";
@@ -115,7 +98,35 @@ class FeedbackController extends Controller
             }
         }
 
-        return redirect()->route('client.feedback,index')
+        return redirect()->route('client.feedback')
             ->with('success', 'Thank you for your feedback! It has been submitted successfully.');
+    }
+
+    /**
+     * Check if feedback already exists for a project from the current client.
+     *
+     * @param int $projectId
+     * @return bool
+     */
+    private function feedbackExistsForProject(int $projectId): bool
+    {
+        return ProjectFeedback::where('project_id', $projectId)
+            ->where('client_id', auth()->id())
+            ->exists();
+    }
+
+    /**
+     * Get a completed project owned by the current client.
+     *
+     * @param int $projectId
+     * @return Project
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    private function getCompletedProjectForClient(int $projectId): Project
+    {
+        return Project::with(['assignments.adiutor'])
+            ->where('client_id', auth()->id())
+            ->where('status', 'completed')
+            ->findOrFail($projectId);
     }
 }

@@ -10,12 +10,20 @@ use App\Models\Payment;
 use App\Events\TierUpgraded;
 use App\Mail\LoyaltyPointsEarnedMail;
 use App\Mail\TierUpgradedMail;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class LoyaltyService
 {
+    /**
+     * Cache key prefixes
+     */
+    private const CACHE_PREFIX = 'loyalty:';
+    private const CACHE_TTL_TIERS = 3600; // 1 hour for tier config
+    private const CACHE_TTL_STATS = 300;  // 5 minutes for statistics
+    private const CACHE_TTL_USER = 60;    // 1 minute for user-specific data
     /**
      * Calculate points earned for a payment
      * 
@@ -84,6 +92,10 @@ class LoyaltyService
                 'points' => $points,
                 'is_first_project' => $isFirstProject,
             ]);
+
+            // Clear caches after earning points
+            $this->clearUserCache($user);
+            $this->clearGlobalCache();
 
             // Send points earned email notification
             try {
@@ -207,7 +219,7 @@ class LoyaltyService
             $loyaltyPoint->earnPoints(
                 $bonusPoints,
                 'referral',
-                "Referral bonus for inviting {$referred->first_name} {$referred->last_name}"
+                "Referral bonus for inviting {$referred->fullName}"
             );
 
             Log::info('Referral bonus points awarded', [
@@ -384,12 +396,26 @@ class LoyaltyService
     }
 
     /**
-     * Get tier benefits for a specific tier
+     * Get tier benefits for a specific tier (cached)
      * 
      * @param string $tier
      * @return array
      */
     public function getTierBenefits(string $tier): array
+    {
+        return Cache::remember(
+            self::CACHE_PREFIX . "tier_benefits:{$tier}",
+            self::CACHE_TTL_TIERS,
+            function () use ($tier) {
+                return $this->getTierBenefitsData($tier);
+            }
+        );
+    }
+
+    /**
+     * Get tier benefits data (uncached)
+     */
+    protected function getTierBenefitsData(string $tier): array
     {
         $benefits = [
             'bronze' => [
@@ -441,18 +467,24 @@ class LoyaltyService
     }
 
     /**
-     * Get all tiers with their requirements
+     * Get all tiers with their requirements (cached)
      * 
      * @return array
      */
     public function getAllTiers(): array
     {
-        return config('loyalty.tiers', [
-            'bronze' => ['points' => 0, 'discount' => 0],
-            'silver' => ['points' => 5000, 'discount' => 5],
-            'gold' => ['points' => 15000, 'discount' => 10],
-            'platinum' => ['points' => 50000, 'discount' => 15],
-        ]);
+        return Cache::remember(
+            self::CACHE_PREFIX . 'all_tiers',
+            self::CACHE_TTL_TIERS,
+            function () {
+                return config('loyalty.tiers', [
+                    'bronze' => ['points' => 0, 'discount' => 0],
+                    'silver' => ['points' => 5000, 'discount' => 5],
+                    'gold' => ['points' => 15000, 'discount' => 10],
+                    'platinum' => ['points' => 50000, 'discount' => 15],
+                ]);
+            }
+        );
     }
 
     /**
@@ -482,6 +514,10 @@ class LoyaltyService
             $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
             $loyaltyPoint->adjustPoints($points, $reason, $adjustedBy);
 
+            // Clear caches after point adjustment
+            $this->clearUserCache($user);
+            $this->clearGlobalCache();
+
             Log::info('Loyalty points manually adjusted', [
                 'user_id' => $user->id,
                 'points' => $points,
@@ -499,12 +535,26 @@ class LoyaltyService
     }
 
     /**
-     * Get loyalty statistics for a user
+     * Get loyalty statistics for a user (cached for short period)
      * 
      * @param User $user
      * @return array
      */
     public function getUserStatistics(User $user): array
+    {
+        return Cache::remember(
+            self::CACHE_PREFIX . "user_stats:{$user->id}",
+            self::CACHE_TTL_USER,
+            function () use ($user) {
+                return $this->calculateUserStatistics($user);
+            }
+        );
+    }
+
+    /**
+     * Calculate user statistics (uncached)
+     */
+    protected function calculateUserStatistics(User $user): array
     {
         $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
         $tiers = $this->getAllTiers();
@@ -539,11 +589,25 @@ class LoyaltyService
     }
 
     /**
-     * Get global loyalty system statistics
+     * Get global loyalty system statistics (cached)
      * 
      * @return array
      */
     public function getGlobalStatistics(): array
+    {
+        return Cache::remember(
+            self::CACHE_PREFIX . 'global_stats',
+            self::CACHE_TTL_STATS,
+            function () {
+                return $this->calculateGlobalStatistics();
+            }
+        );
+    }
+
+    /**
+     * Calculate global statistics (uncached)
+     */
+    protected function calculateGlobalStatistics(): array
     {
         $totalMembers = LoyaltyPoint::count();
         
@@ -616,5 +680,51 @@ class LoyaltyService
         }
 
         return $totalPointsExpired;
+    }
+
+    /**
+     * Clear user-specific loyalty cache
+     * 
+     * @param User $user
+     * @return void
+     */
+    public function clearUserCache(User $user): void
+    {
+        Cache::forget(self::CACHE_PREFIX . "user_stats:{$user->id}");
+    }
+
+    /**
+     * Clear global statistics cache
+     * 
+     * @return void
+     */
+    public function clearGlobalCache(): void
+    {
+        Cache::forget(self::CACHE_PREFIX . 'global_stats');
+    }
+
+    /**
+     * Clear all tier-related caches
+     * 
+     * @return void
+     */
+    public function clearTierCache(): void
+    {
+        Cache::forget(self::CACHE_PREFIX . 'all_tiers');
+        foreach (['bronze', 'silver', 'gold', 'platinum'] as $tier) {
+            Cache::forget(self::CACHE_PREFIX . "tier_benefits:{$tier}");
+        }
+    }
+
+    /**
+     * Clear all loyalty caches
+     * 
+     * @return void
+     */
+    public function clearAllCache(): void
+    {
+        $this->clearTierCache();
+        $this->clearGlobalCache();
+        // User caches will expire naturally (1 minute TTL)
     }
 }

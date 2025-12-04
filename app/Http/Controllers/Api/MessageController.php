@@ -8,7 +8,9 @@ use App\Models\Conversation;
 use App\Models\Project;
 use App\Models\User;
 use App\Services\FirebaseService;
+use App\Services\MessagingService;
 use App\Services\CloudflareR2Service;
+use App\Traits\ValidatesDocuments;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -18,11 +20,15 @@ use Illuminate\Support\Facades\Log;
 
 class MessageController extends Controller
 {
+    use ValidatesDocuments;
+    
     protected FirebaseService $firebaseService;
+    protected MessagingService $messagingService;
 
-    public function __construct(FirebaseService $firebaseService)
+    public function __construct(FirebaseService $firebaseService, MessagingService $messagingService)
     {
         $this->firebaseService = $firebaseService;
+        $this->messagingService = $messagingService;
     }
 
     /**
@@ -139,10 +145,16 @@ class MessageController extends Controller
             }
 
             // Validate request
+            $extensions = $this->getAllowedExtensions();
+            $maxSize = $this->getMaxFileSize();
             $validator = Validator::make($request->all(), [
                 'message' => 'required|string|max:5000',
-                'attachments' => 'nullable|array',
-                'attachments.*' => 'file|max:10240', // 10MB max per file
+                'attachments' => 'nullable|array|max:5',
+                'attachments.*' => "file|max:{$maxSize}|mimes:{$extensions}",
+            ], [
+                'attachments.max' => 'You can upload a maximum of 5 files.',
+                'attachments.*.mimes' => 'Unsupported file type. ' . $this->getHumanReadableFileTypes() . ' are allowed.',
+                'attachments.*.max' => 'Each file must be less than 10MB.',
             ]);
 
             if ($validator->fails()) {
@@ -152,77 +164,27 @@ class MessageController extends Controller
                 ], 422);
             }
 
-            // Get or create conversation
-            $conversation = Conversation::getOrCreateForProject($projectId);
-
-            // Determine recipient
-            $recipientId = $user->isAdmin() ? $project->client_id : null;
+            // Use MessagingService to send the message
+            $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
             
-            // If client is sending, find any admin to notify (you can customize this logic)
-            if ($user->isClient()) {
-                $recipientId = User::where('role', 'admin')->where('status', 'active')->first()?->id;
-            }
+            $result = $this->messagingService->sendDirectMessage(
+                $user,
+                $project,
+                $request->message,
+                $attachments
+            );
 
-            if (!$recipientId) {
+            if (!$result['success']) {
                 return response()->json([
                     'success' => false,
-                    'error' => 'No recipient available'
-                ], 400);
-            }
-
-            // Handle attachments
-            $attachmentPaths = [];
-            if ($request->hasFile('attachments')) {
-                $r2Service = new CloudflareR2Service();
-                
-                foreach ($request->file('attachments') as $file) {
-                    // Upload to R2 in message-attachments directory
-                    $uploadResult = $r2Service->uploadFile($file, 'message-attachments', null, [
-                        'type' => 'message_attachment',
-                        'user_id' => Auth::id(),
-                    ]);
-                    
-                    if ($uploadResult['success']) {
-                        $attachmentPaths[] = [
-                            'name' => $uploadResult['original_name'],
-                            'path' => $uploadResult['path'],
-                            'url' => $uploadResult['url'], // Include URL for direct access
-                            'size' => $uploadResult['size'],
-                            'mime_type' => $uploadResult['mime_type'],
-                        ];
-                    }
-                }
-            }
-
-            // Create message
-            $message = Message::create([
-                'conversation_id' => $conversation->conversation_id,
-                'sender_id' => $user->id,
-                'recipient_id' => $recipientId,
-                'project_id' => $projectId,
-                'message' => $request->message,
-                'message_type' => 'project',
-                'attachments' => !empty($attachmentPaths) ? $attachmentPaths : null,
-                'status' => 'sent',
-            ]);
-
-            // Update conversation
-            $conversation->updateLastMessage($message);
-            $conversation->incrementUnreadCount($user->isClient());
-
-            // Load sender relationship
-            $message->load('sender:id,fullName,profilePic,role');
-
-            // Send push notification
-            $recipient = User::find($recipientId);
-            if ($recipient) {
-                $this->firebaseService->sendNewMessageNotification($message);
+                    'error' => $result['error']
+                ], $result['error'] === 'Unauthorized' ? 403 : 400);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => $message,
-                'conversation' => $conversation,
+                'message' => $result['message'],
+                'conversation' => $result['conversation'],
             ], 201);
 
         } catch (\Exception $e) {
@@ -335,14 +297,7 @@ class MessageController extends Controller
         $user = Auth::user();
 
         try {
-            if ($user->isAdmin()) {
-                $count = Conversation::sum('unread_count_admin');
-            } elseif ($user->isClient()) {
-                $count = Conversation::where('client_id', $user->id)
-                    ->sum('unread_count_client');
-            } else {
-                $count = 0;
-            }
+            $count = $this->messagingService->getDirectMessagesUnreadCount($user);
 
             return response()->json([
                 'success' => true,
@@ -394,6 +349,83 @@ class MessageController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to delete message'
+            ], 500);
+        }
+    }
+
+    /**
+     * Search messages across conversations
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+
+        try {
+            $validator = Validator::make($request->all(), [
+                'query' => 'required|string|min:2|max:100',
+                'project_id' => 'nullable|integer|exists:projects,id',
+                'date_from' => 'nullable|date',
+                'date_to' => 'nullable|date|after_or_equal:date_from',
+                'per_page' => 'nullable|integer|min:5|max:50',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $query = $request->input('query');
+            $projectId = $request->input('project_id');
+
+            // Verify project access if filtering by project
+            if ($projectId) {
+                $project = Project::find($projectId);
+                if (!$project || (!$user->isAdmin() && $project->client_id !== $user->id)) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'You do not have access to this project'
+                    ], 403);
+                }
+            }
+
+            // Use MessagingService to search
+            $filters = [
+                'project_id' => $projectId,
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
+                'per_page' => $request->input('per_page', 20),
+            ];
+
+            $messages = $this->messagingService->searchMessages($user, $query, $filters);
+
+            // Add highlight snippets to results
+            $messages->getCollection()->transform(function ($message) use ($query) {
+                $message->highlight = $this->messagingService->createHighlightSnippet($message->message, $query);
+                return $message;
+            });
+
+            return response()->json([
+                'success' => true,
+                'query' => $query,
+                'messages' => $messages,
+                'total' => $messages->total(),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error searching messages', [
+                'user_id' => $user->id,
+                'query' => $request->input('query'),
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to search messages'
             ], 500);
         }
     }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class GroupChat extends Model
 {
@@ -155,12 +156,16 @@ class GroupChat extends Model
 
     /**
      * Increment unread count for all members except the sender
+     * Uses transaction to prevent race conditions with concurrent messages
      */
     public function incrementUnreadForMembers(int $senderId): void
     {
-        $this->members()
-            ->where('user_id', '!=', $senderId)
-            ->increment('group_chat_members.unread_count');
+        DB::transaction(function () use ($senderId) {
+            DB::table('group_chat_members')
+                ->where('group_chat_id', $this->id)
+                ->where('user_id', '!=', $senderId)
+                ->increment('unread_count');
+        });
     }
 
     /**

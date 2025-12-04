@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Conversation extends Model
 {
@@ -87,14 +88,18 @@ class Conversation extends Model
 
     /**
      * Increment unread count for specific user type
+     * Uses atomic DB operation to prevent race conditions
      */
     public function incrementUnreadCount(bool $isClientMessage): void
     {
-        if ($isClientMessage) {
-            $this->increment('unread_count_admin');
-        } else {
-            $this->increment('unread_count_client');
-        }
+        $column = $isClientMessage ? 'unread_count_admin' : 'unread_count_client';
+        
+        DB::table('conversations')
+            ->where('id', $this->id)
+            ->increment($column);
+        
+        // Refresh the model to reflect the change
+        $this->refresh();
     }
 
     /**

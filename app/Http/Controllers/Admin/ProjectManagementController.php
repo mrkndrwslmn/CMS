@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectAssignment;
+use App\Models\ProjectMilestone;
+use App\Models\ProjectTemplate;
 use App\Models\GroupChat;
 use App\Models\ServiceRequest;
 use App\Models\User;
@@ -332,7 +334,13 @@ class ProjectManagementController extends Controller
                                         ->with('client')
                                         ->get();
         
-        return view('admin.projects.create', compact('clients', 'serviceRequests'));
+        // Get active project templates for pre-populating project data
+        $templates = ProjectTemplate::active()
+                                    ->orderBy('category')
+                                    ->orderBy('name')
+                                    ->get();
+        
+        return view('admin.projects.create', compact('clients', 'serviceRequests', 'templates'));
     }
 
     /**
@@ -342,6 +350,7 @@ class ProjectManagementController extends Controller
     {
         $request->validate([
             'service_request_id' => 'required|exists:service_requests,id|unique:projects,service_request_id',
+            'template_id' => 'nullable|exists:project_templates,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:2000',
             'budget' => 'required|numeric|min:0',
@@ -350,40 +359,83 @@ class ProjectManagementController extends Controller
             'priority' => 'required|in:low,medium,high,urgent',
             'requirements' => 'nullable|json',
             'skills_required' => 'nullable|json',
+            'apply_template_tasks' => 'nullable|boolean',
+            'apply_template_milestones' => 'nullable|boolean',
         ]);
 
         // Get service request to get client_id
         $serviceRequest = ServiceRequest::findOrFail($request->service_request_id);
+        
+        // Get template if selected
+        $template = $request->filled('template_id') 
+            ? ProjectTemplate::find($request->template_id) 
+            : null;
 
-        $project = Project::create([
-            'service_request_id' => $request->service_request_id,
-            'client_id' => $serviceRequest->client_id,
-            'title' => $request->title,
-            'description' => $request->description,
-            'budget' => $request->budget,
-            'budget_type' => $request->budget_type,
-            'deadline' => $request->deadline,
-            'priority' => $request->priority,
-            'requirements' => $request->requirements ? json_decode($request->requirements) : null,
-            'skills_required' => $request->skills_required ? json_decode($request->skills_required) : null,
-            'status' => 'active',
-            'started_at' => now(),
-        ]);
+        // Use template skills if available and no custom skills provided
+        $skillsRequired = $request->skills_required 
+            ? json_decode($request->skills_required) 
+            : ($template && $template->skills_required ? $template->skills_required : null);
 
-        // 🔔 Notify all admins about new project creation
-        $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
-        foreach ($admins as $admin) {
-            $admin->notify(new ProjectCreatedNotification($project, Auth::user()->fullName));
-        }
+        // Use template requirements if available and no custom requirements provided
+        $requirements = $request->requirements 
+            ? json_decode($request->requirements) 
+            : ($template && $template->requirements_template ? [$template->requirements_template] : null);
 
-        // 🔔 Notify client about project creation
-        $client = User::find($project->client_id);
-        if ($client) {
-            $client->notify(new ProjectCreatedNotification($project, 'Admin'));
-        }
+        return DB::transaction(function () use ($request, $serviceRequest, $template, $skillsRequired, $requirements) {
+            $project = Project::create([
+                'service_request_id' => $request->service_request_id,
+                'client_id' => $serviceRequest->client_id,
+                'title' => $request->title,
+                'description' => $request->description,
+                'budget' => $request->budget,
+                'budget_type' => $request->budget_type ?? ($template ? $template->budget_type : 'fixed'),
+                'deadline' => $request->deadline,
+                'priority' => $request->priority,
+                'requirements' => $requirements,
+                'skills_required' => $skillsRequired,
+                'status' => 'active',
+                'started_at' => now(),
+            ]);
 
-        return redirect()->route('admin.projects.show', $project->id)
-                        ->with('success', 'Project created successfully.');
+            // Apply template tasks if template selected and option enabled
+            if ($template && $request->boolean('apply_template_tasks') && !empty($template->default_tasks)) {
+                $this->applyTemplateTasks($project, $template, $serviceRequest);
+            }
+
+            // Apply template milestones if template selected and option enabled
+            if ($template && $request->boolean('apply_template_milestones') && !empty($template->milestones_template)) {
+                $this->applyTemplateMilestones($project, $template, $serviceRequest);
+            }
+
+            // 🔔 Notify all admins about new project creation
+            $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new ProjectCreatedNotification($project, Auth::user()->fullName));
+            }
+
+            // 🔔 Notify client about project creation
+            $client = User::find($project->client_id);
+            if ($client) {
+                $client->notify(new ProjectCreatedNotification($project, 'Admin'));
+            }
+
+            $successMessage = 'Project created successfully.';
+            if ($template) {
+                $appliedItems = [];
+                if ($request->boolean('apply_template_tasks') && !empty($template->default_tasks)) {
+                    $appliedItems[] = count($template->default_tasks) . ' tasks';
+                }
+                if ($request->boolean('apply_template_milestones') && !empty($template->milestones_template)) {
+                    $appliedItems[] = count($template->milestones_template) . ' milestones';
+                }
+                if (!empty($appliedItems)) {
+                    $successMessage .= ' Applied template with ' . implode(' and ', $appliedItems) . '.';
+                }
+            }
+
+            return redirect()->route('admin.projects.show', $project->id)
+                            ->with('success', $successMessage);
+        });
     }
 
     /**
@@ -456,14 +508,28 @@ class ProjectManagementController extends Controller
     {
         $request->validate([
             'completion_notes' => 'nullable|string|max:1000',
+            'force_complete' => 'nullable|boolean',
         ]);
 
-        $project = Project::with('client')->findOrFail($id);
+        $project = Project::with(['client', 'tasks'])->findOrFail($id);
+        
+        // Check for incomplete tasks unless force_complete is set
+        if (!$request->boolean('force_complete')) {
+            $incompleteTasks = $project->tasks->whereNotIn('status', ['completed', 'cancelled']);
+            
+            if ($incompleteTasks->count() > 0) {
+                $taskTitles = $incompleteTasks->take(5)->pluck('taskTitle')->implode(', ');
+                $remaining = $incompleteTasks->count() > 5 ? ' and ' . ($incompleteTasks->count() - 5) . ' more' : '';
+                
+                return redirect()->back()
+                    ->with('error', "Cannot complete project: {$incompleteTasks->count()} task(s) are still incomplete ({$taskTitles}{$remaining}). Complete all tasks first or use 'Force Complete' option.");
+            }
+        }
         
         // Update project to completed status
         $project->update([
             'status' => 'completed',
-            'completion_date' => now(),
+            'completed_at' => now(),
             'notes' => $request->completion_notes ? $project->notes . "\n\nCompletion Notes: " . $request->completion_notes : $project->notes,
         ]);
 
@@ -484,10 +550,24 @@ class ProjectManagementController extends Controller
     {
         $request->validate([
             'status' => 'required|in:active,in_progress,review,completed,cancelled',
+            'force_complete' => 'nullable|boolean',
         ]);
 
-        $project = Project::with(['client', 'adiutors'])->findOrFail($id);
+        $project = Project::with(['client', 'adiutors', 'tasks'])->findOrFail($id);
         $oldStatus = $project->status;
+        
+        // Validate task completion when marking as completed (unless force_complete)
+        if ($request->status === 'completed' && $project->status !== 'completed' && !$request->boolean('force_complete')) {
+            $incompleteTasks = $project->tasks->whereNotIn('status', ['completed', 'cancelled']);
+            
+            if ($incompleteTasks->count() > 0) {
+                $taskTitles = $incompleteTasks->take(3)->pluck('taskTitle')->implode(', ');
+                $remaining = $incompleteTasks->count() > 3 ? ' (+' . ($incompleteTasks->count() - 3) . ' more)' : '';
+                
+                return redirect()->back()
+                    ->with('error', "Cannot mark as completed: {$incompleteTasks->count()} incomplete task(s): {$taskTitles}{$remaining}. Complete all tasks first or check 'Force Complete'.");
+            }
+        }
         
         $updateData = ['status' => $request->status];
         
@@ -552,72 +632,79 @@ class ProjectManagementController extends Controller
         ]);
 
         $project = Project::findOrFail($id);
-        
-        // Check if adiutor is already assigned (excluding removed/declined)
-        $existingAssignment = ProjectAssignment::where('project_id', $id)
-            ->where('adiutor_id', $request->adiutor_id)
-            ->first();
-            
-        if ($existingAssignment && !in_array($existingAssignment->status, ['removed', 'declined'])) {
-            return redirect()->back()->with('error', 'Adiutor is already assigned to this project.');
-        }
+        $adiutorId = $request->adiutor_id;
 
-        // Prepare assignment data based on payment type
-        $assignmentData = [
-            'payment_type' => $request->payment_type,
-            'start_date' => now(),
-            'expected_completion' => $request->expected_completion,
-            'status' => 'assigned',
-            'notes' => $request->notes,
-        ];
-
-        // Set payment-specific fields based on payment type
-        if ($request->payment_type === 'fixed_rate') {
-            $assignmentData['agreed_rate'] = $request->agreed_rate;
-            $assignmentData['hourly_rate'] = null;
-            $assignmentData['max_hours'] = null; // Fixed rate doesn't need max hours
-            $assignmentData['requires_time_tracking'] = false;
-        } else {
-            $assignmentData['hourly_rate'] = $request->hourly_rate;
-            $assignmentData['max_hours'] = $request->max_hours; // Optional max hours limit
-            $assignmentData['agreed_rate'] = null;
-            $assignmentData['requires_time_tracking'] = true;
-        }
-
-        // If there's a removed/declined assignment, update it; otherwise create new
-        if ($existingAssignment && in_array($existingAssignment->status, ['removed', 'declined'])) {
-            // Update existing assignment
-            $existingAssignment->update($assignmentData);
-            
-            // Manually add to group chat since update doesn't trigger created event
-            $groupChat = GroupChat::getOrCreateForProject($id);
-            $groupChat->addMember($request->adiutor_id);
-        } else {
-            // Create new assignment (will automatically add to group chat via model boot method)
-            $assignmentData['project_id'] = $id;
-            $assignmentData['adiutor_id'] = $request->adiutor_id;
-            ProjectAssignment::create($assignmentData);
-        }
-
-        // Send project assignment email
-        try {
-            $adiutor = User::find($request->adiutor_id);
-            $assignedBy = Auth::user();
-            
-            if ($adiutor && $adiutor->email) {
-                Mail::to($adiutor->email)->send(new ProjectAssigned($project, $adiutor, $assignedBy));
+        // Use database transaction with pessimistic locking to prevent race conditions
+        // This ensures atomic check-then-create/update operations for adiutor assignments
+        return DB::transaction(function () use ($request, $id, $project, $adiutorId) {
+            // Lock existing assignment rows to prevent concurrent modifications
+            $existingAssignment = ProjectAssignment::where('project_id', $id)
+                ->where('adiutor_id', $adiutorId)
+                ->lockForUpdate()
+                ->first();
+                
+            if ($existingAssignment && !in_array($existingAssignment->status, ['removed', 'declined'])) {
+                return redirect()->back()->with('error', 'Adiutor is already assigned to this project.');
             }
-        } catch (\Exception $e) {
-            \Log::error('Failed to send project assignment email', [
-                'project_id' => $id,
-                'adiutor_id' => $request->adiutor_id,
-                'error' => $e->getMessage()
-            ]);
-        }
 
-        $paymentLabel = $request->payment_type === 'fixed_rate' ? 'Fixed Rate' : 'Hourly Rate';
-        $maxHoursNote = $request->max_hours ? " with {$request->max_hours} hour limit" : '';
-        return redirect()->back()->with('success', "Adiutor assigned to project with {$paymentLabel} payment{$maxHoursNote} successfully.");
+            // Prepare assignment data based on payment type
+            $assignmentData = [
+                'payment_type' => $request->payment_type,
+                'start_date' => now(),
+                'expected_completion' => $request->expected_completion,
+                'status' => 'assigned',
+                'notes' => $request->notes,
+            ];
+
+            // Set payment-specific fields based on payment type
+            if ($request->payment_type === 'fixed_rate') {
+                $assignmentData['agreed_rate'] = $request->agreed_rate;
+                $assignmentData['hourly_rate'] = null;
+                $assignmentData['max_hours'] = null; // Fixed rate doesn't need max hours
+                $assignmentData['requires_time_tracking'] = false;
+            } else {
+                $assignmentData['hourly_rate'] = $request->hourly_rate;
+                $assignmentData['max_hours'] = $request->max_hours; // Optional max hours limit
+                $assignmentData['agreed_rate'] = null;
+                $assignmentData['requires_time_tracking'] = true;
+            }
+
+            // If there's a removed/declined assignment, update it; otherwise create new
+            if ($existingAssignment && in_array($existingAssignment->status, ['removed', 'declined'])) {
+                // Update existing assignment
+                $existingAssignment->update($assignmentData);
+                
+                // Manually add to group chat since update doesn't trigger created event
+                $groupChat = GroupChat::getOrCreateForProject($id);
+                $groupChat->addMember($adiutorId);
+            } else {
+                // Create new assignment (will automatically add to group chat via model boot method)
+                $assignmentData['project_id'] = $id;
+                $assignmentData['adiutor_id'] = $adiutorId;
+                ProjectAssignment::create($assignmentData);
+            }
+
+            // Send project assignment email (outside of critical section but still in transaction)
+            try {
+                $adiutor = User::find($adiutorId);
+                $assignedBy = Auth::user();
+                
+                if ($adiutor && $adiutor->email) {
+                    Mail::to($adiutor->email)->send(new ProjectAssigned($project, $adiutor, $assignedBy));
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send project assignment email', [
+                    'project_id' => $id,
+                    'adiutor_id' => $adiutorId,
+                    'error' => $e->getMessage()
+                ]);
+                // Don't rollback transaction for email failure - assignment should still succeed
+            }
+
+            $paymentLabel = $request->payment_type === 'fixed_rate' ? 'Fixed Rate' : 'Hourly Rate';
+            $maxHoursNote = $request->max_hours ? " with {$request->max_hours} hour limit" : '';
+            return redirect()->back()->with('success', "Adiutor assigned to project with {$paymentLabel} payment{$maxHoursNote} successfully.");
+        });
     }
 
     /**
@@ -1155,5 +1242,75 @@ class ProjectManagementController extends Controller
 
         return redirect()->back()
             ->with('success', 'Assignment payment settings updated successfully.');
+    }
+
+    /**
+     * Apply template tasks to a newly created project
+     * 
+     * @param Project $project
+     * @param ProjectTemplate $template
+     * @param ServiceRequest $serviceRequest
+     * @return void
+     */
+    private function applyTemplateTasks(Project $project, ProjectTemplate $template, ServiceRequest $serviceRequest): void
+    {
+        foreach ($template->default_tasks as $index => $taskData) {
+            Task::create([
+                'project_id' => $project->id,
+                'service_request_id' => $serviceRequest->id,
+                'client_id' => $serviceRequest->client_id,
+                'title' => $taskData['title'],
+                'description' => $taskData['description'] ?? '',
+                'priority' => $taskData['priority'] ?? 'medium',
+                'estimated_hours' => $taskData['estimated_hours'] ?? null,
+                'status' => 'pending',
+                'order' => $index + 1,
+                'created_by' => Auth::id(),
+            ]);
+        }
+
+        \Log::info('Applied template tasks to project', [
+            'project_id' => $project->id,
+            'template_id' => $template->id,
+            'tasks_created' => count($template->default_tasks),
+        ]);
+    }
+
+    /**
+     * Apply template milestones to a newly created project
+     * 
+     * @param Project $project
+     * @param ProjectTemplate $template
+     * @param ServiceRequest $serviceRequest
+     * @return void
+     */
+    private function applyTemplateMilestones(Project $project, ProjectTemplate $template, ServiceRequest $serviceRequest): void
+    {
+        $phaseOrder = 1;
+        
+        foreach ($template->milestones_template as $milestoneData) {
+            // Calculate amount based on project budget and milestone percentage
+            $percentage = $milestoneData['percentage'] ?? 0;
+            $amount = ($project->budget * $percentage) / 100;
+
+            ProjectMilestone::create([
+                'project_id' => $project->id,
+                'service_request_id' => $serviceRequest->id,
+                'phase_name' => $milestoneData['phase_name'],
+                'phase_order' => $phaseOrder,
+                'percentage' => $percentage,
+                'amount' => $amount,
+                'description' => $milestoneData['description'] ?? null,
+                'is_paid' => false,
+            ]);
+
+            $phaseOrder++;
+        }
+
+        \Log::info('Applied template milestones to project', [
+            'project_id' => $project->id,
+            'template_id' => $template->id,
+            'milestones_created' => count($template->milestones_template),
+        ]);
     }
 }

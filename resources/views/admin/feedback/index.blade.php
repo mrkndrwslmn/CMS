@@ -11,12 +11,26 @@
         ['label' => 'Feedback', 'icon' => 'message-square-text'],
     ]" class="mb-6" />
 
-    <!-- Page Header -->
-    <x-ui.page-header 
-        title="Feedback Management" 
-        description="View and manage all customer feedback"
-        class="mb-6"
-    />
+    <!-- Page Header with Actions -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <x-ui.page-header 
+            title="Feedback Management" 
+            description="View and manage all customer feedback"
+        />
+        
+        <div class="flex items-center gap-3 mt-4 md:mt-0">
+            <a href="{{ route('admin.feedback.analytics') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-neutral-700 text-sm font-medium rounded-xl border border-neutral-200 shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all">
+                <x-lucide-bar-chart-3 class="w-4 h-4" />
+                Analytics
+            </a>
+            <a href="{{ route('admin.feedback.export') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-neutral-700 text-sm font-medium rounded-xl border border-neutral-200 shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all">
+                <x-lucide-download class="w-4 h-4" />
+                Export
+            </a>
+        </div>
+    </div>
 
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-6">

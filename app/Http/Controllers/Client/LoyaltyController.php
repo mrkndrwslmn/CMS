@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\RedeemLoyaltyPointsRequest;
 use App\Models\ServiceRequest;
 use App\Services\LoyaltyService;
 use Illuminate\Http\Request;
@@ -82,12 +83,15 @@ class LoyaltyController extends Controller
             $query->where('transaction_type', $request->type);
         }
 
-        // Filter by date range
-        if ($request->filled('date_from')) {
-            $query->where('created_at', '>=', $request->date_from);
+        // Filter by date range (support both naming conventions)
+        $dateFrom = $request->input('date_from') ?? $request->input('from_date');
+        $dateTo = $request->input('date_to') ?? $request->input('to_date');
+        
+        if ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom);
         }
-        if ($request->filled('date_to')) {
-            $query->where('created_at', '<=', $request->date_to);
+        if ($dateTo) {
+            $query->where('created_at', '<=', $dateTo . ' 23:59:59');
         }
 
         $transactions = $query->orderBy('created_at', 'desc')->paginate(20);
@@ -100,54 +104,36 @@ class LoyaltyController extends Controller
             'available_points' => $loyaltyPoint->available_points,
         ];
 
-        return view('client.loyalty.transactions', compact('transactions', 'stats'));
+        // Get monthly stats for the chart (last 6 months)
+        $monthlyStats = $user->loyaltyTransactions()
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month_key")
+            ->selectRaw("DATE_FORMAT(created_at, '%b %Y') as month")
+            ->selectRaw("SUM(CASE WHEN transaction_type = 'earned' THEN points ELSE 0 END) as earned")
+            ->selectRaw("ABS(SUM(CASE WHEN transaction_type = 'redeemed' THEN points ELSE 0 END)) as redeemed")
+            ->groupBy('month_key', 'month')
+            ->orderBy('month_key', 'desc')
+            ->limit(6)
+            ->get()
+            ->reverse()
+            ->values();
+
+        return view('client.loyalty.transactions', compact('transactions', 'stats', 'monthlyStats'));
     }
 
     /**
      * Redeem loyalty points for discount
      */
-    public function redeemPoints(Request $request, ServiceRequest $serviceRequest)
+    public function redeemPoints(RedeemLoyaltyPointsRequest $request, ServiceRequest $serviceRequest)
     {
-        // Verify ownership
-        if ($serviceRequest->client_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        // Check if request is in correct status
-        if (!in_array($serviceRequest->status, ['approved', 'pending_payment'])) {
-            return back()->withErrors(['error' => 'Points can only be redeemed for approved requests.']);
-        }
-
-        // Check if points already redeemed
-        if ($serviceRequest->loyalty_points_used > 0) {
-            return back()->withErrors(['error' => 'Loyalty points have already been redeemed for this request.']);
-        }
-
-        $request->validate([
-            'points' => 'required|integer|min:1',
-        ]);
-
         try {
-            $user = Auth::user();
-            $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
-
-            // Validate points availability
-            if ($request->points > $loyaltyPoint->available_points) {
-                return back()->withErrors(['points' => 'You do not have enough points available.']);
-            }
-
-            // Check minimum redemption
-            $minRedemption = config('loyalty.points.minimum_redemption', 100);
-            if ($request->points < $minRedemption) {
-                return back()->withErrors(['points' => "Minimum redemption is {$minRedemption} points."]);
-            }
+            $validated = $request->validated();
 
             // Apply loyalty discount
-            $this->loyaltyService->applyLoyaltyDiscount($serviceRequest, $request->points);
+            $this->loyaltyService->applyLoyaltyDiscount($serviceRequest, $validated['points']);
 
-            $discount = $this->loyaltyService->convertPointsToDiscount($request->points);
+            $discount = $this->loyaltyService->convertPointsToDiscount($validated['points']);
 
-            return back()->with('success', "{$request->points} points redeemed! You save ₱" . number_format($discount, 2));
+            return back()->with('success', "{$validated['points']} points redeemed! You save ₱" . number_format($discount, 2));
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }

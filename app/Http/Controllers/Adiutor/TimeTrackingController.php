@@ -9,6 +9,7 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
@@ -99,6 +100,9 @@ class TimeTrackingController extends Controller
 
     /**
      * Start a new time entry
+     * 
+     * Uses database transaction with locking to prevent race conditions
+     * where rapid duplicate requests could create multiple active timers.
      */
     public function start(Request $request)
     {
@@ -117,58 +121,85 @@ class TimeTrackingController extends Controller
 
         $adiutorId = Auth::id();
 
-        // Check if there's already an active timer
-        $activeTimer = TimeEntry::where('adiutor_id', $adiutorId)
-            ->whereNull('end_time')
-            ->first();
+        try {
+            // Use transaction with pessimistic locking to prevent race conditions
+            $result = DB::transaction(function () use ($request, $adiutorId) {
+                // Check if there's already an active timer with row-level lock
+                // This prevents duplicate timers from rapid requests
+                $activeTimer = TimeEntry::where('adiutor_id', $adiutorId)
+                    ->whereNull('end_time')
+                    ->lockForUpdate()
+                    ->first();
 
-        if ($activeTimer) {
+                if ($activeTimer) {
+                    return [
+                        'success' => false,
+                        'status' => 400,
+                        'message' => 'You already have an active timer running. Please stop it first.'
+                    ];
+                }
+
+                // Verify the task belongs to adiutor's projects
+                $task = Task::whereHas('project.adiutors', function($query) use ($adiutorId) {
+                        $query->where('adiutor_id', $adiutorId);
+                    })
+                    ->where('taskID', $request->task_id)
+                    ->first();
+
+                if (!$task) {
+                    return [
+                        'success' => false,
+                        'status' => 404,
+                        'message' => 'Task not found or you do not have access to this task.'
+                    ];
+                }
+
+                // Get the effective hourly rate for this task
+                $hourlyRate = $task->getEffectiveHourlyRate();
+
+                $timeEntry = TimeEntry::create([
+                    'adiutor_id' => $adiutorId,
+                    'task_id' => $request->task_id,
+                    'project_id' => $task->project_id,
+                    'start_time' => Carbon::now(),
+                    'description' => $request->description,
+                    'hourly_rate' => $hourlyRate,
+                    'is_approved' => false
+                ]);
+
+                $timeEntry->load(['task.project']);
+
+                return [
+                    'success' => true,
+                    'status' => 200,
+                    'message' => 'Timer started successfully',
+                    'timer' => [
+                        'id' => $timeEntry->id,
+                        'task_name' => $timeEntry->task->taskTitle,
+                        'project_name' => $timeEntry->task->project->title,
+                        'started_at' => $timeEntry->start_time->toISOString(),
+                        'description' => $timeEntry->description
+                    ]
+                ];
+            });
+
+            $status = $result['status'];
+            unset($result['status']);
+            
+            return response()->json($result, $status);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to start timer', [
+                'adiutor_id' => $adiutorId,
+                'task_id' => $request->task_id,
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'You already have an active timer running. Please stop it first.'
-            ], 400);
+                'message' => 'An error occurred while starting the timer. Please try again.'
+            ], 500);
         }
-
-        // Verify the task belongs to adiutor's projects
-        $task = Task::whereHas('project.adiutors', function($query) use ($adiutorId) {
-                $query->where('adiutor_id', $adiutorId);
-            })
-            ->where('taskID', $request->task_id)
-            ->first();
-
-        if (!$task) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Task not found or you do not have access to this task.'
-            ], 404);
-        }
-
-        // Get the effective hourly rate for this task
-        $hourlyRate = $task->getEffectiveHourlyRate();
-
-        $timeEntry = TimeEntry::create([
-            'adiutor_id' => $adiutorId,
-            'task_id' => $request->task_id,
-            'project_id' => $task->project_id,
-            'start_time' => Carbon::now(),
-            'description' => $request->description,
-            'hourly_rate' => $hourlyRate,
-            'is_approved' => false
-        ]);
-
-        $timeEntry->load(['task.project']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Timer started successfully',
-            'timer' => [
-                'id' => $timeEntry->id,
-                'task_name' => $timeEntry->task->taskTitle,
-                'project_name' => $timeEntry->task->project->title,
-                'started_at' => $timeEntry->start_time->toISOString(),
-                'description' => $timeEntry->description
-            ]
-        ]);
     }
 
     /**
@@ -192,31 +223,69 @@ class TimeTrackingController extends Controller
         $now = Carbon::now();
         $durationMinutes = $activeTimer->start_time->diffInMinutes($now);
 
-        // Calculate earnings
-        $calculatedAmount = null;
-        if ($activeTimer->hourly_rate) {
-            $hours = $durationMinutes / 60;
-            $calculatedAmount = $hours * $activeTimer->hourly_rate;
-        }
-
+        // Update basic time entry fields first
         $activeTimer->update([
             'end_time' => $now,
             'duration_minutes' => $durationMinutes,
-            'calculated_amount' => $calculatedAmount
         ]);
+
+        // Apply max hours cap (sets billable_minutes, non_billable_minutes, is_capped)
+        $activeTimer->applyMaxHoursCap();
+        
+        // Calculate earnings based on billable minutes (respects max hours)
+        $calculatedAmount = null;
+        $billableMinutes = $activeTimer->getBillableMinutes();
+        $nonBillableMinutes = $activeTimer->getNonBillableMinutes();
+        $wasCapped = $activeTimer->wasCapped();
+        
+        if ($activeTimer->hourly_rate) {
+            $billableHours = $billableMinutes / 60;
+            $calculatedAmount = round($billableHours * $activeTimer->hourly_rate, 2);
+            $activeTimer->update(['calculated_amount' => $calculatedAmount]);
+        }
+
+        // Update assignment totals if capped
+        if ($wasCapped) {
+            $assignment = $activeTimer->getProjectAssignment();
+            if ($assignment) {
+                $assignment->updateHourTotals();
+            }
+        }
 
         // Update task earnings
         $activeTimer->task->updateEarnings();
 
-        return response()->json([
+        // Build response with capping info
+        $response = [
             'success' => true,
-            'message' => 'Timer stopped successfully',
+            'message' => $wasCapped 
+                ? 'Timer stopped. Some hours exceeded max limit and are non-billable.' 
+                : 'Timer stopped successfully',
             'duration' => [
                 'minutes' => $durationMinutes,
                 'formatted' => $this->formatDuration($durationMinutes)
             ],
             'earnings' => $calculatedAmount ? number_format($calculatedAmount, 2) : null
-        ]);
+        ];
+
+        // Add capping details if applicable
+        if ($wasCapped) {
+            $response['capped'] = true;
+            $response['billable'] = [
+                'minutes' => $billableMinutes,
+                'formatted' => $this->formatDuration($billableMinutes)
+            ];
+            $response['non_billable'] = [
+                'minutes' => $nonBillableMinutes,
+                'formatted' => $this->formatDuration($nonBillableMinutes)
+            ];
+            $response['warning'] = sprintf(
+                'Task maximum hours reached. %s logged as non-billable.',
+                $this->formatDuration($nonBillableMinutes)
+            );
+        }
+
+        return response()->json($response);
     }
 
     /**

@@ -172,6 +172,61 @@ class CloudflareR2Service
     }
 
     /**
+     * Extract the R2 path from a full URL
+     *
+     * @param string $url
+     * @return string|null
+     */
+    public function extractPathFromUrl(string $url): ?string
+    {
+        // Get the custom domain URL from config
+        $customDomain = config('filesystems.disks.r2.url');
+        $bucket = config('filesystems.disks.r2.bucket');
+        
+        // Try to extract path from custom domain URL
+        if ($customDomain && str_starts_with($url, $customDomain)) {
+            return ltrim(str_replace($customDomain, '', $url), '/');
+        }
+        
+        // Try to extract from URLs containing the bucket name
+        // Pattern: https://*.r2.cloudflarestorage.com/bucket/path or https://*.r2.dev/path
+        if (preg_match('#https?://[^/]+/' . preg_quote($bucket, '#') . '/(.+)$#', $url, $matches)) {
+            return $matches[1];
+        }
+        
+        // Pattern for public R2 dev URLs: https://pub-xxx.r2.dev/path
+        if (preg_match('#https?://pub-[^.]+\.r2\.dev/(.+)$#', $url, $matches)) {
+            return $matches[1];
+        }
+        
+        // Pattern for direct R2 storage URLs
+        if (preg_match('#https?://[^/]+\.r2\.cloudflarestorage\.com/[^/]+/(.+)$#', $url, $matches)) {
+            return $matches[1];
+        }
+        
+        Log::warning('Could not extract R2 path from URL', ['url' => $url]);
+        return null;
+    }
+
+    /**
+     * Delete a file from R2 using its full URL
+     *
+     * @param string $url
+     * @return bool
+     */
+    public function deleteFileByUrl(string $url): bool
+    {
+        $path = $this->extractPathFromUrl($url);
+        
+        if (!$path) {
+            Log::error('Cannot delete R2 file: unable to extract path from URL', ['url' => $url]);
+            return false;
+        }
+        
+        return $this->deleteFile($path);
+    }
+
+    /**
      * Get public URL for a file
      *
      * @param string $path

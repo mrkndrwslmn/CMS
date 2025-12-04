@@ -112,6 +112,16 @@ class Project extends Model
     }
 
     /**
+     * Get TASKS ordered by sort_order for display
+     */
+    public function orderedTasks()
+    {
+        return $this->hasMany(Task::class, 'project_id')
+                    ->orderBy('sort_order')
+                    ->orderBy('taskID');
+    }
+
+    /**
      * Get milestones/phases for this project
      */
     public function milestones(): HasMany
@@ -206,5 +216,69 @@ class Project extends Model
     public function assignedAdiutor()
     {
         return $this->hasOne(ProjectAssignment::class, 'project_id')->latestOfMany();
+    }
+
+    /**
+     * Calculate project progress based on completed tasks.
+     * Returns a percentage (0-100).
+     */
+    public function calculateProgressFromTasks(): int
+    {
+        $tasks = $this->tasks()->get();
+        $totalTasks = $tasks->count();
+        
+        if ($totalTasks === 0) {
+            return 0;
+        }
+
+        $completedTasks = $tasks->where('status', 'completed')->count();
+        return (int) round(($completedTasks / $totalTasks) * 100);
+    }
+
+    /**
+     * Calculate project progress based on task progress percentages.
+     * This gives a more granular view by considering each task's individual progress.
+     */
+    public function calculateWeightedProgress(): int
+    {
+        $tasks = $this->tasks()->get();
+        $totalTasks = $tasks->count();
+        
+        if ($totalTasks === 0) {
+            return 0;
+        }
+
+        $totalProgress = $tasks->sum('progress_percentage');
+        return (int) round($totalProgress / $totalTasks);
+    }
+
+    /**
+     * Get task statistics for this project.
+     */
+    public function getTaskStats(): array
+    {
+        $tasks = $this->tasks()->get();
+        
+        return [
+            'total' => $tasks->count(),
+            'pending' => $tasks->where('status', 'pending')->count(),
+            'in_progress' => $tasks->where('status', 'in_progress')->count(),
+            'completed' => $tasks->where('status', 'completed')->count(),
+            'cancelled' => $tasks->where('status', 'cancelled')->count(),
+            'progress_percentage' => $this->calculateProgressFromTasks(),
+            'weighted_progress' => $this->calculateWeightedProgress(),
+        ];
+    }
+
+    /**
+     * Update all project assignments with calculated progress.
+     */
+    public function syncProgressToAssignments(): void
+    {
+        $progress = $this->calculateProgressFromTasks();
+        
+        $this->assignments()
+            ->whereNotIn('status', ['removed', 'declined'])
+            ->update(['progress_percentage' => $progress]);
     }
 }

@@ -153,25 +153,30 @@ class PayoutManagementController extends Controller
 
             DB::commit();
 
-            // Send notifications to adiutor
+            // Send notifications to adiutor (only if adiutor still exists)
             $adiutor = $payout->adiutor;
-            $processedBy = auth()->user();
-            $firebaseService = app(FirebaseService::class);
             
-            try {
-                // Send email notification
-                Mail::to($adiutor->email)->send(new PayoutPaidMail($payout, $adiutor, $processedBy));
+            if ($adiutor) {
+                $processedBy = auth()->user();
+                $firebaseService = app(FirebaseService::class);
                 
-                // Send in-app notification
-                $adiutor->notify(new PayoutPaidNotification($payout, $processedBy));
-                
-                // Send Firebase push notification
-                if ($adiutor->fcm_token) {
-                    $notificationData = (new PayoutPaidNotification($payout, $processedBy))->toFirebase($adiutor);
-                    $firebaseService->sendToUser($adiutor, $notificationData['data'], $notificationData['notification']);
+                try {
+                    // Send email notification
+                    Mail::to($adiutor->email)->send(new PayoutPaidMail($payout, $adiutor, $processedBy));
+                    
+                    // Send in-app notification
+                    $adiutor->notify(new PayoutPaidNotification($payout, $processedBy));
+                    
+                    // Send Firebase push notification
+                    if ($adiutor->fcm_token) {
+                        $notificationData = (new PayoutPaidNotification($payout, $processedBy))->toFirebase($adiutor);
+                        $firebaseService->sendToUser($adiutor, $notificationData['data'], $notificationData['notification']);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send payout paid notification: ' . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                \Log::error('Failed to send payout paid notification: ' . $e->getMessage());
+            } else {
+                \Log::warning('Cannot send payout notification: adiutor not found', ['payout_id' => $payout->id]);
             }
 
             return redirect()->route('admin.payouts.show', $payout->id)
@@ -204,25 +209,30 @@ class PayoutManagementController extends Controller
 
             DB::commit();
 
-            // Send notifications to adiutor
+            // Send notifications to adiutor (only if adiutor still exists)
             $adiutor = $payout->adiutor;
-            $rejectedBy = auth()->user();
-            $firebaseService = app(FirebaseService::class);
             
-            try {
-                // Send email notification
-                Mail::to($adiutor->email)->send(new PayoutRejectedMail($payout, $adiutor, $rejectedBy));
+            if ($adiutor) {
+                $rejectedBy = auth()->user();
+                $firebaseService = app(FirebaseService::class);
                 
-                // Send in-app notification
-                $adiutor->notify(new PayoutRejectedNotification($payout, $rejectedBy));
-                
-                // Send Firebase push notification
-                if ($adiutor->fcm_token) {
-                    $notificationData = (new PayoutRejectedNotification($payout, $rejectedBy))->toFirebase($adiutor);
-                    $firebaseService->sendToUser($adiutor, $notificationData['data'], $notificationData['notification']);
+                try {
+                    // Send email notification
+                    Mail::to($adiutor->email)->send(new PayoutRejectedMail($payout, $adiutor, $rejectedBy));
+                    
+                    // Send in-app notification
+                    $adiutor->notify(new PayoutRejectedNotification($payout, $rejectedBy));
+                    
+                    // Send Firebase push notification
+                    if ($adiutor->fcm_token) {
+                        $notificationData = (new PayoutRejectedNotification($payout, $rejectedBy))->toFirebase($adiutor);
+                        $firebaseService->sendToUser($adiutor, $notificationData['data'], $notificationData['notification']);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send payout rejected notification: ' . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                \Log::error('Failed to send payout rejected notification: ' . $e->getMessage());
+            } else {
+                \Log::warning('Cannot send payout cancellation notification: adiutor not found', ['payout_id' => $payout->id]);
             }
 
             return redirect()->route('admin.payouts.show', $payout->id)

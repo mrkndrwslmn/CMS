@@ -16,6 +16,7 @@ use App\Mail\CouponAssignedMail;
 use App\Services\CouponService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -161,38 +162,44 @@ class RequestManagementController extends Controller
             }
         }
 
-        // Prepare service request update data
-        $updateData = [
-            'status' => 'approved',
-            'admin_notes' => $request->admin_notes,
-            'approved_budget' => $request->approved_budget,
-            'payment_method' => $serviceRequest->contact_method ?? 'email',
-            'payment_due_date' => $request->payment_due_date,
-            'payment_instructions' => $request->payment_instructions,
-            'payment_type' => $request->payment_type,
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-            'reviewed_at' => now(),
-        ];
-
-        // Handle downpayment type
-        if ($request->payment_type === 'downpayment') {
-            $updateData['downpayment_percentage'] = $request->downpayment_percentage;
-            $updateData['downpayment_amount'] = ($request->approved_budget * $request->downpayment_percentage) / 100;
-            $updateData['remaining_balance'] = $request->approved_budget - $updateData['downpayment_amount'];
-        }
-
-        // Handle milestone payment type
-        if ($request->payment_type === 'milestone_payment' && $request->has('milestone_phases')) {
-            $updateData['total_milestones'] = count($request->milestone_phases);
-        }
+        // Wrap all database operations in a transaction to ensure atomicity
+        // If any operation fails, all changes will be rolled back
+        $couponApplied = null; // Track coupon for email notification outside transaction
         
-        // Update request
-        $serviceRequest->update($updateData);
-        
-        // Handle coupon attachment
-        if ($request->has('attach_coupon') && $request->attach_coupon) {
-            try {
+        try {
+            DB::beginTransaction();
+            
+            // Prepare service request update data
+            $updateData = [
+                'status' => 'approved',
+                'admin_notes' => $request->admin_notes,
+                'approved_budget' => $request->approved_budget,
+                'payment_method' => $serviceRequest->contact_method ?? 'email',
+                'payment_due_date' => $request->payment_due_date,
+                'payment_instructions' => $request->payment_instructions,
+                'payment_type' => $request->payment_type,
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'reviewed_at' => now(),
+            ];
+
+            // Handle downpayment type
+            if ($request->payment_type === 'downpayment') {
+                $updateData['downpayment_percentage'] = $request->downpayment_percentage;
+                $updateData['downpayment_amount'] = ($request->approved_budget * $request->downpayment_percentage) / 100;
+                $updateData['remaining_balance'] = $request->approved_budget - $updateData['downpayment_amount'];
+            }
+
+            // Handle milestone payment type
+            if ($request->payment_type === 'milestone_payment' && $request->has('milestone_phases')) {
+                $updateData['total_milestones'] = count($request->milestone_phases);
+            }
+            
+            // Update request
+            $serviceRequest->update($updateData);
+            
+            // Handle coupon attachment
+            if ($request->has('attach_coupon') && $request->attach_coupon) {
                 $coupon = null;
                 
                 // Option 1: Create new request-specific coupon
@@ -224,119 +231,133 @@ class RequestManagementController extends Controller
                 // Apply the coupon if found
                 if ($coupon) {
                     $this->couponService->autoAssignCouponToRequest($serviceRequest, $coupon);
+                    $couponApplied = $coupon; // Store for email notification after commit
                     Log::info('Coupon applied to service request during approval', [
                         'coupon_id' => $coupon->id,
                         'service_request_id' => $serviceRequest->id,
                     ]);
-                    
-                    // Send coupon assignment email
-                    try {
-                        $serviceRequest->refresh();
-                        $serviceRequest->load(['client', 'appliedCoupon']);
+                }
+            }
+            
+            // Refresh service request to get updated budget after coupon application
+            $serviceRequest->refresh();
+            
+            // Create project immediately when approved (needed for milestones)
+            $project = Project::firstOrCreate(
+                ['service_request_id' => $serviceRequest->id],
+                [
+                    'client_id' => $serviceRequest->client_id,
+                    'title' => $serviceRequest->project_name,
+                    'description' => $serviceRequest->request_description,
+                    'budget' => $serviceRequest->approved_budget, // Use service request's budget (after coupon discount)
+                    'deadline' => $serviceRequest->deadline,
+                    'status' => 'active', // Project is active once approved, will move to in_progress after payment
+                    'priority' => $serviceRequest->priority ?? 'medium',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]
+            );
+
+            // Create milestone phases if milestone payment type
+            if ($request->payment_type === 'milestone_payment' && $request->has('milestone_phases')) {
+                // Delete existing milestones if any
+                $project->milestones()->delete();
+                
+                $phaseOrder = 1;
+                foreach ($request->milestone_phases as $phase) {
+                    if (!empty($phase['name']) && !empty($phase['percentage'])) {
+                        // Use service request's approved budget (after coupon discount) for milestone calculations
+                        $phaseAmount = ($serviceRequest->approved_budget * $phase['percentage']) / 100;
                         
-                        Mail::to($serviceRequest->client->email)
-                            ->queue(new CouponAssignedMail(
-                                $serviceRequest->client,
-                                $coupon,
-                                $serviceRequest
-                            ));
+                        \App\Models\ProjectMilestone::create([
+                            'project_id' => $project->id,
+                            'service_request_id' => $serviceRequest->id,
+                            'phase_name' => $phase['name'],
+                            'phase_order' => $phaseOrder,
+                            'percentage' => $phase['percentage'],
+                            'amount' => $phaseAmount,
+                            'is_paid' => false,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
                         
-                        Log::info('Coupon assignment email queued', [
-                            'user_id' => $serviceRequest->client->id,
-                            'coupon_id' => $coupon->id,
-                            'service_request_id' => $serviceRequest->id
-                        ]);
-                    } catch (\Exception $e) {
-                        Log::error('Failed to send coupon assignment email', [
-                            'error' => $e->getMessage(),
-                            'user_id' => $serviceRequest->client->id,
-                            'coupon_id' => $coupon->id
-                        ]);
+                        $phaseOrder++;
                     }
                 }
-            } catch (\Exception $e) {
-                Log::error('Failed to apply coupon during approval', [
-                    'error' => $e->getMessage(),
+                
+                Log::info('Created ' . ($phaseOrder - 1) . ' milestone phases for project ' . $project->id);
+            }
+            
+            // Create task if requested
+            if ($request->has('create_task') && $request->create_task && $request->filled('task_title')) {
+                $taskData = [
                     'service_request_id' => $serviceRequest->id,
-                ]);
-                // Don't fail the entire approval if coupon fails
-            }
-        }
-        
-        // Refresh service request to get updated budget after coupon application
-        $serviceRequest->refresh();
-        
-        // Create project immediately when approved (needed for milestones)
-        $project = Project::firstOrCreate(
-            ['service_request_id' => $serviceRequest->id],
-            [
-                'client_id' => $serviceRequest->client_id,
-                'title' => $serviceRequest->project_name,
-                'description' => $serviceRequest->request_description,
-                'budget' => $serviceRequest->approved_budget, // Use service request's budget (after coupon discount)
-                'deadline' => $serviceRequest->deadline,
-                'status' => 'active', // Project is active once approved, will move to in_progress after payment
-                'priority' => $serviceRequest->priority ?? 'medium',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]
-        );
-
-        // Create milestone phases if milestone payment type
-        if ($request->payment_type === 'milestone_payment' && $request->has('milestone_phases')) {
-            // Delete existing milestones if any
-            $project->milestones()->delete();
-            
-            $phaseOrder = 1;
-            foreach ($request->milestone_phases as $phase) {
-                if (!empty($phase['name']) && !empty($phase['percentage'])) {
-                    // Use service request's approved budget (after coupon discount) for milestone calculations
-                    $phaseAmount = ($serviceRequest->approved_budget * $phase['percentage']) / 100;
-                    
-                    \App\Models\ProjectMilestone::create([
-                        'project_id' => $project->id,
-                        'service_request_id' => $serviceRequest->id,
-                        'phase_name' => $phase['name'],
-                        'phase_order' => $phaseOrder,
-                        'percentage' => $phase['percentage'],
-                        'amount' => $phaseAmount,
-                        'is_paid' => false,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                    
-                    $phaseOrder++;
+                    'client_id' => $serviceRequest->client_id,
+                    'title' => $request->task_title,
+                    'description' => $request->task_description,
+                    'priority' => $request->task_priority ?? 'medium',
+                    'status' => 'pending',
+                    'created_by' => Auth::id(),
+                ];
+                
+                if ($request->filled('task_due_date')) {
+                    $taskData['due_date'] = $request->task_due_date;
                 }
+                
+                if ($request->filled('adiutor_id')) {
+                    $taskData['adiutor_id'] = $request->adiutor_id;
+                    $taskData['status'] = 'assigned';
+                }
+                
+                \App\Models\Task::create($taskData);
             }
             
-            Log::info('Created ' . ($phaseOrder - 1) . ' milestone phases for project ' . $project->id);
-        }
-        
-        // Create task if requested
-        if ($request->has('create_task') && $request->create_task && $request->filled('task_title')) {
-            $taskData = [
+            DB::commit();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to approve service request - transaction rolled back', [
                 'service_request_id' => $serviceRequest->id,
-                'client_id' => $serviceRequest->client_id,
-                'title' => $request->task_title,
-                'description' => $request->task_description,
-                'priority' => $request->task_priority ?? 'medium',
-                'status' => 'pending',
-                'created_by' => Auth::id(),
-            ];
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
-            if ($request->filled('task_due_date')) {
-                $taskData['due_date'] = $request->task_due_date;
-            }
-            
-            if ($request->filled('adiutor_id')) {
-                $taskData['adiutor_id'] = $request->adiutor_id;
-                $taskData['status'] = 'assigned';
-            }
-            
-            \App\Models\Task::create($taskData);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to approve request. Please try again. Error: ' . $e->getMessage());
         }
         
-        // Send email notification
+        // Send email notifications AFTER successful transaction commit
+        // This ensures emails are only sent when database changes are persisted
+        
+        // Send coupon assignment email if coupon was applied
+        if ($couponApplied) {
+            try {
+                $serviceRequest->refresh();
+                $serviceRequest->load(['client', 'appliedCoupon']);
+                
+                Mail::to($serviceRequest->client->email)
+                    ->queue(new CouponAssignedMail(
+                        $serviceRequest->client,
+                        $couponApplied,
+                        $serviceRequest
+                    ));
+                
+                Log::info('Coupon assignment email queued', [
+                    'user_id' => $serviceRequest->client->id,
+                    'coupon_id' => $couponApplied->id,
+                    'service_request_id' => $serviceRequest->id
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send coupon assignment email', [
+                    'error' => $e->getMessage(),
+                    'user_id' => $serviceRequest->client->id,
+                    'coupon_id' => $couponApplied->id
+                ]);
+            }
+        }
+        
+        // Send approval email notification
         try {
             // Refresh the service request to get the latest data
             $serviceRequest->refresh();

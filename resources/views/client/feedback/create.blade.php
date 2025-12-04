@@ -185,12 +185,20 @@
                 <textarea id="comment" 
                           name="comment" 
                           rows="6" 
+                          maxlength="1000"
                           class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all @error('comment') border-error-300 @enderror" 
                           placeholder="Tell us about your experience with this project. What went well? What could be improved? How was the team's performance?"
                           required>{{ old('comment') }}</textarea>
-                @error('comment')
-                    <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                @enderror
+                <div class="flex justify-between items-center mt-1">
+                    @error('comment')
+                        <p class="text-sm text-error-600">{{ $message }}</p>
+                    @else
+                        <p class="text-xs text-neutral-400">Minimum 10 characters</p>
+                    @enderror
+                    <p class="text-xs text-neutral-400">
+                        <span id="commentCharCount">{{ strlen(old('comment', '')) }}</span>/1000
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -303,6 +311,28 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Character counter for comment textarea
+    const commentTextarea = document.getElementById('comment');
+    const charCountSpan = document.getElementById('commentCharCount');
+    
+    if (commentTextarea && charCountSpan) {
+        commentTextarea.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            charCountSpan.textContent = currentLength;
+            
+            // Visual feedback when approaching limit
+            if (currentLength > 900) {
+                charCountSpan.classList.add('text-warning-600');
+                charCountSpan.classList.remove('text-error-600');
+            } else if (currentLength >= 1000) {
+                charCountSpan.classList.add('text-error-600');
+                charCountSpan.classList.remove('text-warning-600');
+            } else {
+                charCountSpan.classList.remove('text-warning-600', 'text-error-600');
+            }
+        });
+    }
 });
 </script>
 @endsection

@@ -18,9 +18,9 @@ class SetupEarningsSystem extends Command
      * @var string
      */
     protected $signature = 'earnings:setup
-                            {--default-rate=500 : Default hourly rate for adiutors}
-                            {--currency=PHP : Default currency}
-                            {--min-payout=500 : Minimum payout amount}
+                            {--default-rate= : Default hourly rate for adiutors (defaults to config value)}
+                            {--currency= : Default currency (defaults to config value)}
+                            {--min-payout= : Minimum payout amount (defaults to config value)}
                             {--force : Force update existing values}';
 
     /**
@@ -38,9 +38,10 @@ class SetupEarningsSystem extends Command
         $this->info('🚀 Setting up Earnings System...');
         $this->newLine();
 
-        $defaultRate = $this->option('default-rate');
-        $currency = $this->option('currency');
-        $minPayout = $this->option('min-payout');
+        // Use config values as defaults, allow command options to override
+        $defaultRate = $this->option('default-rate') ?? config('financial.default_hourly_rate');
+        $currency = $this->option('currency') ?? config('financial.currency');
+        $minPayout = $this->option('min-payout') ?? config('financial.minimum_payout_amount');
         $force = $this->option('force');
 
         // Step 1: Update Adiutor Profiles

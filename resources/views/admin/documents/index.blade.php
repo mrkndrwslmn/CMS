@@ -11,9 +11,17 @@
             <h1 class="text-2xl font-semibold text-primary-500 mb-1">Document Management</h1>
             <p class="text-neutral-500 text-sm">Upload, manage and organize all documents</p>
         </div>
-        <a href="{{ route('admin.documents.create') }}" class="mt-4 sm:mt-0 flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-            <i class="fas fa-plus mr-2"></i>Upload New Document
-        </a>
+        <div class="mt-4 sm:mt-0 flex space-x-3">
+            <a href="{{ route('admin.documents.trash') }}" class="flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
+                <i class="fas fa-trash-alt mr-2"></i>Trash
+            </a>
+            <a href="{{ route('admin.documents.bulk-create') }}" class="flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
+                <i class="fas fa-layer-group mr-2"></i>Bulk Upload
+            </a>
+            <a href="{{ route('admin.documents.create') }}" class="flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
+                <i class="fas fa-plus mr-2"></i>Upload Document
+            </a>
+        </div>
     </div>
 
     <!-- Statistics Cards -->
@@ -89,8 +97,8 @@
         <div class="p-6">
             <!-- Search and Filter Form -->
             <form method="GET" action="{{ route('admin.documents.index') }}" class="mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div class="lg:col-span-2">
                         <label class="block text-sm font-medium text-neutral-700 mb-1">Search</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -99,19 +107,22 @@
                             <input type="text" 
                                    name="search" 
                                    value="{{ request('search') }}" 
-                                   placeholder="Search documents..." 
+                                   placeholder="Search by name, description, client, project..." 
                                    class="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 transition-colors">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-neutral-700 mb-1">Document Type</label>
+                        <label class="block text-sm font-medium text-neutral-700 mb-1">File Type</label>
                         <select name="type" class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 transition-colors">
                             <option value="">All Types</option>
-                            <option value="contract" {{ request('type') == 'contract' ? 'selected' : '' }}>Contract</option>
-                            <option value="report" {{ request('type') == 'report' ? 'selected' : '' }}>Report</option>
-                            <option value="image" {{ request('type') == 'image' ? 'selected' : '' }}>Image</option>
-                            <option value="document" {{ request('type') == 'document' ? 'selected' : '' }}>Document</option>
-                            <option value="other" {{ request('type') == 'other' ? 'selected' : '' }}>Other</option>
+                            <option value="pdf" {{ request('type') == 'pdf' ? 'selected' : '' }}>PDF</option>
+                            <option value="doc" {{ request('type') == 'doc' ? 'selected' : '' }}>Word (DOC)</option>
+                            <option value="docx" {{ request('type') == 'docx' ? 'selected' : '' }}>Word (DOCX)</option>
+                            <option value="xls" {{ request('type') == 'xls' ? 'selected' : '' }}>Excel (XLS)</option>
+                            <option value="xlsx" {{ request('type') == 'xlsx' ? 'selected' : '' }}>Excel (XLSX)</option>
+                            <option value="jpg" {{ request('type') == 'jpg' ? 'selected' : '' }}>JPEG Image</option>
+                            <option value="png" {{ request('type') == 'png' ? 'selected' : '' }}>PNG Image</option>
+                            <option value="zip" {{ request('type') == 'zip' ? 'selected' : '' }}>ZIP Archive</option>
                         </select>
                     </div>
                     <div>
@@ -125,6 +136,33 @@
                             @endforeach
                         </select>
                     </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 mb-1">Project</label>
+                        <select name="project" class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                            <option value="">All Projects</option>
+                            @foreach($projects as $project)
+                                <option value="{{ $project->id }}" {{ request('project') == $project->id ? 'selected' : '' }}>
+                                    {{ $project->project_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 mb-1">Date From</label>
+                        <input type="date" 
+                               name="date_from" 
+                               value="{{ request('date_from') }}" 
+                               class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 mb-1">Date To</label>
+                        <input type="date" 
+                               name="date_to" 
+                               value="{{ request('date_to') }}" 
+                               class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                    </div>
                     <div class="flex space-x-3 items-end">
                         <button type="submit" class="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
                             <i class="fas fa-search mr-2"></i> Filter
@@ -134,6 +172,39 @@
                         </a>
                     </div>
                 </div>
+                
+                <!-- Active Filters Display -->
+                @if(request()->anyFilled(['search', 'type', 'client', 'project', 'date_from', 'date_to']))
+                <div class="mt-4 flex flex-wrap gap-2 items-center">
+                    <span class="text-sm text-neutral-600">Active filters:</span>
+                    @if(request('search'))
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                            <i class="fas fa-search mr-1"></i> "{{ request('search') }}"
+                        </span>
+                    @endif
+                    @if(request('type'))
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <i class="fas fa-file mr-1"></i> {{ strtoupper(request('type')) }}
+                        </span>
+                    @endif
+                    @if(request('client'))
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-user mr-1"></i> {{ $clients->firstWhere('id', request('client'))->fullName ?? 'Unknown' }}
+                        </span>
+                    @endif
+                    @if(request('project'))
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            <i class="fas fa-project-diagram mr-1"></i> {{ $projects->firstWhere('id', request('project'))->project_name ?? 'Unknown' }}
+                        </span>
+                    @endif
+                    @if(request('date_from') || request('date_to'))
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            <i class="fas fa-calendar mr-1"></i> 
+                            {{ request('date_from') ?? 'Start' }} - {{ request('date_to') ?? 'End' }}
+                        </span>
+                    @endif
+                </div>
+                @endif
             </form>
 
             <!-- File Types Chart -->
@@ -177,11 +248,39 @@
                                 <th class="px-4 py-3 text-left">
                                     <input type="checkbox" id="select-all" class="w-4 h-4 text-primary-600 rounded border-neutral-300 focus:ring-primary-500">
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">File Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">
+                                    <a href="{{ route('admin.documents.index', array_merge(request()->query(), ['sort' => 'fileName', 'direction' => request('sort') === 'fileName' && request('direction') === 'asc' ? 'desc' : 'asc'])) }}" class="flex items-center hover:text-primary-600">
+                                        File Name
+                                        @if(request('sort') === 'fileName')
+                                            <i class="fas fa-sort-{{ request('direction') === 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                        @else
+                                            <i class="fas fa-sort ml-1 text-neutral-400"></i>
+                                        @endif
+                                    </a>
+                                </th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Size</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Related Task</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Uploaded</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">
+                                    <a href="{{ route('admin.documents.index', array_merge(request()->query(), ['sort' => 'fileSize', 'direction' => request('sort') === 'fileSize' && request('direction') === 'asc' ? 'desc' : 'asc'])) }}" class="flex items-center hover:text-primary-600">
+                                        Size
+                                        @if(request('sort') === 'fileSize')
+                                            <i class="fas fa-sort-{{ request('direction') === 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                        @else
+                                            <i class="fas fa-sort ml-1 text-neutral-400"></i>
+                                        @endif
+                                    </a>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Client</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Related To</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">
+                                    <a href="{{ route('admin.documents.index', array_merge(request()->query(), ['sort' => 'created_at', 'direction' => request('sort') === 'created_at' && request('direction') === 'asc' ? 'desc' : 'asc'])) }}" class="flex items-center hover:text-primary-600">
+                                        Uploaded
+                                        @if(request('sort') === 'created_at' || !request('sort'))
+                                            <i class="fas fa-sort-{{ (request('direction') ?? 'desc') === 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                        @else
+                                            <i class="fas fa-sort ml-1 text-neutral-400"></i>
+                                        @endif
+                                    </a>
+                                </th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -193,29 +292,51 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         <a href="{{ route('admin.documents.show', $document->documentID) }}" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
-                                            <i class="fas fa-file-alt text-neutral-400 mr-2"></i>
-                                            {{ $document->fileName }}
+                                            <i class="fas {{ $document->file_icon ?? 'fa-file-alt text-neutral-400' }} mr-2"></i>
+                                            <div>
+                                                <span class="block">{{ Str::limit($document->fileName, 40) }}</span>
+                                                @if($document->description)
+                                                    <span class="text-xs text-neutral-500">{{ Str::limit($document->description, 50) }}</span>
+                                                @endif
+                                            </div>
                                         </a>
                                     </td>
                                     <td class="px-6 py-4">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                                            {{ $document->fileType ?? 'Unknown' }}
+                                            {{ strtoupper($document->fileType ?? 'Unknown') }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-neutral-600">
-                                        {{ number_format($document->fileSize / 1024, 2) }} KB
+                                        {{ $document->formatted_size }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm">
+                                        @if($document->client)
+                                            <a href="{{ route('admin.clients.show', $document->client->id) }}" class="text-primary-600 hover:text-primary-700">
+                                                {{ $document->client->fullName }}
+                                            </a>
+                                        @else
+                                            <span class="text-neutral-400 italic">—</span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 text-sm">
                                         @if($document->task)
-                                            <a href="{{ route('admin.tasks.show', $document->task->taskID) }}" class="text-primary-600 hover:text-primary-700">
-                                                {{ Str::limit($document->task->taskTitle, 30) }}
+                                            <a href="{{ route('admin.tasks.show', $document->task->taskID) }}" class="text-primary-600 hover:text-primary-700 flex items-center">
+                                                <i class="fas fa-tasks text-xs mr-1"></i>
+                                                {{ Str::limit($document->task->taskTitle, 25) }}
+                                            </a>
+                                        @elseif($document->project)
+                                            <a href="{{ route('admin.projects.show', $document->project->id) }}" class="text-primary-600 hover:text-primary-700 flex items-center">
+                                                <i class="fas fa-project-diagram text-xs mr-1"></i>
+                                                {{ Str::limit($document->project->project_name, 25) }}
                                             </a>
                                         @else
-                                            <span class="text-neutral-400 italic">None</span>
+                                            <span class="text-neutral-400 italic">—</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-sm text-neutral-600">
-                                        {{ $document->created_at->format('M d, Y') }}
+                                        <span title="{{ $document->created_at->format('M d, Y g:i A') }}">
+                                            {{ $document->created_at->diffForHumans() }}
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center space-x-2">
@@ -235,10 +356,10 @@
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <button type="button" 
-                                                    class="text-error-600 hover:text-error-800 hover:bg-error-50 p-2 rounded-lg transition-colors delete-document" 
+                                                    class="text-warning-600 hover:text-warning-800 hover:bg-warning-50 p-2 rounded-lg transition-colors delete-document" 
                                                     data-document-id="{{ $document->documentID }}"
                                                     data-document-name="{{ $document->fileName }}"
-                                                    title="Delete">
+                                                    title="Move to Trash">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -246,13 +367,19 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center">
+                                    <td colspan="8" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center justify-center text-neutral-400">
                                             <div class="bg-neutral-100 p-6 rounded-full mb-4">
                                                 <i class="fas fa-folder-open text-4xl text-neutral-400"></i>
                                             </div>
                                             <p class="text-lg font-medium text-neutral-500">No documents found</p>
-                                            <p class="text-sm mt-1">Upload your first document to get started</p>
+                                            <p class="text-sm mt-1">
+                                                @if(request()->anyFilled(['search', 'type', 'client', 'project', 'date_from', 'date_to']))
+                                                    Try adjusting your search or filters
+                                                @else
+                                                    Upload your first document to get started
+                                                @endif
+                                            </p>
                                         </div>
                                     </td>
                                 </tr>
@@ -277,7 +404,7 @@
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all">
         <div class="px-6 py-4 border-b border-neutral-200">
             <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-neutral-800">Confirm Deletion</h3>
+                <h3 class="text-lg font-semibold text-neutral-800">Move to Trash</h3>
                 <button type="button" class="text-neutral-400 hover:text-neutral-600 transition-colors" onclick="document.getElementById('deleteModal').style.display='none'">
                     <i class="fas fa-times"></i>
                 </button>
@@ -285,12 +412,12 @@
         </div>
         <div class="px-6 py-4">
             <div class="flex items-start space-x-4">
-                <div class="bg-error-100 p-3 rounded-full">
-                    <i class="fas fa-exclamation-triangle text-error-500"></i>
+                <div class="bg-warning-100 p-3 rounded-full">
+                    <i class="fas fa-trash-alt text-warning-500"></i>
                 </div>
                 <div class="flex-1">
-                    <p class="text-neutral-700 text-sm mb-2">Are you sure you want to delete this document? This action cannot be undone.</p>
-                    <p class="text-error-600 font-medium text-sm" id="delete-document-name"></p>
+                    <p class="text-neutral-700 text-sm mb-2">This document will be moved to trash. You can restore it later from the Trash section.</p>
+                    <p class="text-warning-600 font-medium text-sm" id="delete-document-name"></p>
                 </div>
             </div>
         </div>
@@ -303,8 +430,8 @@
             <form id="delete-form" method="POST" action="">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="px-4 py-2 bg-error-600 text-white font-medium rounded-lg hover:bg-error-700 transition-colors">
-                    Delete Document
+                <button type="submit" class="px-4 py-2 bg-warning-600 text-white font-medium rounded-lg hover:bg-warning-700 transition-colors">
+                    Move to Trash
                 </button>
             </form>
         </div>

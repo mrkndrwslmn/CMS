@@ -12,18 +12,46 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
+/**
+ * Handles Firebase-based social authentication.
+ * 
+ * This controller manages OAuth authentication through Firebase for
+ * social providers (Google, Apple, Twitter). It supports:
+ * - New user registration via social login
+ * - Existing user login via linked social accounts
+ * - Account linking for existing users
+ * - Account unlinking
+ * 
+ * @package App\Http\Controllers\Auth
+ */
 class FirebaseAuthController extends Controller
 {
+    /**
+     * The Firebase authentication service instance.
+     *
+     * @var \App\Services\FirebaseAuthService
+     */
     protected FirebaseAuthService $firebaseAuth;
 
+    /**
+     * Create a new controller instance.
+     *
+     * @param  \App\Services\FirebaseAuthService  $firebaseAuth
+     */
     public function __construct(FirebaseAuthService $firebaseAuth)
     {
         $this->firebaseAuth = $firebaseAuth;
     }
 
     /**
-     * Handle Firebase authentication callback
-     * This endpoint receives the Firebase ID token from the client
+     * Handle Firebase authentication callback.
+     * 
+     * Receives and verifies a Firebase ID token from the client,
+     * then either logs in an existing user or creates a new account.
+     * Also handles account linking when initiated by an authenticated user.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function handleCallback(Request $request): JsonResponse
     {
@@ -98,10 +126,34 @@ class FirebaseAuthController extends Controller
                 ]
             ]);
 
+        } catch (\Kreait\Firebase\Exception\Auth\FailedToVerifyToken $e) {
+            Log::warning('Firebase token verification failed', [
+                'error' => $e->getMessage(),
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Your authentication token is invalid or has expired. Please try signing in again.'
+            ], 401);
+
+        } catch (\Kreait\Firebase\Exception\Auth\RevokedIdToken $e) {
+            Log::warning('Firebase token was revoked', [
+                'error' => $e->getMessage(),
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Your session has been revoked. Please sign in again.'
+            ], 401);
+
         } catch (\Exception $e) {
             Log::error('Firebase authentication failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error_class' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+                'ip' => $request->ip(),
             ]);
 
             $errorMessage = 'Authentication failed. Please try again or use email/password login.';
@@ -110,6 +162,8 @@ class FirebaseAuthController extends Controller
                 $errorMessage = 'The social provider didn\'t provide your email address. Please try signing in with email/password instead.';
             } elseif (str_contains($e->getMessage(), 'already exists but is linked')) {
                 $errorMessage = 'An account with this email is already linked to a different social provider.';
+            } elseif (str_contains($e->getMessage(), 'expired') || str_contains($e->getMessage(), 'Expired')) {
+                $errorMessage = 'Your authentication session has expired. Please try signing in again.';
             }
 
             return response()->json([
@@ -120,7 +174,13 @@ class FirebaseAuthController extends Controller
     }
 
     /**
-     * Initiate account linking for logged-in users
+     * Initiate account linking for logged-in users.
+     * 
+     * Sets a session flag that triggers account linking mode
+     * when handleCallback is called next.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function initiateLink(Request $request): JsonResponse
     {

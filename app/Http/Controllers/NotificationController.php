@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -15,29 +16,44 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         
-        // Get notifications for the authenticated user
-        $notifications = DB::table('notifications')
-            ->where('notifiable_type', 'App\\Models\\User')
-            ->where('notifiable_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function ($notification) {
-                $notification->data = json_decode($notification->data, true);
-                return $notification;
-            });
-        
-        // Count unread notifications
-        $unreadCount = DB::table('notifications')
-            ->where('notifiable_type', 'App\\Models\\User')
-            ->where('notifiable_id', $user->id)
-            ->whereNull('read_at')
-            ->count();
-        
-        return response()->json([
-            'notifications' => $notifications,
-            'unreadCount' => $unreadCount
-        ]);
+        try {
+            // Get notifications for the authenticated user
+            $notifications = DB::table('notifications')
+                ->where('notifiable_type', 'App\\Models\\User')
+                ->where('notifiable_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function ($notification) {
+                    $notification->data = json_decode($notification->data, true);
+                    return $notification;
+                });
+            
+            // Count unread notifications
+            $unreadCount = DB::table('notifications')
+                ->where('notifiable_type', 'App\\Models\\User')
+                ->where('notifiable_id', $user->id)
+                ->whereNull('read_at')
+                ->count();
+            
+            return response()->json([
+                'success' => true,
+                'notifications' => $notifications,
+                'unreadCount' => $unreadCount
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching notifications', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to fetch notifications',
+                'notifications' => [],
+                'unreadCount' => 0
+            ], 500);
+        }
     }
     
     /**

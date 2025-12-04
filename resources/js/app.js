@@ -1,5 +1,9 @@
 import './bootstrap';
 import { messagingService } from './messaging.js';
+import { MessagingUtils } from './messaging-utils.js';
+
+// Export utilities globally for use in Blade views
+window.MessagingUtils = MessagingUtils;
 
 // Initialize messaging service when DOM is loaded (only for authenticated users)
 document.addEventListener('DOMContentLoaded', async () => {

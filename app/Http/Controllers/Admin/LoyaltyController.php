@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AdjustLoyaltyPointsRequest;
 use App\Models\User;
 use App\Models\LoyaltyPoint;
 use App\Models\LoyaltyTransaction;
@@ -125,12 +126,9 @@ class LoyaltyController extends Controller
     /**
      * Manual points adjustment
      */
-    public function adjustPoints(Request $request, User $user)
+    public function adjustPoints(AdjustLoyaltyPointsRequest $request, User $user)
     {
-        $validated = $request->validate([
-            'points' => 'required|integer|not_in:0',
-            'reason' => 'required|string|max:500',
-        ]);
+        $validated = $request->validated();
 
         try {
             $this->loyaltyService->adjustPoints(
@@ -355,6 +353,99 @@ class LoyaltyController extends Controller
             return back()->with('success', "Expiry warnings sent to {$sentCount} user(s).");
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to send warnings: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Display transactions for a specific user
+     */
+    public function userTransactions(Request $request, User $user)
+    {
+        $query = $user->loyaltyTransactions()
+            ->with(['serviceRequest', 'payment', 'coupon', 'performedBy']);
+
+        // Filter by transaction type
+        if ($request->filled('type')) {
+            $query->where('transaction_type', $request->type);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->where('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+        }
+
+        $transactions = $query->orderBy('created_at', 'desc')->paginate(30);
+
+        // Get user's loyalty points summary
+        $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+        
+        $stats = [
+            'total_earned' => $user->loyaltyTransactions()->earned()->sum('points'),
+            'total_redeemed' => abs($user->loyaltyTransactions()->redeemed()->sum('points')),
+            'total_expired' => abs($user->loyaltyTransactions()->where('transaction_type', 'expired')->sum('points')),
+            'available_points' => $loyaltyPoint->available_points,
+        ];
+
+        return view('admin.loyalty.user-transactions', compact('user', 'transactions', 'stats', 'loyaltyPoint'));
+    }
+
+    /**
+     * Export a specific user's loyalty report
+     */
+    public function exportUserReport(User $user)
+    {
+        try {
+            $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+            $transactions = $user->loyaltyTransactions()
+                ->with(['serviceRequest', 'payment'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $filename = 'loyalty-report-' . str_replace(' ', '-', strtolower($user->fullName)) . '-' . now()->format('Y-m-d') . '.csv';
+            
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ];
+
+            $callback = function () use ($user, $loyaltyPoint, $transactions) {
+                $file = fopen('php://output', 'w');
+                
+                // User summary
+                fputcsv($file, ['Loyalty Report for ' . $user->fullName]);
+                fputcsv($file, ['Generated', now()->format('Y-m-d H:i:s')]);
+                fputcsv($file, []);
+                fputcsv($file, ['Summary']);
+                fputcsv($file, ['Current Tier', ucfirst($loyaltyPoint->tier)]);
+                fputcsv($file, ['Available Points', $loyaltyPoint->available_points]);
+                fputcsv($file, ['Lifetime Earned', $loyaltyPoint->lifetime_earned]);
+                fputcsv($file, ['Lifetime Redeemed', $loyaltyPoint->lifetime_redeemed]);
+                fputcsv($file, []);
+                
+                // Transaction header
+                fputcsv($file, ['Date', 'Type', 'Points', 'Balance After', 'Source', 'Description']);
+
+                // Transaction data
+                foreach ($transactions as $transaction) {
+                    fputcsv($file, [
+                        $transaction->created_at->format('Y-m-d H:i:s'),
+                        ucfirst($transaction->transaction_type),
+                        $transaction->points,
+                        $transaction->balance_after,
+                        $transaction->source,
+                        $transaction->description,
+                    ]);
+                }
+
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to export report: ' . $e->getMessage()]);
         }
     }
 }

@@ -27,6 +27,7 @@ class Task extends Model
         'taskDescription',
         'status',
         'priority',
+        'sort_order',           // Display order for drag-and-drop reordering
         'deadline',
         'completedAt',
         'notes',
@@ -61,9 +62,26 @@ class Task extends Model
         'total_hours_tracked' => 'decimal:2',
         'calculated_earnings' => 'decimal:2',
         'progress_percentage' => 'integer',
+        'sort_order' => 'integer',
         'requires_time_tracking' => 'boolean',
         'use_fixed_budget' => 'boolean',
     ];
+
+    /**
+     * Scope to order tasks by their sort_order
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('sort_order')->orderBy('taskID');
+    }
+
+    /**
+     * Scope to get tasks for a specific project, ordered
+     */
+    public function scopeForProject($query, $projectId)
+    {
+        return $query->where('project_id', $projectId)->ordered();
+    }
 
     /**
      * Get the PROJECT this task belongs to (CORRECT RELATIONSHIP).
@@ -109,7 +127,7 @@ class Task extends Model
     
     /**
      * @deprecated Use project() relationship instead
-     * Get the form this task belongs to.
+aaaaaaaaaaaaaaaaaaa     * Get the form this task belongs to.
      * COMMENTED OUT: forms table no longer exists in new architecture
      */
     // public function form(): BelongsTo
@@ -140,6 +158,125 @@ class Task extends Model
     public function allDocuments(): MorphMany
     {
         return $this->morphMany(Document::class, 'documentable');
+    }
+
+    /**
+     * Get the subtasks for this task.
+     */
+    public function subtasks(): HasMany
+    {
+        return $this->hasMany(Subtask::class, 'task_id', 'taskID')->orderBy('sort_order');
+    }
+
+    /**
+     * Get the deliverables for this task (documents marked as deliverables).
+     */
+    public function deliverables(): HasMany
+    {
+        return $this->hasMany(Document::class, 'taskID')->where('is_deliverable', true);
+    }
+
+    /**
+     * Get approved deliverables.
+     */
+    public function approvedDeliverables(): HasMany
+    {
+        return $this->deliverables()->where('is_approved', true);
+    }
+
+    /**
+     * Get pending approval deliverables.
+     */
+    public function pendingDeliverables(): HasMany
+    {
+        return $this->deliverables()->where('is_approved', false);
+    }
+
+    /**
+     * Check if the task has any deliverables.
+     */
+    public function hasDeliverables(): bool
+    {
+        return $this->deliverables()->exists();
+    }
+
+    /**
+     * Check if the task has any approved deliverables.
+     */
+    public function hasApprovedDeliverables(): bool
+    {
+        return $this->approvedDeliverables()->exists();
+    }
+
+    /**
+     * Get the count of deliverables by type.
+     */
+    public function getDeliverablesCounts(): array
+    {
+        $deliverables = $this->deliverables;
+        return [
+            'total' => $deliverables->count(),
+            'files' => $deliverables->where('deliverable_type', 'file')->count(),
+            'links' => $deliverables->where('deliverable_type', 'link')->count(),
+            'approved' => $deliverables->where('is_approved', true)->count(),
+            'pending' => $deliverables->where('is_approved', false)->count(),
+        ];
+    }
+
+    /**
+     * Check if the task has subtasks.
+     */
+    public function hasSubtasks(): bool
+    {
+        return $this->subtasks()->exists();
+    }
+
+    /**
+     * Get subtasks statistics.
+     */
+    public function getSubtasksStats(): array
+    {
+        $subtasks = $this->subtasks()->withTrashed(false)->get();
+        $total = $subtasks->count();
+        $completed = $subtasks->where('is_completed', true)->count();
+        
+        return [
+            'total' => $total,
+            'completed' => $completed,
+            'pending' => $total - $completed,
+            'percentage' => $total > 0 ? round(($completed / $total) * 100) : 0,
+        ];
+    }
+
+    /**
+     * Update task progress based on subtask completion.
+     * Called automatically when subtasks are added, removed, or toggled.
+     */
+    public function updateProgressFromSubtasks(): void
+    {
+        if (!$this->hasSubtasks()) {
+            return; // Don't override manual progress if no subtasks
+        }
+
+        $stats = $this->getSubtasksStats();
+        $this->update([
+            'progress_percentage' => $stats['percentage'],
+        ]);
+
+        // If all subtasks are completed, mark task as completed
+        if ($stats['total'] > 0 && $stats['pending'] === 0 && $this->status !== 'completed') {
+            $this->update([
+                'status' => 'completed',
+                'completedAt' => now(),
+            ]);
+        }
+        // If task was completed but subtasks are now incomplete, revert to in_progress
+        elseif ($stats['pending'] > 0 && $this->status === 'completed') {
+            $this->update([
+                'status' => 'in_progress',
+                'completedAt' => null,
+            ]);
+        }
     }
 
     /**

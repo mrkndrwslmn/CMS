@@ -65,35 +65,44 @@ class LoyaltyPoint extends Model
         $relatedModel = null,
         ?\DateTime $expiresAt = null
     ): LoyaltyTransaction {
-        $balanceBefore = $this->available_points;
+        return DB::transaction(function () use ($points, $source, $description, $relatedModel, $expiresAt) {
+            // Lock this record to prevent concurrent modifications
+            $locked = static::where('id', $this->id)->lockForUpdate()->first();
+            
+            $balanceBefore = $locked->available_points;
 
-        DB::transaction(function () use ($points, &$balanceBefore) {
-            $this->increment('total_points', $points);
-            $this->increment('available_points', $points);
-            $this->increment('lifetime_earned', $points);
-            $this->update(['last_earned_at' => now()]);
+            $locked->increment('total_points', $points);
+            $locked->increment('available_points', $points);
+            $locked->increment('lifetime_earned', $points);
+            $locked->update(['last_earned_at' => now()]);
+
+            $balanceAfter = $balanceBefore + $points;
+
+            // Default expiry to configured months if not provided
+            $expiryDate = $expiresAt ?? now()->addMonths(config('loyalty.points.expiry_months', 12));
+
+            // Create transaction record
+            $transaction = LoyaltyTransaction::create([
+                'user_id' => $this->user_id,
+                'transaction_type' => 'earned',
+                'points' => $points,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'source' => $source,
+                'description' => $description,
+                'service_request_id' => $relatedModel instanceof ServiceRequest ? $relatedModel->id : null,
+                'payment_id' => $relatedModel instanceof Payment ? $relatedModel->id : null,
+                'expires_at' => $expiryDate,
+            ]);
+
+            // Refresh this instance with locked data
+            $this->refresh();
+
+            // Check for tier upgrade
+            $this->checkAndUpgradeTier();
+
+            return $transaction;
         });
-
-        $balanceAfter = $balanceBefore + $points;
-
-        // Create transaction record
-        $transaction = LoyaltyTransaction::create([
-            'user_id' => $this->user_id,
-            'transaction_type' => 'earned',
-            'points' => $points,
-            'balance_before' => $balanceBefore,
-            'balance_after' => $balanceAfter,
-            'source' => $source,
-            'description' => $description,
-            'service_request_id' => $relatedModel instanceof ServiceRequest ? $relatedModel->id : null,
-            'payment_id' => $relatedModel instanceof Payment ? $relatedModel->id : null,
-            'expires_at' => $expiresAt,
-        ]);
-
-        // Check for tier upgrade
-        $this->checkAndUpgradeTier();
-
-        return $transaction;
     }
 
     /**
@@ -105,34 +114,40 @@ class LoyaltyPoint extends Model
         string $description,
         $relatedModel = null
     ): LoyaltyTransaction {
-        if ($points > $this->available_points) {
-            throw new \Exception('Insufficient loyalty points. Available: ' . $this->available_points);
-        }
+        return DB::transaction(function () use ($points, $source, $description, $relatedModel) {
+            // Lock this record to prevent concurrent modifications
+            $locked = static::where('id', $this->id)->lockForUpdate()->first();
+            
+            if ($points > $locked->available_points) {
+                throw new \Exception('Insufficient loyalty points. Available: ' . $locked->available_points);
+            }
 
-        $balanceBefore = $this->available_points;
+            $balanceBefore = $locked->available_points;
 
-        DB::transaction(function () use ($points) {
-            $this->decrement('total_points', $points);
-            $this->decrement('available_points', $points);
-            $this->increment('lifetime_redeemed', $points);
-            $this->update(['last_redeemed_at' => now()]);
+            $locked->decrement('total_points', $points);
+            $locked->decrement('available_points', $points);
+            $locked->increment('lifetime_redeemed', $points);
+            $locked->update(['last_redeemed_at' => now()]);
+
+            $balanceAfter = $balanceBefore - $points;
+
+            // Refresh this instance with locked data
+            $this->refresh();
+
+            // Create transaction record (negative points)
+            return LoyaltyTransaction::create([
+                'user_id' => $this->user_id,
+                'transaction_type' => 'redeemed',
+                'points' => -$points,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'source' => $source,
+                'description' => $description,
+                'service_request_id' => $relatedModel instanceof ServiceRequest ? $relatedModel->id : null,
+                'payment_id' => $relatedModel instanceof Payment ? $relatedModel->id : null,
+                'coupon_id' => $relatedModel instanceof Coupon ? $relatedModel->id : null,
+            ]);
         });
-
-        $balanceAfter = $balanceBefore - $points;
-
-        // Create transaction record (negative points)
-        return LoyaltyTransaction::create([
-            'user_id' => $this->user_id,
-            'transaction_type' => 'redeemed',
-            'points' => -$points,
-            'balance_before' => $balanceBefore,
-            'balance_after' => $balanceAfter,
-            'source' => $source,
-            'description' => $description,
-            'service_request_id' => $relatedModel instanceof ServiceRequest ? $relatedModel->id : null,
-            'payment_id' => $relatedModel instanceof Payment ? $relatedModel->id : null,
-            'coupon_id' => $relatedModel instanceof Coupon ? $relatedModel->id : null,
-        ]);
     }
 
     /**
@@ -143,27 +158,33 @@ class LoyaltyPoint extends Model
         string $description,
         $relatedModel = null
     ): LoyaltyTransaction {
-        $balanceBefore = $this->available_points;
+        return DB::transaction(function () use ($points, $description, $relatedModel) {
+            // Lock this record to prevent concurrent modifications
+            $locked = static::where('id', $this->id)->lockForUpdate()->first();
+            
+            $balanceBefore = $locked->available_points;
 
-        DB::transaction(function () use ($points) {
-            $this->increment('total_points', $points);
-            $this->increment('available_points', $points);
-            $this->decrement('lifetime_redeemed', $points);
+            $locked->increment('total_points', $points);
+            $locked->increment('available_points', $points);
+            $locked->decrement('lifetime_redeemed', $points);
+
+            $balanceAfter = $balanceBefore + $points;
+
+            // Refresh this instance with locked data
+            $this->refresh();
+
+            return LoyaltyTransaction::create([
+                'user_id' => $this->user_id,
+                'transaction_type' => 'refunded',
+                'points' => $points,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'source' => 'points_refund',
+                'description' => $description,
+                'service_request_id' => $relatedModel instanceof ServiceRequest ? $relatedModel->id : null,
+                'payment_id' => $relatedModel instanceof Payment ? $relatedModel->id : null,
+            ]);
         });
-
-        $balanceAfter = $balanceBefore + $points;
-
-        return LoyaltyTransaction::create([
-            'user_id' => $this->user_id,
-            'transaction_type' => 'refunded',
-            'points' => $points,
-            'balance_before' => $balanceBefore,
-            'balance_after' => $balanceAfter,
-            'source' => 'points_refund',
-            'description' => $description,
-            'service_request_id' => $relatedModel instanceof ServiceRequest ? $relatedModel->id : null,
-            'payment_id' => $relatedModel instanceof Payment ? $relatedModel->id : null,
-        ]);
     }
 
     /**
@@ -174,32 +195,43 @@ class LoyaltyPoint extends Model
         string $reason,
         User $performedBy
     ): LoyaltyTransaction {
-        $balanceBefore = $this->available_points;
-
-        DB::transaction(function () use ($points) {
-            if ($points > 0) {
-                $this->increment('total_points', abs($points));
-                $this->increment('available_points', abs($points));
-                $this->increment('lifetime_earned', abs($points));
-            } else {
-                $this->decrement('total_points', abs($points));
-                $this->decrement('available_points', abs($points));
-                $this->increment('lifetime_redeemed', abs($points));
+        return DB::transaction(function () use ($points, $reason, $performedBy) {
+            // Lock this record to prevent concurrent modifications
+            $locked = static::where('id', $this->id)->lockForUpdate()->first();
+            
+            // Validate deduction doesn't exceed balance
+            if ($points < 0 && abs($points) > $locked->available_points) {
+                throw new \Exception('Cannot deduct more than available balance: ' . $locked->available_points);
             }
+            
+            $balanceBefore = $locked->available_points;
+
+            if ($points > 0) {
+                $locked->increment('total_points', abs($points));
+                $locked->increment('available_points', abs($points));
+                $locked->increment('lifetime_earned', abs($points));
+            } else {
+                $locked->decrement('total_points', abs($points));
+                $locked->decrement('available_points', abs($points));
+                $locked->increment('lifetime_redeemed', abs($points));
+            }
+
+            $balanceAfter = $balanceBefore + $points;
+
+            // Refresh this instance with locked data
+            $this->refresh();
+
+            return LoyaltyTransaction::create([
+                'user_id' => $this->user_id,
+                'transaction_type' => 'adjusted',
+                'points' => $points,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'source' => 'manual_adjustment',
+                'description' => $reason,
+                'performed_by' => $performedBy->id,
+            ]);
         });
-
-        $balanceAfter = $balanceBefore + $points;
-
-        return LoyaltyTransaction::create([
-            'user_id' => $this->user_id,
-            'transaction_type' => 'adjusted',
-            'points' => $points,
-            'balance_before' => $balanceBefore,
-            'balance_after' => $balanceAfter,
-            'source' => 'manual_adjustment',
-            'description' => $reason,
-            'performed_by' => $performedBy->id,
-        ]);
     }
 
     /**
@@ -209,24 +241,30 @@ class LoyaltyPoint extends Model
         int $points,
         string $description
     ): LoyaltyTransaction {
-        $balanceBefore = $this->available_points;
+        return DB::transaction(function () use ($points, $description) {
+            // Lock this record to prevent concurrent modifications
+            $locked = static::where('id', $this->id)->lockForUpdate()->first();
+            
+            $balanceBefore = $locked->available_points;
 
-        DB::transaction(function () use ($points) {
-            $this->decrement('total_points', abs($points));
-            $this->decrement('available_points', abs($points));
+            $locked->decrement('total_points', abs($points));
+            $locked->decrement('available_points', abs($points));
+
+            $balanceAfter = $balanceBefore - abs($points);
+
+            // Refresh this instance with locked data
+            $this->refresh();
+
+            return LoyaltyTransaction::create([
+                'user_id' => $this->user_id,
+                'transaction_type' => 'expired',
+                'points' => -abs($points),
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'source' => 'points_expired',
+                'description' => $description,
+            ]);
         });
-
-        $balanceAfter = $balanceBefore - abs($points);
-
-        return LoyaltyTransaction::create([
-            'user_id' => $this->user_id,
-            'transaction_type' => 'expired',
-            'points' => -abs($points),
-            'balance_before' => $balanceBefore,
-            'balance_after' => $balanceAfter,
-            'source' => 'points_expired',
-            'description' => $description,
-        ]);
     }
 
     /**

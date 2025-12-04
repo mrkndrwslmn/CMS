@@ -286,6 +286,116 @@ class ClientController extends Controller
     }
 
     /**
+     * Show all documents for the client across all projects
+     */
+    public function documents(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Build the base query for client's documents
+        $query = DB::table('documents')
+            ->leftJoin('tasks', 'documents.taskID', '=', 'tasks.taskID')
+            ->leftJoin('projects', function($join) {
+                $join->on('documents.project_id', '=', 'projects.id')
+                     ->orOn('tasks.project_id', '=', 'projects.id');
+            })
+            ->leftJoin('project_milestones', 'tasks.phase_id', '=', 'project_milestones.id')
+            ->leftJoin('users', 'documents.uploaded_by', '=', 'users.id')
+            ->leftJoin('service_requests', 'projects.service_request_id', '=', 'service_requests.id')
+            ->where(function($q) use ($user) {
+                // Documents from projects owned by this client
+                $q->where('projects.client_id', $user->id)
+                  // Or documents directly assigned to this client
+                  ->orWhere('documents.client_id', $user->id);
+            })
+            ->whereNull('documents.deleted_at')
+            ->where(function($q) {
+                $q->where('documents.is_archived', false)
+                  ->orWhereNull('documents.is_archived');
+            });
+        
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('documents.fileName', 'like', "%{$search}%")
+                  ->orWhere('documents.description', 'like', "%{$search}%")
+                  ->orWhere('projects.title', 'like', "%{$search}%");
+            });
+        }
+        
+        // Project filter
+        if ($request->filled('project')) {
+            $query->where('projects.id', $request->project);
+        }
+        
+        // File type filter
+        if ($request->filled('type')) {
+            $query->where('documents.fileType', $request->type);
+        }
+        
+        $documents = $query->select(
+                'documents.*',
+                'projects.id as project_id',
+                'projects.title as project_title',
+                'projects.status as project_status',
+                'tasks.taskTitle as task_name',
+                'tasks.taskID as task_id',
+                'tasks.phase_id',
+                'project_milestones.phase_name',
+                'project_milestones.is_paid as phase_is_paid',
+                'users.fullName as uploaded_by_name',
+                'service_requests.payment_type'
+            )
+            ->orderBy('documents.created_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+        
+        // Map documents to add lock status
+        $documents->getCollection()->transform(function($doc) {
+            $isLocked = false;
+            
+            // Check if document is locked based on payment status
+            if ($doc->phase_id && $doc->payment_type === 'milestone_payment') {
+                $isLocked = ($doc->phase_is_paid == 0 || $doc->phase_is_paid === false || $doc->phase_is_paid === null);
+            }
+            
+            $doc->is_locked = $isLocked;
+            $doc->created_at = Carbon::parse($doc->created_at);
+            
+            return $doc;
+        });
+        
+        // Get client's projects for filter dropdown
+        $projects = DB::table('projects')
+            ->where('client_id', $user->id)
+            ->orderBy('title')
+            ->get(['id', 'title']);
+        
+        // Get stats
+        $stats = [
+            'total' => DB::table('documents')
+                ->leftJoin('projects', 'documents.project_id', '=', 'projects.id')
+                ->where(function($q) use ($user) {
+                    $q->where('projects.client_id', $user->id)
+                      ->orWhere('documents.client_id', $user->id);
+                })
+                ->whereNull('documents.deleted_at')
+                ->count(),
+            'total_size' => DB::table('documents')
+                ->leftJoin('projects', 'documents.project_id', '=', 'projects.id')
+                ->where(function($q) use ($user) {
+                    $q->where('projects.client_id', $user->id)
+                      ->orWhere('documents.client_id', $user->id);
+                })
+                ->whereNull('documents.deleted_at')
+                ->sum('documents.fileSize'),
+        ];
+        
+        return view('client.documents.index', compact('user', 'documents', 'projects', 'stats'));
+    }
+
+    /**
      * Show service requests
      */
     public function requests()

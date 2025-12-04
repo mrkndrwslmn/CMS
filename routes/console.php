@@ -13,8 +13,15 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// ============================================
+// Communication System Scheduled Tasks
+// ============================================
+
 // Schedule announcement status updates to run every minute
 Schedule::command('announcements:update-statuses')->everyMinute();
+
+// Send meeting reminders (runs every minute to catch 1-hour and 15-minute windows)
+Schedule::command('meetings:send-reminders')->everyMinute()->withoutOverlapping();
 
 // ============================================
 // Coupon & Loyalty System Scheduled Tasks

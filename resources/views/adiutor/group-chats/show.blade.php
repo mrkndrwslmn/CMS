@@ -261,61 +261,24 @@ function createMessagesDiv() {
     return messagesContainer.querySelector('.space-y-4');
 }
 
-// Create message element
+// Create message element using shared utility
+const currentUserId = {{ $user->id }};
+
 function createMessageElement(message) {
-    const currentUserId = {{ $user->id }};
-    const isOwnMessage = message.sender_id === currentUserId;
-    const alignClass = isOwnMessage ? 'justify-end' : 'justify-start';
-    const itemsClass = isOwnMessage ? 'items-end' : 'items-start';
-    const bubbleClass = isOwnMessage ? 'bg-primary-600 text-white' : 'bg-white text-neutral-800 border border-neutral-200';
-    
-    let senderInfo = '';
-    if (!isOwnMessage && message.sender) {
-        const initial = message.sender.fullName.substring(0, 1);
-        const roleTag = message.sender.role === 'admin' ? '<span class="text-xs text-primary-600 font-medium">(Admin)</span>' : '';
-        senderInfo = `
-            <div class="flex items-center gap-2 mb-1 px-4">
-                <div class="w-6 h-6 rounded-full bg-primary-50 flex items-center justify-center">
-                    <span class="text-primary-600 text-xs font-medium">${initial}</span>
-                </div>
-                <span class="text-sm font-medium text-neutral-700">${escapeHtml(message.sender.fullName)}</span>
-                ${roleTag}
-            </div>
-        `;
-    }
-    
-    const timestamp = formatMessageTime(message.created_at);
-    
-    return `
-        <div class="flex ${alignClass}" data-message-id="${message.id}">
-            <div class="max-w-2xl ${itemsClass} flex flex-col">
-                ${senderInfo}
-                <div class="relative group">
-                    <div class="px-4 py-3 rounded-2xl ${bubbleClass}">
-                        <p class="text-sm whitespace-pre-wrap break-words">${escapeHtml(message.message)}</p>
-                    </div>
-                    <div class="mt-1 px-4 text-xs text-neutral-500">
-                        ${timestamp}
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+    return window.MessagingUtils.createMessageElement(message, currentUserId, {
+        showSenderInfo: true,
+        showReadStatus: false  // Group chats don't show read status per message
+    });
 }
 
-// Format message time
+// Format message time - use shared utility
 function formatMessageTime(timestamp) {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const options = { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' };
-    return date.toLocaleString('en-US', options);
+    return window.MessagingUtils.formatDateTime(timestamp);
 }
 
-// Escape HTML
+// Escape HTML - use shared utility
 function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return window.MessagingUtils.escapeHtml(text);
 }
 
 function scrollToBottom() {

@@ -208,8 +208,8 @@
             <x-ui.card class="mb-6">
                 <div class="flex justify-between items-center px-6 py-4 border-b border-neutral-100">
                     <div class="flex items-center gap-2">
-                        <x-lucide-clipboard-list class="w-5 h-5 text-neutral-400" />
-                        <h2 class="text-lg font-medium text-neutral-700">Recent Tasks</h2>
+                        <x-lucide-folder-kanban class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Recent Projects</h2>
                     </div>
                     <a href="#" class="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 transition-colors">
                         <span>View All</span>
@@ -217,30 +217,30 @@
                     </a>
                 </div>
                 <div class="p-6">
-                    @if(isset($recentTasks) && !empty($recentTasks) && ((is_array($recentTasks) && count($recentTasks) > 0) || (is_object($recentTasks) && method_exists($recentTasks, 'count') && $recentTasks->count() > 0)))
+                    @if(isset($recentProjects) && !empty($recentProjects) && ((is_array($recentProjects) && count($recentProjects) > 0) || (is_object($recentProjects) && method_exists($recentProjects, 'count') && $recentProjects->count() > 0)))
                         <div class="overflow-x-auto">
                             <table class="w-full">
                                 <thead>
                                     <tr class="bg-neutral-50 border-b border-neutral-100">
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider rounded-l-lg">Task</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider rounded-l-lg">Project</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Priority</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider rounded-r-lg">Due Date</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Budget</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider rounded-r-lg">Deadline</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-neutral-100">
-                                    @foreach($recentTasks as $task)
+                                    @foreach($recentProjects as $project)
                                     <tr class="hover:bg-neutral-50 transition-colors">
                                         <td class="px-4 py-3">
-                                            <div class="font-medium text-neutral-800">{{ $task->title ?? 'Task #' . $task->id }}</div>
+                                            <div class="font-medium text-neutral-800">{{ $project->title ?? 'Project #' . $project->id }}</div>
                                         </td>
                                         <td class="px-4 py-3">
-                                            @if($task->status == 'completed')
+                                            @if($project->status == 'completed')
                                                 <x-ui.badge type="success">
                                                     <span class="w-1.5 h-1.5 bg-success-500 rounded-full mr-1.5"></span>
                                                     Completed
                                                 </x-ui.badge>
-                                            @elseif($task->status == 'in_progress')
+                                            @elseif($project->status == 'in_progress')
                                                 <x-ui.badge type="warning">
                                                     <span class="w-1.5 h-1.5 bg-warning-500 rounded-full mr-1.5"></span>
                                                     In Progress
@@ -248,30 +248,23 @@
                                             @else
                                                 <x-ui.badge type="neutral">
                                                     <span class="w-1.5 h-1.5 bg-neutral-500 rounded-full mr-1.5"></span>
-                                                    Pending
-                                                </x-ui.badge>
-                                            @endif
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            @if($task->priority == 'high')
-                                                <x-ui.badge type="error">
-                                                    <x-lucide-arrow-up class="w-3 h-3 mr-1" />
-                                                    High
-                                                </x-ui.badge>
-                                            @elseif($task->priority == 'medium')
-                                                <x-ui.badge type="warning">
-                                                    <x-lucide-minus class="w-3 h-3 mr-1" />
-                                                    Medium
-                                                </x-ui.badge>
-                                            @else
-                                                <x-ui.badge type="info">
-                                                    <x-lucide-arrow-down class="w-3 h-3 mr-1" />
-                                                    Low
+                                                    {{ ucfirst($project->status ?? 'Pending') }}
                                                 </x-ui.badge>
                                             @endif
                                         </td>
                                         <td class="px-4 py-3 text-neutral-600 text-sm">
-                                            {{ $task->due_date ? $task->due_date : 'Not set' }}
+                                            @if($project->budget)
+                                                ₱{{ number_format($project->budget, 2) }}
+                                            @else
+                                                <span class="text-neutral-400">Not set</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-neutral-600 text-sm">
+                                            @if($project->deadline)
+                                                {{ \Carbon\Carbon::parse($project->deadline)->format('M d, Y') }}
+                                            @else
+                                                <span class="text-neutral-400">Not set</span>
+                                            @endif
                                         </td>
                                     </tr>
                                     @endforeach
@@ -280,13 +273,13 @@
                         </div>
                     @else
                         <x-ui.empty-state 
-                            icon="clipboard-list"
-                            title="No tasks found for this client"
-                            description="Tasks assigned to this client will appear here"
+                            icon="folder-kanban"
+                            title="No projects found for this client"
+                            description="Projects created for this client will appear here"
                         >
                             <a href="#">
                                 <x-ui.button icon="plus">
-                                    Assign New Task
+                                    Create New Project
                                 </x-ui.button>
                             </a>
                         </x-ui.empty-state>

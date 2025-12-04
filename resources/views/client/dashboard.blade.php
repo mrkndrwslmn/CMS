@@ -166,6 +166,17 @@
                         </div>
                     </a>
 
+                    <a href="{{ route('client.documents') }}" 
+                       class="flex items-center p-4 rounded-xl bg-neutral-50 hover:bg-primary-50 border border-neutral-100 hover:border-primary-200 transition-all group">
+                        <div class="w-10 h-10 bg-white border border-neutral-200 rounded-lg flex items-center justify-center group-hover:border-primary-300 transition-colors">
+                            <x-lucide-files class="w-5 h-5 text-neutral-500" />
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-neutral-700">My Documents</p>
+                            <p class="text-xs text-neutral-400">View & download files</p>
+                        </div>
+                    </a>
+
                     <a href="{{ route('client.feedback') }}" 
                        class="flex items-center p-4 rounded-xl bg-neutral-50 hover:bg-primary-50 border border-neutral-100 hover:border-primary-200 transition-all group">
                         <div class="w-10 h-10 bg-white border border-neutral-200 rounded-lg flex items-center justify-center group-hover:border-primary-300 transition-colors">

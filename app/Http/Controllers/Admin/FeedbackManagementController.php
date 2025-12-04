@@ -7,8 +7,10 @@ use App\Models\Feedback;
 use App\Models\User;
 use App\Models\Task;
 use App\Models\Project;
+use App\Notifications\FeedbackResponseNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class FeedbackManagementController extends Controller
 {
@@ -111,6 +113,11 @@ class FeedbackManagementController extends Controller
             'responded_by' => Auth::id(),
             'responded_at' => now(),
         ]);
+
+        // Notify the client about the response
+        if ($feedback->client) {
+            $feedback->client->notify(new FeedbackResponseNotification($feedback, $request->response));
+        }
         
         return redirect()->route('admin.feedback.show', $feedback->id)
                         ->with('success', 'Response added successfully.');

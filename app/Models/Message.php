@@ -173,6 +173,22 @@ class Message extends Model
     }
 
     /**
+     * Get the sender name with fallback for deleted users
+     */
+    public function getSenderNameAttribute(): string
+    {
+        return $this->sender?->fullName ?? 'Deleted User';
+    }
+
+    /**
+     * Get the sender profile picture with fallback
+     */
+    public function getSenderProfilePicAttribute(): ?string
+    {
+        return $this->sender?->profilePic;
+    }
+
+    /**
      * Get formatted timestamp
      */
     public function getFormattedTimeAttribute(): string

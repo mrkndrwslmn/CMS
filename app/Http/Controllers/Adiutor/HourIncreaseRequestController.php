@@ -180,11 +180,9 @@ class HourIncreaseRequestController extends Controller
 
         foreach ($admins as $admin) {
             try {
-                // You can create a notification class for this
-                // $admin->notify(new HourIncreaseRequestNotification($request));
+                $admin->notify(new HourIncreaseRequestNotification($request));
                 
-                // For now, just log it
-                \Log::info('Hour increase request notification would be sent to admin', [
+                \Log::info('Hour increase request notification sent to admin', [
                     'admin_id' => $admin->id,
                     'request_id' => $request->id,
                 ]);

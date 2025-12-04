@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'documents';
     protected $primaryKey = 'documentID';
@@ -26,12 +27,21 @@ class Document extends Model
         'client_id',
         'fileName',
         'filePath',
+        'link_url',
+        'link_type',
         'fileType',
         'fileSize',
+        'version',
+        'parent_document_id',
+        'original_document_id',
         'document_type',
         'description',
         'is_public',
         'is_archived',
+        'is_deliverable',
+        'is_approved',
+        'approved_by',
+        'approved_at',
         'uploaded_by',
         'uploadedAt',
         'verified_by',
@@ -44,9 +54,13 @@ class Document extends Model
     protected $casts = [
         'uploadedAt' => 'datetime',
         'verified_at' => 'datetime',
+        'approved_at' => 'datetime',
         'is_public' => 'boolean',
         'is_archived' => 'boolean',
+        'is_deliverable' => 'boolean',
+        'is_approved' => 'boolean',
         'fileSize' => 'integer',
+        'version' => 'integer',
     ];
 
     /**
@@ -55,6 +69,70 @@ class Document extends Model
     public function documentable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Get the parent document (previous version).
+     */
+    public function parentDocument(): BelongsTo
+    {
+        return $this->belongsTo(Document::class, 'parent_document_id', 'documentID');
+    }
+
+    /**
+     * Get the original document in the version chain.
+     */
+    public function originalDocument(): BelongsTo
+    {
+        return $this->belongsTo(Document::class, 'original_document_id', 'documentID');
+    }
+
+    /**
+     * Get all versions of this document (including this one).
+     */
+    public function allVersions()
+    {
+        $originalId = $this->original_document_id ?? $this->documentID;
+        
+        return static::where(function ($query) use ($originalId) {
+            $query->where('documentID', $originalId)
+                  ->orWhere('original_document_id', $originalId);
+        })->orderBy('version', 'desc');
+    }
+
+    /**
+     * Get the latest version of this document.
+     */
+    public function latestVersion()
+    {
+        $originalId = $this->original_document_id ?? $this->documentID;
+        
+        return static::where(function ($query) use ($originalId) {
+            $query->where('documentID', $originalId)
+                  ->orWhere('original_document_id', $originalId);
+        })->orderBy('version', 'desc')->first();
+    }
+
+    /**
+     * Check if this is the latest version.
+     */
+    public function isLatestVersion(): bool
+    {
+        $latest = $this->latestVersion();
+        return $latest && $latest->documentID === $this->documentID;
+    }
+
+    /**
+     * Get the version count for this document chain.
+     */
+    public function getVersionCount(): int
+    {
+        $originalId = $this->original_document_id ?? $this->documentID;
+        
+        return static::where(function ($query) use ($originalId) {
+            $query->where('documentID', $originalId)
+                  ->orWhere('original_document_id', $originalId);
+        })->count();
     }
 
     /**
@@ -78,7 +156,7 @@ class Document extends Model
      */
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::class, 'project_id', 'projectID');
+        return $this->belongsTo(Project::class, 'project_id');
     }
 
     /**
@@ -103,6 +181,124 @@ class Document extends Model
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    /**
+     * Get the admin who approved this document (for client visibility).
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Check if this is a link (not a file upload).
+     */
+    public function isLink(): bool
+    {
+        return $this->link_type === 'link' && !empty($this->link_url);
+    }
+
+    /**
+     * Get the URL for this document (file path or link URL).
+     */
+    public function getUrl(): string
+    {
+        if ($this->isLink()) {
+            return $this->link_url;
+        }
+        return $this->getDownloadUrl();
+    }
+
+    /**
+     * Approve this document for client visibility.
+     */
+    public function approve(User|int $approver): bool
+    {
+        $approverId = $approver instanceof User ? $approver->id : $approver;
+        
+        return $this->update([
+            'is_approved' => true,
+            'approved_by' => $approverId,
+            'approved_at' => now(),
+            'rejection_reason' => null, // Clear any previous rejection
+            'rejected_at' => null,
+        ]);
+    }
+
+    /**
+     * Reject this document with a reason.
+     */
+    public function reject(User|int $rejector, string $reason): bool
+    {
+        return $this->update([
+            'is_approved' => false,
+            'approved_by' => null,
+            'approved_at' => null,
+            'rejection_reason' => $reason,
+            'rejected_at' => now(),
+        ]);
+    }
+
+    /**
+     * Revoke approval of this document.
+     */
+    public function revokeApproval(): bool
+    {
+        return $this->update([
+            'is_approved' => false,
+            'approved_by' => null,
+            'approved_at' => null,
+        ]);
+    }
+
+    /**
+     * Mark document as a deliverable.
+     */
+    public function markAsDeliverable(): bool
+    {
+        return $this->update(['is_deliverable' => true]);
+    }
+
+    /**
+     * Unmark document as a deliverable.
+     */
+    public function unmarkAsDeliverable(): bool
+    {
+        return $this->update(['is_deliverable' => false]);
+    }
+
+    /**
+     * Scope: Get only approved documents.
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('is_approved', true);
+    }
+
+    /**
+     * Scope: Get only pending (unapproved) documents.
+     */
+    public function scopePendingApproval($query)
+    {
+        return $query->where('is_approved', false);
+    }
+
+    /**
+     * Scope: Get only deliverables.
+     */
+    public function scopeDeliverables($query)
+    {
+        return $query->where('is_deliverable', true);
+    }
+
+    /**
+     * Scope: Get documents visible to clients (approved).
+     */
+    public function scopeVisibleToClient($query)
+    {
+        return $query->where('is_approved', true)
+                     ->where('is_archived', false);
     }
 
     /**
@@ -210,6 +406,55 @@ class Document extends Model
     }
 
     /**
+     * Check if the document is an image.
+     */
+    public function isImage(): bool
+    {
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
+        return in_array(strtolower($this->file_extension), $imageExtensions);
+    }
+
+    /**
+     * Check if the document is a PDF.
+     */
+    public function isPdf(): bool
+    {
+        return strtolower($this->file_extension) === 'pdf';
+    }
+
+    /**
+     * Check if the document can be previewed in browser.
+     */
+    public function isPreviewable(): bool
+    {
+        return $this->isImage() || $this->isPdf();
+    }
+
+    /**
+     * Get the file icon class based on file type.
+     */
+    public function getFileIconAttribute(): string
+    {
+        $extension = strtolower($this->file_extension);
+        
+        return match($extension) {
+            'pdf' => 'fa-file-pdf text-red-500',
+            'doc', 'docx' => 'fa-file-word text-blue-500',
+            'xls', 'xlsx' => 'fa-file-excel text-green-500',
+            'ppt', 'pptx' => 'fa-file-powerpoint text-orange-500',
+            'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg' => 'fa-file-image text-purple-500',
+            'zip', 'rar', '7z', 'tar', 'gz' => 'fa-file-archive text-yellow-500',
+            'mp3', 'wav', 'ogg', 'flac' => 'fa-file-audio text-pink-500',
+            'mp4', 'avi', 'mov', 'wmv', 'mkv' => 'fa-file-video text-indigo-500',
+            'txt', 'log' => 'fa-file-alt text-gray-500',
+            'csv' => 'fa-file-csv text-green-600',
+            'json', 'xml' => 'fa-file-code text-cyan-500',
+            'html', 'css', 'js', 'php' => 'fa-file-code text-teal-500',
+            default => 'fa-file text-neutral-500',
+        };
+    }
+
+    /**
      * Check if file is stored in Cloudflare R2
      */
     public function isR2File(): bool
@@ -264,14 +509,20 @@ class Document extends Model
     }
 
     /**
-     * Check if this document is accessible to the client based on payment status
-     * Documents follow the same accessibility rules as their parent (task/project)
+     * Check if this document is accessible to the client based on approval and payment status
+     * Documents uploaded by adiutors need admin approval before clients can see them.
      * 
      * @return bool
      */
     public function isAccessibleToClient(): bool
     {
-        // If document is explicitly public, it's accessible
+        // Documents must be approved to be visible to clients
+        // (unless explicitly marked public by admin)
+        if (!$this->is_approved && !$this->is_public) {
+            return false;
+        }
+
+        // If document is explicitly public, it's accessible (regardless of payment)
         if ($this->is_public) {
             return true;
         }

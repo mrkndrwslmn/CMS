@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
@@ -12,7 +13,8 @@ use Tests\UseCmsSqlSchema;
 /**
  * Authentication Tests
  * 
- * Tests login, registration, logout, and password reset functionality.
+ * Tests login, registration, logout, password reset, and security features
+ * including account lockout and session management.
  */
 class AuthenticationTest extends TestCase
 {
@@ -24,6 +26,9 @@ class AuthenticationTest extends TestCase
         
         // Bind test services
         $this->app->bind(\App\Services\FirebaseService::class, \Tests\Mocks\FakeFirebaseService::class);
+        
+        // Clear login attempt cache before each test
+        Cache::flush();
     }
 
     // =========================================
@@ -115,12 +120,11 @@ class AuthenticationTest extends TestCase
     public function test_user_can_register_with_valid_data(): void
     {
         $response = $this->post(route('register'), [
-            'first_name' => 'John',
-            'last_name' => 'Doe',
+            'fullName' => 'John Doe',
             'email' => 'newuser@example.com',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
-            'phone' => '09171234567',
+            'phoneNumber' => '09171234567',
         ]);
 
         // Should redirect after successful registration
@@ -129,16 +133,14 @@ class AuthenticationTest extends TestCase
         // Check user was created
         $this->assertDatabaseHas('users', [
             'email' => 'newuser@example.com',
-            'first_name' => 'John',
-            'last_name' => 'Doe',
+            'fullName' => 'John Doe',
         ]);
     }
 
     public function test_registration_requires_valid_email(): void
     {
         $response = $this->post(route('register'), [
-            'first_name' => 'John',
-            'last_name' => 'Doe',
+            'fullName' => 'John Doe',
             'email' => 'invalid-email',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
@@ -150,8 +152,7 @@ class AuthenticationTest extends TestCase
     public function test_registration_requires_password_confirmation(): void
     {
         $response = $this->post(route('register'), [
-            'first_name' => 'John',
-            'last_name' => 'Doe',
+            'fullName' => 'John Doe',
             'email' => 'test@example.com',
             'password' => 'Password123!',
             'password_confirmation' => 'DifferentPassword!',
@@ -167,8 +168,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $response = $this->post(route('register'), [
-            'first_name' => 'John',
-            'last_name' => 'Doe',
+            'fullName' => 'John Doe',
             'email' => 'existing@example.com',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
@@ -320,5 +320,121 @@ class AuthenticationTest extends TestCase
         $response = $this->get(route('register'));
 
         $response->assertRedirect();
+    }
+
+    // =========================================
+    // Account Lockout Tests
+    // =========================================
+
+    public function test_account_is_locked_after_max_failed_attempts(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'locktest@example.com',
+            'password' => Hash::make('correctpassword'),
+            'status' => 'active',
+        ]);
+
+        // Make 5 failed login attempts to trigger lockout
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->post(route('login'), [
+                'email' => 'locktest@example.com',
+                'password' => 'wrongpassword',
+            ]);
+            
+            // Stop if we hit rate limiting (429)
+            if ($response->status() === 429) {
+                $this->markTestSkipped('Rate limiting triggered before lockout could be tested');
+            }
+        }
+
+        // 6th attempt should be blocked due to lockout
+        $response = $this->post(route('login'), [
+            'email' => 'locktest@example.com',
+            'password' => 'correctpassword', // Even correct password should fail
+        ]);
+
+        // Lockout should prevent login - user stays guest
+        $this->assertGuest();
+    }
+
+    public function test_successful_login_clears_failed_attempts(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'cleartest@example.com',
+            'password' => Hash::make('password123'),
+            'status' => 'active',
+        ]);
+
+        // Make 3 failed attempts
+        for ($i = 0; $i < 3; $i++) {
+            $this->post(route('login'), [
+                'email' => 'cleartest@example.com',
+                'password' => 'wrongpassword',
+            ]);
+        }
+
+        // Successful login
+        $response = $this->post(route('login'), [
+            'email' => 'cleartest@example.com',
+            'password' => 'password123',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+
+        // Logout and verify attempts are cleared
+        $this->post(route('logout'));
+
+        // Should be able to fail again without immediate lockout
+        $response = $this->post(route('login'), [
+            'email' => 'cleartest@example.com',
+            'password' => 'wrongpassword',
+        ]);
+
+        // Should not be locked out yet (only 1 failed attempt)
+        $response->assertSessionHasErrors('email');
+        $this->assertStringNotContainsString('Too many failed', 
+            session('errors')->first('email') ?? '');
+    }
+
+    // =========================================
+    // Session Security Tests
+    // =========================================
+
+    public function test_session_is_regenerated_after_login(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'session@example.com',
+            'password' => Hash::make('password123'),
+            'status' => 'active',
+        ]);
+
+        $oldSessionId = session()->getId();
+
+        $this->post(route('login'), [
+            'email' => 'session@example.com',
+            'password' => 'password123',
+        ]);
+
+        $newSessionId = session()->getId();
+
+        // Session ID should have changed
+        $this->assertNotEquals($oldSessionId, $newSessionId);
+    }
+
+    public function test_session_is_invalidated_on_logout(): void
+    {
+        $user = User::factory()->create([
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($user);
+        $oldSessionId = session()->getId();
+
+        $this->post(route('logout'));
+
+        $newSessionId = session()->getId();
+
+        $this->assertNotEquals($oldSessionId, $newSessionId);
+        $this->assertGuest();
     }
 }

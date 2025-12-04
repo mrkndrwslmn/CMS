@@ -160,7 +160,7 @@ class MayaPaymentController extends Controller
                 ]),
                 'created_at' => now(),
                 'updated_at' => now()
-            ]);;
+            ]);
 
             // Update service request - keep status as pending_payment until Maya confirms
             DB::table('service_requests')
@@ -217,6 +217,8 @@ class MayaPaymentController extends Controller
             // Verify payment with Maya
             $paymentDetails = json_decode($payment->payment_details, true);
             $checkoutId = $paymentDetails['checkout_id'] ?? null;
+            $projectId = null;
+            $serviceRequest = null;
 
             if ($checkoutId) {
                 $verificationResponse = $this->mayaService->verifyPayment($checkoutId);
@@ -225,182 +227,89 @@ class MayaPaymentController extends Controller
                     $mayaPaymentData = $verificationResponse['data'];
                     $transactionId = $mayaPaymentData['id'] ?? null;
 
-                    // Update payment status
-                    DB::table('payments')
-                        ->where('id', $payment->id)
-                        ->update([
-                            'status' => 'confirmed',
-                            'transaction_id' => $transactionId,
-                            'gateway_response' => json_encode($mayaPaymentData),
-                            'confirmed_at' => now(),
-                            'updated_at' => now()
-                        ]);
-
-                    // Get service request model to access payment type methods
-                    $serviceRequest = \App\Models\ServiceRequest::with('project.milestones')->find($payment->service_request_id);
-
-                    // Handle payment based on payment type
-                    if ($serviceRequest) {
-                        $this->handlePaymentConfirmation($serviceRequest, $payment);
-                    } else {
-                        // Fallback: update service request to paid status
-                        DB::table('service_requests')
-                            ->where('id', $payment->service_request_id)
+                    // ========================================
+                    // CRITICAL DATABASE OPERATIONS - WRAPPED IN TRANSACTION
+                    // These operations must all succeed or all fail together
+                    // ========================================
+                    $projectId = DB::transaction(function () use ($payment, $transactionId, $mayaPaymentData, &$serviceRequest) {
+                        // Update payment status
+                        DB::table('payments')
+                            ->where('id', $payment->id)
                             ->update([
-                                'status' => 'paid',
-                                'payment_confirmed_at' => now(),
+                                'status' => 'confirmed',
+                                'transaction_id' => $transactionId,
+                                'gateway_response' => json_encode($mayaPaymentData),
+                                'confirmed_at' => now(),
                                 'updated_at' => now()
                             ]);
-                    }
 
-                    // Check if project already exists
-                    $existingProject = DB::table('projects')
-                        ->where('service_request_id', $payment->service_request_id)
-                        ->first();
+                        // Get service request model to access payment type methods
+                        $serviceRequest = \App\Models\ServiceRequest::with('project.milestones')->find($payment->service_request_id);
 
-                    if (!$existingProject) {
-                        // Create project from service request
-                        $serviceRequest = DB::table('service_requests')->find($payment->service_request_id);
-                        
-                        // Use approved_budget from service request (which reflects discounts)
-                        // NOT the payment amount (which might be partial payment like downpayment)
-                        $projectId = DB::table('projects')->insertGetId([
-                            'service_request_id' => $payment->service_request_id,
-                            'client_id' => $payment->client_id,
-                            'title' => $serviceRequest->project_name,
-                            'description' => $serviceRequest->request_description,
-                            'budget' => $serviceRequest->approved_budget, // Use service request's approved budget (after discounts)
-                            'deadline' => $serviceRequest->deadline,
-                            'status' => 'active',
-                            'priority' => $serviceRequest->priority ?? 'medium',
-                            'created_at' => now(),
-                            'updated_at' => now()
-                        ]);
-
-                        Log::info('Project created from payment', [
-                            'project_id' => $projectId,
-                            'service_request_id' => $payment->service_request_id,
-                            'budget' => $serviceRequest->approved_budget,
-                            'payment_amount' => $payment->amount
-                        ]);
-                    } else {
-                        $projectId = $existingProject->id;
-                        Log::info('Project already exists for service request', [
-                            'project_id' => $projectId,
-                            'service_request_id' => $payment->service_request_id
-                        ]);
-                    }
-
-                    // Notify client about payment confirmation
-                    // First, retrieve the Payment model instance for the notification
-                    $paymentModel = \App\Models\Payment::find($payment->id);
-                    $clientUser = \App\Models\User::find($payment->client_id);
-                    
-                    if ($clientUser && $paymentModel) {
-                        try {
-                            Log::info('Dispatching PaymentConfirmedNotification to client', [
-                                'payment_id' => $payment->id,
-                                'client_id' => $clientUser->id,
-                                'client_email' => $clientUser->email,
-                                'amount' => $payment->amount
-                            ]);
-                            
-                            $clientUser->notify(new PaymentConfirmedNotification($paymentModel));
-                            
-                            Log::info('PaymentConfirmedNotification dispatched to client successfully', [
-                                'payment_id' => $payment->id,
-                                'client_id' => $clientUser->id
-                            ]);
-                        } catch (\Exception $e) {
-                            Log::error('Failed to notify client about payment confirmation', [
-                                'payment_id' => $payment->id,
-                                'client_id' => $clientUser->id,
-                                'error' => $e->getMessage(),
-                                'trace' => $e->getTraceAsString()
-                            ]);
-                        }
-                    }
-
-                    // Award loyalty points for payment
-                    if ($serviceRequest && $clientUser && $paymentModel) {
-                        try {
-                            $this->loyaltyService->awardPointsForPayment($serviceRequest, $paymentModel);
-                            
-                            Log::info('Loyalty points awarded for payment', [
-                                'payment_id' => $payment->id,
-                                'service_request_id' => $serviceRequest->id,
-                                'client_id' => $clientUser->id,
-                            ]);
-                        } catch (\Exception $e) {
-                            Log::error('Failed to award loyalty points', [
-                                'payment_id' => $payment->id,
-                                'error' => $e->getMessage(),
-                            ]);
-                        }
-
-                        // 🎁 Process referral completion (if this is user's first payment)
-                        try {
-                            $referralService = app(\App\Services\ReferralService::class);
-                            $referralService->processReferralCompletion($paymentModel);
-                            
-                            Log::info('Referral completion processed for payment', [
-                                'payment_id' => $payment->id,
-                                'client_id' => $clientUser->id,
-                            ]);
-                        } catch (\Exception $e) {
-                            Log::error('Failed to process referral completion', [
-                                'payment_id' => $payment->id,
-                                'error' => $e->getMessage(),
-                            ]);
-                        }
-                    }
-
-                    // Update coupon usage status
-                    if ($serviceRequest && $serviceRequest->applied_coupon_id) {
-                        try {
-                            $this->couponService->updateCouponUsageStatus($serviceRequest, 'completed');
-                            
-                            Log::info('Coupon usage marked as completed', [
-                                'payment_id' => $payment->id,
-                                'service_request_id' => $serviceRequest->id,
-                                'coupon_id' => $serviceRequest->applied_coupon_id,
-                            ]);
-                        } catch (\Exception $e) {
-                            Log::error('Failed to update coupon usage status', [
-                                'payment_id' => $payment->id,
-                                'error' => $e->getMessage(),
-                            ]);
-                        }
-                    }
-
-                    // Notify admins using Laravel's notification structure
-                    $admins = User::where('role', 'admin')->get();
-                    
-                    if ($paymentModel) {
-                        Log::info('Dispatching PaymentConfirmedNotification to admins', [
-                            'payment_id' => $payment->id,
-                            'admin_count' => $admins->count(),
-                            'amount' => $payment->amount
-                        ]);
-                        
-                        foreach ($admins as $admin) {
-                            try {
-                                $admin->notify(new PaymentConfirmedNotification($paymentModel));
-                                
-                                Log::debug('PaymentConfirmedNotification dispatched to admin', [
-                                    'payment_id' => $payment->id,
-                                    'admin_id' => $admin->id,
-                                    'admin_email' => $admin->email
+                        // Handle payment based on payment type
+                        if ($serviceRequest) {
+                            $this->handlePaymentConfirmation($serviceRequest, $payment);
+                        } else {
+                            // Fallback: update service request to paid status
+                            DB::table('service_requests')
+                                ->where('id', $payment->service_request_id)
+                                ->update([
+                                    'status' => 'paid',
+                                    'payment_confirmed_at' => now(),
+                                    'updated_at' => now()
                                 ]);
-                            } catch (\Exception $e) {
-                                Log::error('Failed to notify admin about payment confirmation', [
-                                    'payment_id' => $payment->id,
-                                    'admin_id' => $admin->id,
-                                    'error' => $e->getMessage()
-                                ]);
-                            }
                         }
-                    }
+
+                        // Check if project already exists
+                        $existingProject = DB::table('projects')
+                            ->where('service_request_id', $payment->service_request_id)
+                            ->first();
+
+                        if (!$existingProject) {
+                            // Create project from service request
+                            $serviceRequestData = DB::table('service_requests')->find($payment->service_request_id);
+                            
+                            // Use approved_budget from service request (which reflects discounts)
+                            // NOT the payment amount (which might be partial payment like downpayment)
+                            $projectId = DB::table('projects')->insertGetId([
+                                'service_request_id' => $payment->service_request_id,
+                                'client_id' => $payment->client_id,
+                                'title' => $serviceRequestData->project_name,
+                                'description' => $serviceRequestData->request_description,
+                                'budget' => $serviceRequestData->approved_budget,
+                                'deadline' => $serviceRequestData->deadline,
+                                'status' => 'active',
+                                'priority' => $serviceRequestData->priority ?? 'medium',
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
+
+                            Log::info('Project created from payment', [
+                                'project_id' => $projectId,
+                                'service_request_id' => $payment->service_request_id,
+                                'budget' => $serviceRequestData->approved_budget,
+                                'payment_amount' => $payment->amount
+                            ]);
+
+                            return $projectId;
+                        } else {
+                            Log::info('Project already exists for service request', [
+                                'project_id' => $existingProject->id,
+                                'service_request_id' => $payment->service_request_id
+                            ]);
+
+                            return $existingProject->id;
+                        }
+                    });
+                    // ========================================
+                    // END TRANSACTION
+                    // ========================================
+
+                    // ========================================
+                    // NON-CRITICAL OPERATIONS - OUTSIDE TRANSACTION
+                    // These can fail without rolling back payment data
+                    // ========================================
+                    $this->processPostPaymentActions($payment, $serviceRequest);
 
                     Log::info('Payment confirmed successfully', [
                         'reference' => $referenceNumber,
@@ -417,11 +326,132 @@ class MayaPaymentController extends Controller
         } catch (\Exception $e) {
             Log::error('Error processing payment success', [
                 'reference' => $referenceNumber,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return redirect()->route('client.requests')
                 ->with('error', 'An error occurred while processing your payment.');
+        }
+    }
+
+    /**
+     * Process post-payment actions (notifications, loyalty points, referrals, coupons)
+     * These are non-critical and should not cause transaction rollback if they fail
+     *
+     * @param object $payment The payment record (stdClass from DB query)
+     * @param \App\Models\ServiceRequest|null $serviceRequest
+     */
+    protected function processPostPaymentActions($payment, $serviceRequest): void
+    {
+        $paymentModel = \App\Models\Payment::find($payment->id);
+        $clientUser = \App\Models\User::find($payment->client_id);
+
+        // Notify client about payment confirmation
+        if ($clientUser && $paymentModel) {
+            try {
+                Log::info('Dispatching PaymentConfirmedNotification to client', [
+                    'payment_id' => $payment->id,
+                    'client_id' => $clientUser->id,
+                    'client_email' => $clientUser->email,
+                    'amount' => $payment->amount
+                ]);
+                
+                $clientUser->notify(new PaymentConfirmedNotification($paymentModel));
+                
+                Log::info('PaymentConfirmedNotification dispatched to client successfully', [
+                    'payment_id' => $payment->id,
+                    'client_id' => $clientUser->id
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to notify client about payment confirmation', [
+                    'payment_id' => $payment->id,
+                    'client_id' => $clientUser->id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+        }
+
+        // Award loyalty points for payment
+        if ($serviceRequest && $clientUser && $paymentModel) {
+            try {
+                $this->loyaltyService->awardPointsForPayment($serviceRequest, $paymentModel);
+                
+                Log::info('Loyalty points awarded for payment', [
+                    'payment_id' => $payment->id,
+                    'service_request_id' => $serviceRequest->id,
+                    'client_id' => $clientUser->id,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to award loyalty points', [
+                    'payment_id' => $payment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // 🎁 Process referral completion (if this is user's first payment)
+            try {
+                $referralService = app(\App\Services\ReferralService::class);
+                $referralService->processReferralCompletion($paymentModel);
+                
+                Log::info('Referral completion processed for payment', [
+                    'payment_id' => $payment->id,
+                    'client_id' => $clientUser->id,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to process referral completion', [
+                    'payment_id' => $payment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Update coupon usage status
+        if ($serviceRequest && $serviceRequest->applied_coupon_id) {
+            try {
+                $this->couponService->updateCouponUsageStatus($serviceRequest, 'completed');
+                
+                Log::info('Coupon usage marked as completed', [
+                    'payment_id' => $payment->id,
+                    'service_request_id' => $serviceRequest->id,
+                    'coupon_id' => $serviceRequest->applied_coupon_id,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to update coupon usage status', [
+                    'payment_id' => $payment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Notify admins using Laravel's notification structure
+        if ($paymentModel) {
+            $admins = User::where('role', 'admin')->get();
+            
+            Log::info('Dispatching PaymentConfirmedNotification to admins', [
+                'payment_id' => $payment->id,
+                'admin_count' => $admins->count(),
+                'amount' => $payment->amount
+            ]);
+            
+            foreach ($admins as $admin) {
+                try {
+                    $admin->notify(new PaymentConfirmedNotification($paymentModel));
+                    
+                    Log::debug('PaymentConfirmedNotification dispatched to admin', [
+                        'payment_id' => $payment->id,
+                        'admin_id' => $admin->id,
+                        'admin_email' => $admin->email
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to notify admin about payment confirmation', [
+                        'payment_id' => $payment->id,
+                        'admin_id' => $admin->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
         }
     }
 

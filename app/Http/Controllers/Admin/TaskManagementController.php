@@ -463,15 +463,33 @@ class TaskManagementController extends Controller
     {
         $request->validate([
             'status' => 'required|in:pending,in_progress,completed,cancelled',
+            'confirm_no_deliverables' => 'nullable|boolean', // Confirmation flag
         ]);
         
-        $task = Task::with(['project', 'client', 'assignedUser'])->findOrFail($id);
+        $task = Task::with(['project', 'client', 'assignedUser', 'deliverables'])->findOrFail($id);
         $oldStatus = $task->status;
+        
+        // Check for deliverables when completing a task
+        if ($request->status === 'completed' && $oldStatus !== 'completed') {
+            if (!$task->hasDeliverables() && !$request->boolean('confirm_no_deliverables')) {
+                // Return warning that requires confirmation
+                return response()->json([
+                    'requires_confirmation' => true,
+                    'message' => 'This task has no deliverables attached. Are you sure you want to mark it as completed?',
+                    'task_id' => $task->taskID,
+                ], 422);
+            }
+        }
         
         $task->update([
             'status' => $request->status,
             'completedAt' => $request->status === 'completed' ? now() : null,
         ]);
+        
+        // Update project progress when task is completed
+        if ($request->status === 'completed' && $oldStatus !== 'completed' && $task->project) {
+            $task->project->syncProgressToAssignments();
+        }
         
         // Send email notification when task is marked as completed
         if ($request->status === 'completed' && $oldStatus !== 'completed' && $task->assignedUser) {
@@ -481,6 +499,14 @@ class TaskManagementController extends Controller
                 // Log the error but don't fail the status update
                 \Log::error('Failed to send task completion email: ' . $e->getMessage());
             }
+        }
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Task status updated successfully.',
+                'task' => $task->fresh(),
+            ]);
         }
         
         return redirect()->back()->with('success', 'Task status updated successfully.');
@@ -619,5 +645,71 @@ class TaskManagementController extends Controller
             ->where('adiutor_id', $adiutorId)
             ->whereIn('status', ['assigned', 'accepted', 'in_progress'])
             ->exists();
+    }
+
+    /**
+     * Reorder tasks within a project via drag-and-drop
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reorder(Request $request)
+    {
+        $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'task_ids' => 'required|array|min:1',
+            'task_ids.*' => 'required|integer|exists:tasks,taskID',
+        ]);
+
+        $projectId = $request->project_id;
+        $taskIds = $request->task_ids;
+
+        try {
+            DB::transaction(function () use ($projectId, $taskIds) {
+                // Verify all tasks belong to the specified project
+                $validTasks = Task::where('project_id', $projectId)
+                    ->whereIn('taskID', $taskIds)
+                    ->count();
+
+                if ($validTasks !== count($taskIds)) {
+                    throw new \InvalidArgumentException('Some tasks do not belong to the specified project.');
+                }
+
+                // Update sort_order for each task based on new position
+                foreach ($taskIds as $index => $taskId) {
+                    Task::where('taskID', $taskId)
+                        ->where('project_id', $projectId)
+                        ->update(['sort_order' => $index + 1]);
+                }
+
+                \Log::info('Tasks reordered', [
+                    'project_id' => $projectId,
+                    'task_count' => count($taskIds),
+                    'reordered_by' => Auth::id(),
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tasks reordered successfully.',
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to reorder tasks', [
+                'project_id' => $projectId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reorder tasks. Please try again.',
+            ], 500);
+        }
     }
 }

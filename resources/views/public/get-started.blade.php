@@ -12,341 +12,292 @@
 @endpush
 
 @section('content')
-    <div class="max-w-7xl mx-auto pt-32 pb-32">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 pt-24 pb-24">
         <!-- Header -->
-        <div class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-neutral-900 mb-4">Get Started with Your Project</h1>
-            <p class="text-lg text-neutral-600">Tell us about your needs and we'll match you with the perfect Adiutor</p>
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-semibold text-neutral-800 mb-2">Get Started with Your Project</h1>
+            <p class="text-md text-neutral-600">Tell us about your needs and we'll match you with the perfect Adiutor</p>
             @if(!$isLoggedIn)
-                <p class="text-sm text-primary-600 mt-2">✨ No account? No problem! We'll create one for you automatically.</p>
+                <p class="flex items-center justify-center gap-2 text-sm text-primary-600 mt-3">
+                    <x-lucide-sparkles class="w-4 h-4" />
+                    <span>No account? No problem! We'll create one for you automatically.</span>
+                </p>
             @endif
         </div>
 
-        <!-- Service Pre-selected Notice -->
-        <div id="service-preselected-notice" class="hidden mb-8 max-w-7xl mx-auto">
-            <div class="bg-primary-50 border-l-4 border-primary-500 p-6 rounded-lg">
-                <div class="flex">
-                    <svg class="w-6 h-6 text-primary-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-primary-900 mb-2">Service Pre-selected</h3>
-                        <p class="text-primary-700">We've pre-filled some details based on the service you selected. Feel free to modify any information to match your specific needs.</p>
-                    </div>
-                </div>
-            </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Form Column -->
+            <div class="lg:col-span-2">
+                <!-- Service Pre-selected Notice -->
+        <div id="service-preselected-notice" class="hidden mb-8">
+            <x-ui.alert type="info" title="Service Pre-selected">
+                We've pre-filled some details based on the service you selected. Feel free to modify any information to match your specific needs.
+            </x-ui.alert>
         </div>
 
         <!-- Success Message for New Accounts -->
         @if(session('credentials'))
-            <div class="bg-success-50 border-l-4 border-success-500 p-6 mb-8 rounded-lg">
-                <div class="flex">
-                    <svg class="w-6 h-6 text-success-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-success-900 mb-2">Request Submitted Successfully!</h3>
-                        <p class="text-success-700 mb-4">Your account has been created. Here are your credentials:</p>
-                        <div class="bg-white p-4 rounded border border-success-200">
-                            <p class="text-sm"><strong>Email:</strong> {{ session('credentials.email') }}</p>
-                            <p class="text-sm"><strong>Password:</strong> <code class="bg-neutral-100 px-2 py-1 rounded">{{ session('credentials.password') }}</code></p>
+            <div class="mb-8">
+                <x-ui.card>
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full bg-success-50 flex items-center justify-center">
+                                <x-lucide-check-circle class="w-5 h-5 text-success-500" />
+                            </div>
                         </div>
-                        @if(session('email_failed'))
-                            <p class="text-sm text-warning-600 mt-3 font-semibold">⚠️ {{ session('warning', 'We couldn\'t send the email. Please save these credentials now!') }}</p>
-                        @else
-                            <p class="text-sm text-success-600 mt-3">💌 These credentials have also been sent to your email.</p>
-                        @endif
-                        <a href="{{ route('login') }}" class="btn-primary mt-4 inline-block">Login Now</a>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-medium text-neutral-800 mb-2">Request Submitted Successfully!</h3>
+                            <p class="text-sm text-neutral-600 mb-4">Your account has been created. Here are your credentials:</p>
+                            <div class="bg-neutral-50 p-4 rounded-lg border border-neutral-200">
+                                <p class="text-sm text-neutral-700"><span class="font-medium">Email:</span> {{ session('credentials.email') }}</p>
+                                <p class="text-sm text-neutral-700 mt-1"><span class="font-medium">Password:</span> <code class="bg-neutral-100 px-2 py-0.5 rounded text-neutral-800">{{ session('credentials.password') }}</code></p>
+                            </div>
+                            @if(session('email_failed'))
+                                <div class="flex items-center gap-2 mt-4 text-sm text-warning-600">
+                                    <x-lucide-alert-triangle class="w-4 h-4" />
+                                    <span>{{ session('warning', 'We couldn\'t send the email. Please save these credentials now!') }}</span>
+                                </div>
+                            @else
+                                <div class="flex items-center gap-2 mt-4 text-sm text-success-600">
+                                    <x-lucide-mail class="w-4 h-4" />
+                                    <span>These credentials have also been sent to your email.</span>
+                                </div>
+                            @endif
+                            <div class="mt-4">
+                                <x-ui.button href="{{ route('login') }}" variant="primary" size="sm">
+                                    <x-lucide-log-in class="w-4 h-4" />
+                                    Login Now
+                                </x-ui.button>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
         @endif
 
         <!-- Success Message for Existing Users -->
         @if(session('success') && !session('credentials'))
-            <div class="bg-success-50 border-l-4 border-success-500 p-6 mb-8 rounded-lg">
-                <div class="flex">
-                    <svg class="w-6 h-6 text-success-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <div>
-                        <h3 class="text-lg font-semibold text-success-900">{{ session('success') }}</h3>
-                    </div>
-                </div>
+            <div class="mb-8">
+                <x-ui.alert type="success" title="{{ session('success') }}" />
             </div>
         @endif
 
         <!-- Error Messages -->
         @if($errors->any())
-            <div class="bg-error-50 border-l-4 border-error-500 p-6 mb-8 rounded-lg">
-                <div class="flex">
-                    <svg class="w-6 h-6 text-error-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <div>
-                        <h3 class="text-lg font-semibold text-error-900 mb-2">Please fix the following errors:</h3>
-                        <ul class="list-disc list-inside text-error-700">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
+            <div class="mb-8">
+                <x-ui.alert type="error" title="Please fix the following errors:">
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </x-ui.alert>
             </div>
         @endif
 
         <!-- Form -->
-        <form action="{{ route('get-started.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+        <form action="{{ route('get-started.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
 
             @if(!$isLoggedIn)
             <!-- Contact Information -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-neutral-200">
-                <h2 class="text-xl font-semibold text-neutral-900 mb-6 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                    Your Contact Information
-                </h2>
+            <x-ui.card>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-neutral-50 rounded-lg">
+                        <x-lucide-user class="w-5 h-5 text-neutral-500" />
+                    </div>
+                    <h2 class="text-lg font-medium text-neutral-800">Your Contact Information</h2>
+                </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Full Name -->
                     <div class="md:col-span-2">
-                        <label for="full_name" class="block text-sm font-medium text-neutral-700 mb-2">
-                            Full Name <span class="text-error-500">*</span>
-                        </label>
-                        <input type="text" 
-                               id="full_name" 
-                               name="full_name" 
-                               value="{{ old('full_name') }}"
-                               class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('full_name') border-error-300 @enderror" 
-                               placeholder="John Doe"
-                               required>
-                        @error('full_name')
-                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                        @enderror
+                        <x-ui.input 
+                            type="text"
+                            id="full_name"
+                            name="full_name"
+                            label="Full Name"
+                            placeholder="John Doe"
+                            :value="old('full_name')"
+                            :error="$errors->first('full_name')"
+                            required
+                        />
                     </div>
 
                     <!-- Email -->
                     <div>
-                        <label for="email" class="block text-sm font-medium text-neutral-700 mb-2">
-                            Email Address <span class="text-error-500">*</span>
-                        </label>
-                        <input type="email" 
-                               id="email" 
-                               name="email" 
-                               value="{{ old('email') }}"
-                               class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('email') border-error-300 @enderror" 
-                               placeholder="john@example.com"
-                               required>
-                        @error('email')
-                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                        @enderror
+                        <x-ui.input 
+                            type="email"
+                            id="email"
+                            name="email"
+                            label="Email Address"
+                            placeholder="john@example.com"
+                            :value="old('email')"
+                            :error="$errors->first('email')"
+                            required
+                        />
                     </div>
 
                     <!-- Phone -->
                     <div>
-                        <label for="phone" class="block text-sm font-medium text-neutral-700 mb-2">
-                            Phone Number
-                        </label>
-                        <input type="tel" 
-                               id="phone" 
-                               name="phone" 
-                               value="{{ old('phone') }}"
-                               class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('phone') border-error-300 @enderror" 
-                               placeholder="+1 (555) 000-0000">
-                        @error('phone')
-                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                        @enderror
+                        <x-ui.input 
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            label="Phone Number"
+                            placeholder="+1 (555) 000-0000"
+                            :value="old('phone')"
+                            :error="$errors->first('phone')"
+                        />
                     </div>
 
                     <!-- Contact Method -->
                     <div>
-                        <label for="contact_method" class="block text-sm font-medium text-neutral-700 mb-2">
-                            Preferred Contact Method <span class="text-error-500">*</span>
-                        </label>
-                        <select id="contact_method" 
-                                name="contact_method" 
-                                class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('contact_method') border-error-300 @enderror" 
-                                required>
-                            <option value="">Select a method</option>
-                            <option value="email" {{ old('contact_method') === 'email' ? 'selected' : '' }}>📧 Email</option>
-                            <option value="messenger" {{ old('contact_method') === 'messenger' ? 'selected' : '' }}>💬 Facebook Messenger</option>
-                            <option value="phone" {{ old('contact_method') === 'phone' ? 'selected' : '' }}>📞 Phone</option>
-                        </select>
-                        @error('contact_method')
-                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                        @enderror
+                        <x-ui.select 
+                            id="contact_method"
+                            name="contact_method"
+                            label="Preferred Contact Method"
+                            placeholder="Select a method"
+                            :error="$errors->first('contact_method')"
+                            required
+                        >
+                            <option value="email" {{ old('contact_method') === 'email' ? 'selected' : '' }}>Email</option>
+                            <option value="messenger" {{ old('contact_method') === 'messenger' ? 'selected' : '' }}>Facebook Messenger</option>
+                            <option value="phone" {{ old('contact_method') === 'phone' ? 'selected' : '' }}>Phone</option>
+                        </x-ui.select>
                     </div>
 
                     <!-- Contact Details -->
                     <div>
-                        <label for="contact_details" class="block text-sm font-medium text-neutral-700 mb-2">
-                            Contact Details <span class="text-error-500">*</span>
-                        </label>
-                        <input type="text" 
-                               id="contact_details" 
-                               name="contact_details" 
-                               value="{{ old('contact_details') }}"
-                               class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('contact_details') border-error-300 @enderror" 
-                               placeholder="Your email, phone, or messenger link"
-                               required>
-                        @error('contact_details')
-                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                        @enderror
-                        <p class="mt-1 text-xs text-neutral-500">Enter the details for your preferred contact method</p>
+                        <x-ui.input 
+                            type="text"
+                            id="contact_details"
+                            name="contact_details"
+                            label="Contact Details"
+                            placeholder="Your email, phone, or messenger link"
+                            hint="Enter the details for your preferred contact method"
+                            :value="old('contact_details')"
+                            :error="$errors->first('contact_details')"
+                            required
+                        />
                     </div>
 
                     <!-- Hidden password field (auto-generated) -->
                     <input type="hidden" name="password" value="{{ Str::random(12) }}">
                 </div>
-            </div>
+            </x-ui.card>
             @endif
 
             <!-- Service Request Details -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-neutral-200">
-                <h2 class="text-xl font-semibold text-neutral-900 mb-6 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Project Details
-                </h2>
+            <x-ui.card>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-neutral-50 rounded-lg">
+                        <x-lucide-file-text class="w-5 h-5 text-neutral-500" />
+                    </div>
+                    <h2 class="text-lg font-medium text-neutral-800">Project Details</h2>
+                </div>
                 
                 <div class="space-y-6">
                     <!-- Project Name -->
-                    <div>
-                        <label for="project_name" class="block text-sm font-medium text-neutral-700 mb-2">
-                            Project Name <span class="text-error-500">*</span>
-                        </label>
-                        <input type="text" 
-                               id="project_name" 
-                               name="project_name" 
-                               value="{{ old('project_name') }}"
-                               class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('project_name') border-error-300 @enderror" 
-                               placeholder="e.g., E-commerce Website Redesign"
-                               required>
-                        @error('project_name')
-                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    <x-ui.input 
+                        type="text"
+                        id="project_name"
+                        name="project_name"
+                        label="Project Name"
+                        placeholder="e.g., E-commerce Website Redesign"
+                        :value="old('project_name')"
+                        :error="$errors->first('project_name')"
+                        required
+                    />
 
                     <!-- Service Category -->
-                    <div>
-                        <label for="service_type" class="block text-sm font-medium text-neutral-700 mb-2">
-                            What category of service do you need? <span class="text-error-500">*</span>
-                        </label>
-                        <select id="service_type" 
-                                name="service_type" 
-                                class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('service_type') border-error-300 @enderror" 
-                                required>
-                            <option value="">Loading service categories...</option>
-                            <!-- Service categories will be populated dynamically -->
-                        </select>
-                        @error('service_type')
-                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                        @enderror
-                        <p class="mt-1 text-xs text-neutral-500">Choose the category that best matches your project needs</p>
-                    </div>
+                    <x-ui.select 
+                        id="service_type"
+                        name="service_type"
+                        label="What category of service do you need?"
+                        placeholder="Loading service categories..."
+                        hint="Choose the category that best matches your project needs"
+                        :error="$errors->first('service_type')"
+                        required
+                    />
 
                     <!-- Project Description -->
-                    <div>
-                        <label for="request_description" class="block text-sm font-medium text-neutral-700 mb-2">
-                            Describe your project <span class="text-error-500">*</span>
-                        </label>
-                        <textarea id="request_description" 
-                                  name="request_description" 
-                                  rows="6" 
-                                  class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('request_description') border-error-300 @enderror" 
-                                  placeholder="Tell us about your project goals, requirements, timeline, and any specific needs..."
-                                  required>{{ old('request_description') }}</textarea>
-                        @error('request_description')
-                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    <x-ui.textarea 
+                        id="request_description"
+                        name="request_description"
+                        label="Describe your project"
+                        placeholder="Tell us about your project goals, requirements, timeline, and any specific needs..."
+                        :rows="6"
+                        :error="$errors->first('request_description')"
+                        required
+                    >{{ old('request_description') }}</x-ui.textarea>
 
                     <!-- Deadline (Optional) -->
-                    <div>
-                        <label for="deadline" class="block text-sm font-medium text-neutral-700 mb-2">
-                            Deadline (Optional)
-                        </label>
-                        <input type="date" 
-                               id="deadline" 
-                               name="deadline" 
-                               value="{{ old('deadline') }}"
-                               class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('deadline') border-error-300 @enderror"
-                               min="{{ date('Y-m-d', strtotime('+1 day')) }}">
-                        @error('deadline')
-                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    <x-ui.input 
+                        type="date"
+                        id="deadline"
+                        name="deadline"
+                        label="Deadline (Optional)"
+                        :value="old('deadline')"
+                        :error="$errors->first('deadline')"
+                        min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                    />
 
                     <!-- Expectations (Optional) -->
-                    <div>
-                        <label for="expectations" class="block text-sm font-medium text-neutral-700 mb-2">
-                            Expectations (Optional)
-                        </label>
-                        <textarea id="expectations" 
-                                  name="expectations" 
-                                  rows="3" 
-                                  class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('expectations') border-error-300 @enderror" 
-                                  placeholder="What are your expectations for this project?">{{ old('expectations') }}</textarea>
-                        @error('expectations')
-                            <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Budget (Optional) - Removed as it's not in the controller validation -->
+                    <x-ui.textarea 
+                        id="expectations"
+                        name="expectations"
+                        label="Expectations (Optional)"
+                        placeholder="What are your expectations for this project?"
+                        :rows="3"
+                        :error="$errors->first('expectations')"
+                    >{{ old('expectations') }}</x-ui.textarea>
                 </div>
-            </div>
+            </x-ui.card>
 
             <!-- Additional Notes -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-neutral-200">
-                <h2 class="text-xl font-semibold text-neutral-900 mb-6 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
-                    </svg>
-                    Additional Notes
-                </h2>
-                
-                <div>
-                    <label for="additional_notes" class="block text-sm font-medium text-neutral-700 mb-2">
-                        Any other information? (Optional)
-                    </label>
-                    <textarea id="additional_notes" 
-                              name="additional_notes" 
-                              rows="4" 
-                              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('additional_notes') border-error-300 @enderror" 
-                              placeholder="Any additional comments, questions, or special requirements...">{{ old('additional_notes') }}</textarea>
-                    @error('additional_notes')
-                        <p class="mt-1 text-sm text-error-600">{{ $message }}</p>
-                    @enderror
+            <x-ui.card>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-neutral-50 rounded-lg">
+                        <x-lucide-message-square class="w-5 h-5 text-neutral-500" />
+                    </div>
+                    <h2 class="text-lg font-medium text-neutral-800">Additional Notes</h2>
                 </div>
-            </div>
+                
+                <x-ui.textarea 
+                    id="additional_notes"
+                    name="additional_notes"
+                    label="Any other information? (Optional)"
+                    placeholder="Any additional comments, questions, or special requirements..."
+                    :rows="4"
+                    :error="$errors->first('additional_notes')"
+                >{{ old('additional_notes') }}</x-ui.textarea>
+            </x-ui.card>
 
             <!-- File Attachments -->
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-neutral-200">
-                <h2 class="text-xl font-semibold text-neutral-900 mb-6 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                    </svg>
-                    Attachments (Optional)
-                </h2>
+            <x-ui.card>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-neutral-50 rounded-lg">
+                        <x-lucide-paperclip class="w-5 h-5 text-neutral-500" />
+                    </div>
+                    <h2 class="text-lg font-medium text-neutral-800">Attachments (Optional)</h2>
+                </div>
                 
                 <div>
                     <label for="file_upload" class="block text-sm font-medium text-neutral-700 mb-2">
                         Upload relevant files
                     </label>
-                    <div class="mt-2 flex justify-center px-6 pt-8 pb-8 border-2 border-neutral-300 border-dashed rounded-lg hover:border-primary-400 transition-all duration-200 bg-neutral-50/50">
-                        <div class="space-y-2 text-center">
-                            <svg class="mx-auto h-12 w-12 text-neutral-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
+                    <div class="mt-2 flex justify-center px-6 pt-8 pb-8 border-2 border-neutral-200 border-dashed rounded-xl hover:border-primary-400 transition-all duration-200 bg-neutral-50/50">
+                        <div class="space-y-3 text-center">
+                            <div class="mx-auto w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center">
+                                <x-lucide-upload-cloud class="w-6 h-6 text-neutral-400" />
+                            </div>
                             <div class="flex text-sm text-neutral-600 justify-center">
-                                <label for="file_upload" class="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 px-2 py-1">
+                                <label for="file_upload" class="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 px-2 py-1 border border-neutral-200">
                                     <span>Choose files</span>
                                     <input id="file_upload" name="file_upload[]" type="file" class="sr-only" multiple>
                                 </label>
-                                <p class="pl-1">or drag and drop</p>
+                                <p class="pl-2 self-center">or drag and drop</p>
                             </div>
                             <p class="text-xs text-neutral-500">
                                 Documents, images, or any relevant files (max 10MB each)
@@ -363,17 +314,17 @@
                     <h4 class="text-sm font-medium text-neutral-700 mb-3">Selected Files:</h4>
                     <div id="files" class="space-y-2"></div>
                 </div>
-            </div>
+            </x-ui.card>
 
             <!-- reCAPTCHA -->
             @if(app(\App\Services\RecaptchaService::class)->isEnabled())
-            <div class="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-neutral-200">
-                <h2 class="text-xl font-semibold text-neutral-900 mb-6 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.586-3.414A2 2 0 0118 4.586V2a1 1 0 011-1h2a1 1 0 011 1v2.586A2 2 0 0120.414 6L18 8.414a2 2 0 01-2.828 0L13.586 6A2 2 0 0112 4.586V2a1 1 0 011-1h2a1 1 0 011 1v2.586z"/>
-                    </svg>
-                    Security Verification
-                </h2>
+            <x-ui.card>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-neutral-50 rounded-lg">
+                        <x-lucide-shield-check class="w-5 h-5 text-neutral-500" />
+                    </div>
+                    <h2 class="text-lg font-medium text-neutral-800">Security Verification</h2>
+                </div>
                 
                 <div class="space-y-4">
                     <p class="text-sm text-neutral-600">
@@ -385,22 +336,101 @@
                     </div>
                     
                     @error('g-recaptcha-response')
-                        <p class="mt-1 text-sm text-red-600 text-center">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-error-600 text-center">{{ $message }}</p>
                     @enderror
                 </div>
-            </div>
+            </x-ui.card>
             @endif
 
             <!-- Submit Button -->
             <div class="flex items-center justify-center pt-4">
-                <button type="submit" class="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center text-lg">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
+                <x-ui.button type="submit" variant="primary" size="lg">
+                    <x-lucide-zap class="w-5 h-5" />
                     Submit Request
-                </button>
+                </x-ui.button>
             </div>
         </form>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-24 space-y-6">
+                    <!-- How It Works -->
+                    <x-ui.card>
+                        <h3 class="text-base font-medium text-neutral-800 mb-4">How It Works</h3>
+                        <div class="space-y-4">
+                            <div class="flex gap-3">
+                                <div class="flex-shrink-0 w-8 h-8 bg-primary-50 rounded-full flex items-center justify-center">
+                                    <span class="text-sm font-medium text-primary-600">1</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-700">Submit Your Request</p>
+                                    <p class="text-xs text-neutral-500 mt-0.5">Tell us about your project needs</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="flex-shrink-0 w-8 h-8 bg-primary-50 rounded-full flex items-center justify-center">
+                                    <span class="text-sm font-medium text-primary-600">2</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-700">Get Matched</p>
+                                    <p class="text-xs text-neutral-500 mt-0.5">We'll find the perfect Adiutor for you</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="flex-shrink-0 w-8 h-8 bg-primary-50 rounded-full flex items-center justify-center">
+                                    <span class="text-sm font-medium text-primary-600">3</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-700">Start Collaborating</p>
+                                    <p class="text-xs text-neutral-500 mt-0.5">Work together to bring your project to life</p>
+                                </div>
+                            </div>
+                        </div>
+                    </x-ui.card>
+
+                    <!-- What to Expect -->
+                    <x-ui.card>
+                        <h3 class="text-base font-medium text-neutral-800 mb-4">What to Expect</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-2">
+                                <x-lucide-clock class="w-4 h-4 text-neutral-400 mt-0.5 flex-shrink-0" />
+                                <span class="text-sm text-neutral-600">Response within 24 hours</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <x-lucide-message-circle class="w-4 h-4 text-neutral-400 mt-0.5 flex-shrink-0" />
+                                <span class="text-sm text-neutral-600">Free initial consultation</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <x-lucide-shield-check class="w-4 h-4 text-neutral-400 mt-0.5 flex-shrink-0" />
+                                <span class="text-sm text-neutral-600">Secure & confidential</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <x-lucide-credit-card class="w-4 h-4 text-neutral-400 mt-0.5 flex-shrink-0" />
+                                <span class="text-sm text-neutral-600">Flexible payment options</span>
+                            </li>
+                        </ul>
+                    </x-ui.card>
+
+                    <!-- Need Help? -->
+                    <x-ui.card>
+                        <div class="flex items-start gap-3">
+                            <div class="p-2 bg-neutral-50 rounded-lg flex-shrink-0">
+                                <x-lucide-help-circle class="w-5 h-5 text-neutral-500" />
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-neutral-800">Need Help?</h3>
+                                <p class="text-xs text-neutral-500 mt-1">Have questions before submitting? We're here to help.</p>
+                                <a href="{{ route('contact') }}" class="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 mt-2 transition-colors">
+                                    Contact Us
+                                    <x-lucide-arrow-right class="w-3 h-3" />
+                                </a>
+                            </div>
+                        </div>
+                    </x-ui.card>
+                </div>
+            </div>
+        </div>
     </div>
 
     @endsection
@@ -600,24 +630,11 @@
                 // Clear loading state and set proper placeholder
                 serviceTypeSelect.innerHTML = '<option value="">Select a service category</option>';
                 
-                // Category icons mapping
-                const categoryIcons = {
-                    'Web Development': '💻',
-                    'Mobile Development': '📱',
-                    'Design': '🎨',
-                    'Backend Development': '⚙️',
-                    'Integration': '🔗',
-                    'Consulting': '👥',
-                    'Maintenance': '🔧',
-                    'Marketing': '📢'
-                };
-                
-                // Add category options with icons
+                // Add category options (no emojis for clean UI)
                 categories.sort().forEach(category => {
                     const option = document.createElement('option');
                     option.value = category;
-                    const icon = categoryIcons[category] || '📋';
-                    option.textContent = `${icon} ${category}`;
+                    option.textContent = category;
                     
                     // Check if this category should be selected from old input
                     const oldValue = '{{ old("service_type") }}';
@@ -635,14 +652,14 @@
             if (serviceTypeSelect) {
                 serviceTypeSelect.innerHTML = `
                     <option value="">Select a service category</option>
-                    <option value="Web Development">💻 Web Development</option>
-                    <option value="Mobile Development">📱 Mobile Development</option>
-                    <option value="Design">🎨 Design</option>
-                    <option value="Backend Development">⚙️ Backend Development</option>
-                    <option value="Integration">🔗 Integration</option>
-                    <option value="Consulting">👥 Consulting</option>
-                    <option value="Maintenance">🔧 Maintenance</option>
-                    <option value="Marketing">📢 Marketing</option>
+                    <option value="Web Development">Web Development</option>
+                    <option value="Mobile Development">Mobile Development</option>
+                    <option value="Design">Design</option>
+                    <option value="Backend Development">Backend Development</option>
+                    <option value="Integration">Integration</option>
+                    <option value="Consulting">Consulting</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Marketing">Marketing</option>
                 `;
             }
         }

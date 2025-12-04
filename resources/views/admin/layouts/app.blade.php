@@ -227,7 +227,7 @@
                 
                 <!-- Content -->
                 <div class="mb-0.5">
-                    <button @click="toggle('content')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.documents*', 'admin.templates*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                    <button @click="toggle('content')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.documents*', 'admin.templates*', 'admin.deliverables*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
                         <div class="flex items-center gap-3">
                             <x-lucide-file-text class="w-5 h-5" />
                             <span>Content</span>
@@ -235,9 +235,19 @@
                         <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.content }" />
                     </button>
                     <div x-show="openSections.content" x-collapse class="mt-1 ml-8 space-y-0.5">
-                        <a href="{{ route('admin.documents.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.documents*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                        <a href="{{ route('admin.documents.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.documents*') && !request()->routeIs('admin.deliverables*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-file class="w-4 h-4" />
                             <span>Documents</span>
+                        </a>
+                        <a href="{{ route('admin.deliverables.pending') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.deliverables*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-check-circle class="w-4 h-4" />
+                            <span>Pending Approvals</span>
+                            @php
+                                $pendingCount = \App\Models\Document::where('is_deliverable', true)->where('is_approved', false)->where('is_archived', false)->count();
+                            @endphp
+                            @if($pendingCount > 0)
+                                <span class="ml-auto px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">{{ $pendingCount }}</span>
+                            @endif
                         </a>
                         <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.templates*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-layers class="w-4 h-4" />

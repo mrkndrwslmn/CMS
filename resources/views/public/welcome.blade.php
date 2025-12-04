@@ -25,15 +25,13 @@
             <div class="grid md:grid-cols-2 gap-16 items-center">
                 <div>
                     <div class="flex items-center mb-4">
-                        <span class="px-3 py-1 rounded-full bg-green-100 text-success-700 text-sm font-semibold inline-flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
+                        <span class="px-3 py-1 rounded-full bg-success-100 text-success-700 text-sm font-semibold inline-flex items-center">
+                            <x-lucide-check-circle class="w-4 h-4 mr-1" />
                             <span>Highly Satisfied Clients</span>
                         </span>
                     </div>
                     
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl heading-serif mb-6 leading-tight">
+                    <h1 class="heading-serif text-4xl md:text-5xl lg:text-6xl font-semibold text-neutral-800 mb-6 leading-tight">
                         Get <span class="gradient-text">Reliable, Professional, </span> and <span class="gradient-text">High-quality</span> Services
                     </h1>
                     
@@ -44,28 +42,24 @@
                     <div class="flex flex-col mb-10 bg-primary-50 px-5 py-4 rounded-xl border border-primary-100">
                         <div class="flex items-center mb-2">
                             <div class="mr-3 text-primary-500">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
+                                <x-lucide-check-circle class="w-5 h-5" />
                             </div>
                             <p class="text-sm font-semibold text-neutral-800">On-time delivery</p>
                         </div>
                         <div class="flex items-center">
                             <div class="mr-3 text-primary-500">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                </svg>
+                                <x-lucide-star class="w-5 h-5" />
                             </div>
                             <p class="text-sm font-medium text-neutral-700">Trusted by 500+ tech startups and businesses worldwide</p>
                         </div>
                     </div>
                     
                     <div class="flex flex-col sm:flex-row gap-6">
-                        <a href="/contact" class="btn-primary inline-flex items-center justify-center group py-5 px-8 text-base relative shine-effect">
-                            <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shine"></span>
+                        <a href="/contact" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 text-white text-base font-medium rounded-xl shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
                             <span>Get Started</span>
+                            <x-lucide-arrow-right class="w-5 h-5" />
                         </a>
-                        <a href="/services" class="border-2 border-primary-500 text-primary-500 rounded-xl inline-flex items-center justify-center py-5 px-8 text-base group">
+                        <a href="/services" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-neutral-700 text-base font-medium rounded-xl border border-neutral-200 shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all">
                             <span>View Services</span>
                         </a>
                     </div>
@@ -127,7 +121,7 @@
         <div class="max-w-7xl mx-auto px-6 relative z-10">
             <div class="text-center mb-16" data-aos="fade-up">
                 <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100 backdrop-blur-md">Our Work</span>
-                <h2 class="heading-serif text-3xl md:text-4xl mb-6">From <span class="gradient-text">Concept to Completion</span></h2>
+                <h2 class="text-3xl md:text-4xl font-semibold text-neutral-800 mb-6">From <span class="gradient-text">Concept to Completion</span></h2>
                 <p class="text-neutral-600 max-w-3xl mx-auto text-lg leading-relaxed">
                     We don't just talk the talk. Explore a curated selection of our projects to see how we transform complex challenges into elegant, effective solutions that deliver real-world results.
                 </p>
@@ -144,9 +138,9 @@
         </div>
 
         <div class="text-center mt-16" data-aos="fade-up">
-            <a href="/featured-projects" class="btn-primary inline-flex items-center group">
+            <a href="/featured-projects" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all group">
                 <span>Explore All Projects</span>
-                <svg class="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                <x-lucide-arrow-right class="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </a>
         </div>
     </section>
@@ -161,7 +155,7 @@
         <div class="max-w-7xl mx-auto px-6 relative z-10">
             <div class="text-center mb-16" data-aos="fade-up">
                 <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100 backdrop-blur-md">Our Services</span>
-                <h2 class="heading-serif text-3xl md:text-4xl mb-4 mt-4">What We <span class="gradient-text">Excel At</span></h2>
+                <h2 class="text-3xl md:text-4xl font-semibold text-neutral-800 mb-4 mt-4">What We <span class="gradient-text">Excel At</span></h2>
                 <p class="text-neutral-600 max-w-2xl mx-auto mt-6">
                     Technology solutions powered by proven strategies, creative thinking, and deep technical expertise for modern businesses.
                 </p>
@@ -171,7 +165,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <a href="/services" class="block group relative">
                     
-                    <div class="relative glass-dark rounded-3xl h-full border border-neutral-100 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+                    <div class="relative rounded-3xl h-full border border-neutral-100 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 overflow-hidden" data-aos="fade-up" data-aos-delay="100">
                         
                         <div class="h-2 w-full bg-gradient-to-r from-primary-500 to-violet-500"></div>
                         
@@ -185,9 +179,9 @@
                             </div>
                             
                             <div class="flex items-center mb-4">
-                                <h3 class="text-xl font-semibold heading-serif text-neutral-800 group-hover:text-primary-600 transition-colors duration-300">Digital Content & Strategy</h3>
+                                <h3 class="text-xl font-semibold text-neutral-800 group-hover:text-primary-600 transition-colors duration-300">Digital Content & Strategy</h3>
                                 <div class="ml-auto">
-                                    <span class="flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-green-500 to-green-600 text-white shadow-sm">
+                                    <span class="flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-success-500 text-white shadow-sm">
                                         PRO
                                     </span>
                                 </div>
@@ -240,7 +234,7 @@
 
                 <a href="/services" class="block group relative">
                     
-                    <div class="relative glass-dark rounded-3xl h-full border border-neutral-100 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 overflow-hidden" data-aos="fade-up" data-aos-delay="200">
+                    <div class="relative rounded-3xl h-full border border-neutral-100 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 overflow-hidden" data-aos="fade-up" data-aos-delay="200">
                         <div class="h-2 w-full bg-gradient-to-r from-blue-500 to-accent-500"></div>
                         
                         <div class="p-8">
@@ -253,9 +247,9 @@
                             </div>
                             
                             <div class="flex items-center mb-4">
-                                <h3 class="text-xl font-semibold heading-serif text-neutral-800 group-hover:text-accent-600 transition-colors duration-300">Programming & Tech Services</h3>
+                                <h3 class="text-xl font-semibold text-neutral-800 group-hover:text-accent-600 transition-colors duration-300">Programming & Tech Services</h3>
                                 <div class="ml-auto">
-                                    <span class="flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm">
+                                    <span class="flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-500 text-white shadow-sm">
                                         PRO
                                     </span>
                                 </div>
@@ -307,7 +301,7 @@
                 </a>
 
                 <a href="/services" class="block group relative">
-                    <div class="relative glass-dark rounded-3xl h-full border border-neutral-100 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 overflow-hidden" data-aos="fade-up" data-aos-delay="300">
+                    <div class="relative rounded-3xl h-full border border-neutral-100 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 overflow-hidden" data-aos="fade-up" data-aos-delay="300">
                         
                         <div class="h-2 w-full bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
                         
@@ -321,9 +315,9 @@
                             </div>
                             
                             <div class="flex items-center mb-4">
-                                <h3 class="text-xl font-semibold heading-serif text-neutral-800 group-hover:text-emerald-600 transition-colors duration-300">Consulting Services</h3>
+                                <h3 class="text-xl font-semibold text-neutral-800 group-hover:text-emerald-600 transition-colors duration-300">Consulting Services</h3>
                                 <div class="ml-auto">
-                                    <span class="flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm">
+                                    <span class="flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-sm">
                                         EXPERT
                                     </span>
                                 </div>
@@ -388,47 +382,43 @@
         <div class="text-center mb-16" data-aos="fade-up">
             <div class="flex items-center justify-center mb-3">
                 <div class="flex -space-x-2 mr-3">
-                    <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                    <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                    <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                    <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                    <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <x-lucide-star class="w-5 h-5 text-amber-400 fill-amber-400" />
+                    <x-lucide-star class="w-5 h-5 text-amber-400 fill-amber-400" />
+                    <x-lucide-star class="w-5 h-5 text-amber-400 fill-amber-400" />
+                    <x-lucide-star class="w-5 h-5 text-amber-400 fill-amber-400" />
+                    <x-lucide-star class="w-5 h-5 text-amber-400 fill-amber-400" />
                 </div>
                 <span class="text-primary-600 font-medium">Consistently praised by hundreds of satisfied clients</span>
             </div>
-            <h2 class="heading-serif text-3xl md:text-4xl mb-4 mt-4">Client <span class="gradient-text">Success Stories</span></h2>
+            <h2 class="text-3xl md:text-4xl font-semibold text-neutral-800 mb-4 mt-4">Client Success Stories</h2>
             <p class="text-neutral-600 max-w-2xl mx-auto mt-4 mb-8">
                 See how our services have helped businesses and professionals achieve their goals
             </p>
-            <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-accent-500 mx-auto rounded-full"></div>
+            <div class="w-20 h-1 bg-primary-500 mx-auto rounded-full"></div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             <div class="group relative" data-aos="fade-up" data-aos-delay="100">
                 
                 <div class="absolute -top-3 -right-3 bg-white rounded-full shadow-md z-10 p-1.5">
-                    <div class="bg-green-100 text-green-700 rounded-full p-1">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                        </svg>
+                    <div class="bg-success-100 text-success-700 rounded-full p-1">
+                        <x-lucide-badge-check class="w-4 h-4" />
                     </div>
                 </div>
 
-                <div class="glass-dark rounded-3xl p-6 h-full flex flex-col border border-neutral-100 shadow-sm hover:shadow-lg transition-all duration-500 hover:-translate-y-2">
+                <div class="bg-white rounded-2xl p-6 h-full flex flex-col border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300">
                     <div class="mb-5 relative">
-                        <div class="w-14 h-14 organic-shape bg-gradient-to-br from-primary-600/30 to-primary-500/30 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-glow">
-                            <span class="text-lg heading-serif gradient-text">AC</span>
+                        <div class="w-14 h-14 rounded-xl bg-primary-100 flex items-center justify-center">
+                            <span class="text-lg font-semibold text-primary-600">AC</span>
                         </div>
                         <div class="absolute -top-2 -right-1">
-                            <svg class="w-8 h-8 text-primary-300" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                            </svg>
+                            <x-lucide-quote class="w-8 h-8 text-primary-200" />
                         </div>
                     </div>
 
                     <div class="flex items-center mb-3">
-                        <h3 class="text-lg heading-serif text-primary-600 mr-2">Web Development</h3>
-                        <span class="px-2 py-1 bg-green-50 text-green-700 text-xs rounded-md">Completed</span>
+                        <h3 class="text-lg font-medium text-primary-600 mr-2">Web Development</h3>
+                        <span class="px-2 py-1 bg-success-50 text-success-700 text-xs font-medium rounded-md">Completed</span>
                     </div>
 
                     <p class="text-sm text-neutral-600 italic flex-grow">"Exceptional work! The team delivered our web application ahead of schedule and exceeded all our expectations."</p>
@@ -458,33 +448,29 @@
             <div class="group relative" data-aos="fade-up" data-aos-delay="200">
                 
                 <div class="absolute -top-3 -right-3 bg-white rounded-full shadow-md z-10 p-1.5">
-                    <div class="bg-green-100 text-green-700 rounded-full p-1">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                        </svg>
+                    <div class="bg-success-100 text-success-700 rounded-full p-1">
+                        <x-lucide-badge-check class="w-4 h-4" />
                     </div>
                 </div>
 
                 
-                <div class="absolute -top-2 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-md">
+                <div class="absolute -top-2 left-4 bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-md">
                     Brand Success
                 </div>
 
-                <div class="glass-dark rounded-3xl p-6 h-full flex flex-col border border-neutral-100 shadow-sm hover:shadow-lg transition-all duration-500 hover:-translate-y-2">
+                <div class="bg-white rounded-2xl p-6 h-full flex flex-col border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300">
                     <div class="mb-5 relative">
-                        <div class="w-14 h-14 organic-shape bg-gradient-to-br from-accent-600/30 to-accent-500/30 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-glow">
-                            <span class="text-lg heading-serif gradient-text">KP</span>
+                        <div class="w-14 h-14 rounded-xl bg-accent-100 flex items-center justify-center">
+                            <span class="text-lg font-semibold text-accent-600">KP</span>
                         </div>
                         <div class="absolute -top-2 -right-1">
-                            <svg class="w-8 h-8 text-accent-300" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                            </svg>
+                            <x-lucide-quote class="w-8 h-8 text-accent-200" />
                         </div>
                     </div>
 
                     <div class="flex items-center mb-3">
-                        <h3 class="text-lg heading-serif text-accent-600 mr-2">Brand Research</h3>
-                        <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">Award-winning</span>
+                        <h3 class="text-lg font-medium text-accent-600 mr-2">Brand Research</h3>
+                        <span class="px-2 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-md">Award-winning</span>
                     </div>
 
                     <p class="text-sm text-neutral-600 italic flex-grow">"Their brand research helped our company stand out from competitors. Our new brand identity led to a 40% increase in market recognition and won us the industry innovation award."</p>
@@ -514,27 +500,23 @@
             <div class="group relative" data-aos="fade-up" data-aos-delay="300">
                 
                 <div class="absolute -top-3 -right-3 bg-white rounded-full shadow-md z-10 p-1.5">
-                    <div class="bg-green-100 text-green-700 rounded-full p-1">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                        </svg>
+                    <div class="bg-success-100 text-success-700 rounded-full p-1">
+                        <x-lucide-badge-check class="w-4 h-4" />
                     </div>
                 </div>
 
-                <div class="glass-dark rounded-3xl p-6 h-full flex flex-col border border-neutral-100 shadow-sm hover:shadow-lg transition-all duration-500 hover:-translate-y-2">
+                <div class="bg-white rounded-2xl p-6 h-full flex flex-col border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300">
                     <div class="mb-5 relative">
-                        <div class="w-14 h-14 organic-shape bg-gradient-to-br from-primary-600/30 to-primary-500/30 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-glow">
-                            <span class="text-lg heading-serif gradient-text">JA</span>
+                        <div class="w-14 h-14 rounded-xl bg-primary-100 flex items-center justify-center">
+                            <span class="text-lg font-semibold text-primary-600">JA</span>
                         </div>
                         <div class="absolute -top-2 -right-1">
-                            <svg class="w-8 h-8 text-primary-300" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                            </svg>
+                            <x-lucide-quote class="w-8 h-8 text-primary-200" />
                         </div>
                     </div>
                     <div class="flex items-center mb-3">
-                        <h3 class="text-lg heading-serif text-primary-600 mr-2">Web Development</h3>
-                        <span class="px-2 py-1 bg-violet-50 text-violet-700 text-xs rounded-md">Project Success</span>
+                        <h3 class="text-lg font-medium text-primary-600 mr-2">Web Development</h3>
+                        <span class="px-2 py-1 bg-violet-50 text-violet-700 text-xs font-medium rounded-md">Project Success</span>
                     </div>
 
                     <p class="text-sm text-neutral-600 italic flex-grow">"Their technological approach streamlined our entire project workflow. Their solutions improved our team's productivity by 80% and helped us deliver exceptional results ahead of schedule."</p>
@@ -563,27 +545,23 @@
             <div class="group relative" data-aos="fade-up" data-aos-delay="400">
                 
                 <div class="absolute -top-3 -right-3 bg-white rounded-full shadow-md z-10 p-1.5">
-                    <div class="bg-green-100 text-green-700 rounded-full p-1">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                        </svg>
+                    <div class="bg-success-100 text-success-700 rounded-full p-1">
+                        <x-lucide-badge-check class="w-4 h-4" />
                     </div>
                 </div>
 
-                <div class="glass-dark rounded-3xl p-6 h-full flex flex-col border border-neutral-100 shadow-sm hover:shadow-lg transition-all duration-500 hover:-translate-y-2">
+                <div class="bg-white rounded-2xl p-6 h-full flex flex-col border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300">
                     <div class="mb-5 relative">
-                        <div class="w-14 h-14 organic-shape bg-gradient-to-br from-accent-600/30 to-accent-500/30 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-glow">
-                            <span class="text-lg heading-serif gradient-text">VE</span>
+                        <div class="w-14 h-14 rounded-xl bg-accent-100 flex items-center justify-center">
+                            <span class="text-lg font-semibold text-accent-600">VE</span>
                         </div>
                         <div class="absolute -top-2 -right-1">
-                            <svg class="w-8 h-8 text-accent-300" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                            </svg>
+                            <x-lucide-quote class="w-8 h-8 text-accent-200" />
                         </div>
                     </div>
                     <div class="flex items-center mb-3">
-                        <h3 class="text-lg heading-serif text-accent-600 mr-2">UI Design</h3>
-                        <span class="px-2 py-1 bg-yellow-50 text-yellow-700 text-xs rounded-md">Brand Success</span>
+                        <h3 class="text-lg font-medium text-accent-600 mr-2">UI Design</h3>
+                        <span class="px-2 py-1 bg-warning-50 text-warning-700 text-xs font-medium rounded-md">Brand Success</span>
                     </div>
 
                     <p class="text-sm text-neutral-600 italic flex-grow">"The UI brand design absolutely exceeded our expectations! The visual identity perfectly captures our brand values and has significantly improved our customer engagement metrics."</p>
@@ -621,91 +599,73 @@
     
     <div class="max-w-7xl mx-auto px-6 relative z-10">
         <div class="text-center mb-16" data-aos="fade-up">
-            <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100 backdrop-blur-md">Why Choose Us</span>
-            <h2 class="heading-serif text-3xl md:text-4xl mb-4 mt-4">Why <span class="gradient-text">Treis Adiutor</span>?</h2>
+            <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100">Why Choose Us</span>
+            <h2 class="text-3xl md:text-4xl font-semibold text-neutral-800 mb-4 mt-4">Why Treis Adiutor?</h2>
             <p class="text-neutral-600 max-w-2xl mx-auto">The perfect partner for your digital transformation and technology journey</p>
-            <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-accent-500 mx-auto mt-6 rounded-full"></div>
+            <div class="w-20 h-1 bg-primary-500 mx-auto mt-6 rounded-full"></div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            <div class="glass-dark rounded-3xl p-8 border border-neutral-200 hover:border-neutral-300 transition-all duration-300 group" data-aos="fade-up" data-aos-delay="100">
-                <div class="w-16 h-16 organic-shape bg-primary-500 mb-8 flex items-center justify-center shadow-glow">
-                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
+            <div class="bg-white rounded-2xl p-8 border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300 group" data-aos="fade-up" data-aos-delay="100">
+                <div class="w-16 h-16 rounded-xl bg-primary-100 mb-8 flex items-center justify-center">
+                    <x-lucide-users class="w-7 h-7 text-primary-500" />
                 </div>
-                <h3 class="text-xl font-semibold heading-serif text-neutral-800 mb-4 group-hover:text-primary-600 transition-colors duration-300">Personalized Partnership</h3>
+                <h3 class="text-xl font-semibold text-neutral-800 mb-4 group-hover:text-primary-600 transition-colors duration-300">Personalized Partnership</h3>
                 <p class="text-neutral-600 mb-6">You're not just a task on a board. We assign a dedicated adiutor to your project, ensuring personalized attention from start to finish.</p>
                 <ul class="space-y-3 text-sm text-neutral-600">
                     <li class="flex items-center">
                         <div class="w-5 h-5 rounded-full bg-primary-100 mr-3 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
+                            <x-lucide-check class="w-3 h-3 text-primary-500" />
                         </div>
                         One-on-one guidance
                     </li>
                     <li class="flex items-center">
                         <div class="w-5 h-5 rounded-full bg-primary-100 mr-3 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
+                            <x-lucide-check class="w-3 h-3 text-primary-500" />
                         </div>
                         Custom approach for each project
                     </li>
                 </ul>
             </div>
 
-            <div class="glass-dark rounded-3xl p-8 border border-neutral-200 hover:border-neutral-300 transition-all duration-300 group" data-aos="fade-up" data-aos-delay="200">
-                <div class="w-16 h-16 organic-shape bg-accent-500 mb-8 flex items-center justify-center shadow-glow">
-                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                    </svg>
+            <div class="bg-white rounded-2xl p-8 border border-neutral-200 shadow-sm hover:border-neutral-300 transition-all duration-300 group" data-aos="fade-up" data-aos-delay="200">
+                <div class="w-16 h-16 rounded-2xl bg-accent-500 mb-8 flex items-center justify-center">
+                    <x-lucide-shield-check class="w-7 h-7 text-white" />
                 </div>
-                <h3 class="text-xl font-semibold heading-serif text-neutral-800 mb-4 group-hover:text-accent-600 transition-colors duration-300">Advanced Security</h3>
+                <h3 class="text-xl font-semibold text-neutral-800 mb-4 group-hover:text-accent-600 transition-colors duration-300">Advanced Security</h3>
                 <p class="text-neutral-600 mb-6">Your work, your data. It’s safe with us. Always. We follow enterprise-grade security standards and strict confidentiality practices.</p>
                 <ul class="space-y-3 text-sm text-neutral-600">
                     <li class="flex items-center">
                         <div class="w-5 h-5 rounded-full bg-accent-100 mr-3 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-accent-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
+                            <x-lucide-check class="w-3 h-3 text-accent-500" />
                         </div>
                         End-to-end encryption
                     </li>
                     <li class="flex items-center">
                         <div class="w-5 h-5 rounded-full bg-accent-100 mr-3 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-accent-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
+                            <x-lucide-check class="w-3 h-3 text-accent-500" />
                         </div>
                         Strict confidentiality
                     </li>
                 </ul>
             </div>
 
-            <div class="glass-dark rounded-3xl p-8 border border-neutral-200 hover:border-neutral-300 transition-all duration-300 group" data-aos="fade-up" data-aos-delay="300">
-                <div class="w-16 h-16 organic-shape bg-emerald-500 mb-8 flex items-center justify-center shadow-glow">
-                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
+            <div class="bg-white rounded-2xl p-8 border border-neutral-200 shadow-sm hover:border-neutral-300 transition-all duration-300 group" data-aos="fade-up" data-aos-delay="300">
+                <div class="w-16 h-16 rounded-2xl bg-success-500 mb-8 flex items-center justify-center">
+                    <x-lucide-zap class="w-7 h-7 text-white" />
                 </div>
-                <h3 class="text-xl font-semibold heading-serif text-neutral-800 mb-4 group-hover:text-emerald-600 transition-colors duration-300">On-Time Delivery</h3>
+                <h3 class="text-xl font-semibold text-neutral-800 mb-4 group-hover:text-success-600 transition-colors duration-300">On-Time Delivery</h3>
                 <p class="text-neutral-600 mb-6">Late delivery? Not in our vocabulary. Whether it’s due next week or tomorrow, we make it happen without cutting corners.</p>
                 <ul class="space-y-3 text-sm text-neutral-600">
                     <li class="flex items-center">
-                        <div class="w-5 h-5 rounded-full bg-emerald-100 mr-3 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
+                        <div class="w-5 h-5 rounded-full bg-success-100 mr-3 flex items-center justify-center">
+                            <x-lucide-check class="w-3 h-3 text-success-500" />
                         </div>
                         Rush service available
                     </li>
                     <li class="flex items-center">
-                        <div class="w-5 h-5 rounded-full bg-emerald-100 mr-3 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                            </svg>
+                        <div class="w-5 h-5 rounded-full bg-success-100 mr-3 flex items-center justify-center">
+                            <x-lucide-check class="w-3 h-3 text-success-500" />
                         </div>
                         High quality, every time
                     </li>
@@ -716,35 +676,29 @@
         <div class="relative mt-16 pt-16" data-aos="fade-up">
             <div class="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-accent-500/10 rounded-3xl transform -rotate-1"></div>
             <div class="absolute inset-0 bg-gradient-to-r from-accent-500/10 to-primary-500/10 rounded-3xl transform rotate-1 opacity-70"></div>
-            <div class="relative glass-dark rounded-3xl p-8 md:p-12 border border-white/10">
+            <div class="relative rounded-3xl p-8 md:p-12 border border-white/10">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div class="flex flex-col items-center text-center">
                         <div class="w-16 h-16 rounded-2xl bg-primary-100 flex items-center justify-center mb-4">
-                            <svg class="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                            </svg>
+                            <x-lucide-lightbulb class="w-8 h-8 text-primary-500" />
                         </div>
-                        <h3 class="text-xl font-semibold heading-serif text-neutral-800 mb-2">Innovative Solutions</h3>
+                        <h3 class="text-xl font-semibold text-neutral-800 mb-2">Innovative Solutions</h3>
                         <p class="text-neutral-600">Creative minds. Smart strategies. We tackle your business and tech challenges with innovative ideas that drive results.</p>
                     </div>
 
                     <div class="flex flex-col items-center text-center">
                         <div class="w-16 h-16 rounded-2xl bg-accent-100 flex items-center justify-center mb-4">
-                            <svg class="w-8 h-8 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                            </svg>
+                            <x-lucide-trending-up class="w-8 h-8 text-accent-500" />
                         </div>
-                        <h3 class="text-xl font-semibold heading-serif text-neutral-800 mb-2">Proven Results</h3>
+                        <h3 class="text-xl font-semibold text-neutral-800 mb-2">Proven Results</h3>
                         <p class="text-neutral-600">Hundreds of individuals and startups trust us because we deliver, every single time.</p>
                     </div>
 
                     <div class="flex flex-col items-center text-center">
-                        <div class="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mb-4">
-                            <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                        <div class="w-16 h-16 rounded-2xl bg-success-100 flex items-center justify-center mb-4">
+                            <x-lucide-clock class="w-8 h-8 text-success-500" />
                         </div>
-                        <h3 class="text-xl font-semibold heading-serif text-neutral-800 mb-2">24/7 Support</h3>
+                        <h3 class="text-xl font-semibold text-neutral-800 mb-2">24/7 Support</h3>
                         <p class="text-neutral-600">Late-night questions? Deadline stress? We’re here—day or night—to help you out.</p>
                     </div>
                 </div>
@@ -763,13 +717,13 @@
         <div class="max-w-7xl mx-auto px-6 relative z-10">
             <div class="text-center mb-16" data-aos="fade-up">
                 <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100 backdrop-blur-md">Our Technologies</span>
-                <h2 class="heading-serif text-3xl md:text-4xl mb-4 mt-4">Built With <span class="gradient-text">Modern Tech</span></h2>
+                <h2 class="text-3xl md:text-4xl font-semibold text-neutral-800 mb-4 mt-4">Built With <span class="gradient-text">Modern Tech</span></h2>
                 <p class="text-neutral-600 max-w-2xl mx-auto">We use today’s most powerful tools and frameworks to create solutions that are fast, scalable, and built to last.</p>
                 <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-accent-500 mx-auto mt-6 rounded-full"></div>
             </div>
             
             <div id="tech-stack-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative" style="min-height: 400px;">                
-                <div class="glass-dark rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="100" style="opacity: 1 !important; transform: none !important;">
+                <div class="rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="100" style="opacity: 1 !important; transform: none !important;">
                     <div class="flex items-center mb-8">
                         <div class="w-12 h-12 organic-shape bg-gradient-to-br from-primary-700/20 to-primary-500/20 backdrop-blur-md flex items-center justify-center">
                             <div class="w-6 h-6 bg-primary-400/30 rounded"></div>
@@ -792,7 +746,7 @@
                     </div>
                 </div>
                 
-                <div class="glass-dark rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="200" style="opacity: 1 !important; transform: none !important;">
+                <div class="rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="200" style="opacity: 1 !important; transform: none !important;">
                     <div class="flex items-center mb-8">
                         <div class="w-12 h-12 organic-shape bg-gradient-to-br from-accent-700/20 to-accent-500/20 backdrop-blur-md flex items-center justify-center">
                             <div class="w-6 h-6 bg-accent-400/30 rounded"></div>
@@ -815,7 +769,7 @@
                     </div>
                 </div>
                 
-                <div class="glass-dark rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="300" style="opacity: 1 !important; transform: none !important;">
+                <div class="rounded-3xl p-8 border border-white/10 animate-pulse" data-aos="fade-up" data-aos-delay="300" style="opacity: 1 !important; transform: none !important;">
                     <div class="flex items-center mb-8">
                         <div class="w-12 h-12 organic-shape bg-gradient-to-br from-emerald-700/20 to-emerald-500/20 backdrop-blur-md flex items-center justify-center">
                             <div class="w-6 h-6 bg-emerald-400/30 rounded"></div>
@@ -851,7 +805,7 @@
         <div class="max-w-7xl mx-auto px-6 relative z-10">
             <div class="text-center mb-16" data-aos="fade-up">
                 <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-3 inline-block py-1 px-3 rounded-full bg-primary-100 backdrop-blur-md">Frequently Asked Questions</span>
-                <h2 class="heading-serif text-3xl md:text-4xl mb-4 mt-4">Got <span class="gradient-text">Questions</span>?</h2>
+                <h2 class="text-3xl md:text-4xl font-semibold text-neutral-800 mb-4 mt-4">Got <span class="gradient-text">Questions</span>?</h2>
                 <p class="text-neutral-600 max-w-2xl mx-auto mt-6">
                     We've answered common questions from tech startups and businesses
                 </p>
@@ -859,64 +813,52 @@
             </div>
 
             <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <div class="glass-dark rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-primary-400" data-aos="fade-up" data-aos-delay="100">
+                <div class="rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-primary-400" data-aos="fade-up" data-aos-delay="100">
                     <div class="flex items-center mb-3">
-                        <svg class="w-5 h-5 text-primary-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <h3 class="text-lg font-semibold heading-serif text-neutral-800">How quickly can you deliver?</h3>
+                        <x-lucide-clock class="w-5 h-5 text-primary-500 mr-2" />
+                        <h3 class="text-lg font-semibold text-neutral-800">How quickly can you deliver?</h3>
                     </div>
                     <p class="text-neutral-600">Most projects are done within <span class="font-medium text-primary-700">1 week</span>, sometimes even faster. Got a tight deadline? We offer <span class="font-medium text-primary-700">expedited services</span> to meet tight deadlines without compromising quality. Our team works around the clock to ensure on-time delivery.</p>
                 </div>
 
-                <div class="glass-dark rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-green-400" data-aos="fade-up" data-aos-delay="200">
+                <div class="rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-success-400" data-aos="fade-up" data-aos-delay="200">
                     <div class="flex items-center mb-3">
-                        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                        <h3 class="text-lg font-semibold heading-serif text-neutral-800">Is my information kept confidential?</h3>
+                        <x-lucide-lock class="w-5 h-5 text-success-500 mr-2" />
+                        <h3 class="text-lg font-semibold text-neutral-800">Is my information kept confidential?</h3>
                     </div>
-                    <p class="text-neutral-600">Absolutely. We maintain <span class="font-medium text-green-700">strict confidentiality</span> for all client projects. Your personal details are protected by enterprise-grade encryption. We don’t share, resell, or reuse anything—ever.</p>
+                    <p class="text-neutral-600">Absolutely. We maintain <span class="font-medium text-success-700">strict confidentiality</span> for all client projects. Your personal details are protected by enterprise-grade encryption. We don’t share, resell, or reuse anything—ever.</p>
                 </div>
 
-                <div class="glass-dark rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-amber-400" data-aos="fade-up" data-aos-delay="300">
+                <div class="rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-warning-400" data-aos="fade-up" data-aos-delay="300">
                     <div class="flex items-center mb-3">
-                        <svg class="w-5 h-5 text-amber-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
-                        <h3 class="text-lg font-semibold heading-serif text-neutral-800">What if I'm not happy with the work?</h3>
+                        <x-lucide-shield-check class="w-5 h-5 text-warning-500 mr-2" />
+                        <h3 class="text-lg font-semibold text-neutral-800">What if I'm not happy with the work?</h3>
                     </div>
-                    <p class="text-neutral-600">No stress. We offer <span class="font-medium text-amber-700">multiple revisions</span> until you're satisfied. Still not working out? We may issue a <span class="font-medium text-amber-700">partial refund</span> depending on the situation. With over 500+ successful projects and glowing reviews, chances are—you’ll love the result.</p>
+                    <p class="text-neutral-600">No stress. We offer <span class="font-medium text-warning-700">multiple revisions</span> until you're satisfied. Still not working out? We may issue a <span class="font-medium text-warning-700">partial refund</span> depending on the situation. With over 500+ successful projects and glowing reviews, chances are—you’ll love the result.</p>
                 </div>
 
-                <div class="glass-dark rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-blue-400" data-aos="fade-up" data-aos-delay="400">
+                <div class="rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-blue-400" data-aos="fade-up" data-aos-delay="400">
                     <div class="flex items-center mb-3">
-                        <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                        </svg>
-                        <h3 class="text-lg font-semibold heading-serif text-neutral-800">What payment methods do you accept?</h3>
+                        <x-lucide-credit-card class="w-5 h-5 text-blue-500 mr-2" />
+                        <h3 class="text-lg font-semibold text-neutral-800">What payment methods do you accept?</h3>
                     </div>
                     <p class="text-neutral-600">We offer <span class="font-medium text-blue-700">flexible and secure payment options</span> including all major e-wallets like Gcash, Maya, GoTyme, PayPal, bank transfers, and cryptocurrencies. Clients pay 50% upfront with the remainder due upon completion.</p>
                 </div>
                 
-                <div class="glass-dark rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-indigo-400" data-aos="fade-up" data-aos-delay="500">
+                <div class="rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-indigo-400" data-aos="fade-up" data-aos-delay="500">
                     <div class="flex items-center mb-3">
-                        <svg class="w-5 h-5 text-indigo-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <h3 class="text-lg font-semibold heading-serif text-neutral-800">Is your work original and unique?</h3>
+                        <x-lucide-file-text class="w-5 h-5 text-indigo-500 mr-2" />
+                        <h3 class="text-lg font-semibold text-neutral-800">Is your work original and unique?</h3>
                     </div>
                     <p class="text-neutral-600"><span class="font-medium text-indigo-700">We stand by our work</span>. All deliverables are original, custom-built for your business needs, and free from plagiarism. We take intellectual property rights seriously.</p>
                 </div>
                 
-                <div class="glass-dark rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-rose-400" data-aos="fade-up" data-aos-delay="600">
+                <div class="rounded-2xl p-6 transition-all duration-300 hover:shadow-md border-l-4 border-error-400" data-aos="fade-up" data-aos-delay="600">
                     <div class="flex items-center mb-3">
-                        <svg class="w-5 h-5 text-rose-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <h3 class="text-lg font-semibold heading-serif text-neutral-800">How do I get started?</h3>
+                        <x-lucide-info class="w-5 h-5 text-error-500 mr-2" />
+                        <h3 class="text-lg font-semibold text-neutral-800">How do I get started?</h3>
                     </div>
-                    <p class="text-neutral-600">Click the "Start Your Project" button, fill out our brief project form, and you'll receive a custom quote within 2 hours. Once approved, we'll begin work immediately. It’s <span class="font-medium text-rose-700">fast, simple, and stress-free.</span></p>
+                    <p class="text-neutral-600">Click the "Start Your Project" button, fill out our brief project form, and you'll receive a custom quote within 2 hours. Once approved, we'll begin work immediately. It’s <span class="font-medium text-error-700">fast, simple, and stress-free.</span></p>
                 </div>
             </div>
 
@@ -946,7 +888,7 @@
                         <span class="text-sm font-medium text-neutral-700">Trusted by 500+ tech companies</span>
                     </div>
 
-                    <h2 class="heading-serif text-4xl md:text-5xl lg:text-6xl mb-6 text-neutral-900">
+                    <h2 class="text-4xl md:text-5xl lg:text-6xl font-semibold text-neutral-800 mb-6">
                         Ready to start your <br class="hidden md:block"/>
                         <span class="gradient-text">next project?</span>
                     </h2>
@@ -972,21 +914,15 @@
 
                     <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-500">
                         <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
+                            <x-lucide-check-circle class="w-5 h-5 text-success-500" />
                             <span class="font-medium">Fast turnaround</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
+                            <x-lucide-check-circle class="w-5 h-5 text-success-500" />
                             <span class="font-medium">Quality guaranteed</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
+                            <x-lucide-check-circle class="w-5 h-5 text-success-500" />
                             <span class="font-medium">100% secure</span>
                         </div>
                     </div>

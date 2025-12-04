@@ -322,48 +322,65 @@
                         <h2 class="text-lg font-semibold text-neutral-800 flex items-center gap-2">
                             <x-lucide-list-checks class="w-5 h-5 text-primary-500" />
                             Project Tasks
+                            @if($project->tasks->count() > 1)
+                            <span class="text-xs font-normal text-neutral-400 ml-2">
+                                <x-lucide-grip-vertical class="w-3 h-3 inline" /> Drag to reorder
+                            </span>
+                            @endif
                         </h2>
-                        <x-ui.button variant="primary" size="sm" href="{{ route('admin.tasks.create', ['project_id' => $project->id]) }}">
-                            <x-lucide-plus class="w-4 h-4" />
-                            Add Task
-                        </x-ui.button>
+                        <div class="flex items-center gap-2">
+                            <span id="reorderStatus" class="text-xs text-neutral-500 hidden"></span>
+                            <x-ui.button variant="primary" size="sm" href="{{ route('admin.tasks.create', ['project_id' => $project->id]) }}">
+                                <x-lucide-plus class="w-4 h-4" />
+                                Add Task
+                            </x-ui.button>
+                        </div>
                     </div>
                     <div class="p-6">
                         @if($project->tasks->count() > 0)
-                            <div class="space-y-3">
-                                @foreach($project->tasks as $task)
-                                <div class="border border-neutral-200 rounded-xl p-4 hover:bg-neutral-50 transition">
+                            <div id="tasksList" class="space-y-3" data-project-id="{{ $project->id }}">
+                                @foreach($project->orderedTasks as $task)
+                                <div class="task-item border border-neutral-200 rounded-xl p-4 hover:bg-neutral-50 transition cursor-move group" 
+                                     data-task-id="{{ $task->taskID }}">
                                     <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <div class="flex items-center space-x-3 mb-2">
-                                                <h3 class="font-semibold text-neutral-900">{{ $task->title }}</h3>
-                                                @php
-                                                    $taskStatusConfig = [
-                                                        'pending' => ['class' => 'bg-warning-100 text-warning-800', 'label' => 'Pending'],
-                                                        'in_progress' => ['class' => 'bg-primary-100 text-primary-800', 'label' => 'In Progress'],
-                                                        'completed' => ['class' => 'bg-success-100 text-success-800', 'label' => 'Completed'],
-                                                        'on_hold' => ['class' => 'bg-neutral-100 text-neutral-800', 'label' => 'On Hold'],
-                                                    ];
-                                                    $taskConfig = $taskStatusConfig[$task->status] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'label' => 'Unknown'];
-                                                @endphp
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $taskConfig['class'] }}">
-                                                    {{ $taskConfig['label'] }}
-                                                </span>
+                                        <div class="flex items-start gap-3 flex-1">
+                                            <!-- Drag Handle -->
+                                            <div class="drag-handle flex-shrink-0 mt-1 text-neutral-300 group-hover:text-neutral-500 transition cursor-grab active:cursor-grabbing">
+                                                <x-lucide-grip-vertical class="w-5 h-5" />
                                             </div>
-                                            <p class="text-sm text-neutral-600 mb-2">{{ Str::limit($task->description, 100) }}</p>
-                                            <div class="flex items-center space-x-4 text-xs text-neutral-500">
-                                                <span class="flex items-center">
-                                                    <x-lucide-user class="w-3.5 h-3.5 mr-1" />
-                                                    {{ $task->assignedUser->fullName ?? 'Unassigned' }}
-                                                </span>
-                                                <span class="flex items-center">
-                                                    <x-lucide-banknote class="w-3.5 h-3.5 mr-1" />
-                                                    ₱{{ number_format($task->allocated_budget ?? 0, 2) }}
-                                                </span>
-                                                <span class="flex items-center">
-                                                    <x-lucide-calendar class="w-3.5 h-3.5 mr-1" />
-                                                    {{ $task->due_date ? $task->due_date->format('M d, Y') : 'No deadline' }}
-                                                </span>
+                                            <div class="flex-1">
+                                                <div class="flex items-center space-x-3 mb-2">
+                                                    <h3 class="font-semibold text-neutral-900">{{ $task->taskTitle }}</h3>
+                                                    @php
+                                                        $taskStatusConfig = [
+                                                            'pending' => ['class' => 'bg-warning-100 text-warning-800', 'label' => 'Pending'],
+                                                            'in_progress' => ['class' => 'bg-primary-100 text-primary-800', 'label' => 'In Progress'],
+                                                            'completed' => ['class' => 'bg-success-100 text-success-800', 'label' => 'Completed'],
+                                                            'on_hold' => ['class' => 'bg-neutral-100 text-neutral-800', 'label' => 'On Hold'],
+                                                            'cancelled' => ['class' => 'bg-error-100 text-error-800', 'label' => 'Cancelled'],
+                                                            'pending_approval' => ['class' => 'bg-info-100 text-info-800', 'label' => 'Pending Approval'],
+                                                        ];
+                                                        $taskConfig = $taskStatusConfig[$task->status] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'label' => 'Unknown'];
+                                                    @endphp
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $taskConfig['class'] }}">
+                                                        {{ $taskConfig['label'] }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-sm text-neutral-600 mb-2">{{ Str::limit($task->taskDescription, 100) }}</p>
+                                                <div class="flex items-center space-x-4 text-xs text-neutral-500">
+                                                    <span class="flex items-center">
+                                                        <x-lucide-user class="w-3.5 h-3.5 mr-1" />
+                                                        {{ $task->assignedUser->fullName ?? 'Unassigned' }}
+                                                    </span>
+                                                    <span class="flex items-center">
+                                                        <x-lucide-banknote class="w-3.5 h-3.5 mr-1" />
+                                                        ₱{{ number_format($task->allocated_budget ?? 0, 2) }}
+                                                    </span>
+                                                    <span class="flex items-center">
+                                                        <x-lucide-calendar class="w-3.5 h-3.5 mr-1" />
+                                                        {{ $task->deadline ? $task->deadline->format('M d, Y') : 'No deadline' }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                         <a href="{{ route('admin.tasks.show', $task->taskID) }}" 
@@ -710,16 +727,75 @@
                     </div>
                     
                     <div class="p-6">
+                        @php
+                            $incompleteTasks = $project->tasks->whereNotIn('status', ['completed', 'cancelled']);
+                            $completedTasks = $project->tasks->where('status', 'completed');
+                            $hasIncompleteTasks = $incompleteTasks->count() > 0;
+                        @endphp
+
+                        @if($hasIncompleteTasks)
+                        <!-- Warning: Incomplete Tasks -->
+                        <div class="mb-4 p-4 bg-warning-50 border border-warning-200 rounded-xl">
+                            <div class="flex items-start">
+                                <x-lucide-alert-triangle class="w-5 h-5 text-warning-600 mt-0.5 mr-3 flex-shrink-0" />
+                                <div>
+                                    <h4 class="text-sm font-semibold text-warning-800 mb-1">Incomplete Tasks Detected</h4>
+                                    <p class="text-xs text-warning-700 mb-2">
+                                        {{ $incompleteTasks->count() }} task(s) are not yet completed:
+                                    </p>
+                                    <ul class="text-xs text-warning-700 list-disc list-inside space-y-0.5 max-h-24 overflow-y-auto">
+                                        @foreach($incompleteTasks->take(5) as $task)
+                                            <li>{{ $task->taskTitle }} <span class="text-warning-500">({{ ucfirst($task->status) }})</span></li>
+                                        @endforeach
+                                        @if($incompleteTasks->count() > 5)
+                                            <li class="text-warning-500">...and {{ $incompleteTasks->count() - 5 }} more</li>
+                                        @endif
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        @else
+                        <!-- Success: All Tasks Complete -->
                         <div class="flex items-start mb-4">
                             <div class="flex-shrink-0 h-10 w-10 rounded-full bg-success-100 flex items-center justify-center mr-3">
                                 <x-lucide-check-circle class="w-6 h-6 text-success-600" />
                             </div>
                             <div>
-                                <p class="text-sm text-neutral-600 mb-3">
-                                    Are you sure you want to mark this project as completed? This will notify the client.
+                                <p class="text-sm text-neutral-600 mb-1">
+                                    All {{ $completedTasks->count() }} task(s) are completed. Ready to mark project as complete.
+                                </p>
+                                <p class="text-xs text-neutral-500">
+                                    This will notify the client about the project completion.
                                 </p>
                             </div>
                         </div>
+                        @endif
+
+                        <!-- Task Summary -->
+                        <div class="mb-4 p-3 bg-neutral-50 rounded-lg">
+                            <div class="flex justify-between text-xs text-neutral-600">
+                                <span>Completed: <strong class="text-success-600">{{ $completedTasks->count() }}</strong></span>
+                                <span>Pending: <strong class="text-warning-600">{{ $incompleteTasks->count() }}</strong></span>
+                                <span>Total: <strong>{{ $project->tasks->count() }}</strong></span>
+                            </div>
+                        </div>
+
+                        @if($hasIncompleteTasks)
+                        <!-- Force Complete Option -->
+                        <div class="mb-4 p-3 bg-error-50 border border-error-100 rounded-lg">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" name="force_complete" value="1" 
+                                       class="mt-0.5 w-4 h-4 text-error-600 border-error-300 rounded focus:ring-error-500"
+                                       onchange="toggleCompleteButton(this)">
+                                <div>
+                                    <span class="text-sm font-medium text-error-800">Force Complete</span>
+                                    <p class="text-xs text-error-600 mt-0.5">
+                                        Complete this project even with incomplete tasks. Use with caution.
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+                        @endif
                         
                         <div class="mb-5">
                             <label class="block text-sm font-medium text-neutral-700 mb-2">Completion Notes (Optional)</label>
@@ -734,7 +810,7 @@
                         <x-ui.button type="button" variant="secondary" onclick="hideCompleteModal()">
                             Cancel
                         </x-ui.button>
-                        <x-ui.button type="submit" variant="success">
+                        <x-ui.button type="submit" variant="success" id="completeProjectBtn" {{ $hasIncompleteTasks ? 'disabled' : '' }}>
                             <x-lucide-check-circle class="w-4 h-4" />
                             Complete Project
                         </x-ui.button>
@@ -1156,6 +1232,18 @@
 // Global variable for standard rate validation
 let adiutorStandardRate = 0;
 
+// Toggle complete button when force_complete checkbox is changed
+function toggleCompleteButton(checkbox) {
+    const btn = document.getElementById('completeProjectBtn');
+    if (checkbox.checked) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+}
+
 // Modal JavaScript Functions
 function showCompleteModal() {
     const modal = document.getElementById('completeModal');
@@ -1555,6 +1643,191 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// ============================================
+// Task Reordering with Drag & Drop
+// ============================================
+
+// Load SortableJS from CDN
+const sortableScript = document.createElement('script');
+sortableScript.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
+sortableScript.onload = initializeSortable;
+document.head.appendChild(sortableScript);
+
+let sortableInstance = null;
+let isReorderMode = false;
+
+function initializeSortable() {
+    const taskList = document.getElementById('sortable-tasks');
+    const toggleBtn = document.getElementById('toggle-reorder-mode');
+    const saveBtn = document.getElementById('save-task-order');
+    const cancelBtn = document.getElementById('cancel-reorder');
+    const reorderControls = document.getElementById('reorder-controls');
+    
+    if (!taskList || !toggleBtn) return;
+    
+    // Initialize Sortable but keep it disabled initially
+    sortableInstance = new Sortable(taskList, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'bg-blue-50',
+        chosenClass: 'bg-blue-100',
+        dragClass: 'shadow-lg',
+        disabled: true,
+        onEnd: function(evt) {
+            // Visual feedback that order changed
+            if (evt.oldIndex !== evt.newIndex) {
+                saveBtn.classList.remove('bg-gray-400');
+                saveBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            }
+        }
+    });
+    
+    // Toggle reorder mode
+    toggleBtn.addEventListener('click', function() {
+        isReorderMode = !isReorderMode;
+        
+        if (isReorderMode) {
+            // Enable reorder mode
+            sortableInstance.option('disabled', false);
+            taskList.classList.add('reorder-mode');
+            reorderControls.classList.remove('hidden');
+            toggleBtn.innerHTML = '<i class="fas fa-times mr-1"></i> Exit Reorder Mode';
+            toggleBtn.classList.remove('bg-gray-600');
+            toggleBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+            
+            // Show drag handles
+            document.querySelectorAll('.drag-handle').forEach(handle => {
+                handle.classList.remove('opacity-0');
+                handle.classList.add('opacity-100');
+            });
+        } else {
+            exitReorderMode();
+        }
+    });
+    
+    // Cancel reordering
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            // Reload to reset order
+            window.location.reload();
+        });
+    }
+    
+    // Save new order
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveTaskOrder);
+    }
+}
+
+function exitReorderMode() {
+    const taskList = document.getElementById('sortable-tasks');
+    const toggleBtn = document.getElementById('toggle-reorder-mode');
+    const reorderControls = document.getElementById('reorder-controls');
+    
+    isReorderMode = false;
+    sortableInstance.option('disabled', true);
+    taskList.classList.remove('reorder-mode');
+    reorderControls.classList.add('hidden');
+    toggleBtn.innerHTML = '<i class="fas fa-sort mr-1"></i> Reorder Tasks';
+    toggleBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+    toggleBtn.classList.add('bg-gray-600');
+    
+    // Hide drag handles
+    document.querySelectorAll('.drag-handle').forEach(handle => {
+        handle.classList.remove('opacity-100');
+        handle.classList.add('opacity-0');
+    });
+}
+
+function saveTaskOrder() {
+    const taskList = document.getElementById('sortable-tasks');
+    const saveBtn = document.getElementById('save-task-order');
+    const taskItems = taskList.querySelectorAll('[data-task-id]');
+    
+    // Collect task IDs in new order
+    const taskIds = Array.from(taskItems).map(item => parseInt(item.dataset.taskId));
+    
+    // Disable save button and show loading
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
+    
+    // Send AJAX request
+    fetch('{{ route("admin.tasks.reorder") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            project_id: {{ $project->id }},
+            task_ids: taskIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success notification
+            showToast('Task order saved successfully!', 'success');
+            exitReorderMode();
+        } else {
+            showToast(data.message || 'Failed to save task order', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving task order:', error);
+        showToast('An error occurred while saving task order', 'error');
+    })
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Save Order';
+    });
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+    toast.className = `fixed bottom-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
+    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    // Fade out and remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.add('opacity-0');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 </script>
+
+<style>
+/* Drag and Drop Styles */
+#sortable-tasks.reorder-mode [data-task-id] {
+    cursor: move;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+#sortable-tasks.reorder-mode [data-task-id]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.drag-handle {
+    cursor: grab;
+    transition: opacity 0.2s ease;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+}
+
+.sortable-chosen {
+    background-color: #EBF4FF !important;
+}
+</style>
 
 @endsection

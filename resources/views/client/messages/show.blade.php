@@ -621,84 +621,24 @@ document.addEventListener('DOMContentLoaded', function() {
         scrollToBottom();
     }
 
-    // Create message HTML element with Tailwind
+    // Create message HTML element using shared utility
+    const currentUserId = {{ auth()->id() }};
+    
     function createMessageElement(message) {
-        const isSender = message.sender_id === {{ auth()->id() }};
-        
-        let attachmentsHtml = '';
-        if (message.attachments && message.attachments.length > 0) {
-            attachmentsHtml = message.attachments.map(att => `
-                <a href="/storage/${att.path}" 
-                   download="${att.name}" 
-                   class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${isSender ? 'bg-primary-100 text-primary-800 hover:bg-primary-200' : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'}">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                    </svg>
-                    ${att.name}
-                </a>
-            `).join('');
-        }
-
-        return `
-            <div class="flex ${isSender ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in">
-                <div class="max-w-[70%]">
-                    ${!isSender ? `
-                        <div class="flex items-center gap-2 mb-1.5 px-1">
-                            <div class="w-6 h-6 rounded-full bg-primary-50 flex items-center justify-center shrink-0">
-                                <svg class="w-3.5 h-3.5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                            </div>
-                            <span class="text-xs font-medium text-neutral-700">${escapeHtml(message.sender.fullName)}</span>
-                        </div>
-                    ` : ''}
-                    <div class="rounded-2xl px-4 py-3 ${isSender ? 'bg-primary-600 text-white rounded-br-md' : 'bg-white border border-neutral-100 text-neutral-800 rounded-bl-md shadow-sm'}">
-                        <p class="text-sm leading-relaxed whitespace-pre-wrap wrap-break-word">${escapeHtml(message.message)}</p>
-                        ${attachmentsHtml}
-                    </div>
-                    <div class="flex items-center gap-1.5 mt-1.5 px-1 text-xs text-neutral-400 ${isSender ? 'justify-end' : 'justify-start'}">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span>${formatTime(message.created_at)}</span>
-                        ${message.status === 'read' && isSender ? `
-                            <svg class="w-3.5 h-3.5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        ` : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // Helper function to format time
-    function formatTime(timestamp) {
-        const date = new Date(timestamp);
-        const now = new Date();
-        const diff = now - date;
-        const minutes = Math.floor(diff / 60000);
-        const hours = Math.floor(diff / 3600000);
-        const days = Math.floor(diff / 86400000);
-
-        if (minutes < 1) return 'Just now';
-        if (minutes < 60) return `${minutes}m ago`;
-        if (hours < 24) return `${hours}h ago`;
-        if (days < 7) return `${days}d ago`;
-        
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+        return window.MessagingUtils.createMessageElement(message, currentUserId, {
+            showSenderInfo: true,
+            showReadStatus: true
+        });
     }
 
     // Scroll to bottom
     function scrollToBottom() {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        window.MessagingUtils.scrollToBottom(messagesContainer);
     }
 
-    // Escape HTML
+    // Escape HTML - use shared utility
     function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        return window.MessagingUtils.escapeHtml(text);
     }
 
     // Handle form submission

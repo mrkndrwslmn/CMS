@@ -18,9 +18,12 @@ use App\Notifications\NewServiceRequestNotification;
 use App\Services\CloudflareR2Service;
 use App\Services\CouponService;
 use App\Services\LoyaltyService;
+use App\Traits\ValidatesDocuments;
 
 class ServiceRequestController extends Controller
 {
+    use ValidatesDocuments;
+    
     protected CouponService $couponService;
     protected LoyaltyService $loyaltyService;
 
@@ -46,6 +49,10 @@ class ServiceRequestController extends Controller
      */
     public function store(Request $request)
     {
+        // Get allowed file extensions from config
+        $extensions = $this->getAllowedExtensions();
+        $maxSize = $this->getMaxFileSize();
+        
         // Validate the request
         $validator = Validator::make($request->all(), [
             // User fields (only required if not logged in)
@@ -64,7 +71,9 @@ class ServiceRequestController extends Controller
             'expectations' => 'nullable|string|max:1000',
             'additional_notes' => 'nullable|string|max:1000',
             'estimated_budget' => 'nullable|numeric|min:0|max:999999.99',
-            'attachments.*' => 'nullable|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,gif,zip,rar',
+            'attachments.*' => "nullable|file|max:{$maxSize}|mimes:{$extensions}",
+        ], [
+            'attachments.*.mimes' => 'Unsupported file type. ' . $this->getHumanReadableFileTypes() . ' are allowed.',
         ]);
 
         if ($validator->fails()) {

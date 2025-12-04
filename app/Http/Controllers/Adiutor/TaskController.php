@@ -356,14 +356,31 @@ class TaskController extends Controller
     {
         $request->validate([
             'completion_notes' => 'nullable|string|max:1000',
+            'confirm_no_deliverables' => 'nullable|boolean',
         ]);
         
-        $task = Task::findOrFail($taskId);
+        $task = Task::with('deliverables')->findOrFail($taskId);
         
         // Verify task is assigned to this adiutor
         if ($task->assignedTo != Auth::id()) {
             return redirect()->back()
                 ->withErrors(['error' => 'This task is not assigned to you.']);
+        }
+        
+        // Check for deliverables before completing
+        if (!$task->hasDeliverables() && !$request->boolean('confirm_no_deliverables')) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'requires_confirmation' => true,
+                    'message' => 'This task has no deliverables attached. Are you sure you want to mark it as completed?',
+                    'task_id' => $task->taskID,
+                ], 422);
+            }
+            
+            return redirect()->back()
+                ->with('warning', 'This task has no deliverables. Please add deliverables or confirm you want to mark it complete without them.')
+                ->with('show_completion_confirmation', true)
+                ->with('task_id', $task->taskID);
         }
         
         $task->update([
@@ -372,10 +389,22 @@ class TaskController extends Controller
             'notes' => $request->completion_notes ? $task->notes . "\n\nCompletion Notes: " . $request->completion_notes : $task->notes,
         ]);
         
+        // Update project progress
+        if ($task->project) {
+            $task->project->syncProgressToAssignments();
+        }
+        
         // Create notification for admin
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new TaskCompletedNotification($task, Auth::user()));
+        }
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Task marked as completed.',
+            ]);
         }
         
         return redirect()->back()
@@ -455,9 +484,11 @@ class TaskController extends Controller
         $request->validate([
             'file' => 'required|file|max:10240', // 10MB max
             'description' => 'nullable|string|max:255',
+            'is_deliverable' => 'nullable|boolean',
         ]);
         
         $user = Auth::user();
+        $isDeliverable = $request->boolean('is_deliverable');
         
         // Verify task is assigned to this adiutor
         $task = DB::table('tasks')
@@ -494,6 +525,9 @@ class TaskController extends Controller
                 'fileType' => $uploadResult['mime_type'],
                 'fileSize' => $uploadResult['size'],
                 'description' => $request->description,
+                'is_deliverable' => $isDeliverable,
+                'deliverable_type' => $isDeliverable ? 'file' : null,
+                'is_approved' => false, // Deliverables require approval
                 'is_archived' => false,
                 'uploadedAt' => now(),
                 'created_at' => now(),
@@ -509,23 +543,19 @@ class TaskController extends Controller
 
             if ($task) {
                 $client = User::find($task->client_id);
-                if ($client) {
-                    // Determine if this is likely a deliverable based on description or file type
-                    $isDeliverable = $request->description && 
-                        (str_contains(strtolower($request->description), 'deliverable') ||
-                         str_contains(strtolower($request->description), 'final') ||
-                         str_contains(strtolower($request->description), 'completed'));
-
+                if ($client && $isDeliverable) {
+                    // Only notify client about deliverables (after admin approval - this is a placeholder)
+                    // For now, notify that a deliverable is pending approval
                     $client->notify(new FileUploadedNotification(
                         $uploadResult['original_name'],
                         $task->taskTitle,
                         $taskId,
                         Auth::user()->fullName,
-                        $isDeliverable
+                        true // is deliverable
                     ));
                 }
 
-                // Also notify admins
+                // Notify admins about any file upload (especially deliverables that need approval)
                 $admins = User::where('role', 'admin')->get();
                 foreach ($admins as $admin) {
                     $admin->notify(new FileUploadedNotification(
@@ -533,15 +563,79 @@ class TaskController extends Controller
                         $task->taskTitle,
                         $taskId,
                         Auth::user()->fullName,
-                        false
+                        $isDeliverable
                     ));
                 }
             }
             
-            return redirect()->back()->with('success', 'File uploaded successfully to cloud storage.');
+            $successMessage = $isDeliverable 
+                ? 'Deliverable uploaded successfully. It will be visible to the client once approved by an admin.'
+                : 'File uploaded successfully to cloud storage.';
+            
+            return redirect()->back()->with('success', $successMessage);
         } else {
             return redirect()->back()->withErrors(['error' => 'Failed to upload file: ' . $uploadResult['error']]);
         }
+    }
+
+    /**
+     * Add a link deliverable for task
+     */
+    public function addLinkDeliverable(Request $request, $taskId)
+    {
+        $request->validate([
+            'link_url' => 'required|url|max:2048',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+        ]);
+        
+        $user = Auth::user();
+        
+        // Verify task is assigned to this adiutor
+        $task = DB::table('tasks')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->where('tasks.taskID', $taskId)
+            ->where('tasks.assignedTo', $user->id)
+            ->select('tasks.*', 'projects.client_id', 'projects.title as project_title')
+            ->first();
+            
+        if (!$task) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Task not found or you do not have access to it.']);
+        }
+        
+        // Create document entry for link deliverable
+        DB::table('documents')->insert([
+            'taskID' => $taskId,
+            'uploaded_by' => $user->id,
+            'fileName' => $request->title,
+            'filePath' => null, // No file path for links
+            'fileType' => 'link',
+            'fileSize' => 0,
+            'description' => $request->description,
+            'link_url' => $request->link_url,
+            'is_deliverable' => true,
+            'deliverable_type' => 'link',
+            'is_approved' => false, // Deliverables require approval
+            'is_archived' => false,
+            'uploadedAt' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Notify admins about link deliverable that needs approval
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new FileUploadedNotification(
+                $request->title . ' (Link)',
+                $task->taskTitle,
+                $taskId,
+                Auth::user()->fullName,
+                true // is deliverable
+            ));
+        }
+        
+        return redirect()->back()->with('success', 'Link deliverable added successfully. It will be visible to the client once approved by an admin.');
     }
 
     /**
@@ -689,6 +783,48 @@ class TaskController extends Controller
             'success' => true,
             'message' => 'Task progress updated successfully',
             'progress_percentage' => $progressPercentage
+        ]);
+    }
+
+    /**
+     * Get deliverables for a task
+     */
+    public function getDeliverables($taskId)
+    {
+        $user = Auth::user();
+        
+        // Verify task is assigned to this adiutor
+        $task = Task::where('taskID', $taskId)
+            ->where('assignedTo', $user->id)
+            ->first();
+            
+        if (!$task) {
+            return response()->json(['error' => 'Task not found or you do not have access to it.'], 404);
+        }
+        
+        $deliverables = $task->deliverables()
+            ->with('uploader:id,fullName')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($doc) {
+                return [
+                    'id' => $doc->documentID,
+                    'title' => $doc->fileName,
+                    'description' => $doc->description,
+                    'type' => $doc->deliverable_type,
+                    'link_url' => $doc->link_url,
+                    'file_url' => $doc->deliverable_type === 'file' ? $doc->filePath : null,
+                    'is_approved' => $doc->is_approved,
+                    'approved_at' => $doc->approved_at,
+                    'uploader' => $doc->uploader?->fullName,
+                    'created_at' => $doc->created_at,
+                ];
+            });
+        
+        return response()->json([
+            'success' => true,
+            'deliverables' => $deliverables,
+            'counts' => $task->getDeliverablesCounts(),
         ]);
     }
 }

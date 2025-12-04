@@ -8,7 +8,9 @@ use App\Models\Message;
 use App\Models\Project;
 use App\Models\User;
 use App\Services\FirebaseService;
+use App\Services\MessagingService;
 use App\Services\CloudflareR2Service;
+use App\Traits\ValidatesDocuments;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -17,11 +19,15 @@ use Illuminate\Support\Facades\Log;
 
 class GroupChatController extends Controller
 {
+    use ValidatesDocuments;
+    
     protected FirebaseService $firebaseService;
+    protected MessagingService $messagingService;
 
-    public function __construct(FirebaseService $firebaseService)
+    public function __construct(FirebaseService $firebaseService, MessagingService $messagingService)
     {
         $this->firebaseService = $firebaseService;
+        $this->messagingService = $messagingService;
     }
 
     /**
@@ -137,19 +143,17 @@ class GroupChatController extends Controller
         $user = Auth::user();
 
         try {
-            // Check authorization
-            if (!$groupChat->canSendMessages($user)) {
-                if ($groupChat->status === 'archived') {
-                    return response()->json(['error' => 'This group chat has been archived. Messages cannot be sent.'], 403);
-                }
-                return response()->json(['error' => 'Unauthorized'], 403);
-            }
-
             // Validate request
+            $extensions = $this->getAllowedExtensions();
+            $maxSize = $this->getMaxFileSize();
             $validator = Validator::make($request->all(), [
                 'message' => 'required|string|max:5000',
-                'attachments' => 'nullable|array',
-                'attachments.*' => 'file|max:10240', // 10MB max per file
+                'attachments' => 'nullable|array|max:5',
+                'attachments.*' => "file|max:{$maxSize}|mimes:{$extensions}",
+            ], [
+                'attachments.max' => 'You can upload a maximum of 5 files.',
+                'attachments.*.mimes' => 'Unsupported file type. ' . $this->getHumanReadableFileTypes() . ' are allowed.',
+                'attachments.*.max' => 'Each file must be less than 10MB.',
             ]);
 
             if ($validator->fails()) {
@@ -159,66 +163,28 @@ class GroupChatController extends Controller
                 ], 422);
             }
 
-            // Handle attachments
-            $attachmentPaths = [];
-            if ($request->hasFile('attachments')) {
-                $r2Service = new CloudflareR2Service();
+            // Use MessagingService to send the message
+            $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
 
-                foreach ($request->file('attachments') as $file) {
-                    $uploadResult = $r2Service->uploadFile($file, 'group-chat-attachments', null, [
-                        'type' => 'group_chat_attachment',
-                        'user_id' => $user->id,
-                        'group_chat_id' => $groupChat->id,
-                    ]);
+            $result = $this->messagingService->sendGroupMessage(
+                $user,
+                $groupChat,
+                $request->message,
+                $attachments
+            );
 
-                    if ($uploadResult['success']) {
-                        $attachmentPaths[] = [
-                            'name' => $uploadResult['original_name'],
-                            'path' => $uploadResult['path'],
-                            'url' => $uploadResult['url'],
-                            'size' => $uploadResult['size'],
-                            'mime_type' => $uploadResult['mime_type'],
-                        ];
-                    }
-                }
-            }
-
-            // Create message
-            $message = Message::create([
-                'group_chat_id' => $groupChat->id,
-                'sender_id' => $user->id,
-                'recipient_id' => null, 
-                'project_id' => $groupChat->project_id,
-                'message' => $request->message,
-                'message_type' => 'project',
-                'attachments' => !empty($attachmentPaths) ? $attachmentPaths : null,
-                'status' => 'sent',
-            ]);
-
-            // Update group chat
-            $groupChat->updateLastMessage($message);
-            $groupChat->incrementUnreadForMembers($user->id);
-
-            // Load sender relationship
-            $message->load('sender:id,fullName,profilePic,role');
-
-            // Send push notifications to all members except sender
-            $members = $groupChat->members()->where('user_id', '!=', $user->id)->get();
-            foreach ($members as $member) {
-                try {
-                    $this->firebaseService->sendGroupChatNotification($message, $member);
-                } catch (\Exception $e) {
-                    Log::warning('Failed to send push notification', [
-                        'member_id' => $member->id,
-                        'error' => $e->getMessage()
-                    ]);
-                }
+            if (!$result['success']) {
+                $statusCode = $result['error'] === 'Unauthorized' ? 403 : 400;
+                return response()->json([
+                    'success' => false,
+                    'error' => $result['error']
+                ], $statusCode);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => $message,
-                'group_chat' => $groupChat,
+                'message' => $result['message'],
+                'group_chat' => $result['group_chat'],
             ], 201);
 
         } catch (\Exception $e) {
@@ -332,18 +298,7 @@ class GroupChatController extends Controller
         $user = Auth::user();
 
         try {
-            // Clients cannot access group chats
-            if ($user->isClient()) {
-                return response()->json([
-                    'success' => true,
-                    'unread_count' => 0
-                ]);
-            }
-
-            $count = $user->groupChats()
-                ->join('group_chat_members', 'group_chats.id', '=', 'group_chat_members.group_chat_id')
-                ->where('group_chat_members.user_id', $user->id)
-                ->sum('group_chat_members.unread_count');
+            $count = $this->messagingService->getGroupMessagesUnreadCount($user);
 
             return response()->json([
                 'success' => true,

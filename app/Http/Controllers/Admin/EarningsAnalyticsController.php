@@ -340,9 +340,10 @@ class EarningsAnalyticsController extends Controller
         ];
 
         // Monthly trend
+        $monthFormat = $this->getDateFormatExpression('created_at', '%Y-%m');
         $monthlyTrend = Payout::where('status', 'completed')
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, SUM(amount) as total, COUNT(*) as count")
+            ->selectRaw("{$monthFormat} as month, SUM(amount) as total, COUNT(*) as count")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -393,6 +394,29 @@ class EarningsAnalyticsController extends Controller
     // ==========================================
     // PRIVATE HELPER METHODS
     // ==========================================
+
+    /**
+     * Get database-agnostic date formatting expression
+     */
+    private function getDateFormatExpression(string $column, string $format): string
+    {
+        $driver = config('database.default');
+        $connection = config("database.connections.{$driver}.driver", $driver);
+
+        if ($connection === 'sqlite') {
+            // SQLite uses strftime
+            $sqliteFormat = match ($format) {
+                '%Y-%m' => '%Y-%m',
+                '%Y-%u' => '%Y-%W',  // Week number
+                '%Y-%m-%d' => '%Y-%m-%d',
+                default => $format,
+            };
+            return "strftime('{$sqliteFormat}', {$column})";
+        }
+
+        // MySQL/MariaDB uses DATE_FORMAT
+        return "DATE_FORMAT({$column}, '{$format}')";
+    }
 
     private function getStartDate($period, Request $request)
     {
@@ -479,10 +503,13 @@ class EarningsAnalyticsController extends Controller
             $labelFormat = 'M d';
         }
 
+        $dateFormatExpr = $this->getDateFormatExpression('created_at', $format);
+        $approvedAtFormatExpr = $this->getDateFormatExpression('fixed_rate_approved_at', $format);
+
         // Hourly earnings trend
         $hourlyTrend = TimeEntry::where('is_approved', true)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw("DATE_FORMAT(created_at, '{$format}') as period, SUM(calculated_amount) as amount, SUM(duration_minutes)/60 as hours")
+            ->selectRaw("{$dateFormatExpr} as period, SUM(calculated_amount) as amount, SUM(duration_minutes)/60 as hours")
             ->groupBy('period')
             ->orderBy('period')
             ->get()
@@ -492,7 +519,7 @@ class EarningsAnalyticsController extends Controller
         $fixedTrend = ProjectAssignment::where('payment_type', 'fixed_rate')
             ->where('fixed_rate_approved', true)
             ->whereBetween('fixed_rate_approved_at', [$startDate, $endDate])
-            ->selectRaw("DATE_FORMAT(fixed_rate_approved_at, '{$format}') as period, SUM(agreed_rate) as amount")
+            ->selectRaw("{$approvedAtFormatExpr} as period, SUM(agreed_rate) as amount")
             ->groupBy('period')
             ->orderBy('period')
             ->get()

@@ -650,22 +650,23 @@ Route::prefix('api')->group(function () {
             Route::get('/test-connection', [\App\Http\Controllers\CalendarController::class, 'testConnection'])->name('test');
         });
         
-        Route::prefix('messages')->name('api.messages.')->group(function () {
+        Route::prefix('messages')->name('api.messages.')->middleware('throttle:60,1')->group(function () {
             Route::get('/conversations', [\App\Http\Controllers\Api\MessageController::class, 'index'])->name('conversations');
             Route::get('/unread-count', [\App\Http\Controllers\Api\MessageController::class, 'unreadCount'])->name('unread-count');
+            Route::get('/search', [\App\Http\Controllers\Api\MessageController::class, 'search'])->name('search');
             Route::post('/fcm-token', [\App\Http\Controllers\Api\MessageController::class, 'updateFcmToken'])->name('update-fcm-token');
             Route::get('/projects/{project}', [\App\Http\Controllers\Api\MessageController::class, 'show'])->name('show');
-            Route::post('/projects/{project}', [\App\Http\Controllers\Api\MessageController::class, 'store'])->name('store');
+            Route::post('/projects/{project}', [\App\Http\Controllers\Api\MessageController::class, 'store'])->middleware('throttle:30,1')->name('store');
             Route::post('/projects/{project}/mark-read', [\App\Http\Controllers\Api\MessageController::class, 'markAsRead'])->name('mark-read');
             Route::delete('/{message}', [\App\Http\Controllers\Api\MessageController::class, 'destroy'])->name('destroy');
         });
 
         // Group Chat API routes (admins and adiutors only, NOT clients)
-        Route::prefix('group-chats')->name('api.group-chats.')->group(function () {
+        Route::prefix('group-chats')->name('api.group-chats.')->middleware('throttle:60,1')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\GroupChatController::class, 'index'])->name('index');
             Route::get('/unread-count', [\App\Http\Controllers\Api\GroupChatController::class, 'unreadCount'])->name('unread-count');
             Route::get('/{groupChat}', [\App\Http\Controllers\Api\GroupChatController::class, 'show'])->name('show');
-            Route::post('/{groupChat}', [\App\Http\Controllers\Api\GroupChatController::class, 'store'])->name('store');
+            Route::post('/{groupChat}', [\App\Http\Controllers\Api\GroupChatController::class, 'store'])->middleware('throttle:30,1')->name('store');
             Route::post('/{groupChat}/mark-read', [\App\Http\Controllers\Api\GroupChatController::class, 'markAsRead'])->name('mark-read');
             Route::post('/{groupChat}/archive', [\App\Http\Controllers\Api\GroupChatController::class, 'archive'])->name('archive');
             Route::post('/{groupChat}/reopen', [\App\Http\Controllers\Api\GroupChatController::class, 'reopen'])->name('reopen');
@@ -778,19 +779,19 @@ Route::post('/client/requests/store', [\App\Http\Controllers\Client\ServiceReque
 // Authentication routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1'); // 5 attempts per minute
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:3,1'); // 3 attempts per minute
     
     // Password Reset routes
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:3,1');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update')->middleware('throttle:5,1');
     
     // Firebase Authentication Routes
     Route::prefix('auth/firebase')->name('firebase.')->group(function () {
-        Route::post('/callback', [\App\Http\Controllers\Auth\FirebaseAuthController::class, 'handleCallback'])->name('callback');
+        Route::post('/callback', [\App\Http\Controllers\Auth\FirebaseAuthController::class, 'handleCallback'])->name('callback')->middleware('throttle:10,1');
         Route::get('/config', [\App\Http\Controllers\Auth\FirebaseAuthController::class, 'getConfig'])->name('config');
     });
 });
@@ -910,10 +911,14 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::post('/users/bulk-action', [\App\Http\Controllers\Admin\UserManagementController::class, 'bulkAction'])->name('users.bulk-action');
     
     // Client Management
+    Route::get('/clients/archived', [\App\Http\Controllers\Admin\ClientManagementController::class, 'archived'])->name('clients.archived');
+    Route::get('/clients/export', [\App\Http\Controllers\Admin\ClientManagementController::class, 'export'])->name('clients.export');
+    Route::post('/clients/bulk-action', [\App\Http\Controllers\Admin\ClientManagementController::class, 'bulkAction'])->name('clients.bulk-action');
     Route::resource('clients', \App\Http\Controllers\Admin\ClientManagementController::class);
     Route::post('/clients/{client}/notes', [\App\Http\Controllers\Admin\ClientManagementController::class, 'addNote'])->name('clients.notes.store');
     Route::put('/clients/{client}/notes/{note}', [\App\Http\Controllers\Admin\ClientManagementController::class, 'updateNote'])->name('clients.notes.update');
     Route::delete('/clients/{client}/notes/{note}', [\App\Http\Controllers\Admin\ClientManagementController::class, 'deleteNote'])->name('clients.notes.destroy');
+    Route::post('/clients/{client}/restore', [\App\Http\Controllers\Admin\ClientManagementController::class, 'restore'])->name('clients.restore');
     
     // Task Management
     Route::resource('tasks', \App\Http\Controllers\Admin\TaskManagementController::class);
@@ -923,6 +928,40 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::patch('/tasks/{task}/update-budget', [\App\Http\Controllers\Admin\TaskManagementController::class, 'updateBudget'])->name('tasks.update-budget');
     Route::get('/service-requests/{serviceRequest}/budget-overview', [\App\Http\Controllers\Admin\TaskManagementController::class, 'budgetOverview'])->name('service-requests.budget-overview');
     Route::post('/tasks/bulk-action', [\App\Http\Controllers\Admin\TaskManagementController::class, 'bulkAction'])->name('tasks.bulk-action');
+    Route::post('/tasks/reorder', [\App\Http\Controllers\Admin\TaskManagementController::class, 'reorder'])->name('tasks.reorder');
+    
+    // Subtask Management
+    Route::prefix('tasks/{task}')->name('tasks.')->group(function () {
+        // Subtasks
+        Route::get('/subtasks', [\App\Http\Controllers\Admin\SubtaskController::class, 'index'])->name('subtasks.index');
+        Route::post('/subtasks', [\App\Http\Controllers\Admin\SubtaskController::class, 'store'])->name('subtasks.store');
+        Route::post('/subtasks/bulk', [\App\Http\Controllers\Admin\SubtaskController::class, 'bulkStore'])->name('subtasks.bulk-store');
+        Route::post('/subtasks/reorder', [\App\Http\Controllers\Admin\SubtaskController::class, 'reorder'])->name('subtasks.reorder');
+        
+        // Deliverables
+        Route::get('/deliverables', [\App\Http\Controllers\Admin\TaskDeliverableController::class, 'index'])->name('deliverables.index');
+        Route::post('/deliverables', [\App\Http\Controllers\Admin\TaskDeliverableController::class, 'store'])->name('deliverables.store');
+        Route::post('/deliverables/reorder', [\App\Http\Controllers\Admin\TaskDeliverableController::class, 'reorder'])->name('deliverables.reorder');
+        Route::get('/deliverables/check', [\App\Http\Controllers\Admin\TaskDeliverableController::class, 'checkDeliverables'])->name('deliverables.check');
+    });
+    
+    // Individual subtask routes
+    Route::prefix('subtasks/{subtask}')->name('subtasks.')->group(function () {
+        Route::put('/', [\App\Http\Controllers\Admin\SubtaskController::class, 'update'])->name('update');
+        Route::delete('/', [\App\Http\Controllers\Admin\SubtaskController::class, 'destroy'])->name('destroy');
+        Route::post('/toggle', [\App\Http\Controllers\Admin\SubtaskController::class, 'toggle'])->name('toggle');
+        Route::post('/complete', [\App\Http\Controllers\Admin\SubtaskController::class, 'complete'])->name('complete');
+        Route::post('/incomplete', [\App\Http\Controllers\Admin\SubtaskController::class, 'incomplete'])->name('incomplete');
+    });
+    
+    // Individual deliverable routes (using Document model with is_deliverable flag)
+    Route::prefix('deliverables/{document}')->name('deliverables.')->group(function () {
+        Route::put('/', [\App\Http\Controllers\Admin\TaskDeliverableController::class, 'update'])->name('update');
+        Route::delete('/', [\App\Http\Controllers\Admin\TaskDeliverableController::class, 'destroy'])->name('destroy');
+        Route::post('/approve', [\App\Http\Controllers\Admin\TaskDeliverableController::class, 'approve'])->name('approve');
+        Route::post('/reject', [\App\Http\Controllers\Admin\TaskDeliverableController::class, 'reject'])->name('reject');
+        Route::post('/revoke-approval', [\App\Http\Controllers\Admin\TaskDeliverableController::class, 'revokeApproval'])->name('revoke-approval');
+    });
     
     // Request Management
     Route::resource('requests', \App\Http\Controllers\Admin\RequestManagementController::class, ['only' => ['index', 'show']]);
@@ -964,7 +1003,9 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::post('/expiry-warnings', [\App\Http\Controllers\Admin\LoyaltyController::class, 'sendExpiryWarnings'])->name('expiry-warnings');
         Route::get('/dashboard-widget', [\App\Http\Controllers\Admin\LoyaltyController::class, 'dashboardWidget'])->name('widget');
         Route::get('/{user}', [\App\Http\Controllers\Admin\LoyaltyController::class, 'show'])->name('show');
-        Route::post('/{user}/adjust', [\App\Http\Controllers\Admin\LoyaltyController::class, 'adjustPoints'])->name('adjust');
+        Route::get('/{user}/transactions', [\App\Http\Controllers\Admin\LoyaltyController::class, 'userTransactions'])->name('user-transactions');
+        Route::get('/{user}/export', [\App\Http\Controllers\Admin\LoyaltyController::class, 'exportUserReport'])->name('export-user');
+        Route::post('/{user}/adjust', [\App\Http\Controllers\Admin\LoyaltyController::class, 'adjustPoints'])->name('adjust-points');
     });
     
     // Referral Program Management
@@ -994,6 +1035,23 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::get('/documents/search', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'search'])->name('documents.search');
     Route::post('/projects/{project}/documents', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'uploadToProject'])->name('projects.documents.upload');
     
+    // Bulk Upload
+    Route::get('/documents-bulk-upload', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'bulkCreate'])->name('documents.bulk-create');
+    Route::post('/documents-bulk-upload', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'bulkStore'])->name('documents.bulk-store');
+    
+    // Document Trash Management
+    Route::get('/documents-trash', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'trash'])->name('documents.trash');
+    Route::post('/documents/{document}/restore', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'restore'])->name('documents.restore');
+    Route::delete('/documents/{document}/force-delete', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'forceDelete'])->name('documents.force-delete');
+    Route::post('/documents-trash/bulk-restore', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'bulkRestore'])->name('documents.bulk-restore');
+    Route::delete('/documents-trash/empty', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'emptyTrash'])->name('documents.empty-trash');
+    
+    // Deliverable Approval Management
+    Route::get('/deliverables/pending', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'pendingDeliverables'])->name('deliverables.pending');
+    Route::post('/deliverables/{document}/approve', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'approveDeliverable'])->name('deliverables.approve');
+    Route::post('/deliverables/{document}/reject', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'rejectDeliverable'])->name('deliverables.reject');
+    Route::post('/deliverables/{document}/revoke', [\App\Http\Controllers\Admin\DocumentManagementController::class, 'revokeApproval'])->name('deliverables.revoke');
+    
     // Revision Management
     Route::prefix('revisions')->name('revisions.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\RevisionController::class, 'index'])->name('index');
@@ -1009,15 +1067,16 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     });
     
     // Feedback Management
+    // Note: Static routes must be defined BEFORE the resource route to avoid {feedback} param conflict
+    Route::get('/feedback/analytics', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'analytics'])->name('feedback.analytics');
+    Route::get('/feedback/export', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'export'])->name('feedback.export');
+    Route::get('/feedback/summary', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'summary'])->name('feedback.summary');
+    Route::post('/feedback/bulk-action', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'bulkAction'])->name('feedback.bulk-action');
     Route::resource('feedback', \App\Http\Controllers\Admin\FeedbackManagementController::class, ['only' => ['index', 'show']]);
     Route::post('/feedback/{feedback}/respond', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'respond'])->name('feedback.respond');
     Route::patch('/feedback/{feedback}/status', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'updateStatus'])->name('feedback.update-status');
     Route::post('/feedback/{feedback}/assign', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'assignTo'])->name('feedback.assign');
     Route::post('/feedback/{feedback}/notes', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'addNote'])->name('feedback.add-note');
-    Route::post('/feedback/bulk-action', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'bulkAction'])->name('feedback.bulk-action');
-    Route::get('/feedback/analytics', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'analytics'])->name('feedback.analytics');
-    Route::get('/feedback/export', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'export'])->name('feedback.export');
-    Route::get('/feedback/summary', [\App\Http\Controllers\Admin\FeedbackManagementController::class, 'summary'])->name('feedback.summary');
     
     // Workflow Management (Service Request → Project → Task)
     Route::prefix('workflow')->name('workflow.')->group(function () {
@@ -1131,6 +1190,9 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
         Route::get('/{projectId}/documents/{documentId}/download', [ClientController::class, 'downloadDocument'])->name('documents.download');
     });
     
+    // Documents route
+    Route::get('/documents', [ClientController::class, 'documents'])->name('documents');
+    
     // Feedback routes
     Route::prefix('feedback')->name('feedback.')->group(function () {
         Route::get('/{projectId}/create', [\App\Http\Controllers\Client\FeedbackController::class, 'create'])->name('create');
@@ -1236,10 +1298,32 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
         Route::post('/{task}/complete', [\App\Http\Controllers\Adiutor\TaskController::class, 'markCompleted'])->name('complete');
         Route::post('/{task}/add-note', [\App\Http\Controllers\Adiutor\TaskController::class, 'addNote'])->name('add-note');
         Route::post('/{task}/upload-file', [\App\Http\Controllers\Adiutor\TaskController::class, 'uploadFile'])->name('upload-file');
+        Route::post('/{task}/add-link-deliverable', [\App\Http\Controllers\Adiutor\TaskController::class, 'addLinkDeliverable'])->name('add-link-deliverable');
         Route::get('/download-file/{fileId}', [\App\Http\Controllers\Adiutor\TaskController::class, 'downloadFile'])->name('download-file');
         Route::delete('/delete-file/{fileId}', [\App\Http\Controllers\Adiutor\TaskController::class, 'deleteFile'])->name('delete-file');
         Route::post('/{task}/request-budget-change', [\App\Http\Controllers\Adiutor\TaskController::class, 'requestBudgetChange'])->name('request-budget-change');
         Route::post('/{task}/update-progress', [\App\Http\Controllers\Adiutor\TaskController::class, 'updateTaskProgress'])->name('update-progress');
+        
+        // Subtasks
+        Route::get('/{task}/subtasks', [\App\Http\Controllers\Adiutor\SubtaskController::class, 'index'])->name('subtasks.index');
+        Route::post('/{task}/subtasks', [\App\Http\Controllers\Adiutor\SubtaskController::class, 'store'])->name('subtasks.store');
+        Route::post('/{task}/subtasks/reorder', [\App\Http\Controllers\Adiutor\SubtaskController::class, 'reorder'])->name('subtasks.reorder');
+        
+        // Deliverables (using documents with is_deliverable flag)
+        Route::get('/{task}/deliverables', [\App\Http\Controllers\Adiutor\TaskController::class, 'getDeliverables'])->name('deliverables.index');
+    });
+    
+    // Adiutor Subtask routes (individual operations)
+    Route::prefix('subtasks/{subtask}')->name('subtasks.')->group(function () {
+        Route::put('/', [\App\Http\Controllers\Adiutor\SubtaskController::class, 'update'])->name('update');
+        Route::delete('/', [\App\Http\Controllers\Adiutor\SubtaskController::class, 'destroy'])->name('destroy');
+        Route::post('/toggle', [\App\Http\Controllers\Adiutor\SubtaskController::class, 'toggle'])->name('toggle');
+    });
+    
+    // Adiutor Deliverable routes (individual operations)
+    Route::prefix('deliverables/{deliverable}')->name('deliverables.')->group(function () {
+        Route::put('/', [\App\Http\Controllers\Adiutor\TaskDeliverableController::class, 'update'])->name('update');
+        Route::delete('/', [\App\Http\Controllers\Adiutor\TaskDeliverableController::class, 'destroy'])->name('destroy');
     });
     
     // Time Tracking Routes
@@ -1270,6 +1354,15 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
         Route::post('/', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'store'])->name('store');
         Route::get('/{id}', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'show'])->name('show');
         Route::delete('/{id}', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'cancel'])->name('cancel');
+    });
+    
+    // Budget Change Requests Routes
+    Route::prefix('budget-requests')->name('budget-requests.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Adiutor\BudgetChangeRequestController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Adiutor\BudgetChangeRequestController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Adiutor\BudgetChangeRequestController::class, 'store'])->name('store');
+        Route::get('/{id}', [\App\Http\Controllers\Adiutor\BudgetChangeRequestController::class, 'show'])->name('show');
+        Route::post('/{id}/cancel', [\App\Http\Controllers\Adiutor\BudgetChangeRequestController::class, 'cancel'])->name('cancel');
     });
     
     // Profile management routes

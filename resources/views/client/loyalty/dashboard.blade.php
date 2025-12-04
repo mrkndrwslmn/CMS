@@ -20,32 +20,29 @@
     <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-8 mb-8">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Available Points -->
-            <div class="text-center">
-                <p class="text-sm font-medium text-neutral-500 mb-3">Available Points</p>
-                <p class="text-4xl font-semibold text-neutral-800 mb-2">{{ number_format($loyaltyPoint->available_points) }}</p>
-                <p class="text-sm text-neutral-400">Approx. ₱{{ number_format($loyaltyPoint->available_points) }} discount</p>
-            </div>
+            <x-loyalty.points-display 
+                :points="$loyaltyPoint->available_points" 
+                label="Available Points"
+                size="lg"
+                :showCurrency="true"
+            />
 
             <!-- Current Tier -->
             <div class="text-center border-x border-neutral-100">
                 <p class="text-sm font-medium text-neutral-500 mb-3">Current Tier</p>
-                <div class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xl font-semibold
-                    {{ $loyaltyPoint->tier === 'platinum' ? 'bg-primary-50 text-primary-700 border border-primary-200' : '' }}
-                    {{ $loyaltyPoint->tier === 'gold' ? 'bg-warning-50 text-warning-700 border border-warning-200' : '' }}
-                    {{ $loyaltyPoint->tier === 'silver' ? 'bg-neutral-100 text-neutral-700 border border-neutral-200' : '' }}
-                    {{ $loyaltyPoint->tier === 'bronze' ? 'bg-orange-50 text-orange-700 border border-orange-200' : '' }}">
-                    <x-lucide-award class="w-5 h-5" />
-                    {{ ucfirst($loyaltyPoint->tier) }}
-                </div>
+                <x-loyalty.tier-badge :tier="$loyaltyPoint->tier" size="xl" />
                 <p class="text-sm text-neutral-400 mt-3">{{ $stats['earning_rate'] }} earning rate</p>
             </div>
 
             <!-- Lifetime Stats -->
-            <div class="text-center">
-                <p class="text-sm font-medium text-neutral-500 mb-3">Lifetime Earned</p>
-                <p class="text-4xl font-semibold text-success-600 mb-2">{{ number_format($loyaltyPoint->lifetime_earned) }}</p>
-                <p class="text-sm text-neutral-400">{{ number_format($loyaltyPoint->lifetime_redeemed) }} redeemed</p>
-            </div>
+            <x-loyalty.points-display 
+                :points="$loyaltyPoint->lifetime_earned" 
+                label="Lifetime Earned"
+                type="earned"
+                size="lg"
+            >
+                {{ number_format($loyaltyPoint->lifetime_redeemed) }} redeemed
+            </x-loyalty.points-display>
         </div>
     </div>
 
@@ -60,17 +57,13 @@
                     Progress to {{ ucfirst($stats['next_tier']) }}
                 </h3>
                 
-                <div class="mb-4">
-                    <div class="flex justify-between text-sm font-medium text-neutral-500 mb-2">
-                        <span>{{ number_format($loyaltyPoint->lifetime_earned) }} points</span>
-                        <span>{{ number_format($stats['points_to_next_tier'] + $loyaltyPoint->lifetime_earned) }} needed</span>
-                    </div>
-                    <div class="w-full bg-neutral-100 rounded-full h-2.5">
-                        <div class="bg-primary-600 h-2.5 rounded-full transition-all" 
-                             style="width: {{ min(100, ($loyaltyPoint->lifetime_earned / ($stats['points_to_next_tier'] + $loyaltyPoint->lifetime_earned)) * 100) }}%">
-                        </div>
-                    </div>
-                </div>
+                <x-loyalty.tier-progress 
+                    :current="$loyaltyPoint->lifetime_earned"
+                    :target="$stats['points_to_next_tier'] + $loyaltyPoint->lifetime_earned"
+                    :currentTier="$loyaltyPoint->tier"
+                    :nextTier="$stats['next_tier']"
+                    class="mb-4"
+                />
 
                 <div class="flex items-start gap-2 p-3 bg-primary-50 rounded-xl border border-primary-100">
                     <x-lucide-info class="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
@@ -133,35 +126,7 @@
                 @if($recentTransactions->count() > 0)
                 <div class="space-y-3">
                     @foreach($recentTransactions as $transaction)
-                    <div class="flex items-center justify-between p-4 bg-neutral-50 rounded-xl border border-neutral-100 hover:border-primary-200 transition-all">
-                        <div class="flex items-center gap-3 flex-1 min-w-0">
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
-                                {{ $transaction->transaction_type === 'earned' ? 'bg-success-50 border border-success-100' : '' }}
-                                {{ $transaction->transaction_type === 'redeemed' ? 'bg-warning-50 border border-warning-100' : '' }}
-                                {{ $transaction->transaction_type === 'expired' ? 'bg-error-50 border border-error-100' : '' }}
-                                {{ $transaction->transaction_type === 'adjusted' ? 'bg-primary-50 border border-primary-100' : '' }}">
-                                @if($transaction->transaction_type === 'earned')
-                                    <x-lucide-plus class="w-4 h-4 text-success-500" />
-                                @elseif($transaction->transaction_type === 'redeemed')
-                                    <x-lucide-minus class="w-4 h-4 text-warning-500" />
-                                @elseif($transaction->transaction_type === 'expired')
-                                    <x-lucide-clock class="w-4 h-4 text-error-500" />
-                                @else
-                                    <x-lucide-settings class="w-4 h-4 text-primary-500" />
-                                @endif
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-neutral-700 truncate">{{ $transaction->description }}</p>
-                                <p class="text-xs text-neutral-400">{{ $transaction->created_at->format('M d, Y g:i A') }}</p>
-                            </div>
-                        </div>
-                        <div class="text-right ml-4">
-                            <p class="text-base font-semibold
-                                {{ $transaction->points > 0 ? 'text-success-600' : 'text-error-600' }}">
-                                {{ $transaction->points > 0 ? '+' : '' }}{{ number_format($transaction->points) }}
-                            </p>
-                        </div>
-                    </div>
+                        <x-loyalty.transaction-row :transaction="$transaction" compact />
                     @endforeach
                 </div>
                 @else
@@ -178,33 +143,10 @@
         <!-- Right Column -->
         <div class="space-y-6">
             <!-- Points Expiring Soon -->
-            @if($expiringPoints->count() > 0)
-            <div class="bg-white rounded-2xl border border-warning-200 shadow-sm p-6">
-                <h3 class="text-lg font-medium text-warning-700 mb-4 flex items-center gap-2">
-                    <x-lucide-alert-triangle class="w-5 h-5" />
-                    Points Expiring Soon
-                </h3>
-
-                <div class="space-y-3">
-                    @foreach($expiringPoints->take(3) as $expiring)
-                    <div class="bg-warning-50 rounded-xl p-3 border border-warning-100">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-base font-semibold text-warning-700">{{ number_format($expiring->points) }}</span>
-                            <span class="text-xs font-medium text-warning-600 bg-warning-100 px-2 py-0.5 rounded-full">{{ $expiring->expires_at->format('M d, Y') }}</span>
-                        </div>
-                        <p class="text-xs text-neutral-500">{{ $expiring->description }}</p>
-                    </div>
-                    @endforeach
-                </div>
-
-                <div class="flex items-start gap-2 mt-4 p-3 bg-warning-50 rounded-xl border border-warning-100">
-                    <x-lucide-info class="w-4 h-4 text-warning-500 mt-0.5 flex-shrink-0" />
-                    <p class="text-xs text-warning-700">
-                        Total {{ number_format($stats['expiring_soon']) }} points expiring in 30 days
-                    </p>
-                </div>
-            </div>
-            @endif
+            <x-loyalty.expiring-points 
+                :transactions="$expiringPoints" 
+                :totalExpiring="$stats['expiring_soon']" 
+            />
 
             <!-- All Tiers -->
             <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
@@ -218,14 +160,7 @@
                     <div class="p-4 rounded-xl border 
                         {{ $loyaltyPoint->tier === $tierName ? 'border-primary-300 bg-primary-50' : 'border-neutral-100 bg-white' }}">
                         <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-2">
-                                <x-lucide-award class="w-5 h-5
-                                    {{ $tierName === 'platinum' ? 'text-primary-500' : '' }}
-                                    {{ $tierName === 'gold' ? 'text-warning-500' : '' }}
-                                    {{ $tierName === 'silver' ? 'text-neutral-400' : '' }}
-                                    {{ $tierName === 'bronze' ? 'text-orange-500' : '' }}" />
-                                <span class="font-medium text-neutral-700 uppercase text-sm">{{ $tierName }}</span>
-                            </div>
+                            <x-loyalty.tier-badge :tier="$tierName" size="sm" />
                             @if($loyaltyPoint->tier === $tierName)
                             <span class="px-2 py-0.5 bg-primary-600 text-white text-xs rounded-full font-medium">Current</span>
                             @endif

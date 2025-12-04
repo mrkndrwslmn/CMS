@@ -110,6 +110,12 @@
                                     My Projects
                                 </a>
                                 
+                                <a href="{{ route('client.documents') }}" 
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.documents') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-files class="w-5 h-5" />
+                                    Documents
+                                </a>
+                                
                                 <a href="{{ route('client.requests') }}" 
                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.requests*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                     <x-lucide-clipboard-list class="w-5 h-5" />
@@ -237,6 +243,12 @@
                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.tasks') || request()->routeIs('client.projects.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                     <x-lucide-folder class="w-5 h-5" />
                     My Projects
+                </a>
+                
+                <a href="{{ route('client.documents') }}" 
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.documents') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-files class="w-5 h-5" />
+                    Documents
                 </a>
                 
                 <a href="{{ route('client.requests') }}" 

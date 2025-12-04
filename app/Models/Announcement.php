@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Carbon\Carbon;
 
 class Announcement extends Model
@@ -28,6 +29,41 @@ class Announcement extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Allowed HTML tags for announcement content
+     */
+    private const ALLOWED_TAGS = '<p><br><strong><b><em><i><u><ul><ol><li><a><h1><h2><h3><h4><h5><h6>';
+
+    /**
+     * Sanitize the content attribute to prevent XSS attacks
+     * Allows only safe HTML tags and strips dangerous attributes
+     */
+    protected function content(): Attribute
+    {
+        return Attribute::make(
+            set: function (string $value) {
+                // Strip all tags except allowed ones
+                $sanitized = strip_tags($value, self::ALLOWED_TAGS);
+                
+                // Remove any event handlers and javascript: URLs from allowed tags
+                $sanitized = preg_replace('/\s*on\w+\s*=\s*["\'][^"\']*["\']/i', '', $sanitized);
+                $sanitized = preg_replace('/href\s*=\s*["\']javascript:[^"\']*["\']/i', 'href="#"', $sanitized);
+                
+                return $sanitized;
+            }
+        );
+    }
+
+    /**
+     * Sanitize the title attribute to prevent XSS attacks
+     */
+    protected function title(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => strip_tags($value)
+        );
+    }
 
     /**
      * Relationship with the user who created the announcement
