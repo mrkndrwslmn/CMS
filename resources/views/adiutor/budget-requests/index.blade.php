@@ -176,7 +176,7 @@
                         </a>
                         @if($request->isPending())
                         <form action="{{ route('adiutor.budget-requests.cancel', $request->id) }}" method="POST" class="inline"
-                              onsubmit="return confirm('Are you sure you want to cancel this request?');">
+                              onsubmit="return window.Alerts.confirmDeleteForm(event, 'Cancel Request', 'Are you sure you want to cancel this request?')">
                             @csrf
                             <button type="submit" class="px-3 py-1.5 text-sm text-error-600 hover:text-error-700 hover:bg-error-50 rounded-lg transition-colors">
                                 Cancel

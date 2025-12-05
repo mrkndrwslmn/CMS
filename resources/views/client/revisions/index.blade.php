@@ -1,4 +1,5 @@
 @extends('client.layouts.app')
+@section('title', 'My Revision Requests')
 
 @section('content')
 <div class="min-h-screen bg-neutral-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -138,7 +139,7 @@
                                     </a>
 
                                     @if($revision->status === 'pending')
-                                        <form action="{{ route('client.revisions.cancel', $revision->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this revision request?');">
+                                        <form action="{{ route('client.revisions.cancel', $revision->id) }}" method="POST" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Cancel Revision?', 'Are you sure you want to cancel this revision request?');">
                                             @csrf
                                             <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-neutral-100 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-200 transition-colors">
                                                 <x-lucide-x class="w-4 h-4 mr-2" />

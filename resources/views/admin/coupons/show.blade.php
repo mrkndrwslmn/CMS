@@ -347,7 +347,7 @@
                     </x-ui.button>
 
                     <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST" 
-                          onsubmit="return confirm('Are you sure you want to delete this coupon? This action cannot be undone.')">
+                          onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete Coupon', 'Are you sure you want to delete this coupon? This action cannot be undone.')">
                         @csrf
                         @method('DELETE')
                         <x-ui.button type="submit" variant="danger" class="w-full justify-center">
@@ -431,7 +431,7 @@
     function copyCouponCode() {
         const code = '{{ $coupon->code }}';
         navigator.clipboard.writeText(code).then(() => {
-            alert('Coupon code copied to clipboard!');
+            window.toast.success('Coupon code copied to clipboard!');
         });
     }
 

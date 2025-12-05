@@ -160,9 +160,9 @@
                                 </p>
                                 <p class="text-lg font-semibold text-neutral-800">
                                     @if($project->agreed_rate)
-                                        ${{ number_format($project->agreed_rate, 2) }}
+                                        ₱{{ number_format($project->agreed_rate, 2) }}
                                     @else
-                                        ${{ number_format($project->budget, 2) }}
+                                        ₱{{ number_format($project->budget, 2) }}
                                     @endif
                                 </p>
                                 <p class="text-xs text-neutral-500">{{ ucfirst($project->budget_type) }}</p>

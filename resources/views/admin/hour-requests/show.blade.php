@@ -244,7 +244,7 @@
                             type="submit" 
                             variant="danger" 
                             class="w-full"
-                            onclick="return confirm('Are you sure you want to reject this request?');"
+                            onclick="return window.Alerts.confirmForm(event, 'Reject Request', 'Are you sure you want to reject this request?')"
                         >
                             <x-lucide-x class="w-4 h-4" />
                             Reject Request

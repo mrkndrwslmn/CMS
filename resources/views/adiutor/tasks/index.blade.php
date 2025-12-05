@@ -256,7 +256,7 @@
                                 @if($task->status !== 'completed')
                                     <form method="POST" action="{{ route('adiutor.tasks.complete', $task->taskID) }}" class="inline" onsubmit="event.stopPropagation();">
                                         @csrf
-                                        <x-ui.button type="submit" onclick="return confirm('Mark this task as completed?')" 
+                                        <x-ui.button type="submit" onclick="return window.Alerts.confirmForm(event, 'Complete Task', 'Mark this task as completed?')" 
                                                 variant="success" size="sm">
                                             <x-lucide-check class="w-4 h-4 mr-1" />
                                             Mark Complete

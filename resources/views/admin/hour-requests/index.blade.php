@@ -17,15 +17,6 @@
         class="mb-6"
     />
 
-    @if(session('success'))
-    <div class="mb-6 bg-success-50 border-l-4 border-success-500 text-success-700 p-4 rounded-lg">
-        <div class="flex items-center">
-            <x-lucide-check-circle class="w-5 h-5 text-success-500 mr-3" />
-            <p class="text-sm font-medium">{{ session('success') }}</p>
-        </div>
-    </div>
-    @endif
-
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
@@ -199,27 +190,35 @@
 @push('scripts')
 <script>
 function quickApprove(requestId) {
-    if (!confirm('Quick approve this request with the requested hours?')) return;
-    
-    fetch(`/admin/hour-requests/${requestId}/quick-approve`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    window.Alerts.confirm(
+        'Quick Approve Request',
+        'Quick approve this request with the requested hours?',
+        {
+            confirmText: 'Approve',
+            confirmVariant: 'success',
+            onConfirm: function() {
+                fetch(`/admin/hour-requests/${requestId}/quick-approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        window.toast.error(data.message || 'Failed to approve request');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    window.toast.error('An error occurred');
+                });
+            }
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            alert(data.message || 'Failed to approve request');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred');
-    });
+    );
 }
 </script>
 @endpush

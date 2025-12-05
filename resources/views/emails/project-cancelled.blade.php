@@ -68,7 +68,7 @@
         <!-- Budget -->
         <div style="margin: 0 0 24px 0;">
             <p style="margin: 0; font-size: 14px; color: #6B7280;">
-                <strong style="color: #1F2937;">Budget:</strong> ${{ number_format($project->budget, 2) }}
+                <strong style="color: #1F2937;">Budget:</strong> ₱{{ number_format($project->budget, 2) }}
             </p>
         </div>
         @endif

@@ -39,7 +39,7 @@ class DocumentManagementController extends Controller
                                   ->orWhere('email', 'like', "%{$search}%");
                   })
                   ->orWhereHas('project', function($projectQuery) use ($search) {
-                      $projectQuery->where('project_name', 'like', "%{$search}%");
+                      $projectQuery->where('title', 'like', "%{$search}%");
                   });
             });
         }
@@ -88,7 +88,7 @@ class DocumentManagementController extends Controller
         // Get filter options
         $clients = User::where('role', 'client')->orderBy('fullName')->get();
         $adiutors = User::where('role', 'adiutor')->orderBy('fullName')->get();
-        $projects = \App\Models\Project::orderBy('project_name')->get();
+        $projects = \App\Models\Project::orderBy('title')->get();
         
         // Get statistics (cached for 5 minutes to reduce DB load)
         $stats = Cache::remember('documents.stats', 300, function () {
@@ -100,7 +100,8 @@ class DocumentManagementController extends Controller
                                         ->count(),
                 'by_type' => Document::selectRaw('fileType, count(*) as count')
                                      ->groupBy('fileType')
-                                     ->pluck('count', 'fileType'),
+                                     ->pluck('count', 'fileType')
+                                     ->toArray(),
             ];
         });
         
@@ -193,7 +194,7 @@ class DocumentManagementController extends Controller
     {
         $clients = User::where('role', 'client')->orderBy('fullName')->get();
         $tasks = Task::with('client')->orderBy('created_at', 'desc')->take(50)->get();
-        $projects = \App\Models\Project::orderBy('project_name')->get();
+        $projects = \App\Models\Project::orderBy('title')->get();
         
         return view('admin.documents.bulk-create', compact('clients', 'tasks', 'projects'));
     }

@@ -15,6 +15,16 @@
         confirmText: 'OK',
     });
     
+    Prompt for text input:
+    const result = await window.Alerts.prompt({
+        title: 'Enter Template Name',
+        message: 'Please provide a name for the template',
+        placeholder: 'Template name...',
+        confirmText: 'Save',
+        cancelText: 'Cancel'
+    });
+    // result = { confirmed: true, value: 'User input' } or { confirmed: false }
+    
     Trigger via Alpine.js:
     $dispatch('show-modal', {
         type: 'confirm',
@@ -41,6 +51,10 @@
         confirmVariant: 'primary',
         onConfirm: null,
         onCancel: null,
+        isPrompt: false,
+        promptValue: '',
+        promptPlaceholder: '',
+        promptRequired: false,
         
         icons: {
             info: 'info',
@@ -48,6 +62,7 @@
             warning: 'alert-triangle',
             error: 'x-circle',
             confirm: 'help-circle',
+            prompt: 'edit-3',
         },
         
         iconBgColors: {
@@ -56,6 +71,7 @@
             warning: 'bg-warning-50',
             error: 'bg-error-50',
             confirm: 'bg-primary-50',
+            prompt: 'bg-primary-50',
         },
         
         iconTextColors: {
@@ -64,6 +80,7 @@
             warning: 'text-warning-500',
             error: 'text-error-500',
             confirm: 'text-primary-500',
+            prompt: 'text-primary-500',
         },
         
         show(config) {
@@ -75,14 +92,33 @@
             this.confirmVariant = config.confirmVariant || 'primary';
             this.onConfirm = config.onConfirm || null;
             this.onCancel = config.onCancel || null;
+            this.isPrompt = config.isPrompt || false;
+            this.promptValue = config.defaultValue || '';
+            this.promptPlaceholder = config.placeholder || '';
+            this.promptRequired = config.required || false;
             this.open = true;
+            
+            // Focus input for prompts
+            if (this.isPrompt) {
+                this.$nextTick(() => {
+                    if (this.$refs.promptInput) this.$refs.promptInput.focus();
+                });
+            }
         },
         
         confirm() {
-            if (this.onConfirm && typeof this.onConfirm === 'function') {
-                this.onConfirm();
+            if (this.isPrompt && this.promptRequired && !this.promptValue.trim()) {
+                return; // Don't allow empty required prompts
             }
-            this.$dispatch('global-modal-confirmed');
+            
+            if (this.onConfirm && typeof this.onConfirm === 'function') {
+                if (this.isPrompt) {
+                    this.onConfirm(this.promptValue);
+                } else {
+                    this.onConfirm();
+                }
+            }
+            this.$dispatch('global-modal-confirmed', { value: this.promptValue });
             this.close();
         },
         
@@ -98,6 +134,7 @@
             this.open = false;
             this.onConfirm = null;
             this.onCancel = null;
+            this.promptValue = '';
         },
         
         getIcon() {
@@ -163,6 +200,9 @@
                     <template x-if="type === 'confirm'">
                         <x-lucide-help-circle class="w-6 h-6" ::class="getIconText()" />
                     </template>
+                    <template x-if="type === 'prompt'">
+                        <x-lucide-edit-3 class="w-6 h-6" ::class="getIconText()" />
+                    </template>
                 </div>
             </div>
 
@@ -177,8 +217,23 @@
             <p 
                 x-show="message"
                 x-text="message"
-                class="text-sm text-neutral-500 text-center mb-6"
+                class="text-sm text-neutral-500 text-center mb-4"
             ></p>
+            
+            <!-- Prompt Input -->
+            <div x-show="isPrompt" class="mb-6">
+                <input
+                    type="text"
+                    x-ref="promptInput"
+                    x-model="promptValue"
+                    :placeholder="promptPlaceholder"
+                    @keydown.enter="confirm()"
+                    class="w-full px-4 py-2.5 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+                />
+            </div>
+            
+            <!-- Spacer for non-prompt modals -->
+            <div x-show="!isPrompt && message" class="mb-2"></div>
 
             <!-- Actions -->
             <div class="flex items-center justify-center gap-3">
@@ -250,4 +305,28 @@
             onConfirm
         });
     };
+    
+    // Promise-based prompt function
+    window.showPrompt = function(config = {}) {
+        return new Promise((resolve) => {
+            window.showModal({
+                type: 'prompt',
+                title: config.title || 'Enter Value',
+                message: config.message || '',
+                confirmText: config.confirmText || 'OK',
+                cancelText: config.cancelText || 'Cancel',
+                isPrompt: true,
+                placeholder: config.placeholder || '',
+                defaultValue: config.defaultValue || '',
+                required: config.required || false,
+                onConfirm: (value) => resolve({ confirmed: true, value }),
+                onCancel: () => resolve({ confirmed: false, value: null })
+            });
+        });
+    };
+    
+    // Add to window.Alerts namespace if it exists
+    if (window.Alerts) {
+        window.Alerts.prompt = window.showPrompt;
+    }
 </script>

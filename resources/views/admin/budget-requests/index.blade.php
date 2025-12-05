@@ -362,24 +362,4 @@ document.addEventListener('keydown', function(event) {
     }
 });
 </script>
-
-@if(session('success'))
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.showSuccess) {
-                window.showSuccess('Success', '{{ session('success') }}');
-            }
-        });
-    </script>
-@endif
-
-@if(session('error'))
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.showError) {
-                window.showError('Error', '{{ session('error') }}');
-            }
-        });
-    </script>
-@endif
 @endsection

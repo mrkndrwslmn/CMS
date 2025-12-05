@@ -329,14 +329,4 @@ function auditLogs() {
     }
 }
 </script>
-
-@if(session('success'))
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.showSuccess) {
-                window.showSuccess('Success', '{{ session('success') }}');
-            }
-        });
-    </script>
-@endif
 @endsection

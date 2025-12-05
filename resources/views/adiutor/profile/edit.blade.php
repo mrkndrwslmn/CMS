@@ -26,37 +26,6 @@
         </div>
     </div>
 
-    <!-- Success Message -->
-    @if(session('success'))
-    <div class="mb-6 rounded-2xl bg-success-50 border border-success-100 p-4">
-        <div class="flex items-center gap-3">
-            <div class="p-1.5 bg-success-100 rounded-lg">
-                <x-lucide-check-circle-2 class="w-5 h-5 text-success-600" />
-            </div>
-            <p class="text-sm font-medium text-success-800">{{ session('success') }}</p>
-        </div>
-    </div>
-    @endif
-
-    <!-- Error Messages -->
-    @if($errors->any())
-    <div class="mb-6 rounded-2xl bg-error-50 border border-error-100 p-4">
-        <div class="flex items-start gap-3">
-            <div class="p-1.5 bg-error-100 rounded-lg">
-                <x-lucide-x-circle class="w-5 h-5 text-error-600" />
-            </div>
-            <div>
-                <h3 class="text-sm font-medium text-error-800">Please fix the following errors:</h3>
-                <ul class="mt-2 text-sm text-error-700 list-disc list-inside space-y-1">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        </div>
-    </div>
-    @endif
-
     <form action="{{ route('adiutor.profile.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')

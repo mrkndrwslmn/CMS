@@ -631,14 +631,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 displayFullReport(data.data, data.config);
             } else {
-                alert('Failed to generate report. Please try again.');
+                window.toast.error('Failed to generate report. Please try again.');
             }
         })
         .catch(error => {
             console.error('Error generating report:', error);
             generateButton.innerHTML = '<i class="fas fa-chart-line mr-2"></i>Generate Report';
             generateButton.disabled = false;
-            alert('Error generating report. Please try again.');
+            window.toast.error('Error generating report. Please try again.');
         });
     }
     
@@ -696,11 +696,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function saveCustomTemplate() {
-        const templateName = prompt('Enter a name for this template:');
-        if (!templateName) return;
+    async function saveCustomTemplate() {
+        const nameResult = await window.Alerts.prompt({
+            title: 'Save Template',
+            message: 'Enter a name for this template:',
+            placeholder: 'Template name...',
+            confirmText: 'Next',
+            cancelText: 'Cancel',
+            required: true
+        });
         
-        const templateDescription = prompt('Enter a description (optional):') || '';
+        if (!nameResult.confirmed || !nameResult.value) return;
+        const templateName = nameResult.value;
+        
+        const descResult = await window.Alerts.prompt({
+            title: 'Template Description',
+            message: 'Enter a description (optional):',
+            placeholder: 'Description...',
+            confirmText: 'Save',
+            cancelText: 'Skip'
+        });
+        
+        const templateDescription = descResult.confirmed ? (descResult.value || '') : '';
         const formData = new FormData(document.getElementById('customReportForm'));
         
         // Prepare config object
@@ -740,15 +757,15 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(`Template "${templateName}" saved successfully!`);
+                window.toast.success(`Template "${templateName}" saved successfully!`);
                 loadSavedTemplates(); // Refresh template list
             } else {
-                alert('Failed to save template. Please try again.');
+                window.toast.error('Failed to save template. Please try again.');
             }
         })
         .catch(error => {
             console.error('Error saving template:', error);
-            alert('Error saving template. Please try again.');
+            window.toast.error('Error saving template. Please try again.');
         });
     }
     

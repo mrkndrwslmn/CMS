@@ -259,7 +259,7 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
-                                                        onclick="return confirm('Are you sure you want to cancel this withdrawal request?')"
+                                                        onclick="return window.Alerts.confirmForm(event, 'Cancel Withdrawal', 'Are you sure you want to cancel this withdrawal request?')"
                                                         class="inline-flex items-center px-3 py-1.5 border border-error-200 text-error-700 bg-white hover:bg-error-50 text-sm font-medium rounded-lg transition-colors">
                                                     Cancel
                                                 </button>
@@ -344,48 +344,4 @@
         </div>
     </div>
 </div>
-
-@if(session('success'))
-    @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const toast = document.createElement('div');
-            toast.className = 'fixed top-20 right-5 z-50 flex items-center gap-3 bg-success-600 text-white px-6 py-3 rounded-lg shadow-lg';
-            toast.innerHTML = `
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-                <span class="font-medium">{{ session('success') }}</span>
-            `;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 5000);
-        });
-    </script>
-    @endpush
-@endif
-
-@if(session('error'))
-    @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const toast = document.createElement('div');
-            toast.className = 'fixed top-20 right-5 z-50 flex items-center gap-3 bg-danger-600 text-white px-6 py-3 rounded-lg shadow-lg';
-            toast.innerHTML = `
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                </svg>
-                <span class="font-medium">{{ session('error') }}</span>
-            `;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 5000);
-        });
-    </script>
-    @endpush
-@endif
 @endsection

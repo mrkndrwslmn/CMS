@@ -513,18 +513,25 @@
                 
                 if (action === '') {
                     e.preventDefault();
-                    alert('Please select an action to perform.');
+                    window.toast.warning('Please select an action to perform.');
                     return false;
                 }
                 
                 if (checked.length === 0) {
                     e.preventDefault();
-                    alert('Please select at least one document.');
+                    window.toast.warning('Please select at least one document.');
                     return false;
                 }
                 
-                if (action === 'delete' && !confirm('Are you sure you want to delete the selected documents? This action cannot be undone.')) {
+                if (action === 'delete') {
                     e.preventDefault();
+                    window.Alerts.confirmDelete({
+                        title: 'Delete Documents',
+                        message: 'Are you sure you want to delete the selected documents? This action cannot be undone.',
+                        onConfirm: () => {
+                            bulkActionsForm.submit();
+                        }
+                    });
                     return false;
                 }
             });

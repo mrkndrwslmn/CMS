@@ -50,7 +50,7 @@
                     Budget
                 </p>
                 <p class="text-2xl font-semibold text-neutral-800">
-                    ${{ number_format($project->agreed_rate ?? $project->budget, 2) }}
+                    ₱{{ number_format($project->agreed_rate ?? $project->budget, 2) }}
                 </p>
                 <p class="text-xs text-neutral-500 mt-1">{{ ucfirst($project->budget_type) }}</p>
             </div>
@@ -198,7 +198,7 @@
                                     <div class="flex items-center space-x-4 mt-2">
                                         <span class="text-sm text-neutral-500 flex items-center">
                                             <x-lucide-banknote class="w-4 h-4 mr-1" />
-                                            ${{ number_format($milestone->amount, 2) }}
+                                            ₱{{ number_format($milestone->amount, 2) }}
                                         </span>
                                         <span class="text-sm text-neutral-500 flex items-center">
                                             <x-lucide-calendar class="w-4 h-4 mr-1" />
@@ -489,7 +489,7 @@
 <script>
 function updateProgress() {
     // Implement progress update modal
-    alert('Progress update functionality coming soon!');
+    window.toast.info('Progress update functionality coming soon!');
 }
 
 function contactClient() {
@@ -499,7 +499,7 @@ function contactClient() {
 
 function requestBudgetChange() {
     // Implement budget change request
-    alert('Budget change request functionality coming soon!');
+    window.toast.info('Budget change request functionality coming soon!');
 }
 
 // Modal functionality

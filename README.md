@@ -471,7 +471,7 @@ php artisan view:cache
 - **AI Chatbot:** Available on all public pages via floating widget
 
 #### Administrative Access
-- **Admin Login:** `http://localhost:8000/admin/login`
+- **Admin Dashboard:** `http://localhost:8000/admin/dashboard` (requires admin login via `/login`)
 - **Dashboard:** Complete system overview with real-time analytics
 - **Management Tools:** Full CRUD operations for all system entities
 

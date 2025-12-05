@@ -307,7 +307,23 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
-        /**
+    /**
+     * Get project assignments for this adiutor
+     */
+    public function projectAssignments(): HasMany
+    {
+        return $this->hasMany(ProjectAssignment::class, 'adiutor_id');
+    }
+
+    /**
+     * Get time entries for this adiutor
+     */
+    public function timeEntries(): HasMany
+    {
+        return $this->hasMany(TimeEntry::class, 'adiutor_id');
+    }
+
+    /**
      * Get projects created by this user (for clients)
      */
     public function createdProjects()

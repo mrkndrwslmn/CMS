@@ -318,28 +318,36 @@
 @section('scripts')
 <script>
     function updateStatus(feedbackId, status) {
-        if (confirm('Are you sure you want to mark this feedback as ' + status + '?')) {
-            fetch(`/admin/feedback/${feedbackId}/status`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ status: status })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Failed to update status');
+        window.Alerts.confirm(
+            'Update Status',
+            'Are you sure you want to mark this feedback as ' + status + '?',
+            {
+                confirmText: 'Update',
+                confirmVariant: 'primary',
+                onConfirm: function() {
+                    fetch(`/admin/feedback/${feedbackId}/status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ status: status })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            window.toast.error('Failed to update status');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        window.toast.error('An error occurred');
+                    });
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred');
-            });
-        }
+            }
+        );
     }
 </script>
 @endsection

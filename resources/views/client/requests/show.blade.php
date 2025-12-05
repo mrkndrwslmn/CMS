@@ -10,37 +10,6 @@
         ['label' => $request->project_name]
     ]" />
 
-    <!-- Success/Error Messages -->
-    @if(session('success'))
-        <div class="mb-6 bg-success-50 border-l-4 border-success-500 p-4 rounded-r-lg shadow-sm">
-            <div class="flex items-center">
-                <x-lucide-check-circle class="w-5 h-5 text-success-500 mr-3" />
-                <p class="text-sm font-semibold text-success-800">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error') || $errors->any())
-        <div class="mb-6 bg-error-50 border-l-4 border-error-500 p-4 rounded-r-lg shadow-sm">
-            <div class="flex items-start">
-                <x-lucide-alert-circle class="w-5 h-5 text-error-500 mr-3 mt-0.5" />
-                <div>
-                    @if(session('error'))
-                        <p class="text-sm font-semibold text-error-800">{{ session('error') }}</p>
-                    @endif
-                    @if($errors->has('error'))
-                        <p class="text-sm font-semibold text-error-800">{{ $errors->first('error') }}</p>
-                    @endif
-                    @foreach($errors->all() as $error)
-                        @if(!$errors->has('error') || $error !== $errors->first('error'))
-                            <p class="text-sm text-error-700 mt-1">{{ $error }}</p>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
-
     <!-- Request Header Card -->
     <div class="bg-white rounded-lg shadow-sm p-8 mb-6">
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
@@ -539,7 +508,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 
-                                                    onclick="return confirm('Remove this coupon?')" 
+                                                    onclick="return window.Alerts.confirmForm(event, 'Remove Coupon', 'Remove this coupon?')" 
                                                     class="w-full px-3 py-1.5 bg-white border border-neutral-300 text-neutral-700 text-xs font-medium rounded hover:bg-neutral-50 transition-colors">
                                                 Remove Coupon
                                             </button>
@@ -643,7 +612,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 
-                                                    onclick="return confirm('Remove this coupon?')" 
+                                                    onclick="return window.Alerts.confirmForm(event, 'Remove Coupon', 'Remove this coupon?')" 
                                                     class="w-full px-3 py-1.5 bg-white border border-neutral-300 text-neutral-700 text-xs font-medium rounded hover:bg-neutral-50 transition-colors">
                                                 Remove Coupon
                                             </button>

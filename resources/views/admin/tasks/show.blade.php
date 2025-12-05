@@ -14,25 +14,6 @@
         ['label' => Str::limit($task['taskTitle'], 30), 'icon' => 'clipboard-list']
     ]" class="mb-6" />
 
-    <!-- Alert Messages -->
-    @if(session('success'))
-        <div class="bg-success-50 border border-success-200 text-success-700 p-4 rounded-lg mb-6">
-            <div class="flex items-center gap-3">
-                <x-lucide-check-circle class="w-5 h-5 text-success-500 flex-shrink-0" />
-                <p class="text-success-700">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="bg-error-50 border border-error-200 text-error-700 p-4 rounded-lg mb-6">
-            <div class="flex items-center gap-3">
-                <x-lucide-alert-circle class="w-5 h-5 text-error-500 flex-shrink-0" />
-                <p class="text-error-700">{{ session('error') }}</p>
-            </div>
-        </div>
-    @endif
-
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
@@ -87,7 +68,7 @@
                 Update Status
             </x-ui.button>
             
-            <form action="{{ route('admin.tasks.destroy', $task['taskID']) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this task?')">
+            <form action="{{ route('admin.tasks.destroy', $task['taskID']) }}" method="POST" class="inline" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete Task', 'Are you sure you want to delete this task?')">
                 @csrf
                 @method('DELETE')
                 <x-ui.button type="submit" variant="danger" class="inline-flex items-center gap-2">

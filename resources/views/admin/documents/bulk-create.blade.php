@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         if (errors.length > 0) {
-            alert('Some files were not added:\n\n' + errors.join('\n'));
+            window.toast.warning('Some files were not added:\\n' + errors.join(', '));
         }
         
         updatePreview();
@@ -466,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function(e) {
         if (selectedFiles.length === 0) {
             e.preventDefault();
-            alert('Please select at least one file to upload.');
+            window.toast.warning('Please select at least one file to upload.');
             return;
         }
         

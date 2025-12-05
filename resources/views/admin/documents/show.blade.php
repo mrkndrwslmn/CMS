@@ -28,15 +28,6 @@
             </div>
         </div>
     </div>
-
-    @if(session('success'))
-    <div class="bg-success-50 border-l-4 border-success-500 rounded-lg p-4 mb-6">
-        <div class="flex items-center">
-            <i class="fas fa-check-circle text-success-500 mr-3"></i>
-            <span class="text-success-800">{{ session('success') }}</span>
-        </div>
-    </div>
-    @endif
     
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <!-- Document Preview -->

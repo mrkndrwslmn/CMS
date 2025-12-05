@@ -170,7 +170,7 @@
                             <option value="ban">Ban</option>
                             <option value="archive">Archive</option>
                         </select>
-                        <x-ui.button type="submit" size="sm" onclick="return confirm('Are you sure you want to perform this action on the selected clients?')">
+                        <x-ui.button type="submit" size="sm" onclick="return window.Alerts.confirmForm(event, 'Bulk Action', 'Are you sure you want to perform this action on the selected clients?')">
                             Apply
                         </x-ui.button>
                     </form>

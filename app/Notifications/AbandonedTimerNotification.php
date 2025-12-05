@@ -3,14 +3,11 @@
 namespace App\Notifications;
 
 use App\Models\TimeEntry;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AbandonedTimerNotification extends Notification implements ShouldQueue
+class AbandonedTimerNotification extends Notification
 {
-    use Queueable;
 
     /**
      * Create a new notification instance.

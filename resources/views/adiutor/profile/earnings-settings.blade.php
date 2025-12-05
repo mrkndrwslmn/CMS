@@ -26,17 +26,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="mb-6 rounded-2xl bg-success-50 border border-success-100 p-4">
-            <div class="flex items-center gap-3">
-                <div class="p-1.5 bg-success-100 rounded-lg">
-                    <x-lucide-check-circle-2 class="w-5 h-5 text-success-600" />
-                </div>
-                <p class="text-sm font-medium text-success-800">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
     <form action="{{ route('adiutor.profile.earnings.update') }}" method="POST">
         @csrf
         @method('PUT')

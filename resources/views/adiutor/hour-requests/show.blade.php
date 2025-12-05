@@ -129,7 +129,7 @@
         <h3 class="text-lg font-medium text-warning-800 mb-2">Pending Review</h3>
         <p class="text-sm text-warning-600 mb-4">Your request is waiting for admin review. You'll be notified when it's processed.</p>
         <form action="{{ route('adiutor.hour-requests.cancel', $hourRequest->id) }}" method="POST" class="inline"
-              onsubmit="return confirm('Are you sure you want to cancel this request?');">
+              onsubmit="return window.Alerts.confirmDeleteForm(event, 'Cancel Request', 'Are you sure you want to cancel this request?')">
             @csrf
             @method('DELETE')
             <button type="submit" class="px-4 py-2 text-sm font-medium text-error-600 bg-white border border-error-200 rounded-xl hover:bg-error-50 transition-colors">

@@ -176,7 +176,14 @@ async function markAsRead(id) {
 }
 
 async function deleteNotification(id) {
-    if (confirm('Are you sure you want to delete this notification?')) {
+    const confirmed = await window.Alerts.confirm({
+        title: 'Delete Notification',
+        message: 'Are you sure you want to delete this notification?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        variant: 'danger'
+    });
+    if (confirmed) {
         try {
             const response = await fetch(`/notifications/${id}`, {
                 method: 'DELETE',

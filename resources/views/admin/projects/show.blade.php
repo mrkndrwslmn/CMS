@@ -703,10 +703,10 @@
                                                         Approved
                                                     </span>
                                                     <form action="{{ route('admin.projects.assignments.revoke-fixed-rate', [$project->id, $adiutor->pivot->id]) }}" 
-                                                        method="POST" class="inline">
+                                                        method="POST" class="inline"
+                                                        onsubmit="return window.Alerts.confirmForm(event, 'Revoke Approval', 'Revoke approval? This will prevent payout.')">
                                                         @csrf
                                                         <button type="submit"
-                                                                onclick="return confirm('Revoke approval? This will prevent payout.');"
                                                                 class="text-xs text-warning-600 hover:text-warning-700 font-medium">
                                                             Revoke
                                                         </button>
@@ -789,7 +789,7 @@
                                     <div class="mt-3 pt-2 border-t border-neutral-200/60">
                                         <form action="{{ route('admin.projects.remove-adiutor', [$project->id, $adiutor->id]) }}" 
                                             method="POST"
-                                            onsubmit="return confirm('Are you sure you want to remove this adiutor from the project?');">
+                                            onsubmit="return window.Alerts.confirmDeleteForm(event, 'Remove Adiutor', 'Are you sure you want to remove this adiutor from the project?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
@@ -1885,34 +1885,20 @@ function saveTaskOrder() {
     .then(data => {
         if (data.success) {
             // Show success notification
-            showToast('Task order saved successfully!', 'success');
+            window.toast.success('Task order saved successfully!');
             exitReorderMode();
         } else {
-            showToast(data.message || 'Failed to save task order', 'error');
+            window.toast.error(data.message || 'Failed to save task order');
         }
     })
     .catch(error => {
         console.error('Error saving task order:', error);
-        showToast('An error occurred while saving task order', 'error');
+        window.toast.error('An error occurred while saving task order');
     })
     .finally(() => {
         saveBtn.disabled = false;
         saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Save Order';
     });
-}
-
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-    toast.className = `fixed bottom-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
-    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>${message}`;
-    document.body.appendChild(toast);
-    
-    // Fade out and remove after 3 seconds
-    setTimeout(() => {
-        toast.classList.add('opacity-0');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
 }
 </script>
 

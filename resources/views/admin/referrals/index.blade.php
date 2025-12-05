@@ -109,7 +109,9 @@
                 <x-lucide-trending-up class="w-5 h-5 text-primary-500" />
                 Referral Trends (Last 6 Months)
             </h3>
-            <canvas id="referralTrendChart" height="250"></canvas>
+            <div class="relative" style="height: 250px;">
+                <canvas id="referralTrendChart"></canvas>
+            </div>
         </x-ui.card>
 
         <!-- Status Distribution -->
@@ -118,7 +120,9 @@
                 <x-lucide-pie-chart class="w-5 h-5 text-primary-500" />
                 Referral Status Distribution
             </h3>
-            <canvas id="statusDistributionChart" height="250"></canvas>
+            <div class="relative" style="height: 250px;">
+                <canvas id="statusDistributionChart"></canvas>
+            </div>
         </x-ui.card>
     </div>
 

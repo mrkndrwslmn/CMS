@@ -7,10 +7,10 @@ use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Mail\PasswordResetMail;
+use App\Mail\WelcomeNewUserMail;
 use App\Models\User;
 use App\Notifications\UserCreatedNotification;
-use App\Mail\WelcomeNewUserMail;
-use App\Mail\PasswordResetMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -23,35 +23,33 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Handles user authentication operations.
- * 
+ *
  * This controller manages login, registration, logout, and password reset
  * functionality. It includes security features like:
  * - Rate limiting (via route middleware)
  * - Account lockout after failed attempts
  * - Login attempt logging for security auditing
  * - Session regeneration to prevent fixation attacks
- * 
- * @package App\Http\Controllers\Auth
  */
 class AuthController extends Controller
 {
     /**
      * Maximum number of failed login attempts before lockout.
-     * 
+     *
      * @var int
      */
     protected const MAX_LOGIN_ATTEMPTS = 5;
 
     /**
      * Lockout duration in minutes.
-     * 
+     *
      * @var int
      */
     protected const LOCKOUT_DURATION = 15;
 
     /**
      * Display the login form.
-     * 
+     *
      * Redirects authenticated users to their dashboard.
      *
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
@@ -61,14 +59,13 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect()->route(Auth::user()->getDashboardRoute());
         }
-        
+
         return view('auth.login');
     }
 
     /**
      * Handle login attempt.
      *
-     * @param  \App\Http\Requests\Auth\LoginRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -76,9 +73,9 @@ class AuthController extends Controller
     public function login(LoginRequest $request)
     {
         \Log::info('Login attempt started', ['email' => $request->email]);
-        
+
         $email = $request->email;
-        
+
         // Check if account is locked out
         if ($this->isLockedOut($email)) {
             $this->logLoginAttempt($email, false, 'Account locked out', $request);
@@ -90,8 +87,10 @@ class AuthController extends Controller
 
         // Check if user exists and is active
         $user = User::where('email', $email)->first();
-        
-        if (!$user) {
+
+        \Log::info('User lookup result', ['email' => $email, 'found' => $user ? true : false, 'status' => $user?->status]);
+
+        if (! $user) {
             $this->incrementLoginAttempts($email);
             $this->logLoginAttempt($email, false, 'User not found', $request);
             throw ValidationException::withMessages([
@@ -100,38 +99,65 @@ class AuthController extends Controller
         }
 
         if ($user->status !== 'active') {
+            \Log::info('User status is not active', ['status' => $user->status]);
             $this->logLoginAttempt($email, false, 'Account inactive', $request);
             throw ValidationException::withMessages([
                 'email' => ['Your account has been deactivated. Please contact support.'],
             ]);
         }
 
-        if (Auth::attempt($request->credentials(), $request->rememberMe())) {
-            $request->session()->regenerate();
-            $this->clearLoginAttempts($email);
-            $this->logLoginAttempt($email, true, 'Login successful', $request);
-            
-            \Log::info('Login successful, redirecting', [
-                'email' => $email,
-                'role' => $user->role,
-                'route' => $user->getDashboardRoute()
-            ]);
-            
-            // Redirect based on user role
-            return redirect()->intended(route($user->getDashboardRoute()));
+        \Log::info('User status check passed, about to attempt Auth', ['status' => $user->status]);
+        \Log::info('Attempting Auth::attempt', [
+            'email' => $email,
+            'credentials_keys' => array_keys($request->credentials()),
+            'remember' => $request->rememberMe(),
+        ]);
+
+        try {
+            $credentials = $request->credentials();
+            \Log::info('Credentials prepared', ['has_email' => isset($credentials['email']), 'has_password' => isset($credentials['password']), 'password_length' => strlen($credentials['password'] ?? '')]);
+
+            $authResult = Auth::attempt($credentials, $request->rememberMe());
+            \Log::info('Auth::attempt result', ['success' => $authResult]);
+
+            if ($authResult) {
+                $request->session()->regenerate();
+                $this->clearLoginAttempts($email);
+                $this->logLoginAttempt($email, true, 'Login successful', $request);
+
+                \Log::info('Login successful, redirecting', [
+                    'email' => $email,
+                    'role' => $user->role,
+                    'route' => $user->getDashboardRoute(),
+                ]);
+
+                // Get the intended URL, but ignore API routes
+                $intendedUrl = session()->pull('url.intended', route($user->getDashboardRoute()));
+                
+                // If the intended URL is an API route, redirect to dashboard instead
+                if (str_contains($intendedUrl, '/api/')) {
+                    $intendedUrl = route($user->getDashboardRoute());
+                }
+
+                // Redirect based on user role
+                return redirect($intendedUrl);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Auth::attempt exception', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            throw $e;
         }
 
         $this->incrementLoginAttempts($email);
         $attempts = $this->getLoginAttempts($email);
         $remaining = self::MAX_LOGIN_ATTEMPTS - $attempts;
-        
+
         $this->logLoginAttempt($email, false, "Invalid credentials (attempt {$attempts})", $request);
-        
+
         $message = 'The provided credentials do not match our records.';
         if ($remaining > 0 && $remaining <= 2) {
             $message .= " {$remaining} attempt(s) remaining before lockout.";
         }
-        
+
         throw ValidationException::withMessages([
             'email' => [$message],
         ]);
@@ -142,7 +168,7 @@ class AuthController extends Controller
      */
     protected function getLoginAttemptsKey(string $email): string
     {
-        return 'login_attempts:' . strtolower($email);
+        return 'login_attempts:'.strtolower($email);
     }
 
     /**
@@ -150,7 +176,7 @@ class AuthController extends Controller
      */
     protected function getLockoutKey(string $email): string
     {
-        return 'login_lockout:' . strtolower($email);
+        return 'login_lockout:'.strtolower($email);
     }
 
     /**
@@ -167,11 +193,12 @@ class AuthController extends Controller
     protected function getRemainingLockoutMinutes(string $email): int
     {
         $lockoutTime = Cache::get($this->getLockoutKey($email));
-        if (!$lockoutTime) {
+        if (! $lockoutTime) {
             return 0;
         }
-        
+
         $remaining = now()->diffInMinutes($lockoutTime, false);
+
         return max(1, $remaining);
     }
 
@@ -190,10 +217,10 @@ class AuthController extends Controller
     {
         $key = $this->getLoginAttemptsKey($email);
         $attempts = $this->getLoginAttempts($email) + 1;
-        
+
         // Store attempts for lockout duration + buffer
         Cache::put($key, $attempts, now()->addMinutes(self::LOCKOUT_DURATION + 5));
-        
+
         // If max attempts reached, set lockout
         if ($attempts >= self::MAX_LOGIN_ATTEMPTS) {
             Cache::put(
@@ -201,7 +228,7 @@ class AuthController extends Controller
                 now()->addMinutes(self::LOCKOUT_DURATION),
                 now()->addMinutes(self::LOCKOUT_DURATION)
             );
-            
+
             \Log::channel('daily')->warning('Account locked out due to failed login attempts', [
                 'email' => $email,
                 'attempts' => $attempts,
@@ -222,11 +249,7 @@ class AuthController extends Controller
     /**
      * Log a login attempt for security auditing.
      *
-     * @param  string  $email
-     * @param  bool  $successful
-     * @param  string  $reason
      * @param  \Illuminate\Http\Request  $request
-     * @return void
      */
     protected function logLoginAttempt(string $email, bool $successful, string $reason, $request): void
     {
@@ -242,7 +265,7 @@ class AuthController extends Controller
 
     /**
      * Display the registration form.
-     * 
+     *
      * Redirects authenticated users to their dashboard.
      *
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
@@ -252,17 +275,16 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect()->route(Auth::user()->getDashboardRoute());
         }
-        
+
         return view('auth.register');
     }
 
     /**
      * Handle user registration.
-     * 
+     *
      * Creates a new client account, processes referral codes if provided,
      * sends notifications to admins, and logs the user in.
      *
-     * @param  \App\Http\Requests\Auth\RegisterRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function register(RegisterRequest $request)
@@ -292,7 +314,7 @@ class AuthController extends Controller
                     \Log::error('Failed to process referral during registration', [
                         'user_id' => $user->id,
                         'referral_code' => $request->referralCode,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                     // Don't fail registration if referral processing fails
                 }
@@ -313,7 +335,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             \Log::error('Failed to send welcome email to new registered user', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -333,7 +355,6 @@ class AuthController extends Controller
     /**
      * Log the user out and invalidate their session.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function logout(Request $request)
@@ -359,14 +380,13 @@ class AuthController extends Controller
     /**
      * Send password reset link.
      *
-     * @param  \App\Http\Requests\Auth\ForgotPasswordRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function sendResetLink(ForgotPasswordRequest $request)
     {
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             // Return success message even if user doesn't exist (security best practice)
             return back()->with('success', 'If an account exists with that email, you will receive a password reset link shortly.');
         }
@@ -379,7 +399,7 @@ class AuthController extends Controller
 
         // Generate password reset token
         $token = Str::random(64);
-        
+
         \DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $request->email],
             [
@@ -391,13 +411,13 @@ class AuthController extends Controller
 
         // Send password reset email
         $resetUrl = route('password.reset', ['token' => $token, 'email' => $request->email]);
-        
+
         try {
             Mail::to($user->email)->send(new PasswordResetMail($resetUrl, $user->fullName));
         } catch (\Exception $e) {
             \Log::error('Failed to send password reset email', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -407,7 +427,6 @@ class AuthController extends Controller
     /**
      * Display the password reset form.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  string  $token  The password reset token
      * @return \Illuminate\View\View
      */
@@ -421,12 +440,11 @@ class AuthController extends Controller
 
     /**
      * Handle password reset.
-     * 
+     *
      * Validates the reset token, updates the password, and logs the action.
      *
-     * @param  \App\Http\Requests\Auth\ResetPasswordRequest  $request
      * @return \Illuminate\Http\RedirectResponse
-     * 
+     *
      * @throws \Illuminate\Validation\ValidationException
      */
     public function resetPassword(ResetPasswordRequest $request)
@@ -436,14 +454,14 @@ class AuthController extends Controller
             ->where('email', $request->email)
             ->first();
 
-        if (!$resetRecord) {
+        if (! $resetRecord) {
             throw ValidationException::withMessages([
                 'email' => ['Invalid or expired password reset token.'],
             ]);
         }
 
         // Check if token matches
-        if (!Hash::check($request->token, $resetRecord->token)) {
+        if (! Hash::check($request->token, $resetRecord->token)) {
             throw ValidationException::withMessages([
                 'email' => ['Invalid or expired password reset token.'],
             ]);
@@ -461,7 +479,7 @@ class AuthController extends Controller
         // Find user and update password
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             throw ValidationException::withMessages([
                 'email' => ['No account found with this email address.'],
             ]);

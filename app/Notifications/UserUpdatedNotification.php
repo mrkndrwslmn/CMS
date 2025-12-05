@@ -2,16 +2,12 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\User;
 
-class UserUpdatedNotification extends Notification implements ShouldQueue
+class UserUpdatedNotification extends Notification
 {
-    use Queueable;
-
     protected User $user;
     protected array $changes;
     protected string $updatedBy;

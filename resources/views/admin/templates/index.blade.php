@@ -160,9 +160,9 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
                                     @if($template->estimated_budget_min && $template->estimated_budget_max)
-                                        ${{ number_format($template->estimated_budget_min) }} - ${{ number_format($template->estimated_budget_max) }}
+                                        ₱{{ number_format($template->estimated_budget_min) }} - ₱{{ number_format($template->estimated_budget_max) }}
                                     @elseif($template->estimated_budget_min)
-                                        From ${{ number_format($template->estimated_budget_min) }}
+                                        From ₱{{ number_format($template->estimated_budget_min) }}
                                     @else
                                         <span class="text-neutral-400">Not set</span>
                                     @endif
@@ -214,7 +214,7 @@
                                             </button>
                                         </form>
                                         <form action="{{ route('admin.templates.destroy', $template) }}" method="POST" class="inline" 
-                                              onsubmit="return confirm('Are you sure you want to delete this template?')">
+                                              onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete Template', 'Are you sure you want to delete this template?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 
@@ -257,16 +257,4 @@
     </div>
 </div>
 
-@if(session('success'))
-    <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 5000)" 
-         class="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
-        <div class="flex items-center">
-            <i class="fas fa-check-circle mr-2"></i>
-            {{ session('success') }}
-            <button @click="show = false" class="ml-4 text-green-200 hover:text-white">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    </div>
-@endif
 @endsection

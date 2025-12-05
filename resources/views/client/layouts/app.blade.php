@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>{{ config('app.name', 'CMS') }} - @yield('title', 'Client Dashboard')</title>
+    <title>@yield('title', 'Client Dashboard') - {{ config('app.name', 'CMS') }}</title>
     
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
@@ -620,7 +620,7 @@
 
     @stack('scripts')
     
-    <!-- Global Modal Container -->
-    <x-ui.modal-container />
+    <!-- Global Alert System -->
+    <x-ui.alert-manager />
 </body>
 </html>

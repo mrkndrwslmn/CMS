@@ -101,19 +101,23 @@ function notificationBell() {
         notifications: [],
         unreadCount: 0,
         pollingInterval: null,
+        initialLoadDone: false,
         
         init() {
             // Only start polling if no other instance is running
             if (!window.notificationPollingActive) {
                 window.notificationPollingActive = true;
-                this.fetchNotifications();
+                this.fetchNotifications(true); // Initial load with loading state
                 // Poll for new notifications every 60 seconds (reduced from 30s)
-                this.pollingInterval = setInterval(() => this.fetchNotifications(), 60000);
+                this.pollingInterval = setInterval(() => this.fetchNotifications(false), 60000);
             }
         },
         
-        async fetchNotifications() {
-            this.isLoading = true;
+        async fetchNotifications(showLoading = false) {
+            // Only show loading spinner on initial load or when no notifications cached
+            if (showLoading || !this.initialLoadDone) {
+                this.isLoading = true;
+            }
             try {
                 const response = await fetch('{{ route("notifications.fetch") }}', {
                     headers: {
@@ -124,6 +128,7 @@ function notificationBell() {
                 const data = await response.json();
                 this.notifications = data.notifications || [];
                 this.unreadCount = data.unreadCount || 0;
+                this.initialLoadDone = true;
             } catch (error) {
                 console.error('Error fetching notifications:', error);
             } finally {
@@ -134,7 +139,8 @@ function notificationBell() {
         toggleDropdown() {
             this.isOpen = !this.isOpen;
             if (this.isOpen) {
-                this.fetchNotifications();
+                // Refresh in background without showing loading spinner (data already cached)
+                this.fetchNotifications(false);
             }
         },
         

@@ -428,4 +428,149 @@ class ReferralController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Display pending withdrawals
+     */
+    public function withdrawalsPending(): View
+    {
+        $withdrawals = \App\Models\ReferralCreditWithdrawal::with(['user'])
+            ->where('status', 'pending')
+            ->orderBy('requested_at', 'asc')
+            ->paginate(20);
+
+        return view('admin.referrals.withdrawals-pending', compact('withdrawals'));
+    }
+
+    /**
+     * Show withdrawal details
+     */
+    public function showWithdrawal(\App\Models\ReferralCreditWithdrawal $withdrawal): View
+    {
+        $withdrawal->load(['user', 'processedBy', 'transactions']);
+
+        return view('admin.referrals.withdrawal-show', compact('withdrawal'));
+    }
+
+    /**
+     * Process a withdrawal (mark as processing)
+     */
+    public function processWithdrawal(Request $request, \App\Models\ReferralCreditWithdrawal $withdrawal): JsonResponse
+    {
+        if (!$withdrawal->isPending()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only pending withdrawals can be processed.',
+            ], 400);
+        }
+
+        $withdrawal->update([
+            'status' => 'processing',
+            'processed_by' => auth()->id(),
+            'processed_at' => now(),
+            'admin_notes' => $request->input('admin_notes'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Withdrawal is now being processed.',
+        ]);
+    }
+
+    /**
+     * Complete a withdrawal
+     */
+    public function completeWithdrawal(Request $request, \App\Models\ReferralCreditWithdrawal $withdrawal): JsonResponse
+    {
+        if (!in_array($withdrawal->status, ['pending', 'processing'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This withdrawal cannot be completed.',
+            ], 400);
+        }
+
+        $request->validate([
+            'reference_number' => 'nullable|string|max:255',
+            'proof_of_payment' => 'nullable|file|max:5120',
+        ]);
+
+        $proofPath = null;
+        if ($request->hasFile('proof_of_payment')) {
+            $proofPath = $request->file('proof_of_payment')->store('withdrawal-proofs', 'public');
+        }
+
+        $withdrawal->update([
+            'status' => 'completed',
+            'processed_by' => auth()->id(),
+            'completed_at' => now(),
+            'reference_number' => $request->input('reference_number'),
+            'proof_of_payment' => $proofPath,
+            'admin_notes' => $request->input('admin_notes'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Withdrawal completed successfully.',
+        ]);
+    }
+
+    /**
+     * Reject a withdrawal
+     */
+    public function rejectWithdrawal(Request $request, \App\Models\ReferralCreditWithdrawal $withdrawal): JsonResponse
+    {
+        if (!in_array($withdrawal->status, ['pending', 'processing'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This withdrawal cannot be rejected.',
+            ], 400);
+        }
+
+        $request->validate([
+            'rejection_reason' => 'required|string|max:1000',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Refund the credits back to the user
+            $user = $withdrawal->user;
+            $creditBalance = $user->referralCreditBalance;
+            
+            if ($creditBalance) {
+                $creditBalance->increment('available_credits', $withdrawal->amount);
+                $creditBalance->decrement('pending_withdrawal', $withdrawal->amount);
+                
+                // Create a refund transaction
+                \App\Models\ReferralCreditTransaction::create([
+                    'user_id' => $user->id,
+                    'type' => 'refund',
+                    'amount' => $withdrawal->amount,
+                    'balance_after' => $creditBalance->available_credits,
+                    'description' => 'Withdrawal rejected - credits refunded',
+                    'withdrawal_id' => $withdrawal->id,
+                ]);
+            }
+
+            $withdrawal->update([
+                'status' => 'rejected',
+                'processed_by' => auth()->id(),
+                'processed_at' => now(),
+                'rejection_reason' => $request->input('rejection_reason'),
+                'admin_notes' => $request->input('admin_notes'),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Withdrawal rejected and credits refunded.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reject withdrawal: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

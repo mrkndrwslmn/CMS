@@ -62,7 +62,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Total Budget</p>
-                    <p class="text-2xl font-bold text-yellow-600">${{ number_format($stats['total_budget'], 2) }}</p>
+                    <p class="text-2xl font-bold text-yellow-600">₱{{ number_format($stats['total_budget'], 2) }}</p>
                 </div>
             </div>
         </div>
@@ -121,7 +121,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Average Budget</p>
-                    <p class="text-2xl font-bold text-teal-600">${{ number_format($stats['average_budget'], 2) }}</p>
+                    <p class="text-2xl font-bold text-teal-600">₱{{ number_format($stats['average_budget'], 2) }}</p>
                 </div>
             </div>
         </div>

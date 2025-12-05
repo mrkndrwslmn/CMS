@@ -127,7 +127,7 @@
                                     @csrf
                                     <button type="submit" 
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-success-700 bg-success-50 hover:bg-success-100 rounded-lg transition-colors"
-                                            onclick="return confirm('Are you sure you want to restore this client?')">
+                                            onclick="return window.Alerts.confirmForm(event, 'Restore Client', 'Are you sure you want to restore this client?')">
                                         <x-lucide-rotate-ccw class="w-4 h-4" />
                                         Restore
                                     </button>

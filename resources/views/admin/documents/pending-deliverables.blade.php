@@ -158,7 +158,7 @@
                                     @csrf
                                     <button type="submit" 
                                             class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center"
-                                            onclick="return confirm('Approve this deliverable? The client will be able to view it.')">
+                                            onclick="return window.Alerts.confirmForm(event, 'Approve Deliverable', 'Approve this deliverable? The client will be able to view it.')">
                                         <i class="fas fa-check mr-2"></i>Approve
                                     </button>
                                 </form>

@@ -812,15 +812,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/notifications/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
-// Admin authentication routes
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::middleware('guest')->group(function () {
-        Route::get('/login', [AdminController::class, 'showLogin'])->name('login');
-        Route::post('/login', [AdminController::class, 'login']);
-    });
-    
-    Route::post('/logout', [AdminController::class, 'logout'])->middleware('auth')->name('logout');
-});
+
 
 // Admin routes
 Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {

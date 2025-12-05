@@ -44,16 +44,6 @@
         </div>
     </div>
 
-    <!-- Success/Error Messages -->
-    @if(session('success'))
-        <div class="mb-6 bg-success-50 border border-success-200 rounded-xl p-4">
-            <div class="flex items-center gap-3">
-                <x-lucide-check-circle class="w-5 h-5 text-success-500 flex-shrink-0" />
-                <p class="text-sm text-success-800">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
     @if($errors->any())
         <div class="mb-6 bg-error-50 border border-error-200 rounded-xl p-4">
             <div class="flex gap-3">

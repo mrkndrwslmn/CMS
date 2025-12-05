@@ -3,15 +3,11 @@
 namespace App\Notifications;
 
 use App\Models\HourIncreaseRequest;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class HourIncreaseRequestNotification extends Notification implements ShouldQueue
+class HourIncreaseRequestNotification extends Notification
 {
-    use Queueable;
-
     protected HourIncreaseRequest $hourRequest;
 
     /**

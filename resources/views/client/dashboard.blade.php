@@ -6,7 +6,7 @@
 <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-2xl font-semibold text-neutral-800">Welcome back, {{ auth()->user()->firstName }}!</h1>
+        <h1 class="text-2xl font-semibold text-neutral-800">Welcome back, {{ explode(' ', auth()->user()->fullName)[0] }}!</h1>
         <p class="text-sm text-neutral-500 mt-1">Here's an overview of your projects and service requests.</p>
     </div>
 

@@ -11,25 +11,6 @@
         ['label' => Str::limit($project->title, 30), 'icon' => 'file-text'],
     ]" />
 
-    <!-- Success/Error Messages -->
-    @if(session('success'))
-        <div class="mb-6 bg-success-50 border border-success-200 p-4 rounded-xl">
-            <div class="flex items-center">
-                <x-lucide-check-circle class="w-5 h-5 text-success-500 mr-3 flex-shrink-0" />
-                <p class="text-success-700 font-medium">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="mb-6 bg-error-50 border border-error-200 p-4 rounded-xl">
-            <div class="flex items-center">
-                <x-lucide-alert-circle class="w-5 h-5 text-error-500 mr-3 flex-shrink-0" />
-                <p class="text-error-700 font-medium">{{ session('error') }}</p>
-            </div>
-        </div>
-    @endif
-
     <!-- Project Header Card -->
     <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 mb-6">
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
@@ -908,7 +889,7 @@ function openTaskRevisionModal(taskId, taskTitle) {
     
     if (!modal) {
         console.error('Modal element not found!');
-        alert('ERROR: Modal element not found in DOM!');
+        window.toast.error('ERROR: Modal element not found in DOM!');
         return;
     }
     

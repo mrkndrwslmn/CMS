@@ -3,16 +3,12 @@
 namespace App\Notifications;
 
 use App\Models\Meeting;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Carbon\Carbon;
 
-class MeetingReminderNotification extends Notification implements ShouldQueue
+class MeetingReminderNotification extends Notification
 {
-    use Queueable;
-
     protected Meeting $meeting;
     protected string $reminderType;
 

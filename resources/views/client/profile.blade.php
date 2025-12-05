@@ -20,18 +20,6 @@
             </p>
         </div>
 
-        <!-- Success Message -->
-        @if(session('success'))
-            <div class="bg-white rounded-xl border border-success-200 text-success-800 px-6 py-4 mb-8 max-w-2xl mx-auto shadow-sm">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 text-success-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    {{ session('success') }}
-                </div>
-            </div>
-        @endif
-
         <!-- Profile Form -->
         <form action="{{ route('client.profile.update') }}" method="POST" class="space-y-8">
             @csrf

@@ -260,7 +260,7 @@ window.handleSocialLogin = async function(provider) {
             window.firebaseAuthService.showError(error.message);
             window.firebaseAuthService.setButtonLoading(button, false);
         } else {
-            alert(error.message);
+            window.toast ? window.toast.error(error.message) : console.error(error.message);
             if (button) {
                 button.disabled = false;
                 if (button.dataset.originalText) {

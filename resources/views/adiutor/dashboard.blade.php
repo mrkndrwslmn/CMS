@@ -61,8 +61,8 @@
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-sm font-medium text-neutral-500">This Month</p>
-                    <p class="text-2xl font-semibold text-neutral-800 mt-1">${{ number_format($thisMonthEarnings, 2) }}</p>
-                    <p class="text-sm text-neutral-400 mt-1">Total: ${{ number_format($stats['total_earnings'], 2) }}</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($thisMonthEarnings, 2) }}</p>
+                    <p class="text-sm text-neutral-400 mt-1">Total: ₱{{ number_format($stats['total_earnings'], 2) }}</p>
                 </div>
                 <div class="p-3 bg-primary-50 rounded-xl">
                     <x-lucide-banknote class="w-5 h-5 text-primary-500" />
@@ -114,7 +114,7 @@
                     @foreach($pendingBudgetRequests->take(2) as $request)
                         <div class="p-3 bg-warning-50 rounded-xl border border-warning-100">
                             <h4 class="font-medium text-warning-900 text-sm">{{ $request->project_title }}</h4>
-                            <p class="text-xs text-warning-700 mt-1">${{ number_format($request->requested_amount, 2) }} - {{ ucfirst($request->type) }}</p>
+                            <p class="text-xs text-warning-700 mt-1">₱{{ number_format($request->requested_amount, 2) }} - {{ ucfirst($request->type) }}</p>
                             <p class="text-xs text-warning-600">{{ \Carbon\Carbon::parse($request->created_at)->diffForHumans() }}</p>
                         </div>
                     @endforeach
@@ -191,7 +191,7 @@
                                     </div>
                                     <span class="text-xs text-neutral-600">{{ $project->progress_percentage }}%</span>
                                     @if($project->agreed_rate)
-                                        <span class="text-xs text-neutral-500 ml-3">${{ number_format($project->agreed_rate, 2) }}/hr</span>
+                                        <span class="text-xs text-neutral-500 ml-3">₱{{ number_format($project->agreed_rate, 2) }}/hr</span>
                                     @endif
                                 </div>
                             </div>

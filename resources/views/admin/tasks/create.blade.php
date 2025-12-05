@@ -29,21 +29,6 @@
 
     <!-- Main Content -->
     <div class="max-w-8xl mx-auto">
-        <!-- Alert Messages -->
-        @if(session('success'))
-            <div class="mb-6 p-4 bg-success-50 border border-success-200 text-success-700 rounded-lg flex items-center animate-fade-in">
-                <x-lucide-check-circle class="w-5 h-5 text-success-500 mr-3" />
-                <p class="font-medium">{{ session('success') }}</p>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="mb-6 p-4 bg-error-50 border border-error-200 text-error-700 rounded-lg flex items-center animate-fade-in">
-                <x-lucide-alert-circle class="w-5 h-5 text-error-500 mr-3" />
-                <p class="font-medium">{{ session('error') }}</p>
-            </div>
-        @endif
-
         <form action="{{ route('admin.tasks.store') }}" method="POST" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             @csrf
 

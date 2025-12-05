@@ -363,7 +363,7 @@
                                     <form action="{{ route('admin.projects.destroy', $project->id) }}" 
                                           method="POST" 
                                           class="inline"
-                                          onsubmit="return confirm('Are you sure you want to delete this project?');">
+                                          onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete Project', 'Are you sure you want to delete this project?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" 

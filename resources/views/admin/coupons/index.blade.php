@@ -182,7 +182,7 @@
                                     </button>
                                 </form>
                                 <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST" class="inline" 
-                                      onsubmit="return confirm('Are you sure you want to delete this coupon?')">
+                                      onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete Coupon', 'Are you sure you want to delete this coupon?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-error-600 hover:text-error-900" title="Delete">

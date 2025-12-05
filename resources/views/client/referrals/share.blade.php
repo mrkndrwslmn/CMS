@@ -253,13 +253,13 @@ const socialText = `{{ $shareTexts['social'] }}`;
 
 function copyCode() {
     navigator.clipboard.writeText(referralCode).then(() => {
-        showToast('Referral code copied to clipboard!', 'success');
+        window.toast.success('Referral code copied to clipboard!');
     });
 }
 
 function copyUrl() {
     navigator.clipboard.writeText(referralUrl).then(() => {
-        showToast('Referral link copied to clipboard!', 'success');
+        window.toast.success('Referral link copied to clipboard!');
     });
 }
 
@@ -295,23 +295,6 @@ function shareViaSMS() {
     window.location.href = `sms:?body=${text}`;
 }
 
-function showToast(message, type = 'success') {
-    const bgColor = type === 'success' ? 'bg-success-600' : 'bg-error-600';
-    const toast = document.createElement('div');
-    toast.className = `fixed top-20 right-5 z-50 flex items-center gap-3 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg`;
-    toast.innerHTML = `
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-        </svg>
-        <span class="font-medium">${message}</span>
-    `;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
-
 // Handle invitation form submission
 document.getElementById('invitationForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -336,13 +319,13 @@ document.getElementById('invitationForm').addEventListener('submit', async funct
         const data = await response.json();
         
         if (data.success) {
-            showToast('Invitation sent successfully!', 'success');
+            window.toast.success('Invitation sent successfully!');
             this.reset();
         } else {
-            showToast(data.message || 'Failed to send invitation', 'error');
+            window.toast.error(data.message || 'Failed to send invitation');
         }
     } catch (error) {
-        showToast('An error occurred. Please try again.', 'error');
+        window.toast.error('An error occurred. Please try again.');
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;

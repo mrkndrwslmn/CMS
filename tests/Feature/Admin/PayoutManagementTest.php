@@ -48,7 +48,7 @@ class PayoutManagementTest extends TestCase
             ->get(route('admin.payouts.index'));
 
         // AdminMiddleware redirects non-admins to login
-        $response->assertRedirect(route('admin.login'));
+        $response->assertRedirect(route('login'));
     }
 
     /**
@@ -60,7 +60,7 @@ class PayoutManagementTest extends TestCase
             ->get(route('admin.payouts.index'));
 
         // AdminMiddleware redirects non-admins to login
-        $response->assertRedirect(route('admin.login'));
+        $response->assertRedirect(route('login'));
     }
 
     /**

@@ -28,25 +28,6 @@
         </x-slot>
     </x-ui.page-header>
 
-    <!-- Alert Messages -->
-    @if(session('success'))
-        <div class="bg-success-50 border-l-4 border-success-500 text-success-700 p-4 rounded-lg shadow-sm mb-6">
-            <div class="flex items-center">
-                <x-lucide-check-circle class="w-5 h-5 text-success-500 mr-3" />
-                <p class="font-medium">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="bg-error-50 border-l-4 border-error-500 text-error-700 p-4 rounded-lg shadow-sm mb-6">
-            <div class="flex items-center">
-                <x-lucide-alert-circle class="w-5 h-5 text-error-500 mr-3" />
-                <p class="font-medium">{{ session('error') }}</p>
-            </div>
-        </div>
-    @endif
-
     <!-- Form Card -->
     <form action="{{ route('admin.tasks.update', $task->taskID) }}" method="POST" class="space-y-6">
         @csrf
@@ -466,7 +447,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <x-ui.button type="submit" variant="danger" size="sm"
-                                        onclick="return confirm('Are you sure you want to delete this document?')">
+                                        onclick="return window.Alerts.confirmDeleteForm(event, 'Delete Document', 'Are you sure you want to delete this document?')">
                                     <x-lucide-trash-2 class="w-4 h-4 mr-1" />
                                     Delete
                                 </x-ui.button>

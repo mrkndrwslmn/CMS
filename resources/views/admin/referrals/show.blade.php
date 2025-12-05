@@ -25,7 +25,7 @@
                 <x-ui.button 
                     type="submit" 
                     variant="primary"
-                    onclick="return confirm('Process this referral manually? This will award rewards to the referrer immediately.')"
+                    onclick="return window.Alerts.confirmForm(event, 'Process Referral', 'Process this referral manually? This will award rewards to the referrer immediately.')"
                     class="inline-flex items-center gap-2"
                 >
                     <x-lucide-check-circle class="w-4 h-4" />

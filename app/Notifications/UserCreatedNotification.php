@@ -2,17 +2,13 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 
-class UserCreatedNotification extends Notification implements ShouldQueue
+class UserCreatedNotification extends Notification
 {
-    use Queueable;
-
     protected User $user;
     protected string $createdBy;
     protected bool $isManualCreation;

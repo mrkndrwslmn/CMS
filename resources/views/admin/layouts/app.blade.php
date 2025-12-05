@@ -249,10 +249,6 @@
                                 <span class="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">{{ $pendingWithdrawals }}</span>
                             @endif
                         </a>
-                        <a href="{{ route('admin.referrals.analytics') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.referrals.analytics') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
-                            <x-lucide-trending-up class="w-4 h-4" />
-                            <span>Referral Analytics</span>
-                        </a>
                     </div>
                 </div>
                 
@@ -432,7 +428,7 @@
                                 Settings
                             </a>
                             <div class="border-t border-neutral-100 my-1"></div>
-                            <form method="POST" action="{{ route('admin.logout') }}">
+                            <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
                                     <x-lucide-log-out class="w-4 h-4 text-neutral-400" />
@@ -446,29 +442,6 @@
 
             <!-- Page Content -->
             <div class="p-6 lg:p-8">
-                <!-- Flash Messages -->
-                @if(session('success'))
-                    <x-ui.alert type="success" dismissible class="mb-6">
-                        {{ session('success') }}
-                    </x-ui.alert>
-                @endif
-
-                @if(session('error'))
-                    <x-ui.alert type="error" dismissible class="mb-6">
-                        {{ session('error') }}
-                    </x-ui.alert>
-                @endif
-
-                @if(isset($errors) && is_object($errors) && $errors->any())
-                    <x-ui.alert type="error" dismissible class="mb-6">
-                        <ul class="list-disc ml-4 space-y-1">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </x-ui.alert>
-                @endif
-
                 @yield('content')
             </div>
         </main>
@@ -512,7 +485,7 @@
     
     @stack('scripts')
     
-    <!-- Global Modal Container -->
-    <x-ui.modal-container />
+    <!-- Global Alert System -->
+    <x-ui.alert-manager />
 </body>
 </html>

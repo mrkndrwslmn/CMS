@@ -606,17 +606,21 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const noteId = this.dataset.noteId;
             
-            if (confirm('Are you sure you want to delete this note? This action cannot be undone.')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/admin/clients/${clientId}/notes/${noteId}`;
-                form.innerHTML = `
-                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="_method" value="DELETE">
-                `;
-                document.body.appendChild(form);
-                form.submit();
-            }
+            window.Alerts.confirm({
+                title: 'Delete Note',
+                message: 'Are you sure you want to delete this note? This action cannot be undone.',
+                onConfirm: () => {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/admin/clients/${clientId}/notes/${noteId}`;
+                    form.innerHTML = `
+                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="_method" value="DELETE">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
         });
     });
 });

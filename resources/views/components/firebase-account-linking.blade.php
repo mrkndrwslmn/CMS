@@ -161,7 +161,7 @@ window.linkFirebaseAccount = async function(provider) {
         }
     } catch (error) {
         console.error('Failed to link account:', error);
-        alert('Failed to link account. Please try again.');
+        window.toast.error('Failed to link account. Please try again.');
     }
 };
 </script>

@@ -915,29 +915,6 @@
                                 <span class="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full"><?php echo e($pendingWithdrawals); ?></span>
                             <?php endif; ?>
                         </a>
-                        <a href="<?php echo e(route('admin.referrals.analytics')); ?>" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg <?php echo e(request()->routeIs('admin.referrals.analytics') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50'); ?>">
-                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('lucide-trending-up'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'w-4 h-4']); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                            <span>Referral Analytics</span>
-                        </a>
                     </div>
                 </div>
                 
@@ -1611,7 +1588,7 @@
                                 Settings
                             </a>
                             <div class="border-t border-neutral-100 my-1"></div>
-                            <form method="POST" action="<?php echo e(route('admin.logout')); ?>">
+                            <form method="POST" action="<?php echo e(route('logout')); ?>">
                                 <?php echo csrf_field(); ?>
                                 <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
                                     <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
@@ -1644,85 +1621,6 @@
 
             <!-- Page Content -->
             <div class="p-6 lg:p-8">
-                <!-- Flash Messages -->
-                <?php if(session('success')): ?>
-                    <?php if (isset($component)) { $__componentOriginal746de018ded8594083eb43be3f1332e1 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal746de018ded8594083eb43be3f1332e1 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.alert','data' => ['type' => 'success','dismissible' => true,'class' => 'mb-6']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('ui.alert'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['type' => 'success','dismissible' => true,'class' => 'mb-6']); ?>
-                        <?php echo e(session('success')); ?>
-
-                     <?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal746de018ded8594083eb43be3f1332e1)): ?>
-<?php $attributes = $__attributesOriginal746de018ded8594083eb43be3f1332e1; ?>
-<?php unset($__attributesOriginal746de018ded8594083eb43be3f1332e1); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal746de018ded8594083eb43be3f1332e1)): ?>
-<?php $component = $__componentOriginal746de018ded8594083eb43be3f1332e1; ?>
-<?php unset($__componentOriginal746de018ded8594083eb43be3f1332e1); ?>
-<?php endif; ?>
-                <?php endif; ?>
-
-                <?php if(session('error')): ?>
-                    <?php if (isset($component)) { $__componentOriginal746de018ded8594083eb43be3f1332e1 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal746de018ded8594083eb43be3f1332e1 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.alert','data' => ['type' => 'error','dismissible' => true,'class' => 'mb-6']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('ui.alert'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['type' => 'error','dismissible' => true,'class' => 'mb-6']); ?>
-                        <?php echo e(session('error')); ?>
-
-                     <?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal746de018ded8594083eb43be3f1332e1)): ?>
-<?php $attributes = $__attributesOriginal746de018ded8594083eb43be3f1332e1; ?>
-<?php unset($__attributesOriginal746de018ded8594083eb43be3f1332e1); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal746de018ded8594083eb43be3f1332e1)): ?>
-<?php $component = $__componentOriginal746de018ded8594083eb43be3f1332e1; ?>
-<?php unset($__componentOriginal746de018ded8594083eb43be3f1332e1); ?>
-<?php endif; ?>
-                <?php endif; ?>
-
-                <?php if(isset($errors) && is_object($errors) && $errors->any()): ?>
-                    <?php if (isset($component)) { $__componentOriginal746de018ded8594083eb43be3f1332e1 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal746de018ded8594083eb43be3f1332e1 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.alert','data' => ['type' => 'error','dismissible' => true,'class' => 'mb-6']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('ui.alert'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['type' => 'error','dismissible' => true,'class' => 'mb-6']); ?>
-                        <ul class="list-disc ml-4 space-y-1">
-                            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <li><?php echo e($error); ?></li>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </ul>
-                     <?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal746de018ded8594083eb43be3f1332e1)): ?>
-<?php $attributes = $__attributesOriginal746de018ded8594083eb43be3f1332e1; ?>
-<?php unset($__attributesOriginal746de018ded8594083eb43be3f1332e1); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal746de018ded8594083eb43be3f1332e1)): ?>
-<?php $component = $__componentOriginal746de018ded8594083eb43be3f1332e1; ?>
-<?php unset($__componentOriginal746de018ded8594083eb43be3f1332e1); ?>
-<?php endif; ?>
-                <?php endif; ?>
-
                 <?php echo $__env->yieldContent('content'); ?>
             </div>
         </main>
@@ -1767,11 +1665,11 @@
     
     <?php echo $__env->yieldPushContent('scripts'); ?>
     
-    <!-- Global Modal Container -->
-    <?php if (isset($component)) { $__componentOriginal4a7dfd9004c7b9a5379b9986bdcfb11c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal4a7dfd9004c7b9a5379b9986bdcfb11c = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.modal-container','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('ui.modal-container'); ?>
+    <!-- Global Alert System -->
+    <?php if (isset($component)) { $__componentOriginal87e73dabe2e823ddba16e45f23fee1a0 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal87e73dabe2e823ddba16e45f23fee1a0 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.alert-manager','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.alert-manager'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
@@ -1780,13 +1678,13 @@
 <?php $component->withAttributes([]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
-<?php if (isset($__attributesOriginal4a7dfd9004c7b9a5379b9986bdcfb11c)): ?>
-<?php $attributes = $__attributesOriginal4a7dfd9004c7b9a5379b9986bdcfb11c; ?>
-<?php unset($__attributesOriginal4a7dfd9004c7b9a5379b9986bdcfb11c); ?>
+<?php if (isset($__attributesOriginal87e73dabe2e823ddba16e45f23fee1a0)): ?>
+<?php $attributes = $__attributesOriginal87e73dabe2e823ddba16e45f23fee1a0; ?>
+<?php unset($__attributesOriginal87e73dabe2e823ddba16e45f23fee1a0); ?>
 <?php endif; ?>
-<?php if (isset($__componentOriginal4a7dfd9004c7b9a5379b9986bdcfb11c)): ?>
-<?php $component = $__componentOriginal4a7dfd9004c7b9a5379b9986bdcfb11c; ?>
-<?php unset($__componentOriginal4a7dfd9004c7b9a5379b9986bdcfb11c); ?>
+<?php if (isset($__componentOriginal87e73dabe2e823ddba16e45f23fee1a0)): ?>
+<?php $component = $__componentOriginal87e73dabe2e823ddba16e45f23fee1a0; ?>
+<?php unset($__componentOriginal87e73dabe2e823ddba16e45f23fee1a0); ?>
 <?php endif; ?>
 </body>
 </html><?php /**PATH C:\Users\marka\Projects\cms\resources\views/admin/layouts/app.blade.php ENDPATH**/ ?>

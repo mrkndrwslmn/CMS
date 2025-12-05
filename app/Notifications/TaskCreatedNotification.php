@@ -2,17 +2,13 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Task;
 use App\Models\User;
 
-class TaskCreatedNotification extends Notification implements ShouldQueue
+class TaskCreatedNotification extends Notification
 {
-    use Queueable;
-
     protected Task $task;
     protected string $createdBy;
 

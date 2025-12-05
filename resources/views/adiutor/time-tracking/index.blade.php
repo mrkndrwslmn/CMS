@@ -352,7 +352,14 @@ function timeTracker() {
         },
         
         async deleteEntry(entryId) {
-            if (!confirm('Are you sure you want to delete this time entry?')) return;
+            const confirmed = await window.Alerts.confirm({
+                title: 'Delete Time Entry',
+                message: 'Are you sure you want to delete this time entry?',
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+                variant: 'danger'
+            });
+            if (!confirmed) return;
             
             try {
                 const response = await fetch(`/adiutor/time-tracking/entries/${entryId}`, {

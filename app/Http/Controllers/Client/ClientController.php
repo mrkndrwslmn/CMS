@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\Document;
+use App\Models\Project;
+use App\Models\ProjectFeedback;
 
 class ClientController extends Controller
 {
@@ -26,9 +28,10 @@ class ClientController extends Controller
         
         // Get dashboard statistics
         $stats = [
+            // Active Projects: includes 'active', 'in_progress', and 'review' statuses (all ongoing work)
             'activeProjects' => DB::table('projects')
                 ->where('client_id', $user->id)
-                ->where('status', 'in_progress')
+                ->whereIn('status', ['active', 'in_progress', 'review'])
                 ->count(),
             'completedProjects' => DB::table('projects')
                 ->where('client_id', $user->id)
@@ -38,11 +41,11 @@ class ClientController extends Controller
                 ->where('client_id', $user->id)
                 ->where('status', 'pending')
                 ->count(),
-            'totalSpent' => DB::table('projects')
-                ->join('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
-                ->where('projects.client_id', $user->id)
-                ->where('project_assignments.status', 'completed')
-                ->sum('project_assignments.agreed_rate') ?? 0,
+            // Total Investment: sum of all confirmed payments made by this client
+            'totalSpent' => DB::table('payments')
+                ->where('client_id', $user->id)
+                ->where('status', 'confirmed')
+                ->sum('amount') ?? 0,
         ];
 
         // Get recent projects

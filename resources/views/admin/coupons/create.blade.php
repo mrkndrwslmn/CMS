@@ -19,25 +19,6 @@
         class="mb-6"
     />
 
-    <!-- Alert Messages -->
-    @if(session('success'))
-        <div class="bg-success-50 border-l-4 border-success-500 text-success-700 p-4 rounded-lg shadow-sm mb-6">
-            <div class="flex items-center">
-                <x-lucide-check-circle class="w-5 h-5 text-success-500 mr-3" />
-                <p class="font-medium">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="bg-error-50 border-l-4 border-error-500 text-error-700 p-4 rounded-lg shadow-sm mb-6">
-            <div class="flex items-center">
-                <x-lucide-alert-circle class="w-5 h-5 text-error-500 mr-3" />
-                <p class="font-medium">{{ session('error') }}</p>
-            </div>
-        </div>
-    @endif
-
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Form Column -->
         <div class="lg:col-span-2">
@@ -640,7 +621,7 @@
 
         if (validUntil <= validFrom) {
             e.preventDefault();
-            alert('Valid Until date must be after Valid From date');
+            window.toast.warning('Valid Until date must be after Valid From date');
             return false;
         }
     });

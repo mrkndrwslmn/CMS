@@ -2,17 +2,13 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use App\Models\Project;
 
-class ProjectCreatedNotification extends Notification implements ShouldQueue
+class ProjectCreatedNotification extends Notification
 {
-    use Queueable;
-
     protected Project $project;
     protected string $createdBy;
 

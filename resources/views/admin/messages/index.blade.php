@@ -18,15 +18,6 @@
         />
     </div>
 
-    @if(session('success'))
-        <div class="mb-6 bg-success-50 border border-success-200 rounded-xl p-4 flex items-start gap-3">
-            <x-lucide-check-circle class="w-5 h-5 text-success-500 flex-shrink-0 mt-0.5" />
-            <div class="flex-1">
-                <p class="text-sm font-medium text-success-800">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
     @php
         // Merge conversations and group chats by project_id for unified view
         $projectChatsArray = [];

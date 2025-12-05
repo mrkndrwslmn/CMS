@@ -22,15 +22,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="mb-6">
-            <div class="bg-success-50 border border-success-200 rounded-xl p-4 flex items-start gap-3">
-                <x-lucide-check-circle class="w-5 h-5 text-success-500 flex-shrink-0 mt-0.5" />
-                <p class="text-sm text-success-800">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
     <!-- Main Content -->
     <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
             @if($conversations->isEmpty())

@@ -28,26 +28,6 @@
                 <!-- Service Pre-selected Notice -->
                 <x-service-request.preselected-notice />
 
-                <!-- Success Message for Existing Users -->
-                @if(session('success'))
-                    <div class="mb-8">
-                        <x-ui.alert type="success" title="{{ session('success') }}" />
-                    </div>
-                @endif
-
-                <!-- Error Messages -->
-                @if($errors->any())
-                    <div class="mb-8">
-                        <x-ui.alert type="error" title="Please fix the following errors:">
-                            <ul class="list-disc list-inside mt-2 space-y-1">
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </x-ui.alert>
-                    </div>
-                @endif
-
                 <!-- Form -->
                 <form action="{{ route('client.requests.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf

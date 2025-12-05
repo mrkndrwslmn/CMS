@@ -42,15 +42,6 @@
                 @csrf
                 @method('PUT')
                 
-                @if (session('success'))
-                    <div class="bg-success-50 border-l-4 border-success-500 rounded-lg p-4 mb-6">
-                        <div class="flex items-center">
-                            <i class="fas fa-check-circle text-success-500 mr-3"></i>
-                            <span class="text-success-800">{{ session('success') }}</span>
-                        </div>
-                    </div>
-                @endif
-                
                 @if ($errors->any())
                     <div class="bg-error-50 border-l-4 border-error-500 rounded-lg p-4 mb-6">
                         <div class="flex items-start">

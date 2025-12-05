@@ -181,7 +181,7 @@
                                 </a>
                                 <form action="{{ route('client.requests.destroy', $request->id) }}" 
                                       method="POST" 
-                                      onsubmit="return confirm('Are you sure you want to cancel this request?')">
+                                      onsubmit="return window.Alerts.confirmDeleteForm(event, 'Cancel Request?', 'Are you sure you want to cancel this request?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-error-500 text-error-600 font-medium rounded-lg hover:bg-error-50 transition-all duration-200 text-sm">

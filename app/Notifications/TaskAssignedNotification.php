@@ -2,14 +2,11 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
 class TaskAssignedNotification extends Notification
 {
-    use Queueable;
-
     protected $task;
     protected $project;
 

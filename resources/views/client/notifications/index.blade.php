@@ -195,22 +195,26 @@ async function markAsRead(id) {
 }
 
 async function deleteNotification(id) {
-    if (confirm('Are you sure you want to delete this notification?')) {
-        try {
-            const response = await fetch(`/notifications/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json',
+    window.Alerts.confirmDelete({
+        title: 'Delete Notification',
+        message: 'Are you sure you want to delete this notification?',
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/notifications/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                    }
+                });
+                if (response.ok) {
+                    location.reload();
                 }
-            });
-            if (response.ok) {
-                location.reload();
+            } catch (error) {
+                console.error('Error:', error);
             }
-        } catch (error) {
-            console.error('Error:', error);
         }
-    }
+    });
 }
 </script>
 @endsection

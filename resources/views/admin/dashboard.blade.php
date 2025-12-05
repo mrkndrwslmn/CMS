@@ -519,7 +519,7 @@
             button.disabled = false;
             
             // Show success notification
-            showToast('success', 'Report downloaded successfully');
+            window.toast.success('Report downloaded successfully');
         }, 1500);
     }
     
@@ -527,7 +527,7 @@
     function refreshDashboard() {
         
         // Show loading toast
-        showToast('info', 'Refreshing dashboard data...', 2000);
+        window.toast.info('Refreshing dashboard data...', { duration: 2000 });
         
         // Fetch fresh data from server
         fetch('{{ route('admin.dashboard.refresh') }}', {
@@ -556,55 +556,15 @@
                 updateLastRefreshed(data.data.timestamp);
                 
                 // Show success notification
-                showToast('success', 'Dashboard data refreshed successfully');
+                window.toast.success('Dashboard data refreshed successfully');
             } else {
                 throw new Error(data.message || 'Failed to refresh data');
             }
         })
         .catch(error => {
             console.error('Error refreshing dashboard:', error);
-            showToast('error', 'Failed to refresh dashboard data');
+            window.toast.error('Failed to refresh dashboard data');
         });
-    }
-    
-    // Helper function to show toast notifications
-    function showToast(type, message, duration = 3000) {
-        const toastEl = document.createElement('div');
-        
-        // Define toast styles based on type
-        const typeStyles = {
-            success: 'bg-success-50 text-success-600 border-success-200',
-            error: 'bg-error-50 text-error-600 border-error-200',
-            info: 'bg-info-50 text-info-600 border-info-200',
-            warning: 'bg-warning-50 text-warning-600 border-warning-200'
-        };
-        
-        // SVG icons for each type (Lucide-style)
-        const typeIcons = {
-            success: '<svg class="w-4 h-4 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline stroke-linecap="round" stroke-linejoin="round" points="22 4 12 14.01 9 11.01"></polyline></svg>',
-            error: '<svg class="w-4 h-4 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
-            info: '<svg class="w-4 h-4 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
-            warning: '<svg class="w-4 h-4 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
-        };
-        
-        toastEl.className = `fixed bottom-4 right-4 ${typeStyles[type]} border px-4 py-3 rounded-xl shadow-lg z-50 flex items-center transition-all transform translate-x-full opacity-0`;
-        toastEl.innerHTML = `${typeIcons[type]} ${message}`;
-        document.body.appendChild(toastEl);
-        
-        // Animate in
-        setTimeout(() => {
-            toastEl.classList.remove('translate-x-full', 'opacity-0');
-        }, 100);
-        
-        // Remove toast after duration
-        setTimeout(() => {
-            toastEl.classList.add('opacity-0', 'translate-x-full');
-            setTimeout(() => {
-                if (document.body.contains(toastEl)) {
-                    document.body.removeChild(toastEl);
-                }
-            }, 300);
-        }, duration);
     }
     
     // Function to update stats cards

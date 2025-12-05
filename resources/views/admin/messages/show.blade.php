@@ -254,7 +254,12 @@
             ? 'Are you sure you want to archive this group chat? Members will no longer be able to send messages.'
             : 'Are you sure you want to reopen this group chat?';
         
-        if (!confirm(confirmMsg)) return;
+        const confirmed = await window.Alerts.confirm(
+            action === 'archive' ? 'Archive Group Chat' : 'Reopen Group Chat',
+            confirmMsg,
+            'warning'
+        );
+        if (!confirmed) return;
         
         try {
             const response = await fetch(`/api/group-chats/${groupChatId}/${action}`, {
@@ -271,11 +276,11 @@
                 // Reload the page to reflect changes
                 window.location.reload();
             } else {
-                alert(`Failed to ${action} group chat: ` + (data.error || 'Unknown error'));
+                window.toast.error(`Failed to ${action} group chat: ` + (data.error || 'Unknown error'));
             }
         } catch (error) {
             console.error(`Error ${action}ing group chat:`, error);
-            alert(`Failed to ${action} group chat. Please try again.`);
+            window.toast.error(`Failed to ${action} group chat. Please try again.`);
         }
     }
 
@@ -384,11 +389,11 @@
                 selectedFilesDiv.innerHTML = '';
                 charCount.textContent = '0';
             } else {
-                alert('Failed to send message. Please try again.');
+                window.toast.error('Failed to send message. Please try again.');
             }
         } catch (error) {
             console.error('Error sending message:', error);
-            alert('Failed to send message. Please try again.');
+            window.toast.error('Failed to send message. Please try again.');
         }
     });
 
@@ -717,15 +722,15 @@
             const data = await response.json();
             
             if (response.ok) {
-                alert('Meeting approved! Zoom link has been generated.');
+                window.toast.success('Meeting approved! Zoom link has been generated.');
                 closeApproveMeetingModal();
                 loadMeetings();
             } else {
-                alert(data.error || 'Failed to approve meeting. Please try again.');
+                window.toast.error(data.error || 'Failed to approve meeting. Please try again.');
             }
         } catch (error) {
             console.error('Error approving meeting:', error);
-            alert('An error occurred. Please try again.');
+            window.toast.error('An error occurred. Please try again.');
         }
     }
 
@@ -779,15 +784,15 @@
             const data = await response.json();
             
             if (response.ok) {
-                alert('Meeting rescheduled! Client will be notified to approve the new time.');
+                window.toast.success('Meeting rescheduled! Client will be notified to approve the new time.');
                 closeRescheduleMeetingModal();
                 loadMeetings();
             } else {
-                alert(data.error || 'Failed to reschedule meeting. Please try again.');
+                window.toast.error(data.error || 'Failed to reschedule meeting. Please try again.');
             }
         } catch (error) {
             console.error('Error rescheduling meeting:', error);
-            alert('An error occurred. Please try again.');
+            window.toast.error('An error occurred. Please try again.');
         }
     });
 
@@ -838,15 +843,15 @@
             const data = await response.json();
             
             if (response.ok) {
-                alert('Meeting rejected. Client will be notified.');
+                window.toast.success('Meeting rejected. Client will be notified.');
                 closeRejectMeetingModal();
                 loadMeetings();
             } else {
-                alert(data.error || 'Failed to reject meeting. Please try again.');
+                window.toast.error(data.error || 'Failed to reject meeting. Please try again.');
             }
         } catch (error) {
             console.error('Error rejecting meeting:', error);
-            alert('An error occurred. Please try again.');
+            window.toast.error('An error occurred. Please try again.');
         }
     });
 

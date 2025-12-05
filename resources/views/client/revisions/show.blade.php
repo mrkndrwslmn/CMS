@@ -179,7 +179,7 @@
 
                 @if($revision->status === 'pending')
                     <form action="{{ route('client.revisions.cancel', $revision->id) }}" method="POST" 
-                          onsubmit="return confirm('Are you sure you want to cancel this revision request?');">
+                          onsubmit="return window.Alerts.confirmDeleteForm(event, 'Cancel Revision', 'Are you sure you want to cancel this revision request?')">
                         @csrf
                         <button type="submit" class="inline-flex items-center px-5 py-2.5 bg-neutral-100 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-200 transition-colors">
                             <x-lucide-x class="w-4 h-4 mr-2" />

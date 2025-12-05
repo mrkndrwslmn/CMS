@@ -415,22 +415,6 @@
                 }
             });
         </script>
-        <!-- Flash Messages -->
-        @if(session('success'))
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-                <x-ui.alert type="success" dismissible>
-                    {{ session('success') }}
-                </x-ui.alert>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-                <x-ui.alert type="error" dismissible>
-                    {{ session('error') }}
-                </x-ui.alert>
-            </div>
-        @endif
 
         @yield('content')
     </main>
@@ -596,7 +580,7 @@
     @yield('scripts')
     @stack('scripts')
     
-    <!-- Global Modal Container -->
-    <x-ui.modal-container />
+    <!-- Global Alert System -->
+    <x-ui.alert-manager />
 </body>
 </html>

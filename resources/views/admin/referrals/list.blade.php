@@ -241,7 +241,7 @@
                                     <button type="submit" 
                                             class="text-success-600 hover:text-success-700"
                                             title="Process Manually"
-                                            onclick="return confirm('Process this referral manually? This will award rewards to the referrer.')">
+                                            onclick="return window.Alerts.confirmForm(event, 'Process Referral', 'Process this referral manually? This will award rewards to the referrer.')">
                                         <x-lucide-check-circle class="w-4 h-4" />
                                     </button>
                                 </form>

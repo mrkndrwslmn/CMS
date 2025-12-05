@@ -261,7 +261,7 @@
                                                 @endif
                                             </button>
                                         </form>
-                                        <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this user?')">
+                                        <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="inline-block" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete User', 'Are you sure you want to delete this user?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 
@@ -330,16 +330,16 @@
         const action = document.querySelector('select[name="action"]').value;
         
         if (selectedUsers.length === 0) {
-            alert('Please select at least one user.');
+            window.toast.warning('Please select at least one user.');
             return false;
         }
         
         if (!action) {
-            alert('Please select an action.');
+            window.toast.warning('Please select an action.');
             return false;
         }
         
-        return confirm(`Are you sure you want to ${action} ${selectedUsers.length} selected user(s)?`);
+        return window.Alerts.confirmFormSync(`Are you sure you want to ${action} ${selectedUsers.length} selected user(s)?`);
     }
 </script>
 @endpush

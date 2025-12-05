@@ -254,7 +254,7 @@
                                 <form method="POST" 
                                       action="{{ route('admin.referrals.codes.toggle', $code->id) }}" 
                                       class="inline"
-                                      onsubmit="return confirm('Are you sure you want to {{ $code->is_active ? 'deactivate' : 'activate' }} this code?')">
+                                      onsubmit="return window.Alerts.confirmForm(event, '{{ $code->is_active ? 'Deactivate' : 'Activate' }} Code', 'Are you sure you want to {{ $code->is_active ? 'deactivate' : 'activate' }} this code?')">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" 

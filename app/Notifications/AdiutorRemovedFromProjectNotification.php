@@ -2,16 +2,12 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\User;
 
-class AdiutorRemovedFromProjectNotification extends Notification implements ShouldQueue
+class AdiutorRemovedFromProjectNotification extends Notification
 {
-    use Queueable;
-
     protected string $projectTitle;
     protected int $projectId;
     protected string $clientName;

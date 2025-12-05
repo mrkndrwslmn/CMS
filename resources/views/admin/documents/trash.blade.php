@@ -16,7 +16,7 @@
                 <i class="fas fa-arrow-left mr-2"></i>Back to Documents
             </a>
             @if($documents->count() > 0)
-            <form action="{{ route('admin.documents.empty-trash') }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete ALL documents in trash? This action cannot be undone!')">
+            <form action="{{ route('admin.documents.empty-trash') }}" method="POST" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Empty Trash', 'Are you sure you want to permanently delete ALL documents in trash? This action cannot be undone!')">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="flex items-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
@@ -26,21 +26,6 @@
             @endif
         </div>
     </div>
-
-    <!-- Alert Messages -->
-    @if(session('success'))
-    <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
-        <i class="fas fa-check-circle mr-2"></i>
-        {{ session('success') }}
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
-        <i class="fas fa-exclamation-circle mr-2"></i>
-        {{ session('error') }}
-    </div>
-    @endif
 
     <!-- Search Bar -->
     <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
@@ -74,7 +59,7 @@
                     <input type="checkbox" id="selectAll" class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500">
                     <label for="selectAll" class="text-sm text-neutral-600">Select All</label>
                 </div>
-                <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm" onclick="return confirm('Restore selected documents?')">
+                <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm" onclick="return window.Alerts.confirmForm(event, 'Restore Documents', 'Restore selected documents?')">
                     <i class="fas fa-undo mr-2"></i>Restore Selected
                 </button>
             </div>
@@ -145,7 +130,7 @@
                                             <i class="fas fa-undo"></i>
                                         </button>
                                     </form>
-                                    <form action="{{ route('admin.documents.force-delete', $document->documentID) }}" method="POST" class="inline" onsubmit="return confirm('Permanently delete this document? This cannot be undone!')">
+                                    <form action="{{ route('admin.documents.force-delete', $document->documentID) }}" method="POST" class="inline" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete Document', 'Permanently delete this document? This cannot be undone!')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Permanently">

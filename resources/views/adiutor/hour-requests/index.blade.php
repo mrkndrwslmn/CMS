@@ -16,28 +16,6 @@
         <p class="text-sm text-neutral-500 mt-1">Request additional hours when approaching your max limit</p>
     </div>
 
-    @if(session('success'))
-    <div class="mb-6 rounded-2xl bg-success-50 border border-success-100 p-4">
-        <div class="flex items-center gap-3">
-            <div class="p-1.5 bg-success-100 rounded-lg">
-                <x-lucide-check-circle-2 class="w-5 h-5 text-success-600" />
-            </div>
-            <p class="text-sm font-medium text-success-800">{{ session('success') }}</p>
-        </div>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="mb-6 rounded-2xl bg-error-50 border border-error-100 p-4">
-        <div class="flex items-center gap-3">
-            <div class="p-1.5 bg-error-100 rounded-lg">
-                <x-lucide-x-circle class="w-5 h-5 text-error-600" />
-            </div>
-            <p class="text-sm font-medium text-error-800">{{ session('error') }}</p>
-        </div>
-    </div>
-    @endif
-
     <!-- Warning Assignments (Approaching Max Hours) -->
     @if($warningAssignments->isNotEmpty())
     <div class="mb-8">
@@ -135,7 +113,7 @@
                         </a>
                         @if($request->isPending())
                         <form action="{{ route('adiutor.hour-requests.cancel', $request->id) }}" method="POST" class="inline"
-                              onsubmit="return confirm('Are you sure you want to cancel this request?');">
+                              onsubmit="return window.Alerts.confirmDeleteForm(event, 'Cancel Request', 'Are you sure you want to cancel this request?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="px-3 py-1.5 text-sm text-error-600 hover:text-error-700 hover:bg-error-50 rounded-lg transition-colors">

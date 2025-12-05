@@ -262,7 +262,7 @@
             // Check file size (10MB = 10485760 bytes)
             if (file.size > 10485760) {
                 e.preventDefault();
-                alert('File size exceeds 10MB. Please choose a smaller file.');
+                window.toast.warning('File size exceeds 10MB. Please choose a smaller file.');
                 return false;
             }
         }

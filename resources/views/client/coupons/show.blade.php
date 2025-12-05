@@ -169,23 +169,10 @@
 <script>
 function copyCouponCode(code) {
     navigator.clipboard.writeText(code).then(() => {
-        // Show success toast
-        const toast = document.createElement('div');
-        toast.className = 'fixed top-20 right-5 z-50 flex items-center gap-3 bg-success-600 text-white px-6 py-3 rounded-lg shadow-lg';
-        toast.innerHTML = `
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <span class="font-medium">Coupon code "${code}" copied!</span>
-        `;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
+        window.toast.success(`Coupon code "${code}" copied!`);
     }).catch(err => {
         console.error('Failed to copy:', err);
-        alert('Failed to copy coupon code. Please try again.');
+        window.toast.error('Failed to copy coupon code. Please try again.');
     });
 }
 </script>

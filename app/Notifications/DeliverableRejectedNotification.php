@@ -3,15 +3,11 @@
 namespace App\Notifications;
 
 use App\Models\Document;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class DeliverableRejectedNotification extends Notification implements ShouldQueue
+class DeliverableRejectedNotification extends Notification
 {
-    use Queueable;
-
     protected Document $document;
     protected string $reason;
 

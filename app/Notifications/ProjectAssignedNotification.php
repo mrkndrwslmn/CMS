@@ -2,13 +2,10 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
 class ProjectAssignedNotification extends Notification
 {
-    use Queueable;
-
     protected $project;
     protected $assignment;
 

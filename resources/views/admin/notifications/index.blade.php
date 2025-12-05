@@ -116,13 +116,13 @@
                                     </form>
                                 @endif
                                 
-                                <form action="{{ route('notifications.destroy', $notification->id) }}" method="POST" class="inline">
+                                <form action="{{ route('notifications.destroy', $notification->id) }}" method="POST" class="inline"
+                                      onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete Notification', 'Are you sure you want to delete this notification?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" 
                                             class="p-2 text-neutral-400 hover:text-error-600 hover:bg-error-50 rounded-lg transition-colors" 
-                                            title="Delete" 
-                                            onclick="return confirm('Are you sure you want to delete this notification?')">
+                                            title="Delete">
                                         <x-lucide-trash-2 class="w-4 h-4" />
                                     </button>
                                 </form>

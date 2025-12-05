@@ -102,7 +102,7 @@
                 
                 <div class="text-center bg-white rounded-xl p-8 shadow-md mb-6">
                     <p class="text-sm font-medium text-neutral-600 mb-2">Total Amount to Pay</p>
-                    <p class="text-5xl font-bold text-primary-600 mb-6">${{ number_format($request->approved_budget, 2) }}</p>
+                    <p class="text-5xl font-bold text-primary-600 mb-6">₱{{ number_format($request->approved_budget, 2) }}</p>
                     
                     <div class="space-y-3 text-left">
                         <div class="flex justify-between items-center py-3 border-b border-neutral-200">
@@ -317,7 +317,7 @@
                                    required
                                    class="mt-1 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 w-5 h-5 flex-shrink-0">
                             <label for="confirm_payment" class="ml-3 text-sm text-neutral-700">
-                                I confirm that I have completed the payment of <strong class="text-neutral-900">${{ number_format($request->approved_budget, 2) }}</strong> and the information provided is accurate and truthful.
+                                I confirm that I have completed the payment of <strong class="text-neutral-900">₱{{ number_format($request->approved_budget, 2) }}</strong> and the information provided is accurate and truthful.
                             </label>
                         </div>
 
@@ -368,7 +368,7 @@
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
                                     <span class="text-neutral-600">Amount Paid:</span>
-                                    <span class="font-semibold text-lg text-success-600">${{ number_format($request->approved_budget, 2) }}</span>
+                                    <span class="font-semibold text-lg text-success-600">₱{{ number_format($request->approved_budget, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-neutral-600">Payment Reference:</span>

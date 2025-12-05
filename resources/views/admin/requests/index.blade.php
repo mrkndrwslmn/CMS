@@ -480,34 +480,47 @@ $(document).ready(function() {
         
         const checkedRequests = $('.request-checkbox:checked').length;
         if(checkedRequests === 0) {
-            alert('Please select at least one request to perform action.');
+            window.toast.warning('Please select at least one request to perform action.');
             return;
         }
         
         const action = $('select[name="action"]').val();
         if(!action) {
-            alert('Please select an action to perform.');
+            window.toast.warning('Please select an action to perform.');
             return;
         }
         
         if(action === 'update_priority' && !$('select[name="priority"]').val()) {
-            alert('Please select a priority.');
+            window.toast.warning('Please select a priority.');
             return;
         }
         
         // Confirm before bulk actions
         if(action === 'approve') {
-            if(confirm('Are you sure you want to approve ' + checkedRequests + ' selected requests?')) {
-                $('#bulkActionForm').submit();
-            }
+            window.Alerts.confirm(
+                'Approve Requests',
+                'Are you sure you want to approve ' + checkedRequests + ' selected requests?',
+                'warning'
+            ).then(confirmed => {
+                if (confirmed) {
+                    $('#bulkActionForm').submit();
+                }
+            });
+            return;
         } else if(action === 'reject') {
             if($('#bulkNotesField').val().trim() === '') {
-                alert('Please provide rejection notes.');
+                window.toast.warning('Please provide rejection notes.');
                 return;
             }
-            if(confirm('Are you sure you want to reject ' + checkedRequests + ' selected requests?')) {
-                $('#bulkActionForm').submit();
-            }
+            window.Alerts.confirm(
+                'Reject Requests',
+                'Are you sure you want to reject ' + checkedRequests + ' selected requests?',
+                'warning'
+            ).then(confirmed => {
+                if (confirmed) {
+                    $('#bulkActionForm').submit();
+                }
+            });
         } else {
             $('#bulkActionForm').submit();
         }

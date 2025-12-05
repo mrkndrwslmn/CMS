@@ -16,19 +16,6 @@
         <p class="text-sm text-neutral-500 mt-1">Sync your CMS tasks with Google Calendar for better schedule management.</p>
     </div>
 
-    <!-- Alert Messages -->
-    @if(session('success'))
-        <x-ui.alert type="success" class="mb-6" dismissible>
-            {{ session('success') }}
-        </x-ui.alert>
-    @endif
-
-    @if(session('error'))
-        <x-ui.alert type="error" class="mb-6" dismissible>
-            {{ session('error') }}
-        </x-ui.alert>
-    @endif
-
     <!-- Connection Status Card -->
     <x-ui.card class="mb-6">
         <div class="flex items-center justify-between mb-6">
@@ -75,7 +62,7 @@
                         Test Connection
                     </x-ui.button>
                     
-                    <form action="{{ url('/calendar/disconnect') }}" method="POST" onsubmit="return confirm('Are you sure you want to disconnect your calendar? Scheduled tasks will not sync anymore.');">
+                    <form action="{{ url('/calendar/disconnect') }}" method="POST" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Disconnect Calendar', 'Are you sure you want to disconnect your calendar? Scheduled tasks will not sync anymore.')">
                         @csrf
                         <x-ui.button type="submit" variant="danger">
                             <x-lucide-unlink class="w-4 h-4" />
@@ -150,20 +137,6 @@
     </x-ui.card>
 </div>
 
-<!-- Test Connection Toast -->
-<div id="testResultToast" class="hidden fixed bottom-4 right-4 bg-white rounded-2xl shadow-lg p-4 max-w-md border-l-4 transition-all duration-300 z-50">
-    <div class="flex items-start">
-        <div id="testResultIcon" class="flex-shrink-0 mr-3"></div>
-        <div class="flex-1">
-            <h4 id="testResultTitle" class="font-medium text-neutral-800 mb-1"></h4>
-            <p id="testResultMessage" class="text-sm text-neutral-500"></p>
-        </div>
-        <button onclick="closeToast()" class="ml-4 text-neutral-400 hover:text-neutral-600 transition-colors">
-            <x-lucide-x class="w-5 h-5" />
-        </button>
-    </div>
-</div>
-
 <script>
 function testConnection() {
     fetch('{{ url('/calendar/test') }}', {
@@ -175,44 +148,15 @@ function testConnection() {
     })
     .then(response => response.json())
     .then(data => {
-        showToast(
-            data.success,
-            data.success ? 'Connection Successful!' : 'Connection Failed',
-            data.success ? `Found ${data.events_count} events this week.` : data.error
-        );
+        if (data.success) {
+            window.toast.success(`Connection Successful! Found ${data.events_count} events this week.`);
+        } else {
+            window.toast.error(`Connection Failed: ${data.error}`);
+        }
     })
     .catch(error => {
-        showToast(false, 'Error', 'Failed to test connection: ' + error.message);
+        window.toast.error('Failed to test connection: ' + error.message);
     });
-}
-
-function showToast(success, title, message) {
-    const toast = document.getElementById('testResultToast');
-    const icon = document.getElementById('testResultIcon');
-    const titleEl = document.getElementById('testResultTitle');
-    const messageEl = document.getElementById('testResultMessage');
-    
-    // Set border color
-    toast.className = toast.className.replace(/border-l-(success|error)-500/, '');
-    toast.classList.add(success ? 'border-l-success-500' : 'border-l-error-500');
-    
-    // Set icon using inline SVG for Lucide
-    icon.innerHTML = success 
-        ? '<svg class="w-6 h-6 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
-        : '<svg class="w-6 h-6 text-error-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
-    
-    titleEl.textContent = title;
-    messageEl.textContent = message;
-    
-    toast.classList.remove('hidden');
-    
-    setTimeout(() => {
-        closeToast();
-    }, 5000);
-}
-
-function closeToast() {
-    document.getElementById('testResultToast').classList.add('hidden');
 }
 </script>
 @endsection

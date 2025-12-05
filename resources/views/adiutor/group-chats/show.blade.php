@@ -241,12 +241,12 @@ function sendMessage(event) {
             messagesDiv.insertAdjacentHTML('beforeend', createMessageElement(data.message));
             scrollToBottom();
         } else {
-            alert('Failed to send message');
+            window.toast.error('Failed to send message');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while sending the message');
+        window.toast.error('An error occurred while sending the message');
     })
     .finally(() => {
         sendBtn.disabled = false;

@@ -608,12 +608,12 @@ function confirmSchedule() {
     console.log('End Time:', endTime);
     
     if (!selectedAdiutor) {
-        alert('Please select an adiutor');
+        window.toast.warning('Please select an adiutor');
         return;
     }
     
     if (!startTime || !endTime) {
-        alert('Please select start and end times');
+        window.toast.warning('Please select start and end times');
         return;
     }
     
@@ -649,18 +649,18 @@ function confirmSchedule() {
     .then(data => {
         console.log('Parsed data:', data);
         if (data.success) {
-            alert('Task scheduled successfully!');
+            window.toast.success('Task scheduled successfully!');
             console.log('SUCCESS RESPONSE:', JSON.stringify(data, null, 2));
             closeScheduleModal();
             location.reload(); // Refresh to update the view
         } else {
-            alert('Error: ' + (data.message || 'Failed to schedule task'));
+            window.toast.error('Error: ' + (data.message || 'Failed to schedule task'));
             console.error('ERROR RESPONSE:', data);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while scheduling the task: ' + error.message);
+        window.toast.error('An error occurred while scheduling the task: ' + error.message);
     });
 }
 
@@ -719,7 +719,7 @@ function reassignTask() {
         
         // Show a hint to select a different adiutor
         setTimeout(() => {
-            alert('Please select a different adiutor to avoid the conflict.');
+            window.toast.info('Please select a different adiutor to avoid the conflict.');
         }, 300);
     }
 }

@@ -256,16 +256,16 @@
                 
                 if (response.ok) {
                     // Show success message
-                    alert('Meeting request submitted successfully! You will be notified when the admin reviews it.');
+                    window.toast.success('Meeting request submitted successfully! You will be notified when the admin reviews it.');
                     closeScheduleMeetingModal();
                     loadMeetings(); // Reload meetings list
                 } else {
                     // Show error message
-                    alert(data.message || 'Failed to submit meeting request. Please try again.');
+                    window.toast.error(data.message || 'Failed to submit meeting request. Please try again.');
                 }
             } catch (error) {
                 console.error('Error submitting meeting request:', error);
-                alert('An error occurred. Please try again.');
+                window.toast.error('An error occurred. Please try again.');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
@@ -678,11 +678,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedFilesDiv.innerHTML = '';
                 charCount.textContent = '0';
             } else {
-                alert('Failed to send message. Please try again.');
+                window.toast.error('Failed to send message. Please try again.');
             }
         } catch (error) {
             console.error('Error sending message:', error);
-            alert('Failed to send message. Please try again.');
+            window.toast.error('Failed to send message. Please try again.');
         }
     });
 
@@ -727,22 +727,29 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success) {
                 // Show success message
-                alert('Meeting time approved! A Zoom link has been created.');
+                window.toast.success('Meeting time approved! A Zoom link has been created.');
                 // Reload meetings to update the display
                 loadMeetings();
             } else {
-                alert('Failed to approve meeting time. Please try again.');
+                window.toast.error('Failed to approve meeting time. Please try again.');
             }
         } catch (error) {
             console.error('Error approving reschedule:', error);
-            alert('Failed to approve meeting time. Please try again.');
+            window.toast.error('Failed to approve meeting time. Please try again.');
         }
     }
 
     // Reject rescheduled meeting
     async function rejectReschedule(meetingId) {
-        const reason = prompt('Please provide a reason for rejecting this time (optional):');
-        if (reason === null) return; // User cancelled
+        const result = await window.Alerts.prompt({
+            title: 'Decline Meeting Time',
+            message: 'Please provide a reason for declining this time (optional):',
+            placeholder: 'Enter reason...',
+            confirmText: 'Decline',
+            cancelText: 'Cancel'
+        });
+        
+        if (!result.confirmed) return; // User cancelled
         
         try {
             const response = await fetch(`/api/meetings/${meetingId}/reject-reschedule`, {
@@ -752,22 +759,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
                 },
                 body: JSON.stringify({
-                    reason: reason || 'Time not suitable'
+                    reason: result.value || 'Time not suitable'
                 })
             });
 
             const data = await response.json();
             
             if (data.success) {
-                alert('Meeting time declined. The admin will be notified to propose a new time.');
+                window.toast.success('Meeting time declined. The admin will be notified to propose a new time.');
                 // Reload meetings to update the display
                 loadMeetings();
             } else {
-                alert('Failed to decline meeting time. Please try again.');
+                window.toast.error('Failed to decline meeting time. Please try again.');
             }
         } catch (error) {
             console.error('Error rejecting reschedule:', error);
-            alert('Failed to decline meeting time. Please try again.');
+            window.toast.error('Failed to decline meeting time. Please try again.');
         }
     }
 

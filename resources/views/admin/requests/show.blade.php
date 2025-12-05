@@ -21,33 +21,6 @@
         this.showCreateTaskModal = true;
     }
 }">
-    <!-- Alert Messages -->
-    @if(session('success'))
-        <div class="bg-success-50 border-l-4 border-success-500 text-success-700 p-6 rounded-2xl shadow-sm mb-6">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <x-lucide-check-circle class="w-6 h-6 text-success-500" />
-                </div>
-                <div class="ml-3">
-                    <p class="text-success-700">{{ session('success') }}</p>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="bg-error-50 border-l-4 border-error-500 text-error-700 p-6 rounded-2xl shadow-sm mb-6">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <x-lucide-alert-circle class="w-6 h-6 text-error-500" />
-                </div>
-                <div class="ml-3">
-                    <p class="text-error-700">{{ session('error') }}</p>
-                </div>
-            </div>
-        </div>
-    @endif
-
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>

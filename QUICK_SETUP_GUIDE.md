@@ -70,7 +70,7 @@ composer run dev
 
 ### 6. Access Your Application
 - **Homepage:** http://localhost:8000
-- **Admin Panel:** http://localhost:8000/admin/login
+- **Admin Panel:** http://localhost:8000/admin/dashboard (login via http://localhost:8000/login)
 - **User Login:** http://localhost:8000/login
 
 ---

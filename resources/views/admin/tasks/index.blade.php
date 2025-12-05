@@ -11,25 +11,6 @@
         ['label' => 'Tasks', 'icon' => 'list-checks']
     ]" class="mb-6" />
 
-    <!-- Alert Messages -->
-    @if(session('success'))
-        <div class="bg-success-50 border border-success-200 text-success-700 p-4 rounded-lg mb-6">
-            <div class="flex items-center gap-3">
-                <x-lucide-check-circle class="w-5 h-5 text-success-500 flex-shrink-0" />
-                <p class="text-success-700">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="bg-error-50 border border-error-200 text-error-700 p-4 rounded-lg mb-6">
-            <div class="flex items-center gap-3">
-                <x-lucide-alert-circle class="w-5 h-5 text-error-500 flex-shrink-0" />
-                <p class="text-error-700">{{ session('error') }}</p>
-            </div>
-        </div>
-    @endif
-
     <!-- Header Section -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <x-ui.page-header 
@@ -518,33 +499,38 @@
             
             if (checkedTasks.length === 0) {
                 event.preventDefault();
-                alert('Please select at least one task to perform this action');
+                window.toast.warning('Please select at least one task to perform this action');
                 return false;
             }
             
             if (selectedAction === '') {
                 event.preventDefault();
-                alert('Please select an action to perform');
+                window.toast.warning('Please select an action to perform');
                 return false;
             }
             
             if (selectedAction === 'assign' && assigneeSelect.querySelector('select').value === '') {
                 event.preventDefault();
-                alert('Please select an assignee');
+                window.toast.warning('Please select an assignee');
                 return false;
             }
             
             if (selectedAction === 'status_update' && statusSelect.querySelector('select').value === '') {
                 event.preventDefault();
-                alert('Please select a status');
+                window.toast.warning('Please select a status');
                 return false;
             }
             
             if (selectedAction === 'delete') {
-                if (!confirm('Are you sure you want to delete the selected tasks? This action cannot be undone.')) {
-                    event.preventDefault();
-                    return false;
-                }
+                event.preventDefault();
+                window.Alerts.confirm({
+                    title: 'Delete Tasks',
+                    message: 'Are you sure you want to delete the selected tasks? This action cannot be undone.',
+                    onConfirm: () => {
+                        document.getElementById('bulkActionForm').submit();
+                    }
+                });
+                return false;
             }
         });
     });

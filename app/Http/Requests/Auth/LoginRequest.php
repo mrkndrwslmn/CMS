@@ -42,6 +42,20 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     * 
+     * Converts checkbox 'on' value to boolean for remember field.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('remember')) {
+            $this->merge([
+                'remember' => filter_var($this->remember, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? ($this->remember === 'on'),
+            ]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>

@@ -381,7 +381,7 @@ function scheduleTask(taskId, hasConflict) {
     }
     
     // Otherwise, handle regular task scheduling
-    alert('Regular task scheduling functionality to be implemented');
+    window.toast.info('Regular task scheduling functionality to be implemented');
 }
 
 function closeConflictModal() {
@@ -635,7 +635,7 @@ function syncAllTasks() {
                     <x-lucide-settings class="w-4 h-4" />
                     Edit Working Hours
                 </button>
-                <form action="{{ url('/calendar/disconnect') }}" method="POST" class="flex-1" onsubmit="return confirm('Are you sure you want to disconnect your calendar?');">
+                <form action="{{ url('/calendar/disconnect') }}" method="POST" class="flex-1" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Disconnect Calendar', 'Are you sure you want to disconnect your calendar?')">
                     @csrf
                     <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-error-600 text-white font-medium rounded-lg hover:bg-error-700 transition-all">
                         <x-lucide-unlink class="w-4 h-4" />
