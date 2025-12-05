@@ -44,7 +44,7 @@
 
                     @if($project->budget)
                         <div class="flex items-center gap-2">
-                            <x-lucide-peso-sign class="w-4 h-4 text-neutral-400" />
+                            <x-lucide-philippine-peso class="w-4 h-4 text-neutral-400" />
                             <span class="text-neutral-500">Budget: <span class="font-medium text-neutral-700">₱{{ number_format($project->budget, 2) }}</span></span>
                         </div>
                     @endif

@@ -41,14 +41,6 @@
         </div>
     @endif
 
-    <!-- Back Button -->
-    <div class="mb-6">
-        <a href="{{ route('client.requests') }}" class="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium transition-colors">
-            <x-lucide-arrow-left class="w-5 h-5 mr-2" />
-            Back to Service Requests
-        </a>
-    </div>
-
     <!-- Request Header Card -->
     <div class="bg-white rounded-lg shadow-sm p-8 mb-6">
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">

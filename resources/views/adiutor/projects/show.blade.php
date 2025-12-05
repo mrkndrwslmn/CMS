@@ -116,6 +116,67 @@
                 <p class="text-neutral-600 whitespace-pre-line">{{ $project->description ?? $project->request_description ?? 'No description provided.' }}</p>
             </x-ui.card>
 
+            {{-- Service Requirements Section --}}
+            @if($project->serviceRequest && (!empty($project->serviceRequest->requested_features) || !empty($project->serviceRequest->requested_skills) || !empty($project->serviceRequest->template_features) || !empty($project->serviceRequest->template_skills)))
+                <x-ui.card class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-medium text-neutral-800 flex items-center">
+                            <x-lucide-layers class="w-5 h-5 text-secondary-500 mr-2" />
+                            Service Requirements
+                        </h2>
+                        @if($project->serviceRequest->has_customizations)
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700">
+                                <x-lucide-edit-3 class="w-3 h-3 mr-1" />
+                                Client Customized
+                            </span>
+                        @endif
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{-- Features / What's Included --}}
+                        @php
+                            $sr = $project->serviceRequest;
+                            $displayFeatures = $sr->effective_features ?? [];
+                        @endphp
+                        @if(!empty($displayFeatures))
+                            <div class="p-4 bg-success-50/50 rounded-xl border border-success-100">
+                                <h4 class="text-sm font-semibold text-neutral-700 mb-3 flex items-center">
+                                    <x-lucide-check-circle class="w-4 h-4 mr-2 text-success-500" />
+                                    What's Included
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($displayFeatures as $feature)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-success-700 border border-success-200">
+                                            {{ $feature }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                        
+                        {{-- Skills Required --}}
+                        @php
+                            $displaySkills = $sr->effective_skills ?? [];
+                        @endphp
+                        @if(!empty($displaySkills))
+                            <div class="p-4 bg-primary-50/50 rounded-xl border border-primary-100">
+                                <h4 class="text-sm font-semibold text-neutral-700 mb-3 flex items-center">
+                                    <x-lucide-wrench class="w-4 h-4 mr-2 text-primary-500" />
+                                    Skills Required
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($displaySkills as $skill)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-primary-700 border border-primary-200">
+                                            {{ $skill }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </x-ui.card>
+            @endif
+
             <!-- Milestones (if milestone payment) -->
             @if($project->payment_type === 'milestone' && count($milestones) > 0)
                 <x-ui.card class="p-6">

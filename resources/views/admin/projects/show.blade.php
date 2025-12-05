@@ -100,6 +100,122 @@
                         </div>
                     </div>
 
+                    {{-- Service Requirements from Request --}}
+                    @if($project->serviceRequest && (!empty($project->serviceRequest->requested_features) || !empty($project->serviceRequest->requested_skills) || !empty($project->serviceRequest->template_features) || !empty($project->serviceRequest->template_skills)))
+                        <div class="mb-6 p-4 bg-secondary-50 rounded-xl border border-secondary-200">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-medium text-secondary-700 uppercase tracking-wider flex items-center">
+                                    <x-lucide-layers class="w-4 h-4 mr-2" />
+                                    Service Requirements
+                                </h3>
+                                @if($project->serviceRequest->has_customizations)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                                        <x-lucide-edit-3 class="w-3 h-3 mr-1" />
+                                        Client Customized
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600">
+                                        <x-lucide-copy class="w-3 h-3 mr-1" />
+                                        Template Default
+                                    </span>
+                                @endif
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{-- Features / What's Included --}}
+                                @php
+                                    $sr = $project->serviceRequest;
+                                    $displayFeatures = $sr->effective_features ?? [];
+                                @endphp
+                                @if(!empty($displayFeatures))
+                                    <div class="bg-white p-3 rounded-lg border border-secondary-100">
+                                        <h4 class="text-xs font-semibold text-neutral-600 uppercase mb-2 flex items-center">
+                                            <x-lucide-check-circle class="w-3 h-3 mr-1 text-success-500" />
+                                            What's Included
+                                        </h4>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @foreach($displayFeatures as $feature)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-50 text-success-700 border border-success-200">
+                                                    {{ $feature }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                        @if($sr->has_customizations && $sr->hasCustomizedFeatures())
+                                            <div class="mt-2 pt-2 border-t border-neutral-100">
+                                                <p class="text-xs text-neutral-400 mb-1">Original template:</p>
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach($sr->template_features ?? [] as $feature)
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-neutral-100 text-neutral-500 line-through">
+                                                            {{ $feature }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+                                
+                                {{-- Skills Required --}}
+                                @php
+                                    $displaySkills = $sr->effective_skills ?? [];
+                                @endphp
+                                @if(!empty($displaySkills))
+                                    <div class="bg-white p-3 rounded-lg border border-secondary-100">
+                                        <h4 class="text-xs font-semibold text-neutral-600 uppercase mb-2 flex items-center">
+                                            <x-lucide-wrench class="w-3 h-3 mr-1 text-primary-500" />
+                                            Skills Required
+                                        </h4>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @foreach($displaySkills as $skill)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-50 text-primary-700 border border-primary-200">
+                                                    {{ $skill }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                        @if($sr->has_customizations && $sr->hasCustomizedSkills())
+                                            <div class="mt-2 pt-2 border-t border-neutral-100">
+                                                <p class="text-xs text-neutral-400 mb-1">Original template:</p>
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach($sr->template_skills ?? [] as $skill)
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-neutral-100 text-neutral-500 line-through">
+                                                            {{ $skill }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            {{-- Template Reference Info --}}
+                            @if(!empty($sr->estimated_duration_days) || !empty($sr->template_base_price))
+                                <div class="mt-4 pt-3 border-t border-secondary-200 flex flex-wrap gap-4 text-sm">
+                                    @if(!empty($sr->estimated_duration_days))
+                                        <div class="flex items-center text-neutral-600">
+                                            <x-lucide-calendar-days class="w-4 h-4 mr-1.5 text-secondary-500" />
+                                            <span>Template Est.: <strong>{{ $sr->estimated_duration_days }} days</strong></span>
+                                        </div>
+                                    @endif
+                                    @if(!empty($sr->template_base_price))
+                                        <div class="flex items-center text-neutral-600">
+                                            <x-lucide-banknote class="w-4 h-4 mr-1.5 text-success-500" />
+                                            <span>Template Base: <strong>₱{{ number_format($sr->template_base_price, 2) }}</strong></span>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @elseif($project->serviceRequest && !$project->serviceRequest->template_service_id)
+                        {{-- No template was used - show note --}}
+                        <div class="mb-6 p-4 bg-neutral-50 rounded-xl border border-neutral-200">
+                            <div class="flex items-center gap-2 text-neutral-500">
+                                <x-lucide-info class="w-4 h-4" />
+                                <span class="text-sm">This project was created from a custom request without a service template.</span>
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Timeline</h3>

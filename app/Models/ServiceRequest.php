@@ -63,6 +63,15 @@ class ServiceRequest extends Model
         'loyalty_points_awarded_at',
         'total_discount_amount',
         'discount_percentage',
+        // Service template customization fields
+        'template_service_id',
+        'template_features',
+        'template_skills',
+        'estimated_duration_days',
+        'template_base_price',
+        'requested_features',
+        'requested_skills',
+        'has_customizations',
     ];
 
     protected $casts = [
@@ -94,6 +103,14 @@ class ServiceRequest extends Model
         'loyalty_points_awarded_at' => 'datetime',
         'total_discount_amount' => 'decimal:2',
         'discount_percentage' => 'decimal:2',
+        // Service template customization casts
+        'template_features' => 'array',
+        'template_skills' => 'array',
+        'estimated_duration_days' => 'integer',
+        'template_base_price' => 'decimal:2',
+        'requested_features' => 'array',
+        'requested_skills' => 'array',
+        'has_customizations' => 'boolean',
     ];
 
     /**
@@ -111,6 +128,52 @@ class ServiceRequest extends Model
     public function user(): BelongsTo
     {
         return $this->client();
+    }
+
+    /**
+     * Get the template service this request was based on
+     */
+    public function templateService(): BelongsTo
+    {
+        return $this->belongsTo(Service::class, 'template_service_id');
+    }
+
+    /**
+     * Check if the client customized the features
+     */
+    public function hasCustomizedFeatures(): bool
+    {
+        if (!$this->template_features || !$this->requested_features) {
+            return false;
+        }
+        return $this->template_features !== $this->requested_features;
+    }
+
+    /**
+     * Check if the client customized the skills
+     */
+    public function hasCustomizedSkills(): bool
+    {
+        if (!$this->template_skills || !$this->requested_skills) {
+            return false;
+        }
+        return $this->template_skills !== $this->requested_skills;
+    }
+
+    /**
+     * Get the effective features (customized or template)
+     */
+    public function getEffectiveFeaturesAttribute(): array
+    {
+        return $this->requested_features ?? $this->template_features ?? [];
+    }
+
+    /**
+     * Get the effective skills (customized or template)
+     */
+    public function getEffectiveSkillsAttribute(): array
+    {
+        return $this->requested_skills ?? $this->template_skills ?? [];
     }
 
     /**

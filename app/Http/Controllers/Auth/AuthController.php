@@ -75,6 +75,8 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request)
     {
+        \Log::info('Login attempt started', ['email' => $request->email]);
+        
         $email = $request->email;
         
         // Check if account is locked out
@@ -108,6 +110,12 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $this->clearLoginAttempts($email);
             $this->logLoginAttempt($email, true, 'Login successful', $request);
+            
+            \Log::info('Login successful, redirecting', [
+                'email' => $email,
+                'role' => $user->role,
+                'route' => $user->getDashboardRoute()
+            ]);
             
             // Redirect based on user role
             return redirect()->intended(route($user->getDashboardRoute()));

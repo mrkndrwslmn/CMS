@@ -372,7 +372,7 @@
               </svg>
               ${service.service_type}
             </span>
-            <a href="/get-started?service=${encodeURIComponent(service.service_name)}&type=${encodeURIComponent(service.service_type)}&description=${encodeURIComponent(service.description)}&price=${service.price}" class="inline-flex items-center text-sm font-bold px-5 py-2.5 rounded-xl transition-all duration-300 ${colors.buttonBg} ${colors.buttonText} ${colors.buttonHover} shadow-md hover:shadow-lg group/btn">
+            <a href="${buildInquireUrl(service)}" class="inline-flex items-center text-sm font-bold px-5 py-2.5 rounded-xl transition-all duration-300 ${colors.buttonBg} ${colors.buttonText} ${colors.buttonHover} shadow-md hover:shadow-lg group/btn">
               <span>Inquire Now</span>
               <svg class="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
@@ -471,6 +471,22 @@
           };
 
           return iconMap[serviceType] || `<svg class="${iconClasses} text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>`;
+      }
+
+      // Build the Inquire Now URL with all service details
+      function buildInquireUrl(service) {
+        const params = new URLSearchParams({
+          id: service.id, // Template service ID
+          service: service.service_name,
+          type: service.service_type,
+          description: service.description,
+          price: service.price,
+          duration: service.estimated_duration_days || '',
+          requirements: service.requirements || '',
+          features: JSON.stringify(service.features || []),
+          skills: JSON.stringify(service.required_skills || [])
+        });
+        return `/get-started?${params.toString()}`;
       }
 
       function setupFilterEventListeners() {

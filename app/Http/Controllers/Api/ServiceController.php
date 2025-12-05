@@ -22,12 +22,23 @@ class ServiceController extends Controller
                     'category as service_type', 
                     'name as service_name', 
                     'description', 
-                    'base_price as price'
+                    'base_price as price',
+                    'estimated_duration_days',
+                    'required_skills',
+                    'requirements',
+                    'features',
+                    'icon'
                 )
                 ->where('is_active', true)
                 ->orderBy('category')
                 ->orderBy('name')
-                ->get();
+                ->get()
+                ->map(function ($service) {
+                    // Decode JSON fields
+                    $service->required_skills = json_decode($service->required_skills) ?? [];
+                    $service->features = json_decode($service->features) ?? [];
+                    return $service;
+                });
 
             return response()->json($services);
         } catch (\Exception $e) {

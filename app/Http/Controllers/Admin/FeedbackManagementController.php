@@ -10,10 +10,19 @@ use App\Models\Project;
 use App\Notifications\FeedbackResponseNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class FeedbackManagementController extends Controller
 {
+    /**
+     * Clear feedback-related cache entries.
+     */
+    protected function clearFeedbackCache(): void
+    {
+        Cache::forget('feedback_stats');
+    }
+
     public function index(Request $request)
     {
         $query = Feedback::with(['client', 'adiutor', 'task', 'project']);
@@ -75,15 +84,17 @@ class FeedbackManagementController extends Controller
         $clients = User::where('role', 'client')->orderBy('fullName')->get();
         $adiutors = User::where('role', 'adiutor')->orderBy('fullName')->get();
         
-        // Get statistics
-        $stats = [
-            'total_feedback' => Feedback::count(),
-            'average_rating' => round(Feedback::avg('rating'), 1),
-            'pending_feedback' => Feedback::where('status', 'pending')->count(),
-            'resolved_feedback' => Feedback::where('status', 'resolved')->count(),
-            'positive_feedback' => Feedback::where('rating', '>=', 4)->count(),
-            'negative_feedback' => Feedback::where('rating', '<=', 2)->count(),
-        ];
+        // Get cached statistics (5-minute TTL)
+        $stats = Cache::remember('feedback_stats', 300, function () {
+            return [
+                'total_feedback' => Feedback::count(),
+                'average_rating' => round(Feedback::avg('rating'), 1),
+                'pending_feedback' => Feedback::where('status', Feedback::STATUS_PENDING)->count(),
+                'resolved_feedback' => Feedback::where('status', Feedback::STATUS_RESOLVED)->count(),
+                'positive_feedback' => Feedback::where('rating', '>=', 4)->count(),
+                'negative_feedback' => Feedback::where('rating', '<=', 2)->count(),
+            ];
+        });
         
         return view('admin.feedback.index', compact('feedbacks', 'clients', 'adiutors', 'stats'));
     }
@@ -101,7 +112,7 @@ class FeedbackManagementController extends Controller
         
         $request->validate([
             'response' => 'required|string',
-            'status' => 'required|in:pending,in_progress,resolved,closed',
+            'status' => 'required|in:' . implode(',', Feedback::statuses()),
             'internal_notes' => 'nullable|string',
         ]);
         
@@ -118,6 +129,8 @@ class FeedbackManagementController extends Controller
         if ($feedback->client) {
             $feedback->client->notify(new FeedbackResponseNotification($feedback, $request->response));
         }
+
+        $this->clearFeedbackCache();
         
         return redirect()->route('admin.feedback.show', $feedback->id)
                         ->with('success', 'Response added successfully.');
@@ -126,8 +139,8 @@ class FeedbackManagementController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,in_progress,resolved,closed',
-            'notes' => 'nullable|string',
+            'status' => 'required|in:' . implode(',', Feedback::statuses()),
+            'notes' => 'nullable|string|max:2000',
         ]);
         
         $feedback = Feedback::findOrFail($id);
@@ -139,16 +152,20 @@ class FeedbackManagementController extends Controller
         
         if ($request->filled('notes')) {
             $currentNotes = $feedback->internal_notes ?? '';
-            $newNote = "[" . now()->format('Y-m-d H:i:s') . " - Status changed from {$oldStatus} to {$request->status}]\n" . $request->notes . "\n\n";
+            // Escape notes to prevent XSS
+            $escapedNotes = e($request->notes);
+            $newNote = "[" . now()->format('Y-m-d H:i:s') . " - Status changed from {$oldStatus} to {$request->status}]\n" . $escapedNotes . "\n\n";
             $updateData['internal_notes'] = $newNote . $currentNotes;
         }
         
-        if ($request->status === 'resolved' && $oldStatus !== 'resolved') {
+        if ($request->status === Feedback::STATUS_RESOLVED && $oldStatus !== Feedback::STATUS_RESOLVED) {
             $updateData['resolved_at'] = now();
             $updateData['resolved_by'] = Auth::id();
         }
         
         $feedback->update($updateData);
+
+        $this->clearFeedbackCache();
         
         return redirect()->back()->with('success', 'Status updated successfully.');
     }
@@ -162,8 +179,10 @@ class FeedbackManagementController extends Controller
         $feedback = Feedback::findOrFail($id);
         $feedback->update([
             'adiutor_id' => $request->adiutor_id,
-            'status' => 'in_progress',
+            'status' => Feedback::STATUS_IN_PROGRESS,
         ]);
+
+        $this->clearFeedbackCache();
         
         return redirect()->back()->with('success', 'Feedback assigned successfully.');
     }
@@ -171,16 +190,21 @@ class FeedbackManagementController extends Controller
     public function addNote(Request $request, $id)
     {
         $request->validate([
-            'note' => 'required|string',
+            'note' => 'required|string|max:2000',
         ]);
         
         $feedback = Feedback::findOrFail($id);
         $currentNotes = $feedback->internal_notes ?? '';
-        $newNote = "[" . now()->format('Y-m-d H:i:s') . " - " . Auth::user()->fullName . "]\n" . $request->note . "\n\n";
+        
+        // Escape the note content to prevent XSS when displayed
+        $escapedNote = e($request->note);
+        $newNote = "[" . now()->format('Y-m-d H:i:s') . " - " . e(Auth::user()->fullName) . "]\n" . $escapedNote . "\n\n";
         
         $feedback->update([
             'internal_notes' => $newNote . $currentNotes
         ]);
+
+        $this->clearFeedbackCache();
         
         return redirect()->back()->with('success', 'Note added successfully.');
     }
@@ -191,9 +215,9 @@ class FeedbackManagementController extends Controller
             'action' => 'required|in:update_status,assign,delete,mark_priority',
             'feedback_ids' => 'required|array',
             'feedback_ids.*' => 'exists:feedbacks,id',
-            'status' => 'required_if:action,update_status|in:pending,in_progress,resolved,closed',
+            'status' => 'required_if:action,update_status|in:' . implode(',', Feedback::statuses()),
             'adiutor_id' => 'required_if:action,assign|exists:users,id',
-            'priority' => 'required_if:action,mark_priority|in:low,medium,high,urgent',
+            'priority' => 'required_if:action,mark_priority|in:' . implode(',', Feedback::priorities()),
         ]);
         
         $feedbacks = Feedback::whereIn('id', $request->feedback_ids);
@@ -201,7 +225,7 @@ class FeedbackManagementController extends Controller
         switch ($request->action) {
             case 'update_status':
                 $updateData = ['status' => $request->status];
-                if ($request->status === 'resolved') {
+                if ($request->status === Feedback::STATUS_RESOLVED) {
                     $updateData['resolved_at'] = now();
                     $updateData['resolved_by'] = Auth::id();
                 }
@@ -212,7 +236,7 @@ class FeedbackManagementController extends Controller
             case 'assign':
                 $feedbacks->update([
                     'adiutor_id' => $request->adiutor_id,
-                    'status' => 'in_progress',
+                    'status' => Feedback::STATUS_IN_PROGRESS,
                 ]);
                 $message = 'Feedbacks assigned successfully.';
                 break;
@@ -227,6 +251,8 @@ class FeedbackManagementController extends Controller
                 $message = 'Feedbacks deleted successfully.';
                 break;
         }
+
+        $this->clearFeedbackCache();
         
         return redirect()->back()->with('success', $message);
     }

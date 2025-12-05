@@ -139,9 +139,33 @@
                 </a>
                 
                 <a href="{{ route('adiutor.earnings.index') }}" 
-                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.earnings.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.earnings.index') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                     <x-lucide-wallet class="w-5 h-5" />
                     My Earnings
+                </a>
+                
+                <a href="{{ route('adiutor.earnings.wallet') }}" 
+                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.earnings.wallet') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-credit-card class="w-5 h-5" />
+                    Wallet
+                </a>
+                
+                <a href="{{ route('adiutor.earnings.payouts') }}" 
+                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.earnings.payouts', 'adiutor.earnings.payout.show') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-banknote class="w-5 h-5" />
+                    Payout History
+                </a>
+                
+                <a href="{{ route('adiutor.hour-requests.index') }}" 
+                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.hour-requests.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-clock-plus class="w-5 h-5" />
+                    Hour Requests
+                </a>
+                
+                <a href="{{ route('adiutor.budget-requests.index') }}" 
+                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('adiutor.budget-requests.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-receipt class="w-5 h-5" />
+                    Budget Requests
                 </a>
                 
                 <a href="{{ route('adiutor.clients') }}" 
@@ -182,6 +206,12 @@
                             
                             <!-- Account Section -->
                             <div class="border-t border-neutral-100 py-2">
+                                <a href="{{ route('adiutor.notifications.index') }}" 
+                                   class="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors {{ request()->routeIs('adiutor.notifications.*') ? 'bg-primary-50 text-primary-700' : '' }}">
+                                    <x-lucide-bell class="w-5 h-5" />
+                                    All Notifications
+                                </a>
+                                
                                 <a href="{{ route('adiutor.profile.show') }}" 
                                    class="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
                                     <x-lucide-user class="w-5 h-5" />
@@ -261,9 +291,33 @@
                 </a>
                 
                 <a href="{{ route('adiutor.earnings.index') }}" 
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.earnings.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.earnings.index') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                     <x-lucide-wallet class="w-5 h-5" />
                     My Earnings
+                </a>
+                
+                <a href="{{ route('adiutor.earnings.wallet') }}" 
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.earnings.wallet') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-credit-card class="w-5 h-5" />
+                    Wallet
+                </a>
+                
+                <a href="{{ route('adiutor.earnings.payouts') }}" 
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.earnings.payouts', 'adiutor.earnings.payout.show') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-banknote class="w-5 h-5" />
+                    Payout History
+                </a>
+                
+                <a href="{{ route('adiutor.hour-requests.index') }}" 
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.hour-requests.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-clock-plus class="w-5 h-5" />
+                    Hour Requests
+                </a>
+                
+                <a href="{{ route('adiutor.budget-requests.index') }}" 
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.budget-requests.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-receipt class="w-5 h-5" />
+                    Budget Requests
                 </a>
                 
                 <a href="{{ route('adiutor.clients') }}" 
@@ -317,6 +371,11 @@
                 </div>
                 
                 <div class="border-t border-neutral-100 my-2 pt-2">
+                    <a href="{{ route('adiutor.notifications.index') }}" 
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('adiutor.notifications.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                        <x-lucide-bell class="w-5 h-5" />
+                        All Notifications
+                    </a>
                     <a href="{{ route('adiutor.profile.show') }}" 
                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50 transition-colors">
                         <x-lucide-user class="w-5 h-5" />

@@ -8,6 +8,7 @@ use App\Models\Feedback;
 use App\Models\Project;
 use App\Models\ProjectFeedback;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use App\Notifications\FeedbackReceivedNotification;
 
@@ -97,6 +98,9 @@ class FeedbackController extends Controller
                 }
             }
         }
+
+        // Clear feedback cache so admin stats are updated
+        Cache::forget('feedback_stats');
 
         return redirect()->route('client.feedback')
             ->with('success', 'Thank you for your feedback! It has been submitted successfully.');

@@ -139,9 +139,17 @@
                         <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.finance }" />
                     </button>
                     <div x-show="openSections.finance" x-collapse class="mt-1 ml-8 space-y-0.5">
-                        <a href="{{ route('admin.earnings-analytics.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.earnings-analytics*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                        <a href="{{ route('admin.earnings-analytics.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.earnings-analytics.index') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-pie-chart class="w-4 h-4" />
-                            <span>Analytics</span>
+                            <span>Earnings Overview</span>
+                        </a>
+                        <a href="{{ route('admin.earnings-analytics.leaderboard') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.earnings-analytics.leaderboard') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-trophy class="w-4 h-4" />
+                            <span>Earnings Leaderboard</span>
+                        </a>
+                        <a href="{{ route('admin.earnings-analytics.project-costs') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.earnings-analytics.project-costs') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-calculator class="w-4 h-4" />
+                            <span>Project Costs</span>
                         </a>
                         <a href="{{ route('admin.payments.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.payments*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-credit-card class="w-4 h-4" />
@@ -150,6 +158,10 @@
                         <a href="{{ route('admin.payouts.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.payouts*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-landmark class="w-4 h-4" />
                             <span>Payouts</span>
+                        </a>
+                        <a href="{{ route('admin.earnings-analytics.payout-history') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.earnings-analytics.payout-history') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-history class="w-4 h-4" />
+                            <span>Payout History</span>
                         </a>
                         <a href="{{ route('admin.hour-requests.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.hour-requests*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-clock class="w-4 h-4" />
@@ -184,9 +196,13 @@
                                 </span>
                             @endif
                         </a>
-                        <a href="{{ route('admin.feedback.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.feedback*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                        <a href="{{ route('admin.feedback.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.feedback.index', 'admin.feedback.show') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-star class="w-4 h-4" />
                             <span>Feedback</span>
+                        </a>
+                        <a href="{{ route('admin.feedback.analytics') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.feedback.analytics') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-bar-chart-2 class="w-4 h-4" />
+                            <span>Feedback Analytics</span>
                         </a>
                         <a href="{{ route('admin.announcements.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.announcements*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-megaphone class="w-4 h-4" />
@@ -209,13 +225,33 @@
                             <x-lucide-ticket class="w-4 h-4" />
                             <span>Coupons</span>
                         </a>
-                        <a href="{{ route('admin.loyalty.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.loyalty*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                        <a href="{{ route('admin.loyalty.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.loyalty.index', 'admin.loyalty.show') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-award class="w-4 h-4" />
                             <span>Loyalty</span>
                         </a>
-                        <a href="{{ route('admin.referrals.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.referrals*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                        <a href="{{ route('admin.loyalty.leaderboard') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.loyalty.leaderboard') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-trophy class="w-4 h-4" />
+                            <span>Loyalty Leaderboard</span>
+                        </a>
+                        <a href="{{ route('admin.referrals.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.referrals.index', 'admin.referrals.show') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-users class="w-4 h-4" />
                             <span>Referrals</span>
+                        </a>
+                        <a href="{{ route('admin.referrals.withdrawals.pending') }}" class="flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.referrals.withdrawals*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <div class="flex items-center gap-2">
+                                <x-lucide-wallet class="w-4 h-4" />
+                                <span>Withdrawals</span>
+                            </div>
+                            @php
+                                $pendingWithdrawals = \App\Models\ReferralCreditWithdrawal::where('status', 'pending')->count();
+                            @endphp
+                            @if($pendingWithdrawals > 0)
+                                <span class="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">{{ $pendingWithdrawals }}</span>
+                            @endif
+                        </a>
+                        <a href="{{ route('admin.referrals.analytics') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.referrals.analytics') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-trending-up class="w-4 h-4" />
+                            <span>Referral Analytics</span>
                         </a>
                     </div>
                 </div>
@@ -235,9 +271,13 @@
                         <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.content }" />
                     </button>
                     <div x-show="openSections.content" x-collapse class="mt-1 ml-8 space-y-0.5">
-                        <a href="{{ route('admin.documents.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.documents*') && !request()->routeIs('admin.deliverables*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                        <a href="{{ route('admin.documents.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.documents.index', 'admin.documents.show', 'admin.documents.create', 'admin.documents.edit') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-file class="w-4 h-4" />
                             <span>Documents</span>
+                        </a>
+                        <a href="{{ route('admin.documents.bulk-create') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.documents.bulk-create') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-upload class="w-4 h-4" />
+                            <span>Bulk Upload</span>
                         </a>
                         <a href="{{ route('admin.deliverables.pending') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.deliverables*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-check-circle class="w-4 h-4" />
@@ -248,6 +288,10 @@
                             @if($pendingCount > 0)
                                 <span class="ml-auto px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">{{ $pendingCount }}</span>
                             @endif
+                        </a>
+                        <a href="{{ route('admin.documents.trash') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.documents.trash') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-trash-2 class="w-4 h-4" />
+                            <span>Trash</span>
                         </a>
                         <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.templates*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-layers class="w-4 h-4" />

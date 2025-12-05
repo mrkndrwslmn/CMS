@@ -17,7 +17,7 @@
     <x-ui.stat-card 
         label="Total Revenue"
         value="₱125,430"
-        icon="peso-sign"
+        icon="philippine-peso"
         icon-color="primary"
         trend="+12%"
         trend-direction="up"

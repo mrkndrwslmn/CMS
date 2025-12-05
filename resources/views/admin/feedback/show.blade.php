@@ -39,13 +39,31 @@
                             $statusVariants = [
                                 'pending' => 'warning',
                                 'reviewed' => 'info',
+                                'in_progress' => 'primary',
                                 'resolved' => 'success',
+                                'closed' => 'neutral',
                             ];
                             $statusVariant = $statusVariants[$feedback->status] ?? 'neutral';
+                            
+                            $priorityVariants = [
+                                'low' => 'neutral',
+                                'medium' => 'info',
+                                'high' => 'warning',
+                                'urgent' => 'danger',
+                            ];
+                            $priorityVariant = $priorityVariants[$feedback->priority ?? 'medium'] ?? 'neutral';
                         @endphp
-                        <x-ui.badge :variant="$statusVariant" size="lg">
-                            {{ ucfirst($feedback->status ?? 'pending') }}
-                        </x-ui.badge>
+                        <div class="flex items-center gap-2">
+                            @if($feedback->priority)
+                                <x-ui.badge :variant="$priorityVariant" size="sm">
+                                    <x-lucide-flag class="w-3 h-3 mr-1" />
+                                    {{ ucfirst($feedback->priority) }}
+                                </x-ui.badge>
+                            @endif
+                            <x-ui.badge :variant="$statusVariant" size="lg">
+                                {{ ucfirst($feedback->status ?? 'pending') }}
+                            </x-ui.badge>
+                        </div>
                     </div>
                 </x-slot:header>
 
@@ -82,6 +100,21 @@
                     </div>
                 @endif
 
+                <!-- Project Reference -->
+                @if($feedback->project)
+                    <div class="mb-6">
+                        <h3 class="text-sm font-medium text-neutral-500 mb-2">Related Project</h3>
+                        <a href="{{ route('admin.projects.show', $feedback->project->id) }}" 
+                           class="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-50 text-secondary-700 rounded-lg hover:bg-secondary-100 transition-colors">
+                            <x-lucide-folder class="w-4 h-4" />
+                            {{ $feedback->project->title }}
+                            @if($feedback->project->status)
+                                <span class="text-xs text-secondary-500">({{ ucfirst($feedback->project->status) }})</span>
+                            @endif
+                        </a>
+                    </div>
+                @endif
+
                 <!-- Admin Response -->
                 @if($feedback->admin_response)
                     <div class="mb-6">
@@ -91,16 +124,54 @@
                             @if($feedback->responded_at)
                                 <p class="text-xs text-neutral-400 mt-3">
                                     Responded on {{ $feedback->responded_at->format('F d, Y g:i A') }}
+                                    @if($feedback->respondedBy)
+                                        by {{ $feedback->respondedBy->fullName }}
+                                    @endif
                                 </p>
                             @endif
                         </div>
                     </div>
                 @endif
 
+                <!-- Internal Notes (Admin Only) -->
+                @if($feedback->internal_notes)
+                    <div class="mb-6">
+                        <h3 class="text-sm font-medium text-neutral-500 mb-2">
+                            <x-lucide-lock class="w-3 h-3 inline mr-1" />
+                            Internal Notes (Admin Only)
+                        </h3>
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                            <pre class="text-sm text-neutral-700 whitespace-pre-wrap font-sans">{{ $feedback->internal_notes }}</pre>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Quick Add Note -->
+                <div class="mb-6 border-t border-neutral-100 pt-6">
+                    <h3 class="text-sm font-medium text-neutral-500 mb-3">
+                        <x-lucide-sticky-note class="w-3 h-3 inline mr-1" />
+                        Add Internal Note
+                    </h3>
+                    <form action="{{ route('admin.feedback.add-note', $feedback->id) }}" method="POST" class="flex gap-2">
+                        @csrf
+                        <x-ui.input 
+                            name="note" 
+                            placeholder="Add a quick internal note..." 
+                            class="flex-1"
+                            required
+                        />
+                        <x-ui.button type="submit" variant="outline" size="sm">
+                            <x-lucide-plus class="w-4 h-4" />
+                            Add
+                        </x-ui.button>
+                    </form>
+                </div>
+
                 <!-- Response Form -->
-                @if(!$feedback->admin_response || $feedback->status !== 'resolved')
+                @if($feedback->status !== 'resolved' && $feedback->status !== 'closed')
                     <div class="border-t border-neutral-100 pt-6">
                         <h3 class="text-sm font-medium text-neutral-700 mb-4">
+                            <x-lucide-message-circle class="w-4 h-4 inline mr-1" />
                             {{ $feedback->admin_response ? 'Update Response' : 'Add Response' }}
                         </h3>
                         <form action="{{ route('admin.feedback.respond', $feedback->id) }}" method="POST">
@@ -110,23 +181,64 @@
                                     name="response" 
                                     rows="4" 
                                     required
-                                    placeholder="Write your response here..."
+                                    placeholder="Write your response to the client..."
                                     :value="old('response', $feedback->admin_response)"
                                 />
+                                <p class="text-xs text-neutral-400 mt-1">This response will be sent to the client.</p>
                             </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-600 mb-1">Update Status</label>
+                                    <select name="status" class="w-full rounded-lg border-neutral-200 text-sm focus:border-primary-500 focus:ring-primary-500">
+                                        <option value="pending" {{ $feedback->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="reviewed" {{ $feedback->status === 'reviewed' ? 'selected' : '' }}>Reviewed</option>
+                                        <option value="in_progress" {{ $feedback->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                        <option value="resolved" {{ $feedback->status === 'resolved' ? 'selected' : '' }}>Resolved</option>
+                                        <option value="closed" {{ $feedback->status === 'closed' ? 'selected' : '' }}>Closed</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-600 mb-1">Internal Note (Optional)</label>
+                                    <x-ui.input 
+                                        name="internal_notes" 
+                                        placeholder="Private note for admins..."
+                                        :value="old('internal_notes')"
+                                    />
+                                </div>
+                            </div>
+
                             <div class="flex items-center gap-3">
                                 <x-ui.button type="submit" variant="primary">
                                     <x-lucide-send class="w-4 h-4" />
                                     Send Response
                                 </x-ui.button>
                                 @if($feedback->status !== 'resolved')
-                                    <x-ui.button type="submit" name="mark_resolved" value="1" variant="success">
+                                    <x-ui.button type="button" onclick="this.form.status.value='resolved'; this.form.submit();" variant="success">
                                         <x-lucide-check-circle class="w-4 h-4" />
-                                        Send & Mark Resolved
+                                        Send & Resolve
                                     </x-ui.button>
                                 @endif
                             </div>
                         </form>
+                    </div>
+                @elseif($feedback->status === 'resolved' || $feedback->status === 'closed')
+                    <div class="border-t border-neutral-100 pt-6">
+                        <div class="flex items-center justify-between p-4 bg-neutral-50 rounded-lg">
+                            <div class="flex items-center gap-2 text-neutral-600">
+                                <x-lucide-check-circle-2 class="w-5 h-5 text-success-500" />
+                                <span class="text-sm font-medium">This feedback has been {{ $feedback->status }}.</span>
+                            </div>
+                            <form action="{{ route('admin.feedback.update-status', $feedback->id) }}" method="POST" class="inline">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="in_progress">
+                                <x-ui.button type="submit" variant="outline" size="sm">
+                                    <x-lucide-rotate-ccw class="w-4 h-4" />
+                                    Reopen
+                                </x-ui.button>
+                            </form>
+                        </div>
                     </div>
                 @endif
             </x-ui.card>
@@ -217,29 +329,99 @@
                 <x-slot:header>
                     <div class="flex items-center gap-2">
                         <x-lucide-info class="w-4 h-4 text-neutral-400" />
-                        <h3 class="text-sm font-medium text-neutral-700">Metadata</h3>
+                        <h3 class="text-sm font-medium text-neutral-700">Details</h3>
                     </div>
                 </x-slot:header>
 
                 <div class="space-y-3">
                     <div class="flex justify-between items-center">
-                        <span class="text-sm text-neutral-500">Type</span>
-                        <span class="text-sm font-medium text-neutral-700">{{ ucfirst($feedback->type ?? 'general') }}</span>
+                        <span class="text-sm text-neutral-500">Feedback ID</span>
+                        <span class="text-sm font-mono text-neutral-700">#{{ $feedback->id }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-sm text-neutral-500">Status</span>
-                        <span class="text-sm font-medium text-neutral-700">{{ ucfirst($feedback->status ?? 'pending') }}</span>
+                        <span class="text-sm text-neutral-500">Type</span>
+                        <x-ui.badge variant="neutral" size="sm">{{ ucfirst($feedback->type ?? 'general') }}</x-ui.badge>
                     </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-neutral-500">Priority</span>
+                        @php
+                            $priorityColors = [
+                                'low' => 'neutral',
+                                'medium' => 'info',
+                                'high' => 'warning',
+                                'urgent' => 'danger',
+                            ];
+                        @endphp
+                        <x-ui.badge :variant="$priorityColors[$feedback->priority ?? 'medium'] ?? 'neutral'" size="sm">
+                            {{ ucfirst($feedback->priority ?? 'Medium') }}
+                        </x-ui.badge>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-neutral-500">Category</span>
+                        <span class="text-sm font-medium text-neutral-700">{{ ucfirst(str_replace('_', ' ', $feedback->category ?? 'General')) }}</span>
+                    </div>
+                    
+                    <div class="border-t border-neutral-100 my-2"></div>
+                    
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-neutral-500">Submitted</span>
-                        <span class="text-sm font-medium text-neutral-700">{{ $feedback->created_at->format('M d, Y') }}</span>
+                        <span class="text-sm font-medium text-neutral-700" title="{{ $feedback->created_at->format('F d, Y g:i A') }}">
+                            {{ $feedback->created_at->diffForHumans() }}
+                        </span>
                     </div>
-                    @if($feedback->updated_at != $feedback->created_at)
+                    @if($feedback->updated_at && $feedback->updated_at != $feedback->created_at)
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-neutral-500">Last Updated</span>
-                            <span class="text-sm font-medium text-neutral-700">{{ $feedback->updated_at->format('M d, Y') }}</span>
+                            <span class="text-sm font-medium text-neutral-700" title="{{ $feedback->updated_at->format('F d, Y g:i A') }}">
+                                {{ $feedback->updated_at->diffForHumans() }}
+                            </span>
                         </div>
                     @endif
+                    @if($feedback->resolved_at)
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-neutral-500">Resolved</span>
+                            <span class="text-sm font-medium text-success-600" title="{{ $feedback->resolved_at->format('F d, Y g:i A') }}">
+                                {{ $feedback->resolved_at->diffForHumans() }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+            </x-ui.card>
+
+            <!-- Quick Actions Card -->
+            <x-ui.card>
+                <x-slot:header>
+                    <div class="flex items-center gap-2">
+                        <x-lucide-zap class="w-4 h-4 text-neutral-400" />
+                        <h3 class="text-sm font-medium text-neutral-700">Quick Actions</h3>
+                    </div>
+                </x-slot:header>
+
+                <div class="space-y-2">
+                    <!-- Quick Status Update -->
+                    <form action="{{ route('admin.feedback.update-status', $feedback->id) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <div class="flex gap-2">
+                            <select name="status" class="flex-1 rounded-lg border-neutral-200 text-sm focus:border-primary-500 focus:ring-primary-500">
+                                <option value="pending" {{ $feedback->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="reviewed" {{ $feedback->status === 'reviewed' ? 'selected' : '' }}>Reviewed</option>
+                                <option value="in_progress" {{ $feedback->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                <option value="resolved" {{ $feedback->status === 'resolved' ? 'selected' : '' }}>Resolved</option>
+                                <option value="closed" {{ $feedback->status === 'closed' ? 'selected' : '' }}>Closed</option>
+                            </select>
+                            <x-ui.button type="submit" variant="outline" size="sm">
+                                Update
+                            </x-ui.button>
+                        </div>
+                    </form>
+
+                    <div class="pt-2">
+                        <a href="{{ route('admin.feedback.index') }}" class="flex items-center gap-2 text-sm text-neutral-600 hover:text-primary-600 transition-colors">
+                            <x-lucide-arrow-left class="w-4 h-4" />
+                            Back to All Feedback
+                        </a>
+                    </div>
                 </div>
             </x-ui.card>
         </div>

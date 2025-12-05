@@ -4,7 +4,7 @@
 @section('site_name', 'Treis Adiutor')
 
 @push('analytics')
-    <script defer src="https://cdn.vercel-insights.com/v1/script.js?projectId=prj_8NsY544ll3Q74OVb6njoN8QFj0kl"></script>
+    
 @endpush
 
 @section('content')

@@ -92,6 +92,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the revisions requested by the user.
+     */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(RevisionRequest::class, 'requested_by');
+    }
+
+    /**
      * Check if user is active.
      * 
      * Returns false if status is null or any value other than 'active'.

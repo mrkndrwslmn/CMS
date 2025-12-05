@@ -17,6 +17,8 @@ class ClientController extends Controller
      */
     public function dashboard()
     {
+        \Log::info('Client Dashboard Accessed', ['user_id' => Auth::id()]);
+
         // Increase memory limit for this operation
         ini_set('memory_limit', '256M');
         

@@ -136,6 +136,72 @@
                 <div class="text-neutral-600 leading-relaxed whitespace-pre-line">{{ $project->description }}</div>
             </div>
 
+            {{-- Service Requirements Section --}}
+            @if($project->serviceRequest && (!empty($project->serviceRequest->requested_features) || !empty($project->serviceRequest->requested_skills) || !empty($project->serviceRequest->template_features) || !empty($project->serviceRequest->template_skills)))
+                <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base font-medium text-neutral-800 flex items-center">
+                            <x-lucide-layers class="w-5 h-5 mr-2 text-secondary-500" />
+                            Service Requirements
+                        </h3>
+                        @if($project->serviceRequest->has_customizations)
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-50 text-primary-700">
+                                <x-lucide-edit-3 class="w-3 h-3 mr-1" />
+                                You Customized This
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600">
+                                <x-lucide-copy class="w-3 h-3 mr-1" />
+                                Standard Template
+                            </span>
+                        @endif
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{-- Features / What's Included --}}
+                        @php
+                            $sr = $project->serviceRequest;
+                            $displayFeatures = $sr->effective_features ?? [];
+                        @endphp
+                        @if(!empty($displayFeatures))
+                            <div class="bg-success-50/50 p-4 rounded-xl border border-success-100">
+                                <h4 class="text-sm font-semibold text-neutral-700 mb-3 flex items-center">
+                                    <x-lucide-check-circle class="w-4 h-4 mr-2 text-success-500" />
+                                    What's Included
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($displayFeatures as $feature)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-success-700 border border-success-200 shadow-sm">
+                                            {{ $feature }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                        
+                        {{-- Skills Required --}}
+                        @php
+                            $displaySkills = $sr->effective_skills ?? [];
+                        @endphp
+                        @if(!empty($displaySkills))
+                            <div class="bg-primary-50/50 p-4 rounded-xl border border-primary-100">
+                                <h4 class="text-sm font-semibold text-neutral-700 mb-3 flex items-center">
+                                    <x-lucide-wrench class="w-4 h-4 mr-2 text-primary-500" />
+                                    Skills Being Applied
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($displaySkills as $skill)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-primary-700 border border-primary-200 shadow-sm">
+                                            {{ $skill }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             <!-- Tasks -->
             @if($tasks && count($tasks) > 0)
                 <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">

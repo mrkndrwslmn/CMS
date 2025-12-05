@@ -72,6 +72,15 @@ class ServiceRequestController extends Controller
             'additional_notes' => 'nullable|string|max:1000',
             'estimated_budget' => 'nullable|numeric|min:0|max:999999.99',
             'attachments.*' => "nullable|file|max:{$maxSize}|mimes:{$extensions}",
+            
+            // Customization fields
+            'requested_features' => 'nullable|string',
+            'requested_skills' => 'nullable|string',
+            'template_service_id' => 'nullable|integer|exists:services,id',
+            'template_features' => 'nullable|string',
+            'template_skills' => 'nullable|string',
+            'template_duration' => 'nullable|integer',
+            'template_price' => 'nullable|numeric',
         ], [
             'attachments.*.mimes' => 'Unsupported file type. ' . $this->getHumanReadableFileTypes() . ' are allowed.',
         ]);
@@ -135,18 +144,45 @@ class ServiceRequestController extends Controller
             $userId = Auth::id();
         }
 
+        // Parse customization fields
+        $requestedFeatures = $request->requested_features ? json_decode($request->requested_features, true) : null;
+        $requestedSkills = $request->requested_skills ? json_decode($request->requested_skills, true) : null;
+        $templateFeatures = $request->template_features ? json_decode($request->template_features, true) : null;
+        $templateSkills = $request->template_skills ? json_decode($request->template_skills, true) : null;
+        
+        // Determine if client made customizations
+        $hasCustomizations = false;
+        if ($templateFeatures || $templateSkills) {
+            // Check if features were modified
+            if ($requestedFeatures !== null && $templateFeatures !== null) {
+                $hasCustomizations = $requestedFeatures !== $templateFeatures;
+            }
+            // Check if skills were modified
+            if (!$hasCustomizations && $requestedSkills !== null && $templateSkills !== null) {
+                $hasCustomizations = $requestedSkills !== $templateSkills;
+            }
+        }
+
         // Create service request
         $serviceRequestId = DB::table('service_requests')->insertGetId([
             'client_id' => $userId,
             'contact_method' => $request->contact_method,
             'contact_details' => $request->contact_details,
             'service_type' => $request->service_type,
+            'template_service_id' => $request->template_service_id,
             'project_name' => $request->project_name,
             'request_description' => $request->request_description,
             'deadline' => $request->deadline,
             'expectations' => $request->expectations,
             'additional_notes' => $request->additional_notes,
             'estimated_budget' => $request->estimated_budget,
+            'requested_features' => $requestedFeatures ? json_encode($requestedFeatures) : null,
+            'requested_skills' => $requestedSkills ? json_encode($requestedSkills) : null,
+            'template_features' => $templateFeatures ? json_encode($templateFeatures) : null,
+            'template_skills' => $templateSkills ? json_encode($templateSkills) : null,
+            'has_customizations' => $hasCustomizations,
+            'estimated_duration_days' => $request->template_duration,
+            'template_base_price' => $request->template_price,
             'status' => 'pending',
             'priority' => $request->priority ?? 'medium',
             'created_at' => now(),

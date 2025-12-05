@@ -139,6 +139,30 @@
                                     <x-lucide-star class="w-5 h-5" />
                                     Feedback
                                 </a>
+                                
+                                <a href="{{ route('client.revisions.index') }}" 
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.revisions.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-rotate-ccw class="w-5 h-5" />
+                                    Revisions
+                                    @php
+                                        $pendingRevisionsCount = Auth::user()->revisions()->whereIn('status', ['pending', 'in_progress'])->count();
+                                    @endphp
+                                    @if($pendingRevisionsCount > 0)
+                                        <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingRevisionsCount }}</span>
+                                    @endif
+                                </a>
+                                
+                                <a href="{{ route('client.notifications.index') }}" 
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.notifications.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-bell class="w-5 h-5" />
+                                    All Notifications
+                                    @php
+                                        $unreadNotificationsCount = Auth::user()->unreadNotifications()->count();
+                                    @endphp
+                                    @if($unreadNotificationsCount > 0)
+                                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $unreadNotificationsCount }}</span>
+                                    @endif
+                                </a>
                             </div>
                             
                             <!-- Rewards & Benefits Section -->
@@ -148,7 +172,7 @@
                                 </div>
                                 
                                 <a href="{{ route('client.referrals.dashboard') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.referrals.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.referrals.dashboard') || request()->routeIs('client.referrals.share') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                     <x-lucide-users class="w-5 h-5" />
                                     Referrals
                                     @php
@@ -157,6 +181,18 @@
                                     @if($pendingReferralsCount > 0)
                                         <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingReferralsCount }}</span>
                                     @endif
+                                </a>
+                                
+                                <a href="{{ route('client.referrals.history') }}" 
+                                   class="flex items-center gap-3 px-4 py-2 pl-10 text-sm transition-colors {{ request()->routeIs('client.referrals.history') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                                    <x-lucide-clock class="w-4 h-4" />
+                                    Referral History
+                                </a>
+                                
+                                <a href="{{ route('client.referrals.credits') }}" 
+                                   class="flex items-center gap-3 px-4 py-2 pl-10 text-sm transition-colors {{ request()->routeIs('client.referrals.credits') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                                    <x-lucide-wallet class="w-4 h-4" />
+                                    Credits & Withdrawals
                                 </a>
                                 
                                 <a href="{{ route('client.coupons.index') }}" 
@@ -172,7 +208,7 @@
                                 </a>
                                 
                                 <a href="{{ route('client.loyalty.dashboard') }}" 
-                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.loyalty.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                   class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.loyalty.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                     <x-lucide-award class="w-5 h-5" />
                                     Loyalty Program
                                     @php
@@ -181,6 +217,12 @@
                                     @if($userPoints > 0)
                                         <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
                                     @endif
+                                </a>
+                                
+                                <a href="{{ route('client.loyalty.transactions') }}" 
+                                   class="flex items-center gap-3 px-4 py-2 pl-10 text-sm transition-colors {{ request()->routeIs('client.loyalty.transactions') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                                    <x-lucide-history class="w-4 h-4" />
+                                    Points History
                                 </a>
                             </div>
                             
@@ -275,6 +317,30 @@
                     Feedback
                 </a>
                 
+                <a href="{{ route('client.revisions.index') }}" 
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.revisions.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-rotate-ccw class="w-5 h-5" />
+                    Revisions
+                    @php
+                        $pendingRevisionsCountMobile = Auth::user()->revisions()->whereIn('status', ['pending', 'in_progress'])->count();
+                    @endphp
+                    @if($pendingRevisionsCountMobile > 0)
+                        <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingRevisionsCountMobile }}</span>
+                    @endif
+                </a>
+                
+                <a href="{{ route('client.notifications.index') }}" 
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.notifications.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-bell class="w-5 h-5" />
+                    All Notifications
+                    @php
+                        $unreadNotificationsCountMobile = Auth::user()->unreadNotifications()->count();
+                    @endphp
+                    @if($unreadNotificationsCountMobile > 0)
+                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $unreadNotificationsCountMobile }}</span>
+                    @endif
+                </a>
+                
                 <!-- Rewards & Benefits Section -->
                 <div class="border-t border-neutral-100 my-2 pt-2">
                     <div class="px-3 py-2">
@@ -282,15 +348,27 @@
                     </div>
                     
                     <a href="{{ route('client.referrals.dashboard') }}" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.referrals.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.referrals.dashboard') || request()->routeIs('client.referrals.share') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                         <x-lucide-users class="w-5 h-5" />
                         Referrals
                         @php
-                            $pendingReferralsCount = Auth::user()->referralsMade()->where('status', 'pending')->count();
+                            $pendingReferralsCountMobile = Auth::user()->referralsMade()->where('status', 'pending')->count();
                         @endphp
-                        @if($pendingReferralsCount > 0)
-                            <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingReferralsCount }}</span>
+                        @if($pendingReferralsCountMobile > 0)
+                            <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingReferralsCountMobile }}</span>
                         @endif
+                    </a>
+                    
+                    <a href="{{ route('client.referrals.history') }}" 
+                       class="flex items-center gap-3 px-3 py-2 pl-8 rounded-lg transition-colors {{ request()->routeIs('client.referrals.history') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                        <x-lucide-clock class="w-4 h-4" />
+                        Referral History
+                    </a>
+                    
+                    <a href="{{ route('client.referrals.credits') }}" 
+                       class="flex items-center gap-3 px-3 py-2 pl-8 rounded-lg transition-colors {{ request()->routeIs('client.referrals.credits') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                        <x-lucide-wallet class="w-4 h-4" />
+                        Credits & Withdrawals
                     </a>
                     
                     <a href="{{ route('client.coupons.index') }}" 
@@ -306,15 +384,21 @@
                     </a>
                     
                     <a href="{{ route('client.loyalty.dashboard') }}" 
-                       class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.loyalty.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.loyalty.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                         <x-lucide-star class="w-5 h-5" />
                         Loyalty Program
                         @php
-                            $userPoints = Auth::user()->loyalty_points ?? 0;
+                            $userPointsMobile = Auth::user()->loyalty_points ?? 0;
                         @endphp
-                        @if($userPoints > 0)
-                            <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
+                        @if($userPointsMobile > 0)
+                            <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPointsMobile) }}</span>
                         @endif
+                    </a>
+                    
+                    <a href="{{ route('client.loyalty.transactions') }}" 
+                       class="flex items-center gap-3 px-3 py-2 pl-8 rounded-lg transition-colors {{ request()->routeIs('client.loyalty.transactions') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                        <x-lucide-history class="w-4 h-4" />
+                        Points History
                     </a>
                 </div>
                 

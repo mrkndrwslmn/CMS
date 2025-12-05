@@ -198,6 +198,129 @@
                         </div>
                     @endif
                     
+                    {{-- Service Template & Client Customizations --}}
+                    @if(!empty($request['template_service_id']) || !empty($request['requested_features']) || !empty($request['requested_skills']))
+                        <div class="mb-6 p-4 bg-secondary-50 rounded-xl border border-secondary-200">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-medium text-secondary-700 uppercase tracking-wider flex items-center">
+                                    <x-lucide-layers class="w-4 h-4 mr-2" />
+                                    Service Requirements
+                                </h3>
+                                @if(!empty($request['has_customizations']) && $request['has_customizations'])
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                                        <x-lucide-edit-3 class="w-3 h-3 mr-1" />
+                                        Client Customized
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600">
+                                        <x-lucide-copy class="w-3 h-3 mr-1" />
+                                        Template Default
+                                    </span>
+                                @endif
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{-- Features / What's Included --}}
+                                @php
+                                    $requestedFeatures = $request['requested_features'] ?? [];
+                                    $templateFeatures = $request['template_features'] ?? [];
+                                    $displayFeatures = !empty($requestedFeatures) ? $requestedFeatures : $templateFeatures;
+                                    if (is_string($displayFeatures)) {
+                                        $displayFeatures = json_decode($displayFeatures, true) ?? [];
+                                    }
+                                @endphp
+                                @if(!empty($displayFeatures))
+                                    <div class="bg-white p-3 rounded-lg border border-secondary-100">
+                                        <h4 class="text-xs font-semibold text-neutral-600 uppercase mb-2 flex items-center">
+                                            <x-lucide-check-circle class="w-3 h-3 mr-1 text-success-500" />
+                                            What's Included
+                                        </h4>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @foreach($displayFeatures as $feature)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-50 text-success-700 border border-success-200">
+                                                    {{ $feature }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                        @if(!empty($request['has_customizations']) && !empty($templateFeatures) && $displayFeatures !== $templateFeatures)
+                                            <div class="mt-2 pt-2 border-t border-neutral-100">
+                                                <p class="text-xs text-neutral-400 mb-1">Original template:</p>
+                                                <div class="flex flex-wrap gap-1">
+                                                    @php
+                                                        $templateFeaturesArr = is_string($templateFeatures) ? json_decode($templateFeatures, true) : $templateFeatures;
+                                                    @endphp
+                                                    @foreach($templateFeaturesArr ?? [] as $feature)
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-neutral-100 text-neutral-500 line-through">
+                                                            {{ $feature }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+                                
+                                {{-- Skills Required --}}
+                                @php
+                                    $requestedSkills = $request['requested_skills'] ?? [];
+                                    $templateSkills = $request['template_skills'] ?? [];
+                                    $displaySkills = !empty($requestedSkills) ? $requestedSkills : $templateSkills;
+                                    if (is_string($displaySkills)) {
+                                        $displaySkills = json_decode($displaySkills, true) ?? [];
+                                    }
+                                @endphp
+                                @if(!empty($displaySkills))
+                                    <div class="bg-white p-3 rounded-lg border border-secondary-100">
+                                        <h4 class="text-xs font-semibold text-neutral-600 uppercase mb-2 flex items-center">
+                                            <x-lucide-wrench class="w-3 h-3 mr-1 text-primary-500" />
+                                            Skills Required
+                                        </h4>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @foreach($displaySkills as $skill)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-50 text-primary-700 border border-primary-200">
+                                                    {{ $skill }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                        @if(!empty($request['has_customizations']) && !empty($templateSkills) && $displaySkills !== $templateSkills)
+                                            <div class="mt-2 pt-2 border-t border-neutral-100">
+                                                <p class="text-xs text-neutral-400 mb-1">Original template:</p>
+                                                <div class="flex flex-wrap gap-1">
+                                                    @php
+                                                        $templateSkillsArr = is_string($templateSkills) ? json_decode($templateSkills, true) : $templateSkills;
+                                                    @endphp
+                                                    @foreach($templateSkillsArr ?? [] as $skill)
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-neutral-100 text-neutral-500 line-through">
+                                                            {{ $skill }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            {{-- Template Reference Info --}}
+                            @if(!empty($request['estimated_duration_days']) || !empty($request['template_base_price']))
+                                <div class="mt-4 pt-3 border-t border-secondary-200 flex flex-wrap gap-4 text-sm">
+                                    @if(!empty($request['estimated_duration_days']))
+                                        <div class="flex items-center text-neutral-600">
+                                            <x-lucide-calendar-days class="w-4 h-4 mr-1.5 text-secondary-500" />
+                                            <span>Est. Duration: <strong>{{ $request['estimated_duration_days'] }} days</strong></span>
+                                        </div>
+                                    @endif
+                                    @if(!empty($request['template_base_price']))
+                                        <div class="flex items-center text-neutral-600">
+                                            <x-lucide-banknote class="w-4 h-4 mr-1.5 text-success-500" />
+                                            <span>Base Price: <strong>₱{{ number_format($request['template_base_price'], 2) }}</strong></span>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Request Information</h3>
