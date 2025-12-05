@@ -50,14 +50,23 @@ class UserManagementController extends Controller
 
         $users = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        // Statistics
+        // Statistics - optimized with single query using conditional counts
+        $statsQuery = User::selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admins,
+            SUM(CASE WHEN role = 'client' THEN 1 ELSE 0 END) as clients,
+            SUM(CASE WHEN role = 'adiutor' THEN 1 ELSE 0 END) as adiutors,
+            SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
+            SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive
+        ")->first();
+
         $stats = [
-            'total' => User::count(),
-            'admins' => User::where('role', 'admin')->count(),
-            'clients' => User::where('role', 'client')->count(),
-            'adiutors' => User::where('role', 'adiutor')->count(),
-            'active' => User::where('status', 'active')->count(),
-            'inactive' => User::where('status', 'inactive')->count(),
+            'total' => (int) ($statsQuery->total ?? 0),
+            'admins' => (int) ($statsQuery->admins ?? 0),
+            'clients' => (int) ($statsQuery->clients ?? 0),
+            'adiutors' => (int) ($statsQuery->adiutors ?? 0),
+            'active' => (int) ($statsQuery->active ?? 0),
+            'inactive' => (int) ($statsQuery->inactive ?? 0),
         ];
 
         return view('admin.users.index', compact('users', 'stats'));

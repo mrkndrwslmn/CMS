@@ -198,7 +198,7 @@
         <!-- Pagination -->
         @if($requests instanceof \Illuminate\Pagination\LengthAwarePaginator)
             <div class="mt-8">
-                {{ $requests->links() }}
+                <x-ui.pagination :paginator="$requests" />
             </div>
         @endif
     @else

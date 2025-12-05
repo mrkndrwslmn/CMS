@@ -143,7 +143,7 @@
         selectAll: false,
         toggleSelectAll() {
             if (this.selectAll) {
-                this.selectedClients = [...document.querySelectorAll('input[name=\'client_checkbox\']')].map(el => el.value);
+                this.selectedClients = [...document.querySelectorAll('.client-checkbox')].map(el => el.value);
             } else {
                 this.selectedClients = [];
             }
@@ -203,7 +203,7 @@
                                    name="client_checkbox"
                                    value="{{ $client->id }}"
                                    x-model="selectedClients"
-                                   class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
+                                   class="client-checkbox rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
@@ -297,7 +297,7 @@
         <!-- Pagination -->
         @if(is_object($clients) && method_exists($clients, 'hasPages') && $clients->hasPages())
         <div class="px-6 py-4 border-t border-neutral-100">
-            {{ $clients->links() }}
+            <x-ui.pagination :paginator="$clients" />
         </div>
         @endif
     </x-ui.card>

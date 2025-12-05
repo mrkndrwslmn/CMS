@@ -227,7 +227,7 @@
 
         <!-- Pagination -->
         <div class="mt-6">
-            {{ $referrals->withQueryString()->links() }}
+            <x-ui.pagination :paginator="$referrals->withQueryString()" />
         </div>
     @else
         <!-- Empty State -->

@@ -193,7 +193,7 @@
 
             <!-- Pagination -->
             <div class="mt-6">
-                {{ $transactions->withQueryString()->links() }}
+                <x-ui.pagination :paginator="$transactions->withQueryString()" />
             </div>
             @else
             <div class="text-center py-12">

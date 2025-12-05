@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreClientRequest;
 use App\Http\Requests\Admin\UpdateClientRequest;
 use App\Http\Requests\Admin\StoreNoteRequest;
+use App\Mail\ClientAccountCreatedMail;
 use App\Models\User;
 use App\Models\Note;
 use App\Repositories\ClientRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -195,19 +198,25 @@ class ClientManagementController extends Controller
         try {
             $validated = $request->validated();
             
-            $client = DB::transaction(function () use ($validated) {
+            // Generate a secure random password
+            $temporaryPassword = Str::random(12);
+            
+            $client = DB::transaction(function () use ($validated, $temporaryPassword) {
                 return User::create([
                     'fullName' => $validated['fullName'],
                     'email' => $validated['email'],
                     'phoneNumber' => $validated['phoneNumber'],
-                    'password' => bcrypt($validated['password']),
+                    'password' => bcrypt($temporaryPassword),
                     'role' => 'client',
                     'status' => $validated['status'],
                 ]);
             });
             
+            // Send welcome email with credentials immediately
+            Mail::to($client->email)->send(new ClientAccountCreatedMail($client, $temporaryPassword));
+            
             return redirect()->route('admin.clients.index')
-                            ->with('success', 'Client created successfully.');
+                            ->with('success', 'Client created successfully. A welcome email with login credentials has been sent to ' . $client->email);
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Failed to create client. Please try again.')

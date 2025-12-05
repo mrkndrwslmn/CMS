@@ -209,7 +209,7 @@
 
             <!-- Pagination -->
             <div class="px-6 py-4 border-t border-neutral-100">
-                {{ $auditLogs->appends(request()->query())->links() }}
+                <x-ui.pagination :paginator="$auditLogs->appends(request()->query())" />
             </div>
         @else
             <x-ui.empty-state 

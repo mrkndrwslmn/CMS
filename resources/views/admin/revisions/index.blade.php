@@ -326,7 +326,7 @@
 
             <!-- Pagination -->
             <div class="px-6 py-4 border-t border-neutral-100">
-                {{ $revisions->links() }}
+                <x-ui.pagination :paginator="$revisions" />
             </div>
         @else
             <!-- Empty State -->

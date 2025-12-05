@@ -145,7 +145,7 @@
     <!-- Pagination -->
     @if($notifications->hasPages())
         <div class="mt-6">
-            {{ $notifications->links() }}
+            <x-ui.pagination :paginator="$notifications" />
         </div>
     @endif
 </div>

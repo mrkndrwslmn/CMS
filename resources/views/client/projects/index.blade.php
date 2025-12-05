@@ -157,7 +157,7 @@
         <!-- Pagination -->
         @if($projects instanceof \Illuminate\Pagination\LengthAwarePaginator)
             <div class="mt-8">
-                {{ $projects->links() }}
+                <x-ui.pagination :paginator="$projects" />
             </div>
         @endif
     @else

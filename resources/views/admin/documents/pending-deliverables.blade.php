@@ -178,7 +178,7 @@
             <!-- Pagination -->
             @if($deliverables->hasPages())
                 <div class="px-5 py-4 border-t border-neutral-200">
-                    {{ $deliverables->links() }}
+                    <x-ui.pagination :paginator="$deliverables" />
                 </div>
             @endif
         </div>

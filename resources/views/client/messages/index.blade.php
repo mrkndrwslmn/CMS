@@ -119,14 +119,7 @@
                 <!-- Pagination -->
                 @if($conversations->hasPages())
                     <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-100">
-                        <div class="flex items-center justify-between">
-                            <div class="text-sm text-neutral-500">
-                                Showing {{ $conversations->firstItem() }}-{{ $conversations->lastItem() }} of {{ $conversations->total() }} conversations
-                            </div>
-                            <div class="flex items-center gap-2">
-                                {{ $conversations->links() }}
-                            </div>
-                        </div>
+                        <x-ui.pagination :paginator="$conversations" />
                     </div>
                 @endif
             @endif

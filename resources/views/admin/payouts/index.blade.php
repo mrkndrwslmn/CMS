@@ -235,7 +235,7 @@
             <!-- Pagination -->
             @if($payouts->hasPages())
             <div class="px-6 py-4 border-t border-neutral-100">
-                {{ $payouts->links() }}
+                <x-ui.pagination :paginator="$payouts" />
             </div>
             @endif
         @endif

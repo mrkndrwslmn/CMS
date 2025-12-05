@@ -288,7 +288,7 @@
         <!-- Pagination -->
         @if($codes->hasPages())
         <div class="px-4 py-4 border-t border-neutral-200">
-            {{ $codes->links() }}
+            <x-ui.pagination :paginator="$codes" />
         </div>
         @endif
     </x-ui.card>

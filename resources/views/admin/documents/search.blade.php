@@ -97,7 +97,7 @@
                 </div>
                 
                 <div class="d-flex justify-content-center">
-                    {{ $documents->appends(['q' => $query])->links() }}
+                    <x-ui.pagination :paginator="$documents->appends(['q' => $query])" />
                 </div>
             @else
                 <div class="alert alert-info">

@@ -14,27 +14,26 @@
 @section('content')
 <div class="w-full">
     <div class="w-full px-4 py-5">
+        <!-- Breadcrumb -->
+        <x-ui.breadcrumb :items="[
+            ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+            ['label' => 'Earnings Analytics', 'route' => 'admin.earnings-analytics.index', 'icon' => 'bar-chart-2'],
+            ['label' => 'Payout History', 'icon' => 'wallet'],
+        ]" />
+
         <!-- Header -->
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 mb-6">
             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
                 <div>
-                    <nav class="flex mb-2" aria-label="Breadcrumb">
-                        <ol class="inline-flex items-center space-x-1 text-sm text-neutral-500">
-                            <li><a href="{{ route('admin.earnings-analytics.index') }}" class="hover:text-accent-500">Earnings Analytics</a></li>
-                            <li><i class="fas fa-chevron-right mx-2 text-xs"></i></li>
-                            <li class="text-primary-500 font-medium">Payout History</li>
-                        </ol>
-                    </nav>
-                    <h1 class="text-2xl font-semibold text-primary-500">
-                        <i class="fas fa-wallet text-tertiary-500 mr-2"></i>
+                    <h1 class="text-2xl font-semibold text-neutral-800">
                         Payout History
                     </h1>
-                    <p class="text-neutral-500 mt-1">Complete history of all adiutor payouts</p>
+                    <p class="text-sm text-neutral-500 mt-1">Complete history of all adiutor payouts</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
                     <a href="{{ route('admin.earnings-analytics.export', ['type' => 'payouts', 'period' => request('period', 90)]) }}" 
-                       class="glass-button-accent rounded-lg px-4 py-2 flex items-center text-sm">
-                        <i class="fas fa-download mr-2"></i> Export CSV
+                       class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
+                        <x-lucide-download class="w-4 h-4" /> Export CSV
                     </a>
                 </div>
             </div>
@@ -42,37 +41,79 @@
 
         <!-- Summary Stats -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-            <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-primary-500">
-                <div class="text-xs uppercase font-bold text-neutral-500">Total Payouts</div>
-                <div class="text-xl font-bold text-primary-500">{{ number_format($stats['total_payouts']) }}</div>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-neutral-500 uppercase">Total Payouts</p>
+                        <p class="text-xl font-semibold text-neutral-800 mt-1">{{ number_format($stats['total_payouts']) }}</p>
+                    </div>
+                    <div class="p-2 bg-primary-50 rounded-lg">
+                        <x-lucide-list class="w-4 h-4 text-primary-500" />
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-success-500">
-                <div class="text-xs uppercase font-bold text-neutral-500">Completed</div>
-                <div class="text-xl font-bold text-success-500">{{ number_format($stats['completed_payouts']) }}</div>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-neutral-500 uppercase">Completed</p>
+                        <p class="text-xl font-semibold text-success-600 mt-1">{{ number_format($stats['completed_payouts']) }}</p>
+                    </div>
+                    <div class="p-2 bg-success-50 rounded-lg">
+                        <x-lucide-check-circle class="w-4 h-4 text-success-500" />
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-warning-500">
-                <div class="text-xs uppercase font-bold text-neutral-500">Pending</div>
-                <div class="text-xl font-bold text-warning-500">{{ number_format($stats['pending_payouts']) }}</div>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-neutral-500 uppercase">Pending</p>
+                        <p class="text-xl font-semibold text-warning-600 mt-1">{{ number_format($stats['pending_payouts']) }}</p>
+                    </div>
+                    <div class="p-2 bg-warning-50 rounded-lg">
+                        <x-lucide-clock class="w-4 h-4 text-warning-500" />
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-accent-500">
-                <div class="text-xs uppercase font-bold text-neutral-500">Total Paid</div>
-                <div class="text-xl font-bold text-accent-500">₱{{ number_format($stats['total_paid'], 0) }}</div>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-neutral-500 uppercase">Total Paid</p>
+                        <p class="text-xl font-semibold text-primary-600 mt-1">₱{{ number_format($stats['total_paid'], 0) }}</p>
+                    </div>
+                    <div class="p-2 bg-primary-50 rounded-lg">
+                        <x-lucide-banknote class="w-4 h-4 text-primary-500" />
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-tertiary-500">
-                <div class="text-xs uppercase font-bold text-neutral-500">Pending Amount</div>
-                <div class="text-xl font-bold text-tertiary-500">₱{{ number_format($stats['pending_amount'], 0) }}</div>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-neutral-500 uppercase">Pending Amount</p>
+                        <p class="text-xl font-semibold text-neutral-600 mt-1">₱{{ number_format($stats['pending_amount'], 0) }}</p>
+                    </div>
+                    <div class="p-2 bg-neutral-50 rounded-lg">
+                        <x-lucide-hourglass class="w-4 h-4 text-neutral-400" />
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-secondary-500">
-                <div class="text-xs uppercase font-bold text-neutral-500">Avg Payout</div>
-                <div class="text-xl font-bold text-secondary-500">₱{{ number_format($stats['average_payout'] ?? 0, 0) }}</div>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-neutral-500 uppercase">Avg Payout</p>
+                        <p class="text-xl font-semibold text-neutral-600 mt-1">₱{{ number_format($stats['average_payout'] ?? 0, 0) }}</p>
+                    </div>
+                    <div class="p-2 bg-neutral-50 rounded-lg">
+                        <x-lucide-calculator class="w-4 h-4 text-neutral-400" />
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Monthly Trend Chart -->
         @if($monthlyTrend->count() > 0)
-        <div class="bg-white rounded-xl shadow-sm p-5 mb-6">
-            <h5 class="text-lg font-bold text-primary-500 mb-4">
-                <i class="fas fa-chart-bar text-accent-500 mr-2"></i>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 mb-6">
+            <h5 class="text-lg font-medium text-neutral-700 mb-4 flex items-center gap-2">
+                <x-lucide-bar-chart-2 class="w-5 h-5 text-neutral-400" />
                 Monthly Payout Trend
             </h5>
             <div class="chart-container">
@@ -82,11 +123,11 @@
         @endif
 
         <!-- Filters -->
-        <div class="bg-white rounded-xl shadow-sm p-5 mb-6">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 mb-6">
             <form method="GET" class="flex flex-wrap items-end gap-4">
                 <div class="flex-1 min-w-[150px]">
                     <label class="block text-sm font-medium text-neutral-700 mb-1">Period</label>
-                    <select name="period" class="form-select rounded-lg border-neutral-200 w-full text-sm">
+                    <select name="period" class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
                         <option value="30" {{ request('period') == '30' ? 'selected' : '' }}>Last 30 days</option>
                         <option value="90" {{ request('period', '90') == '90' ? 'selected' : '' }}>Last 90 days</option>
                         <option value="180" {{ request('period') == '180' ? 'selected' : '' }}>Last 6 months</option>
@@ -95,7 +136,7 @@
                 </div>
                 <div class="flex-1 min-w-[150px]">
                     <label class="block text-sm font-medium text-neutral-700 mb-1">Status</label>
-                    <select name="status" class="form-select rounded-lg border-neutral-200 w-full text-sm">
+                    <select name="status" class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
                         <option value="">All Statuses</option>
                         <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="processing" {{ $status == 'processing' ? 'selected' : '' }}>Processing</option>
@@ -105,7 +146,7 @@
                 </div>
                 <div class="flex-1 min-w-[150px]">
                     <label class="block text-sm font-medium text-neutral-700 mb-1">Adiutor</label>
-                    <select name="adiutor_id" class="form-select rounded-lg border-neutral-200 w-full text-sm">
+                    <select name="adiutor_id" class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
                         <option value="">All Adiutors</option>
                         @foreach($adiutors as $adiutor)
                             <option value="{{ $adiutor->id }}" {{ $adiutorId == $adiutor->id ? 'selected' : '' }}>
@@ -115,60 +156,61 @@
                     </select>
                 </div>
                 <div>
-                    <button type="submit" class="glass-button-accent rounded-lg px-4 py-2 text-sm">
-                        <i class="fas fa-filter mr-2"></i> Apply
+                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
+                        <x-lucide-filter class="w-4 h-4" /> Apply
                     </button>
                 </div>
                 <div>
-                    <a href="{{ route('admin.earnings-analytics.payout-history') }}" class="glass-button rounded-lg px-4 py-2 text-sm">
-                        <i class="fas fa-times mr-2"></i> Clear
+                    <a href="{{ route('admin.earnings-analytics.payout-history') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-neutral-700 text-sm font-medium rounded-lg border border-neutral-200 shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all">
+                        <x-lucide-x class="w-4 h-4" /> Clear
                     </a>
                 </div>
             </form>
         </div>
 
         <!-- Payouts Table -->
-        <div class="bg-white rounded-xl shadow-sm">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-neutral-100">
-                            <th class="text-neutral-500 font-semibold py-3 px-5 text-left">Payout #</th>
-                            <th class="text-neutral-500 font-semibold py-3 px-5 text-left">Adiutor</th>
-                            <th class="text-neutral-500 font-semibold py-3 px-5 text-right">Amount</th>
-                            <th class="text-neutral-500 font-semibold py-3 px-5 text-center">Status</th>
-                            <th class="text-neutral-500 font-semibold py-3 px-5 text-left">Method</th>
-                            <th class="text-neutral-500 font-semibold py-3 px-5 text-left">Reference</th>
-                            <th class="text-neutral-500 font-semibold py-3 px-5 text-left">Requested</th>
-                            <th class="text-neutral-500 font-semibold py-3 px-5 text-left">Processed By</th>
-                            <th class="text-neutral-500 font-semibold py-3 px-5 text-right">Actions</th>
+                    <thead class="bg-neutral-50 border-b border-neutral-100">
+                        <tr>
+                            <th class="text-xs font-medium text-neutral-500 uppercase tracking-wider py-3 px-5 text-left">Payout #</th>
+                            <th class="text-xs font-medium text-neutral-500 uppercase tracking-wider py-3 px-5 text-left">Adiutor</th>
+                            <th class="text-xs font-medium text-neutral-500 uppercase tracking-wider py-3 px-5 text-right">Amount</th>
+                            <th class="text-xs font-medium text-neutral-500 uppercase tracking-wider py-3 px-5 text-center">Status</th>
+                            <th class="text-xs font-medium text-neutral-500 uppercase tracking-wider py-3 px-5 text-left">Method</th>
+                            <th class="text-xs font-medium text-neutral-500 uppercase tracking-wider py-3 px-5 text-left">Reference</th>
+                            <th class="text-xs font-medium text-neutral-500 uppercase tracking-wider py-3 px-5 text-left">Requested</th>
+                            <th class="text-xs font-medium text-neutral-500 uppercase tracking-wider py-3 px-5 text-left">Processed By</th>
+                            <th class="text-xs font-medium text-neutral-500 uppercase tracking-wider py-3 px-5 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-neutral-100">
                         @forelse($payouts as $payout)
-                            <tr class="border-b border-neutral-50 hover:bg-neutral-50">
+                            <tr class="hover:bg-neutral-50 transition-colors">
                                 <td class="py-3 px-5">
-                                    <span class="font-medium font-mono text-primary-500">{{ $payout->payout_number }}</span>
+                                    <span class="font-medium font-mono text-neutral-700">{{ $payout->payout_number }}</span>
                                 </td>
                                 <td class="py-3 px-5">
-                                    <div class="font-medium text-primary-500">{{ $payout->adiutor?->fullName ?? 'N/A' }}</div>
+                                    <div class="font-medium text-neutral-700">{{ $payout->adiutor?->fullName ?? 'N/A' }}</div>
                                     <div class="text-xs text-neutral-500">{{ $payout->adiutor?->email }}</div>
                                 </td>
-                                <td class="py-3 px-5 text-right font-bold text-success-500">
+                                <td class="py-3 px-5 text-right font-bold text-success-600">
                                     {{ $payout->getFormattedAmount() }}
                                 </td>
                                 <td class="py-3 px-5 text-center">
                                     @php
-                                        $statusIcons = [
-                                            'pending' => 'fas fa-clock',
-                                            'processing' => 'fas fa-spinner',
-                                            'completed' => 'fas fa-check-circle',
-                                            'cancelled' => 'fas fa-times-circle',
-                                            'failed' => 'fas fa-exclamation-circle',
+                                        $statusConfig = [
+                                            'pending' => ['icon' => 'clock', 'class' => 'bg-warning-100 text-warning-700'],
+                                            'processing' => ['icon' => 'loader', 'class' => 'bg-primary-100 text-primary-700'],
+                                            'completed' => ['icon' => 'check-circle', 'class' => 'bg-success-100 text-success-700'],
+                                            'cancelled' => ['icon' => 'x-circle', 'class' => 'bg-error-100 text-error-700'],
+                                            'failed' => ['icon' => 'alert-circle', 'class' => 'bg-error-100 text-error-700'],
                                         ];
+                                        $config = $statusConfig[$payout->status] ?? ['icon' => 'help-circle', 'class' => 'bg-neutral-100 text-neutral-700'];
                                     @endphp
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $payout->getStatusBadgeClass() }}">
-                                        <i class="{{ $statusIcons[$payout->status] ?? 'fas fa-question-circle' }} mr-1"></i>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium {{ $config['class'] }}">
+                                        <x-dynamic-component :component="'lucide-' . $config['icon']" class="w-3 h-3" />
                                         {{ ucfirst($payout->status) }}
                                     </span>
                                 </td>
@@ -202,16 +244,16 @@
                                 </td>
                                 <td class="py-3 px-5 text-right">
                                     <a href="{{ route('admin.payouts.show', $payout->id) }}" 
-                                       class="inline-flex items-center px-3 py-1.5 bg-accent-50 text-accent-600 rounded-lg hover:bg-accent-100 transition-colors text-xs font-medium">
-                                        <i class="fas fa-eye mr-1"></i> View
+                                       class="inline-flex items-center gap-1 px-3 py-1.5 bg-neutral-50 text-neutral-600 rounded-lg hover:bg-neutral-100 transition-colors text-xs font-medium">
+                                        <x-lucide-eye class="w-3 h-3" /> View
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="9" class="py-12 text-center text-neutral-500">
-                                    <i class="fas fa-wallet text-5xl mb-4 opacity-30"></i>
-                                    <p>No payouts found for the selected filters</p>
+                                    <x-lucide-wallet class="w-12 h-12 mx-auto mb-3 text-neutral-300" />
+                                    <p class="text-sm">No payouts found for the selected filters</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -221,7 +263,7 @@
             
             @if($payouts->hasPages())
                 <div class="p-5 border-t border-neutral-100">
-                    {{ $payouts->withQueryString()->links() }}
+                    <x-ui.pagination :paginator="$payouts->withQueryString()" />
                 </div>
             @endif
         </div>

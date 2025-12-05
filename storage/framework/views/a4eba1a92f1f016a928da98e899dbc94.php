@@ -1,0 +1,7 @@
+<svg class="w-5 h-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M13 5h8"/>
+  <path d="M13 12h8"/>
+  <path d="M13 19h8"/>
+  <path d="m3 17 2 2 4-4"/>
+  <path d="m3 7 2 2 4-4"/>
+</svg><?php /**PATH C:\Users\marka\Projects\cms\storage\framework\views/56aef84dfe87115510cc17d437c07b44.blade.php ENDPATH**/ ?>

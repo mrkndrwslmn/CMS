@@ -216,7 +216,7 @@
         <!-- Pagination -->
         @if($coupons->hasPages())
         <div class="px-6 py-4 border-t border-neutral-200">
-            {{ $coupons->links() }}
+            <x-ui.pagination :paginator="$coupons" />
         </div>
         @endif
     </x-ui.card>

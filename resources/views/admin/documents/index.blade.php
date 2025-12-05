@@ -390,9 +390,9 @@
             </form>
 
             <!-- Pagination -->
-            <div class="mt-6 flex justify-center">
+            <div class="mt-6">
                 @if(isset($documents) && !is_array($documents) && method_exists($documents, 'links'))
-                    {{ $documents->links() }}
+                    <x-ui.pagination :paginator="$documents" />
                 @endif
             </div>
         </div>

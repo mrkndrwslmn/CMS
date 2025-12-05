@@ -386,7 +386,7 @@
 
                             <!-- Pagination -->
                             <div class="pagination">
-                                {{ $requests->links() }}
+                                <x-ui.pagination :paginator="$requests" />
                             </div>
                         </div>
                     </form>

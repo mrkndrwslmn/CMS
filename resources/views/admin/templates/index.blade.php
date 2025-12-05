@@ -233,7 +233,7 @@
 
             <!-- Pagination -->
             <div class="px-6 py-4 border-t border-neutral-200">
-                {{ $templates->appends(request()->query())->links() }}
+                <x-ui.pagination :paginator="$templates->appends(request()->query())" />
             </div>
         @else
             <div class="text-center py-12">

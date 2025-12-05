@@ -253,12 +253,7 @@
                     @if($payments->hasPages())
                         <div class="px-6 py-4 bg-neutral-50/50 border-t border-neutral-100">
                             <div class="flex items-center justify-between">
-                                <div class="text-sm text-neutral-600">
-                                    Showing {{ $payments->firstItem() }}-{{ $payments->lastItem() }} of {{ $payments->total() }} payments
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    {{ $payments->links() }}
-                                </div>
+                                <x-ui.pagination :paginator="$payments" />
                             </div>
                         </div>
                     @endif

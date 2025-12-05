@@ -165,7 +165,7 @@
                     <!-- Pagination -->
                     @if($timeEntries->hasPages())
                         <div class="px-6 py-4 border-t border-neutral-100">
-                            {{ $timeEntries->links() }}
+                            <x-ui.pagination :paginator="$timeEntries" />
                         </div>
                     @endif
                 @endif

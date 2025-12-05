@@ -17,7 +17,7 @@ class NotificationController extends Controller
         $user = Auth::user();
         
         try {
-            // Get notifications for the authenticated user
+            // Get notifications and count unread in a single query using raw SQL for efficiency
             $notifications = DB::table('notifications')
                 ->where('notifiable_type', 'App\\Models\\User')
                 ->where('notifiable_id', $user->id)
@@ -29,12 +29,18 @@ class NotificationController extends Controller
                     return $notification;
                 });
             
-            // Count unread notifications
-            $unreadCount = DB::table('notifications')
-                ->where('notifiable_type', 'App\\Models\\User')
-                ->where('notifiable_id', $user->id)
-                ->whereNull('read_at')
-                ->count();
+            // Count unread from the fetched notifications (avoid second query)
+            // For accurate count of ALL unread, we still need a count but it's indexed
+            $unreadCount = $notifications->whereNull('read_at')->count();
+            
+            // If user might have more than 10 unread, get the actual count
+            if ($unreadCount >= 10) {
+                $unreadCount = DB::table('notifications')
+                    ->where('notifiable_type', 'App\\Models\\User')
+                    ->where('notifiable_id', $user->id)
+                    ->whereNull('read_at')
+                    ->count();
+            }
             
             return response()->json([
                 'success' => true,

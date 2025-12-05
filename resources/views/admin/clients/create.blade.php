@@ -102,45 +102,25 @@
                         </label>
                         <x-ui.select name="status" id="status" required>
                             <option value="">Select Status</option>
-                            <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="active" {{ old('status', 'active') == 'active' ? 'selected' : '' }}>Active</option>
                             <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
                         </x-ui.select>
                         @error('status')
                             <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
                         @enderror
                     </div>
+                </div>
 
-                    <!-- Password -->
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-neutral-700 mb-1.5">
-                            Password <span class="text-error-500">*</span>
-                        </label>
-                        <x-ui.input 
-                            type="password" 
-                            name="password" 
-                            id="password" 
-                            icon="lock"
-                            placeholder="Enter password (min. 8 characters)" 
-                            required
-                        />
-                        @error('password')
-                            <p class="mt-1 text-sm text-error-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Confirm Password -->
-                    <div>
-                        <label for="password_confirmation" class="block text-sm font-medium text-neutral-700 mb-1.5">
-                            Confirm Password <span class="text-error-500">*</span>
-                        </label>
-                        <x-ui.input 
-                            type="password" 
-                            name="password_confirmation" 
-                            id="password_confirmation" 
-                            icon="lock"
-                            placeholder="Confirm password" 
-                            required
-                        />
+                <!-- Password Notice -->
+                <div class="mt-6 p-4 bg-info-50 border border-info-200 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <x-lucide-info class="w-5 h-5 text-info-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                            <h4 class="text-sm font-medium text-info-800">Automatic Password Generation</h4>
+                            <p class="mt-1 text-sm text-info-700">
+                                For security and privacy purposes, a secure password will be automatically generated and sent to the client's email address along with login instructions.
+                            </p>
+                        </div>
                     </div>
                 </div>
 

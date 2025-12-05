@@ -267,7 +267,7 @@
         <!-- Pagination -->
         @if($referrals->hasPages())
         <div class="px-4 py-4 border-t border-neutral-200">
-            {{ $referrals->links() }}
+            <x-ui.pagination :paginator="$referrals" />
         </div>
         @endif
     </x-ui.card>

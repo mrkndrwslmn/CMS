@@ -308,7 +308,7 @@
         <!-- Pagination -->
         @if($feedbacks->hasPages())
             <div class="mt-6 flex justify-center border-t border-neutral-100 pt-6">
-                {{ $feedbacks->links() }}
+                <x-ui.pagination :paginator="$feedbacks" />
             </div>
         @endif
     </x-ui.card>

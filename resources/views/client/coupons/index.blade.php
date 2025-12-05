@@ -207,7 +207,7 @@
 
         @if($usageHistory->hasPages())
         <div class="mt-6">
-            {{ $usageHistory->links() }}
+            <x-ui.pagination :paginator="$usageHistory" />
         </div>
         @endif
         @else

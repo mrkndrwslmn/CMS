@@ -8,6 +8,7 @@ use App\Models\ServiceRequest;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Repository for client-related database operations.
@@ -57,8 +58,7 @@ class ClientRepository
     public function getPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = $this->baseQuery()
-            ->with(['createdProjects', 'serviceRequests'])
-            ->withCount(['createdProjects', 'serviceRequests']);
+            ->withCount(['createdProjects', 'serviceRequests']); // Only load counts, not full relations
 
         $this->applyFilters($query, $filters);
 
@@ -79,8 +79,7 @@ class ClientRepository
     public function getArchivedPaginated(?string $search = null, int $perPage = 15): LengthAwarePaginator
     {
         $query = $this->archivedQuery()
-            ->with(['createdProjects', 'serviceRequests'])
-            ->withCount(['createdProjects', 'serviceRequests']);
+            ->withCount(['createdProjects', 'serviceRequests']); // Only load counts, not full relations
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -200,12 +199,22 @@ class ClientRepository
      */
     public function getStats(): array
     {
+        // Use a single query with subqueries for all stats
+        $stats = DB::selectOne("
+            SELECT 
+                (SELECT COUNT(*) FROM users WHERE role = 'client' AND status != 'deleted') as total_clients,
+                (SELECT COUNT(*) FROM users WHERE role = 'client' AND status = 'active') as active_clients,
+                (SELECT COUNT(*) FROM users WHERE role = 'client' AND status = 'deleted') as archived_clients,
+                (SELECT COUNT(*) FROM service_requests) as total_requests,
+                (SELECT COUNT(*) FROM projects WHERE status = 'in_progress') as active_projects
+        ");
+        
         return [
-            'total_clients' => User::where('role', 'client')->where('status', '!=', 'deleted')->count(),
-            'active_clients' => User::where('role', 'client')->where('status', 'active')->count(),
-            'archived_clients' => User::where('role', 'client')->where('status', 'deleted')->count(),
-            'total_requests' => ServiceRequest::count(),
-            'active_projects' => Project::where('status', 'in_progress')->count(),
+            'total_clients' => (int) ($stats->total_clients ?? 0),
+            'active_clients' => (int) ($stats->active_clients ?? 0),
+            'archived_clients' => (int) ($stats->archived_clients ?? 0),
+            'total_requests' => (int) ($stats->total_requests ?? 0),
+            'active_projects' => (int) ($stats->active_projects ?? 0),
         ];
     }
 

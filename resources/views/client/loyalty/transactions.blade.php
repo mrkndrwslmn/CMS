@@ -190,7 +190,7 @@
 
         <!-- Pagination -->
         <div class="p-6 border-t border-neutral-100">
-            {{ $transactions->links() }}
+            <x-ui.pagination :paginator="$transactions" />
         </div>
         @else
         <div class="text-center py-12 px-6">

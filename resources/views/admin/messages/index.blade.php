@@ -236,7 +236,7 @@
         <!-- Pagination -->
         @if(!$conversations->isEmpty())
             <div class="px-6 py-4 border-t border-neutral-200">
-                {{ $conversations->links() }}
+                <x-ui.pagination :paginator="$conversations" />
             </div>
         @endif
     </x-ui.card>

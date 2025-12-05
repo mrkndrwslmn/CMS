@@ -926,7 +926,7 @@
                         <x-ui.button type="button" variant="secondary" onclick="hideCompleteModal()">
                             Cancel
                         </x-ui.button>
-                        <x-ui.button type="submit" variant="success" id="completeProjectBtn" {{ $hasIncompleteTasks ? 'disabled' : '' }}>
+                        <x-ui.button type="submit" variant="success" id="completeProjectBtn" :disabled="$hasIncompleteTasks">
                             <x-lucide-check-circle class="w-4 h-4" />
                             Complete Project
                         </x-ui.button>

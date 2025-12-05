@@ -155,7 +155,7 @@
 
             <!-- Pagination -->
             <div class="mt-8">
-                {{ $revisions->links() }}
+                <x-ui.pagination :paginator="$revisions" />
             </div>
         @else
             <!-- Empty State -->

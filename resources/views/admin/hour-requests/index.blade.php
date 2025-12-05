@@ -189,7 +189,7 @@
 
         @if($requests->hasPages())
         <div class="mt-6 pt-6 border-t border-neutral-100">
-            {{ $requests->withQueryString()->links() }}
+            <x-ui.pagination :paginator="$requests->withQueryString()" />
         </div>
         @endif
         @endif

@@ -192,7 +192,7 @@
             <!-- Pagination -->
             @if($budgetRequests->hasPages())
                 <div class="px-6 py-4 border-t border-neutral-100">
-                    {{ $budgetRequests->links() }}
+                    <x-ui.pagination :paginator="$budgetRequests" />
                 </div>
             @endif
         @else

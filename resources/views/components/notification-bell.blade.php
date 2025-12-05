@@ -100,11 +100,16 @@ function notificationBell() {
         isLoading: false,
         notifications: [],
         unreadCount: 0,
+        pollingInterval: null,
         
         init() {
-            this.fetchNotifications();
-            // Poll for new notifications every 30 seconds
-            setInterval(() => this.fetchNotifications(), 30000);
+            // Only start polling if no other instance is running
+            if (!window.notificationPollingActive) {
+                window.notificationPollingActive = true;
+                this.fetchNotifications();
+                // Poll for new notifications every 60 seconds (reduced from 30s)
+                this.pollingInterval = setInterval(() => this.fetchNotifications(), 60000);
+            }
         },
         
         async fetchNotifications() {

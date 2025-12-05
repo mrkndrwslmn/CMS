@@ -164,7 +164,7 @@
         <!-- Pagination -->
         @if($documents->hasPages())
         <div class="px-4 py-3 border-t border-neutral-100">
-            {{ $documents->links() }}
+            <x-ui.pagination :paginator="$documents" />
         </div>
         @endif
         @else

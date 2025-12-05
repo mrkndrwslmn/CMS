@@ -222,7 +222,7 @@
         <!-- Pagination -->
         @if($loyaltyPoints->hasPages())
         <div class="px-6 py-4 border-t border-neutral-200">
-            {{ $loyaltyPoints->links() }}
+            <x-ui.pagination :paginator="$loyaltyPoints" />
         </div>
         @endif
     </x-ui.card>

@@ -205,8 +205,8 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="mt-6 flex justify-center">
-                    {{ $documents->links() }}
+                <div class="mt-6">
+                    <x-ui.pagination :paginator="$documents" />
                 </div>
             @else
                 <div class="text-center py-16">

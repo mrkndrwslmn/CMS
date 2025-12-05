@@ -33,10 +33,9 @@ class StoreClientRequest extends FormRequest
             'phoneNumber' => [
                 'required',
                 'string',
-                'max:20',
-                'regex:/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,9}$/',
+                'max:30',
+                'regex:/^[\+]?[0-9\s\-\(\)\.]{7,25}$/',
             ],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'status' => ['required', 'in:active,inactive'],
         ];
     }
@@ -56,9 +55,6 @@ class StoreClientRequest extends FormRequest
             'email.unique' => 'This email address is already registered.',
             'phoneNumber.required' => 'The phone number is required.',
             'phoneNumber.regex' => 'Please enter a valid phone number format.',
-            'password.required' => 'The password is required.',
-            'password.min' => 'The password must be at least 8 characters.',
-            'password.confirmed' => 'The password confirmation does not match.',
             'status.required' => 'Please select a status.',
             'status.in' => 'The status must be either active or inactive.',
         ];
