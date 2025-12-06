@@ -14,11 +14,11 @@
         <div class="flex items-center space-x-3">
             <a href="{{ route('admin.templates.edit', $template) }}" 
                class="flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                <i class="fas fa-edit mr-2"></i>Edit Template
+                <x-lucide-pencil class="w-4 h-4 mr-2" />Edit Template
             </a>
             <a href="{{ route('admin.templates.index') }}" 
                class="flex items-center px-4 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Templates
+                <x-lucide-arrow-left class="w-4 h-4 mr-2" />Back to Templates
             </a>
         </div>
     </div>
@@ -125,7 +125,7 @@
                     
                     <div class="mt-4 p-3 bg-blue-50 rounded-lg">
                         <div class="flex items-center text-sm text-blue-600">
-                            <i class="fas fa-clock mr-2"></i>
+                            <x-lucide-clock class="w-4 h-4 mr-2" />
                             <span>Total estimated hours: {{ collect($template->default_tasks)->sum('estimated_hours') }} hours</span>
                         </div>
                     </div>
@@ -216,7 +216,11 @@
                         @csrf
                         <button type="submit" 
                                 class="w-full flex items-center justify-center px-4 py-2 {{ $template->is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600' }} text-white rounded-lg transition-colors">
-                            <i class="fas fa-{{ $template->is_active ? 'pause' : 'play' }} mr-2"></i>
+                            @if($template->is_active)
+                                <x-lucide-pause class="w-4 h-4 mr-2" />
+                            @else
+                                <x-lucide-play class="w-4 h-4 mr-2" />
+                            @endif
                             {{ $template->is_active ? 'Deactivate' : 'Activate' }} Template
                         </button>
                     </form>
@@ -225,7 +229,7 @@
                         @csrf
                         <button type="submit" 
                                 class="w-full flex items-center justify-center px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors">
-                            <i class="fas fa-copy mr-2"></i>Duplicate Template
+                            <x-lucide-copy class="w-4 h-4 mr-2" />Duplicate Template
                         </button>
                     </form>
                     
@@ -235,7 +239,7 @@
                         @method('DELETE')
                         <button type="submit" 
                                 class="w-full flex items-center justify-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
-                            <i class="fas fa-trash mr-2"></i>Delete Template
+                            <x-lucide-trash-2 class="w-4 h-4 mr-2" />Delete Template
                         </button>
                     </form>
                 </div>

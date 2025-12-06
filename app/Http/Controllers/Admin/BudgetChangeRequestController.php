@@ -108,11 +108,7 @@ class BudgetChangeRequestController extends Controller
             $budgetRequest->refresh();
             
             // Send notification for dashboard and email
-            $adiutor->notify(new BudgetChangeReviewedNotification(
-                $task,
-                'approved',
-                $budgetRequest->requested_budget
-            ));
+            $adiutor->notify(new BudgetChangeReviewedNotification($budgetRequest));
 
             DB::commit();
 
@@ -153,19 +149,13 @@ class BudgetChangeRequestController extends Controller
             ]);
 
             // Create notification for adiutor
-            $task = Task::find($budgetRequest->task_id);
             $adiutor = User::find($budgetRequest->adiutor_id);
             
             // Reload budget request to get updated data
             $budgetRequest->refresh();
             
             // Send notification for dashboard and email
-            $adiutor->notify(new BudgetChangeReviewedNotification(
-                $task,
-                'rejected',
-                null,
-                $request->review_notes
-            ));
+            $adiutor->notify(new BudgetChangeReviewedNotification($budgetRequest));
 
             DB::commit();
 

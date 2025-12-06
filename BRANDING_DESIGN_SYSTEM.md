@@ -399,6 +399,130 @@ Use Lucide icons for separators. **Every breadcrumb item MUST have an icon** for
 </span>
 ```
 
+### Status Icons
+
+**All status indicators must use consistent Lucide icons across the application.** This ensures visual consistency and helps users quickly recognize status types.
+
+#### Standard Status Icon Mapping
+
+| Status Type | Icon | Color Class | Usage |
+|-------------|------|-------------|-------|
+| **Success/Approved/Active** | `check-circle` | `text-success-500` | Approved items, active states, completed tasks |
+| **Pending/Waiting** | `clock` | `text-warning-500` | Awaiting approval, in progress, pending review |
+| **Rejected/Error/Failed** | `x-circle` | `text-error-500` | Rejected items, errors, failed operations |
+| **Draft/Inactive** | `circle-dashed` | `text-neutral-400` | Draft states, inactive items |
+| **Info/Notice** | `info` | `text-primary-500` | Informational notices |
+| **Warning/Caution** | `alert-triangle` | `text-warning-500` | Warnings, needs attention |
+| **Locked/Private** | `lock` | `text-neutral-500` | Locked items, private content |
+| **Unlocked/Public** | `globe` | `text-success-500` | Public content, accessible items |
+| **Archived** | `archive` | `text-neutral-400` | Archived items |
+| **Verified** | `badge-check` | `text-success-500` | Verified/validated items |
+
+#### Status Badge with Icon
+
+```blade
+{{-- Approved status --}}
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
+    <x-lucide-check-circle class="w-3 h-3" />
+    Approved
+</span>
+
+{{-- Pending status --}}
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-700">
+    <x-lucide-clock class="w-3 h-3" />
+    Pending
+</span>
+
+{{-- Rejected status --}}
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-700">
+    <x-lucide-x-circle class="w-3 h-3" />
+    Rejected
+</span>
+
+{{-- Draft status --}}
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600">
+    <x-lucide-circle-dashed class="w-3 h-3" />
+    Draft
+</span>
+```
+
+#### Standalone Status Icons
+
+For table cells or compact displays:
+
+```blade
+{{-- Icon only with tooltip --}}
+<span title="Approved">
+    <x-lucide-check-circle class="w-5 h-5 text-success-500" />
+</span>
+
+<span title="Pending Approval">
+    <x-lucide-clock class="w-5 h-5 text-warning-500" />
+</span>
+
+<span title="Rejected">
+    <x-lucide-x-circle class="w-5 h-5 text-error-500" />
+</span>
+```
+
+#### Document/File Type Icons
+
+Use consistent icons for file types across all views:
+
+| File Type | Icon | Color Class |
+|-----------|------|-------------|
+| PDF | `file-text` | `text-red-500` |
+| Word (doc/docx) | `file-text` | `text-blue-500` |
+| Excel (xls/xlsx) | `file-spreadsheet` | `text-green-500` |
+| PowerPoint (ppt/pptx) | `presentation` | `text-orange-500` |
+| Images (jpg/png/gif/webp) | `image` | `text-purple-500` |
+| Archives (zip/rar) | `archive` | `text-yellow-500` |
+| Audio files | `file-audio` | `text-pink-500` |
+| Video files | `file-video` | `text-indigo-500` |
+| Text files (txt/log) | `file-text` | `text-gray-500` |
+| CSV files | `file-spreadsheet` | `text-green-600` |
+| Code files (json/xml/html/css/js/php) | `file-code` | `text-cyan-500` |
+| Default/Unknown | `file` | `text-neutral-500` |
+
+#### Payment Status Icons
+
+| Status | Icon | Color Class |
+|--------|------|-------------|
+| Paid | `check-circle` | `text-success-500` |
+| Unpaid | `circle-dashed` | `text-neutral-400` |
+| Partial | `circle-dot` | `text-warning-500` |
+| Overdue | `alert-circle` | `text-error-500` |
+| Refunded | `rotate-ccw` | `text-primary-500` |
+
+#### Task/Project Status Icons
+
+| Status | Icon | Color Class |
+|--------|------|-------------|
+| Not Started | `circle-dashed` | `text-neutral-400` |
+| In Progress | `loader` | `text-primary-500` |
+| On Hold | `pause-circle` | `text-warning-500` |
+| Completed | `check-circle` | `text-success-500` |
+| Cancelled | `x-circle` | `text-error-500` |
+| Overdue | `alert-circle` | `text-error-500` |
+
+#### User/Account Status Icons
+
+| Status | Icon | Color Class |
+|--------|------|-------------|
+| Active | `check-circle` | `text-success-500` |
+| Inactive | `circle-dashed` | `text-neutral-400` |
+| Suspended | `ban` | `text-error-500` |
+| Pending Verification | `clock` | `text-warning-500` |
+| Verified | `badge-check` | `text-success-500` |
+
+#### Privacy/Visibility Icons
+
+| Status | Icon | Color Class |
+|--------|------|-------------|
+| Public | `globe` | `text-success-500` |
+| Private | `lock` | `text-warning-500` |
+| Restricted | `shield` | `text-neutral-500` |
+
 ### Statistics Cards
 
 Statistics cards display key metrics on dashboards. They should be consistent across all pages.

@@ -3,7 +3,7 @@
 @section('title', 'Group Chat - ' . $project->title)
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'url' => route('adiutor.dashboard')],
@@ -91,7 +91,7 @@
                         @php
                             $isOwnMessage = $message->sender_id === $user->id;
                         @endphp
-                        <div class="flex {{ $isOwnMessage ? 'justify-end' : 'justify-start' }}">
+                        <div class="flex {{ $isOwnMessage ? 'justify-end' : 'justify-start' }}" data-message-id="{{ $message->id }}">
                             <div class="max-w-2xl {{ $isOwnMessage ? 'items-end' : 'items-start' }} flex flex-col">
                                 <!-- Sender Info -->
                                 @if(!$isOwnMessage)

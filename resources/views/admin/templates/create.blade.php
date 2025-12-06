@@ -13,7 +13,7 @@
         </div>
         <a href="{{ route('admin.templates.index') }}" 
            class="flex items-center px-4 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg transition-colors">
-            <i class="fas fa-arrow-left mr-2"></i>Back to Templates
+            <x-lucide-arrow-left class="w-4 h-4 mr-2" />Back to Templates
         </a>
     </div>
 
@@ -118,12 +118,12 @@
                 <h3 class="text-lg font-medium text-neutral-900">Default Tasks</h3>
                 <button type="button" @click="addTask()" 
                         class="flex items-center px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors">
-                    <i class="fas fa-plus mr-1"></i>Add Task
+                    <x-lucide-plus class="w-4 h-4 mr-1" />Add Task
                 </button>
             </div>
             
             <div x-show="tasks.length === 0" class="text-center py-8 text-neutral-500">
-                <i class="fas fa-tasks text-2xl mb-2"></i>
+                <x-lucide-list-todo class="w-8 h-8 mx-auto mb-2" />
                 <p>No tasks added yet. Click "Add Task" to get started.</p>
             </div>
             
@@ -134,7 +134,7 @@
                             <h4 class="font-medium text-neutral-900" x-text="`Task ${index + 1}`"></h4>
                             <button type="button" @click="removeTask(index)" 
                                     class="text-red-600 hover:text-red-700 transition-colors">
-                                <i class="fas fa-trash"></i>
+                                <x-lucide-trash-2 class="w-4 h-4" />
                             </button>
                         </div>
                         
@@ -178,12 +178,12 @@
                 <h3 class="text-lg font-medium text-neutral-900">Required Skills</h3>
                 <button type="button" @click="addSkill()" 
                         class="flex items-center px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors">
-                    <i class="fas fa-plus mr-1"></i>Add Skill
+                    <x-lucide-plus class="w-4 h-4 mr-1" />Add Skill
                 </button>
             </div>
             
             <div x-show="skills.length === 0" class="text-center py-8 text-neutral-500">
-                <i class="fas fa-cogs text-2xl mb-2"></i>
+                <x-lucide-settings class="w-8 h-8 mx-auto mb-2" />
                 <p>No skills added yet. Click "Add Skill" to get started.</p>
             </div>
             
@@ -194,7 +194,7 @@
                                class="flex-1 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <button type="button" @click="removeSkill(index)" 
                                 class="text-red-600 hover:text-red-700 transition-colors">
-                            <i class="fas fa-trash"></i>
+                            <x-lucide-trash-2 class="w-4 h-4" />
                         </button>
                     </div>
                 </template>
@@ -207,12 +207,12 @@
                 <h3 class="text-lg font-medium text-neutral-900">Milestone Template</h3>
                 <button type="button" @click="addMilestone()" 
                         class="flex items-center px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors">
-                    <i class="fas fa-plus mr-1"></i>Add Milestone
+                    <x-lucide-plus class="w-4 h-4 mr-1" />Add Milestone
                 </button>
             </div>
             
             <div x-show="milestones.length === 0" class="text-center py-8 text-neutral-500">
-                <i class="fas fa-flag text-2xl mb-2"></i>
+                <x-lucide-flag class="w-8 h-8 mx-auto mb-2" />
                 <p>No milestones added yet. Click "Add Milestone" to get started.</p>
             </div>
             
@@ -223,7 +223,7 @@
                             <h4 class="font-medium text-neutral-900" x-text="`Milestone ${index + 1}`"></h4>
                             <button type="button" @click="removeMilestone(index)" 
                                     class="text-red-600 hover:text-red-700 transition-colors">
-                                <i class="fas fa-trash"></i>
+                                <x-lucide-trash-2 class="w-4 h-4" />
                             </button>
                         </div>
                         
@@ -252,7 +252,7 @@
             
             <div x-show="milestones.length > 0" class="mt-4 p-3 bg-blue-50 rounded-lg">
                 <div class="flex items-center text-sm text-blue-600">
-                    <i class="fas fa-info-circle mr-2"></i>
+                    <x-lucide-info class="w-4 h-4 mr-2" />
                     <span>Total percentage: <span x-text="milestones.reduce((sum, milestone) => sum + parseInt(milestone.percentage || 0), 0)"></span>% (should equal 100%)</span>
                 </div>
             </div>

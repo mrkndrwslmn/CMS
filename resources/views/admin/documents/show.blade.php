@@ -4,7 +4,7 @@
 @section('page-title', 'Document Details')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-6 py-8">
+<div class="max-w-8xl mx-auto px-6 py-8">
     <!-- Page Header -->
     <div class="mb-8">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
@@ -12,18 +12,18 @@
                 <h1 class="text-2xl font-semibold text-neutral-800">Document Details</h1>
                 <nav class="flex items-center space-x-2 text-sm text-neutral-500 mt-2">
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-primary-500 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <a href="{{ route('admin.documents.index') }}" class="hover:text-primary-500 transition-colors">Documents</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <span class="text-neutral-700">{{ $document->fileName }}</span>
                 </nav>
             </div>
             <div class="mt-4 sm:mt-0 flex items-center space-x-3">
                 <a href="{{ route('admin.documents.download', $document->documentID) }}" class="px-4 py-2 bg-success-500 hover:bg-success-600 text-white rounded-lg transition-colors flex items-center">
-                    <i class="fas fa-download mr-2"></i> Download
+                    <x-lucide-download class="w-4 h-4 mr-2" /> Download
                 </a>
                 <a href="{{ route('admin.documents.edit', $document->documentID) }}" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors flex items-center">
-                    <i class="fas fa-edit mr-2"></i> Edit
+                    <x-lucide-pencil class="w-4 h-4 mr-2" /> Edit
                 </a>
             </div>
         </div>
@@ -35,12 +35,12 @@
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-neutral-200 flex items-center justify-between">
                     <div class="flex items-center">
-                        <i class="fas {{ $document->file_icon }} mr-2"></i>
+                        <x-dynamic-component :component="'lucide-' . $document->file_icon" class="w-5 h-5 mr-2 {{ $document->file_icon_color }}" />
                         <h3 class="text-lg font-semibold text-neutral-800">Document Preview</h3>
                     </div>
                     @if($document->version > 1)
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        <i class="fas fa-code-branch mr-1"></i> Version {{ $document->version }}
+                        <x-lucide-git-branch class="w-3 h-3 mr-1" /> Version {{ $document->version }}
                     </span>
                     @endif
                 </div>
@@ -50,7 +50,7 @@
                             <div class="text-center">
                                 <img src="{{ $document->getDisplayUrl() }}" alt="{{ $document->fileName }}" class="max-w-full h-auto rounded-lg shadow-sm mx-auto" style="max-height: 600px;">
                                 <a href="{{ $document->getDisplayUrl() }}" target="_blank" class="inline-flex items-center mt-4 text-sm text-primary-600 hover:text-primary-700">
-                                    <i class="fas fa-external-link-alt mr-1"></i> Open Full Size
+                                    <x-lucide-external-link class="w-4 h-4 mr-1" /> Open Full Size
                                 </a>
                             </div>
                         @elseif($document->isPdf())
@@ -59,18 +59,18 @@
                             </div>
                             <div class="text-center mt-4">
                                 <a href="{{ $document->getDisplayUrl() }}" target="_blank" class="inline-flex items-center text-sm text-primary-600 hover:text-primary-700">
-                                    <i class="fas fa-external-link-alt mr-1"></i> Open in New Tab
+                                    <x-lucide-external-link class="w-4 h-4 mr-1" /> Open in New Tab
                                 </a>
                             </div>
                         @else
                             <div class="py-16 text-center bg-neutral-50 rounded-lg">
                                 <div class="bg-neutral-200 p-6 rounded-full inline-block mb-4">
-                                    <i class="fas {{ $document->file_icon }} text-4xl"></i>
+                                    <x-dynamic-component :component="'lucide-' . $document->file_icon" class="w-10 h-10 {{ $document->file_icon_color }}" />
                                 </div>
                                 <h4 class="text-lg font-semibold text-neutral-800 mb-2">{{ $document->fileName }}</h4>
                                 <p class="text-neutral-500 mb-6">This file type cannot be previewed. Please download the file to view it.</p>
                                 <a href="{{ route('admin.documents.download', $document->documentID) }}" class="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors inline-flex items-center">
-                                    <i class="fas fa-download mr-2"></i> Download File
+                                    <x-lucide-download class="w-4 h-4 mr-2" /> Download File
                                 </a>
                             </div>
                         @endif
@@ -86,7 +86,7 @@
             <div class="bg-white rounded-xl shadow-sm overflow-hidden mt-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
                     <div class="flex items-center">
-                        <i class="fas fa-history text-primary-500 mr-2"></i>
+                        <x-lucide-history class="w-5 h-5 text-primary-500 mr-2" />
                         <h3 class="text-lg font-semibold text-neutral-800">Version History</h3>
                         <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700">
                             {{ $versionCount }} versions
@@ -98,7 +98,7 @@
                     <div class="px-6 py-4 flex items-center justify-between hover:bg-neutral-50 {{ $version->documentID === $document->documentID ? 'bg-primary-50' : '' }}">
                         <div class="flex items-center">
                             <div class="bg-{{ $version->documentID === $document->documentID ? 'primary' : 'neutral' }}-100 p-2 rounded-lg mr-4">
-                                <i class="fas {{ $version->file_icon }} text-lg"></i>
+                                <x-dynamic-component :component="'lucide-' . $version->file_icon" class="w-5 h-5 {{ $version->file_icon_color }}" />
                             </div>
                             <div>
                                 <div class="flex items-center">
@@ -122,11 +122,11 @@
                         <div class="flex items-center space-x-2">
                             @if($version->documentID !== $document->documentID)
                             <a href="{{ route('admin.documents.show', $version->documentID) }}" class="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors" title="View">
-                                <i class="fas fa-eye"></i>
+                                <x-lucide-eye class="w-4 h-4" />
                             </a>
                             @endif
                             <a href="{{ route('admin.documents.download', $version->documentID) }}" class="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors" title="Download">
-                                <i class="fas fa-download"></i>
+                                <x-lucide-download class="w-4 h-4" />
                             </a>
                         </div>
                     </div>
@@ -141,7 +141,7 @@
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-neutral-200">
                     <div class="flex items-center">
-                        <i class="fas fa-info-circle text-primary-500 mr-2"></i>
+                        <x-lucide-info class="w-5 h-5 text-primary-500 mr-2" />
                         <h3 class="text-lg font-semibold text-neutral-800">Document Information</h3>
                     </div>
                 </div>
@@ -171,11 +171,11 @@
                             <dt class="text-sm font-medium text-neutral-500">Version</dt>
                             <dd class="mt-1">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    <i class="fas fa-code-branch mr-1"></i> Version {{ $document->version }}
+                                    <x-lucide-git-branch class="w-3 h-3 mr-1" /> Version {{ $document->version }}
                                 </span>
                                 @if(!$document->isLatestVersion())
-                                <span class="ml-2 text-xs text-warning-600">
-                                    <i class="fas fa-exclamation-triangle mr-1"></i> Newer version available
+                                <span class="ml-2 text-xs text-warning-600 inline-flex items-center">
+                                    <x-lucide-alert-triangle class="w-3 h-3 mr-1" /> Newer version available
                                 </span>
                                 @endif
                             </dd>
@@ -205,11 +205,11 @@
                             <dd class="mt-1">
                                 @if($document->is_public)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
-                                        <i class="fas fa-globe mr-1"></i> Public
+                                        <x-lucide-globe class="w-3 h-3 mr-1" /> Public
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
-                                        <i class="fas fa-lock mr-1"></i> Private
+                                        <x-lucide-lock class="w-3 h-3 mr-1" /> Private
                                     </span>
                                 @endif
                             </dd>
@@ -249,19 +249,19 @@
             <div class="bg-white rounded-xl shadow-sm overflow-hidden mt-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
                     <div class="flex items-center">
-                        <i class="fas fa-tools text-primary-500 mr-2"></i>
+                        <x-lucide-wrench class="w-5 h-5 text-primary-500 mr-2" />
                         <h3 class="text-lg font-semibold text-neutral-800">Actions</h3>
                     </div>
                 </div>
                 <div class="p-6 space-y-3">
                     <a href="{{ route('admin.documents.edit', $document->documentID) }}" class="w-full px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors flex items-center justify-center">
-                        <i class="fas fa-edit mr-2"></i> Edit Document
+                        <x-lucide-pencil class="w-4 h-4 mr-2" /> Edit Document
                     </a>
                     <a href="{{ route('admin.documents.download', $document->documentID) }}" class="w-full px-4 py-2 bg-success-500 hover:bg-success-600 text-white rounded-lg transition-colors flex items-center justify-center">
-                        <i class="fas fa-download mr-2"></i> Download File
+                        <x-lucide-download class="w-4 h-4 mr-2" /> Download File
                     </a>
                     <button type="button" onclick="document.getElementById('deleteModal').classList.remove('hidden')" class="w-full px-4 py-2 bg-error-500 hover:bg-error-600 text-white rounded-lg transition-colors flex items-center justify-center">
-                        <i class="fas fa-trash mr-2"></i> Delete Document
+                        <x-lucide-trash-2 class="w-4 h-4 mr-2" /> Delete Document
                     </button>
                 </div>
             </div>
@@ -276,14 +276,14 @@
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-neutral-800">Confirm Deletion</h3>
                 <button type="button" onclick="document.getElementById('deleteModal').classList.add('hidden')" class="text-neutral-400 hover:text-neutral-600 transition-colors">
-                    <i class="fas fa-times"></i>
+                    <x-lucide-x class="w-5 h-5" />
                 </button>
             </div>
         </div>
         <div class="px-6 py-4">
             <div class="flex items-start space-x-4">
                 <div class="bg-warning-100 p-3 rounded-full">
-                    <i class="fas fa-trash-alt text-warning-500"></i>
+                    <x-lucide-trash-2 class="w-5 h-5 text-warning-500" />
                 </div>
                 <div class="flex-1">
                     <p class="text-neutral-700 text-sm mb-2">Are you sure you want to delete this document? It will be moved to trash and can be restored later.</p>

@@ -8,51 +8,72 @@ use App\Models\Task;
 use App\Models\ServiceRequest;
 use App\Models\Project;
 use App\Models\Conversation;
+use App\Services\DashboardStatsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
     use \App\Http\Controllers\Admin\AdminMessagingMethods;
 
+    protected DashboardStatsService $statsService;
+
+    public function __construct(DashboardStatsService $statsService)
+    {
+        $this->statsService = $statsService;
+    }
+
     /**
      * Show admin dashboard
+     * OPTIMIZED: Uses cached stats and batched queries
      */
     public function dashboard()
     {
-        // Get dashboard statistics
-        $stats = [
-            'total_users' => User::count(),
-            'total_clients' => User::where('role', 'client')->count(),
-            'total_adiutors' => User::where('role', 'adiutor')->count(),
-            'pending_requests' => ServiceRequest::where('status', 'pending')->count(),
-            'active_tasks' => Task::whereIn('status', ['pending', 'in_progress'])->count(),
-            'completed_tasks' => Task::where('status', 'completed')->count(),
-            'pending_budget_requests' => \App\Models\BudgetChangeRequest::where('status', 'pending')->count(),
-            'recent_users' => User::orderBy('created_at', 'desc')->limit(5)->get(),
-            'recent_requests' => ServiceRequest::with('user')->orderBy('created_at', 'desc')->limit(5)->get(),
-        ];
+        // Get cached dashboard statistics (reduces 7+ queries to 1 cached call)
+        $cachedStats = $this->statsService->getAdminStats();
+        
+        // Add recent items (these are small queries, acceptable to run fresh)
+        $stats = array_merge($cachedStats, [
+            'recent_users' => User::select('id', 'fullName', 'email', 'role', 'created_at')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get(),
+            'recent_requests' => ServiceRequest::with('user:id,fullName,email')
+                ->select('id', 'client_id', 'service_type', 'status', 'created_at')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get(),
+        ]);
 
-        // Get monthly user registrations for chart
-        $monthlyUsers = User::selectRaw('DATE_FORMAT(created_at, "%m") as month, COUNT(*) as count')
-            ->whereRaw('YEAR(created_at) = ?', [date('Y')])
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+        // Cache chart data for 5 minutes (doesn't change frequently)
+        $monthlyUsers = Cache::remember('admin_monthly_users_chart', 300, function () {
+            return User::selectRaw('DATE_FORMAT(created_at, "%m") as month, COUNT(*) as count')
+                ->whereRaw('YEAR(created_at) = ?', [date('Y')])
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+        });
 
-        // Get task completion stats for chart
-        $taskStats = Task::selectRaw('status, COUNT(*) as count')
-            ->groupBy('status')
-            ->get();
+        $taskStats = Cache::remember('admin_task_stats_chart', 300, function () {
+            return Task::selectRaw('status, COUNT(*) as count')
+                ->groupBy('status')
+                ->get();
+        });
 
-        // Get pending budget change requests
-        $pendingBudgetRequests = \App\Models\BudgetChangeRequest::with(['task', 'adiutor'])
+        // Get pending budget change requests with optimized eager loading
+        $pendingBudgetRequests = \App\Models\BudgetChangeRequest::with([
+                'task:taskID,taskTitle,project_id', 
+                'adiutor:id,fullName'
+            ])
             ->where('status', 'pending')
+            ->select('id', 'task_id', 'adiutor_id', 'current_budget', 'requested_budget', 'reason', 'created_at')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
-        // Earnings Quick Stats (Phase 7)
+        // Earnings Quick Stats (Phase 7) - cached
         $earningsStats = $this->getEarningsQuickStats();
 
         return view('admin.dashboard', compact('stats', 'monthlyUsers', 'taskStats', 'pendingBudgetRequests', 'earningsStats'));
@@ -60,30 +81,35 @@ class AdminController extends Controller
 
     /**
      * Refresh dashboard data via AJAX
+     * OPTIMIZED: Uses cached stats service
      */
     public function refreshDashboard()
     {
-        // Get fresh dashboard statistics
-        $stats = [
-            'total_users' => User::count(),
-            'total_clients' => User::where('role', 'client')->count(),
-            'total_adiutors' => User::where('role', 'adiutor')->count(),
-            'pending_requests' => ServiceRequest::where('status', 'pending')->count(),
-            'active_tasks' => Task::whereIn('status', ['pending', 'in_progress'])->count(),
-            'completed_tasks' => Task::where('status', 'completed')->count(),
-            'pending_budget_requests' => \App\Models\BudgetChangeRequest::where('status', 'pending')->count(),
-            'recent_users' => User::orderBy('created_at', 'desc')->limit(5)->get(),
-            'recent_requests' => ServiceRequest::with('user')->orderBy('created_at', 'desc')->limit(5)->get(),
-        ];
+        // Invalidate cache to get fresh data
+        $this->statsService->invalidateAdminStats();
+        Cache::forget('admin_monthly_users_chart');
+        Cache::forget('admin_task_stats_chart');
+        
+        // Get fresh statistics
+        $cachedStats = $this->statsService->getAdminStats();
+        $stats = array_merge($cachedStats, [
+            'recent_users' => User::select('id', 'fullName', 'email', 'role', 'created_at')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get(),
+            'recent_requests' => ServiceRequest::with('user:id,fullName,email')
+                ->select('id', 'client_id', 'service_type', 'status', 'created_at')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get(),
+        ]);
 
-        // Get monthly user registrations for chart
         $monthlyUsers = User::selectRaw('DATE_FORMAT(created_at, "%m") as month, COUNT(*) as count')
             ->whereRaw('YEAR(created_at) = ?', [date('Y')])
             ->groupBy('month')
             ->orderBy('month')
             ->get();
 
-        // Get task completion stats for chart
         $taskStats = Task::selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->get();

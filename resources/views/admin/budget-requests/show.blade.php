@@ -19,6 +19,14 @@
         class="mb-6"
     >
         <x-slot:actions>
+            @if($budgetRequest->status === 'pending')
+                <x-ui.button variant="success" icon="check-circle" onclick="openApproveModal()">
+                    Approve
+                </x-ui.button>
+                <x-ui.button variant="danger" icon="x-circle" onclick="openRejectModal()">
+                    Reject
+                </x-ui.button>
+            @endif
             <a href="{{ route('admin.budget-requests.index') }}">
                 <x-ui.button variant="secondary" icon="arrow-left">
                     Back to Requests
@@ -126,54 +134,6 @@
                                 </div>
                             </div>
                         @endif
-                    </div>
-                </x-ui.card>
-            @endif
-
-            <!-- Action Buttons (if pending) -->
-            @if($budgetRequest->status === 'pending')
-                <x-ui.card>
-                    <div class="p-6 border-b border-neutral-100">
-                        <h3 class="text-lg font-medium text-neutral-700 flex items-center gap-3">
-                            <x-lucide-check-square class="w-5 h-5 text-neutral-400" />
-                            Review Actions
-                        </h3>
-                    </div>
-                    <div class="p-6 space-y-6">
-                        <form method="POST" action="{{ route('admin.budget-requests.approve', $budgetRequest->id) }}">
-                            @csrf
-                            <div class="mb-4">
-                                <x-ui.input 
-                                    type="textarea"
-                                    label="Approval Notes (Optional)"
-                                    name="review_notes"
-                                    rows="3"
-                                    placeholder="Add any notes about this approval..."
-                                />
-                            </div>
-                            <x-ui.button type="submit" variant="success" icon="check-circle" class="w-full justify-center">
-                                Approve Budget Change
-                            </x-ui.button>
-                        </form>
-
-                        <div class="border-t border-neutral-100 pt-6">
-                            <form method="POST" action="{{ route('admin.budget-requests.reject', $budgetRequest->id) }}">
-                                @csrf
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-neutral-700 mb-1.5">
-                                        Rejection Reason <span class="text-error-500">*</span>
-                                    </label>
-                                    <textarea name="review_notes" 
-                                              rows="3" 
-                                              required
-                                              class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                                              placeholder="Explain why this request is being rejected..."></textarea>
-                                </div>
-                                <x-ui.button type="submit" variant="danger" icon="x-circle" class="w-full justify-center">
-                                    Reject Budget Change
-                                </x-ui.button>
-                            </form>
-                        </div>
                     </div>
                 </x-ui.card>
             @endif
@@ -287,4 +247,130 @@
         </div>
     </div>
 </div>
+
+<!-- Approve Modal -->
+@if($budgetRequest->status === 'pending')
+<div id="approveModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-neutral-900/50" onclick="closeApproveModal()"></div>
+        <div class="relative z-50 w-full max-w-md p-6 mx-auto bg-white rounded-2xl shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                    <x-lucide-check-circle class="w-5 h-5 text-success-500" />
+                    Approve Budget Request
+                </h3>
+                <button onclick="closeApproveModal()" class="p-1 text-neutral-400 hover:text-neutral-600 transition-colors">
+                    <x-lucide-x class="w-5 h-5" />
+                </button>
+            </div>
+            
+            <div class="mb-4 p-3 bg-success-50 rounded-lg">
+                <p class="text-sm text-success-700">
+                    You are about to approve a budget change from 
+                    <span class="font-semibold">₱{{ number_format($budgetRequest->current_budget, 2) }}</span> to 
+                    <span class="font-semibold">₱{{ number_format($budgetRequest->requested_budget, 2) }}</span>
+                </p>
+            </div>
+            
+            <form method="POST" action="{{ route('admin.budget-requests.approve', $budgetRequest->id) }}">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-neutral-700 mb-1.5 text-left">
+                        Approval Notes (Optional)
+                    </label>
+                    <textarea name="review_notes" 
+                              rows="3" 
+                              class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-success-500/20 focus:border-success-500 transition-all"
+                              placeholder="Add any notes about this approval..."></textarea>
+                </div>
+                <div class="flex items-center gap-3">
+                    <x-ui.button type="button" variant="secondary" class="flex-1 justify-center" onclick="closeApproveModal()">
+                        Cancel
+                    </x-ui.button>
+                    <x-ui.button type="submit" variant="success" icon="check-circle" class="flex-1 justify-center">
+                        Approve
+                    </x-ui.button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-neutral-900/50" onclick="closeRejectModal()"></div>
+        <div class="relative z-50 w-full max-w-md p-6 mx-auto bg-white rounded-2xl shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                    <x-lucide-x-circle class="w-5 h-5 text-error-500" />
+                    Reject Budget Request
+                </h3>
+                <button onclick="closeRejectModal()" class="p-1 text-neutral-400 hover:text-neutral-600 transition-colors">
+                    <x-lucide-x class="w-5 h-5" />
+                </button>
+            </div>
+            
+            <div class="mb-4 p-3 bg-error-50 rounded-lg">
+                <p class="text-sm text-error-700">
+                    You are about to reject the budget change request from 
+                    <span class="font-semibold">{{ $budgetRequest->adiutor->fullName }}</span>
+                </p>
+            </div>
+            
+            <form method="POST" action="{{ route('admin.budget-requests.reject', $budgetRequest->id) }}">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-neutral-700 mb-1.5 text-left">
+                        Rejection Reason <span class="text-error-500">*</span>
+                    </label>
+                    <textarea name="review_notes" 
+                              rows="3" 
+                              required
+                              class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-error-500/20 focus:border-error-500 transition-all"
+                              placeholder="Explain why this request is being rejected..."></textarea>
+                </div>
+                <div class="flex items-center gap-3">
+                    <x-ui.button type="button" variant="secondary" class="flex-1 justify-center" onclick="closeRejectModal()">
+                        Cancel
+                    </x-ui.button>
+                    <x-ui.button type="submit" variant="danger" icon="x-circle" class="flex-1 justify-center">
+                        Reject
+                    </x-ui.button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openApproveModal() {
+        document.getElementById('approveModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+    
+    function closeApproveModal() {
+        document.getElementById('approveModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+    
+    function openRejectModal() {
+        document.getElementById('rejectModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+    
+    function closeRejectModal() {
+        document.getElementById('rejectModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+    
+    // Close modals on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeApproveModal();
+            closeRejectModal();
+        }
+    });
+</script>
+@endif
 @endsection

@@ -14,7 +14,7 @@
 
     <div class="card mb-4">
         <div class="card-header">
-            <i class="fas fa-search me-1"></i>
+            <x-lucide-search class="w-4 h-4 inline me-1" />
             Search Results for "{{ $query }}"
         </div>
         <div class="card-body">
@@ -36,7 +36,7 @@
                             <tr>
                                 <td>
                                     <a href="{{ route('admin.documents.show', $document->documentID) }}" class="text-decoration-none">
-                                        <i class="fas fa-file me-2"></i>{{ $document->fileName }}
+                                        <x-lucide-file class="w-4 h-4 inline me-2" />{{ $document->fileName }}
                                     </a>
                                 </td>
                                 <td>{{ $document->fileType }}</td>
@@ -54,16 +54,16 @@
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('admin.documents.show', $document->documentID) }}" class="btn btn-sm btn-info">
-                                            <i class="fas fa-eye"></i>
+                                            <x-lucide-eye class="w-4 h-4" />
                                         </a>
                                         <a href="{{ route('admin.documents.download', $document->documentID) }}" class="btn btn-sm btn-success">
-                                            <i class="fas fa-download"></i>
+                                            <x-lucide-download class="w-4 h-4" />
                                         </a>
                                         <a href="{{ route('admin.documents.edit', $document->documentID) }}" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-edit"></i>
+                                            <x-lucide-pencil class="w-4 h-4" />
                                         </a>
                                         <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $document->documentID }}">
-                                            <i class="fas fa-trash"></i>
+                                            <x-lucide-trash-2 class="w-4 h-4" />
                                         </button>
                                     </div>
                                     
@@ -101,11 +101,11 @@
                 </div>
             @else
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> No documents found for your search: "{{ $query }}"
+                    <x-lucide-info class="w-4 h-4 inline me-2" /> No documents found for your search: "{{ $query }}"
                 </div>
                 <div class="text-center mt-4">
                     <a href="{{ route('admin.documents.index') }}" class="btn btn-primary">
-                        <i class="fas fa-arrow-left me-2"></i> Back to All Documents
+                        <x-lucide-arrow-left class="w-4 h-4 inline me-2" /> Back to All Documents
                     </a>
                 </div>
             @endif
@@ -115,7 +115,7 @@
     <!-- Search Tips -->
     <div class="card mb-4">
         <div class="card-header">
-            <i class="fas fa-lightbulb me-1"></i>
+            <x-lucide-lightbulb class="w-4 h-4 inline me-1" />
             Search Tips
         </div>
         <div class="card-body">

@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Mail\BudgetChangeReviewed;
+use App\Models\BudgetChangeRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -11,10 +12,7 @@ class BudgetChangeReviewedNotification extends Notification
     use Queueable;
 
     public function __construct(
-        protected $task,
-        protected $status,
-        protected $newBudget = null,
-        protected $reason = null
+        protected BudgetChangeRequest $budgetRequest
     ) {
     }
 
@@ -31,7 +29,7 @@ class BudgetChangeReviewedNotification extends Notification
      */
     public function toMail($notifiable): BudgetChangeReviewed
     {
-        return (new BudgetChangeReviewed($this->task, $this->status, $this->newBudget, $this->reason, $notifiable))
+        return (new BudgetChangeReviewed($this->budgetRequest))
             ->onQueue('emails');
     }
 
@@ -40,18 +38,21 @@ class BudgetChangeReviewedNotification extends Notification
      */
     public function toArray($notifiable): array
     {
-        $message = $this->status === 'approved'
-            ? 'Your budget change request for task "' . $this->task->taskTitle . '" has been approved. New budget: ₱' . number_format($this->newBudget, 2)
-            : 'Your budget change request for task "' . $this->task->taskTitle . '" has been rejected. Reason: ' . $this->reason;
+        $task = $this->budgetRequest->task;
+        $status = $this->budgetRequest->status;
+        
+        $message = $status === 'approved'
+            ? 'Your budget change request for task "' . $task->taskTitle . '" has been approved. New budget: ₱' . number_format($this->budgetRequest->requested_budget, 2)
+            : 'Your budget change request for task "' . $task->taskTitle . '" has been rejected. Reason: ' . $this->budgetRequest->review_notes;
 
         return [
-            'title' => $this->status === 'approved' ? 'Budget Change Request Approved' : 'Budget Change Request Rejected',
+            'title' => $status === 'approved' ? 'Budget Change Request Approved' : 'Budget Change Request Rejected',
             'message' => $message,
-            'action_url' => route('adiutor.tasks.show', $this->task->taskID),
-            'task_id' => $this->task->taskID,
-            'task_title' => $this->task->taskTitle,
-            'status' => $this->status,
-            'new_budget' => $this->newBudget,
+            'action_url' => route('adiutor.tasks.show', $task->taskID),
+            'task_id' => $task->taskID,
+            'task_title' => $task->taskTitle,
+            'status' => $status,
+            'new_budget' => $this->budgetRequest->requested_budget,
         ];
     }
 }

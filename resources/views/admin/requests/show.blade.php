@@ -21,12 +21,19 @@
         this.showCreateTaskModal = true;
     }
 }">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Requests', 'route' => 'admin.requests.index', 'icon' => 'file-text'],
+        ['label' => $request->project_name ?? 'Request #' . $request->id, 'icon' => 'file-check'],
+    ]" />
+
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <div>
-            <div class="flex items-center mb-2">
+            <div class="flex items-center gap-2 mb-2">
                 @php
-                    $requestStatus = $request['status'] ?? 'pending';
+                    $requestStatus = $request->status ?? 'pending';
                     $statusBadgeClasses = [
                         'pending' => 'bg-warning-100 text-warning-800',
                         'approved' => 'bg-success-100 text-success-800',
@@ -53,7 +60,7 @@
                 </span>
                 
                 @php
-                    $requestPriority = $request['priority'] ?? 'low';
+                    $requestPriority = $request->priority ?? 'low';
                     $priorityBadgeClasses = [
                         'low' => 'bg-info-100 text-info-800',
                         'medium' => 'bg-warning-100 text-warning-800',
@@ -76,27 +83,20 @@
                 </span>
             </div>
             
-            <h1 class="text-2xl font-semibold text-primary-600 mb-1">
-                {{ $request['title'] ?? 'Request #' . $request['id'] }}
+            <h1 class="text-2xl font-semibold text-neutral-800 mb-1">
+                {{ $request->project_name ?? 'Request #' . $request->id }}
             </h1>
             
-            <div class="text-neutral-500 flex items-center">
+            <div class="text-sm text-neutral-500 flex items-center mb-3">
                 <x-lucide-calendar class="w-4 h-4 mr-2" />
-                <span>Submitted {{ isset($request['submissionDate']) ? date('F d, Y', strtotime($request['submissionDate'])) : 
-                (isset($request['submission_date']) ? date('F d, Y', strtotime($request['submission_date'])) : 
-                date('F d, Y', strtotime($request['created_at']))) }}</span>
+                <span>Submitted {{ $request->created_at ? $request->created_at->format('F d, Y') : 'N/A' }}</span>
             </div>
+            
+            <!-- Related Links -->
+            <x-ui.related-links :serviceRequest="$request" role="admin" />
         </div>
         
         <div class="mt-4 sm:mt-0 flex flex-wrap gap-3">
-            <x-ui.button 
-                href="{{ route('admin.requests.index') }}" 
-                variant="secondary"
-                class="inline-flex items-center gap-2"
-            >
-                <x-lucide-arrow-left class="w-4 h-4" />
-                Back to Requests
-            </x-ui.button>
             
             @if($requestStatus === 'pending')
                 <x-ui.button 
@@ -119,7 +119,7 @@
                 </x-ui.button>
             @elseif($requestStatus === 'approved' || $requestStatus === 'pending_payment')
                 <x-ui.button 
-                    href="{{ route('client.maya.checkout', $request['id']) }}" 
+                    href="{{ route('client.maya.checkout', $request->id) }}" 
                     target="_blank"
                     variant="primary"
                     class="inline-flex items-center gap-2"
@@ -128,7 +128,7 @@
                     View Payment Link
                 </x-ui.button>
             @elseif($requestStatus === 'rejected')
-                <form action="{{ route('admin.requests.reopen', $request['id']) }}" method="POST" class="inline">
+                <form action="{{ route('admin.requests.reopen', $request->id) }}" method="POST" class="inline">
                     @csrf
                     <x-ui.button 
                         type="submit"
@@ -150,36 +150,85 @@
             <!-- Request Details Card -->
             <x-ui.card class="mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">Request Details</h2>
+                    <div class="flex items-center gap-2">
+                        <x-lucide-clipboard-list class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Request Details</h2>
+                    </div>
                 </div>
                 <div class="p-6">
-                    @if(!empty($request['projectDescription']) || !empty($request['project_description']))
+                    {{-- Project Name --}}
+                    @if(!empty($request->project_name))
                         <div class="mb-6">
-                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Project Description</h3>
-                            <div class="prose max-w-none text-neutral-800">
-                                {!! nl2br(e($request['projectDescription'] ?? $request['project_description'])) !!}
+                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Project Name</h3>
+                            <div class="text-lg font-semibold text-neutral-900">
+                                {{ $request->project_name }}
                             </div>
                         </div>
                     @endif
 
-                    @if(!empty($request['specialRequests']) || !empty($request['special_requests']))
+                    {{-- Request Description (main project description from client) --}}
+                    @if(!empty($request->request_description))
                         <div class="mb-6">
-                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Special Requests</h3>
-                            <div class="prose max-w-none text-neutral-800">
-                                {!! nl2br(e($request['specialRequests'] ?? $request['special_requests'])) !!}
+                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Project Description</h3>
+                            <div class="prose max-w-none text-neutral-800 bg-neutral-50 p-4 rounded-lg">
+                                {!! nl2br(e($request->request_description)) !!}
                             </div>
                         </div>
                     @endif
+
+                    {{-- Expectations --}}
+                    @if(!empty($request->expectations))
+                        <div class="mb-6">
+                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Client Expectations</h3>
+                            <div class="prose max-w-none text-neutral-800 bg-info-50 p-4 rounded-lg">
+                                {!! nl2br(e($request->expectations)) !!}
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Additional Notes --}}
+                    @if(!empty($request->additional_notes))
+                        <div class="mb-6">
+                            <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Additional Notes</h3>
+                            <div class="prose max-w-none text-neutral-700 bg-warning-50 p-4 rounded-lg border border-warning-100">
+                                {!! nl2br(e($request->additional_notes)) !!}
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Requirements (JSON field) --}}
+                    @if(!empty($request->requirements))
+                        @php
+                            $requirements = is_string($request->requirements) ? json_decode($request->requirements, true) : $request->requirements;
+                        @endphp
+                        @if(!empty($requirements) && is_array($requirements))
+                            <div class="mb-6">
+                                <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Requirements</h3>
+                                <div class="bg-success-50 p-4 rounded-lg border border-success-100">
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($requirements as $key => $value)
+                                            @if($value)
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-success-100 text-success-800">
+                                                    <x-lucide-check class="w-3 h-3 mr-1.5" />
+                                                    {{ is_string($key) ? ucwords(str_replace('_', ' ', $key)) : $value }}
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @endif
                     
                     {{-- Service Template & Client Customizations --}}
-                    @if(!empty($request['template_service_id']) || !empty($request['requested_features']) || !empty($request['requested_skills']))
+                    @if(!empty($request->template_service_id) || !empty($request->requested_features) || !empty($request->requested_skills))
                         <div class="mb-6 p-4 bg-secondary-50 rounded-xl border border-secondary-200">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-sm font-medium text-secondary-700 uppercase tracking-wider flex items-center">
                                     <x-lucide-layers class="w-4 h-4 mr-2" />
                                     Service Requirements
                                 </h3>
-                                @if(!empty($request['has_customizations']) && $request['has_customizations'])
+                                @if(!empty($request->has_customizations) && $request->has_customizations)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
                                         <x-lucide-edit-3 class="w-3 h-3 mr-1" />
                                         Client Customized
@@ -195,8 +244,8 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {{-- Features / What's Included --}}
                                 @php
-                                    $requestedFeatures = $request['requested_features'] ?? [];
-                                    $templateFeatures = $request['template_features'] ?? [];
+                                    $requestedFeatures = $request->requested_features ?? [];
+                                    $templateFeatures = $request->template_features ?? [];
                                     $displayFeatures = !empty($requestedFeatures) ? $requestedFeatures : $templateFeatures;
                                     if (is_string($displayFeatures)) {
                                         $displayFeatures = json_decode($displayFeatures, true) ?? [];
@@ -215,7 +264,7 @@
                                                 </span>
                                             @endforeach
                                         </div>
-                                        @if(!empty($request['has_customizations']) && !empty($templateFeatures) && $displayFeatures !== $templateFeatures)
+                                        @if(!empty($request->has_customizations) && !empty($templateFeatures) && $displayFeatures !== $templateFeatures)
                                             <div class="mt-2 pt-2 border-t border-neutral-100">
                                                 <p class="text-xs text-neutral-400 mb-1">Original template:</p>
                                                 <div class="flex flex-wrap gap-1">
@@ -235,8 +284,8 @@
                                 
                                 {{-- Skills Required --}}
                                 @php
-                                    $requestedSkills = $request['requested_skills'] ?? [];
-                                    $templateSkills = $request['template_skills'] ?? [];
+                                    $requestedSkills = $request->requested_skills ?? [];
+                                    $templateSkills = $request->template_skills ?? [];
                                     $displaySkills = !empty($requestedSkills) ? $requestedSkills : $templateSkills;
                                     if (is_string($displaySkills)) {
                                         $displaySkills = json_decode($displaySkills, true) ?? [];
@@ -255,7 +304,7 @@
                                                 </span>
                                             @endforeach
                                         </div>
-                                        @if(!empty($request['has_customizations']) && !empty($templateSkills) && $displaySkills !== $templateSkills)
+                                        @if(!empty($request->has_customizations) && !empty($templateSkills) && $displaySkills !== $templateSkills)
                                             <div class="mt-2 pt-2 border-t border-neutral-100">
                                                 <p class="text-xs text-neutral-400 mb-1">Original template:</p>
                                                 <div class="flex flex-wrap gap-1">
@@ -275,18 +324,18 @@
                             </div>
                             
                             {{-- Template Reference Info --}}
-                            @if(!empty($request['estimated_duration_days']) || !empty($request['template_base_price']))
+                            @if(!empty($request->estimated_duration_days) || !empty($request->template_base_price))
                                 <div class="mt-4 pt-3 border-t border-secondary-200 flex flex-wrap gap-4 text-sm">
-                                    @if(!empty($request['estimated_duration_days']))
+                                    @if(!empty($request->estimated_duration_days))
                                         <div class="flex items-center text-neutral-600">
                                             <x-lucide-calendar-days class="w-4 h-4 mr-1.5 text-secondary-500" />
-                                            <span>Est. Duration: <strong>{{ $request['estimated_duration_days'] }} days</strong></span>
+                                            <span>Est. Duration: <strong>{{ $request->estimated_duration_days }} days</strong></span>
                                         </div>
                                     @endif
-                                    @if(!empty($request['template_base_price']))
+                                    @if(!empty($request->template_base_price))
                                         <div class="flex items-center text-neutral-600">
                                             <x-lucide-banknote class="w-4 h-4 mr-1.5 text-success-500" />
-                                            <span>Base Price: <strong>₱{{ number_format($request['template_base_price'], 2) }}</strong></span>
+                                            <span>Base Price: <strong>₱{{ number_format($request->template_base_price, 2) }}</strong></span>
                                         </div>
                                     @endif
                                 </div>
@@ -301,17 +350,30 @@
                                 <div class="flex">
                                     <div class="w-32 text-neutral-500">Request ID:</div>
                                     <div class="flex-1 text-neutral-800 font-medium">
-                                        {{ $request['id'] ?? 'N/A' }}
+                                        {{ $request->id ?? 'N/A' }}
                                     </div>
                                 </div>
                                 
                                 <div class="flex">
-                                    <div class="w-32 text-neutral-500">Type:</div>
+                                    <div class="w-32 text-neutral-500">Service Type:</div>
                                     <div class="flex-1 text-neutral-800">
-                                        {{ ucfirst($request['businessType'] ?? $request['business_type'] ?? 'N/A') }}
+                                        {{ $request->service_type ?? 'N/A' }}
                                     </div>
                                 </div>
                                 
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Contact Method:</div>
+                                    <div class="flex-1 text-neutral-800">
+                                        {{ ucfirst($request->contact_method ?? 'N/A') }}
+                                    </div>
+                                </div>
+                                
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Contact Details:</div>
+                                    <div class="flex-1 text-neutral-800">
+                                        {{ $request->contact_details ?? 'N/A' }}
+                                    </div>
+                                </div>
                                 <div class="flex">
                                     <div class="w-32 text-neutral-500">Status:</div>
                                     <div class="flex-1 text-neutral-800">
@@ -323,7 +385,7 @@
                                     <div class="w-32 text-neutral-500">Priority:</div>
                                     <div class="flex-1">
                                         <div class="flex items-center">
-                                            <form action="{{ route('admin.requests.update-priority', $request['id']) }}" method="POST" class="flex items-center" id="priorityForm">
+                                            <form action="{{ route('admin.requests.update-priority', $request->id) }}" method="POST" class="flex items-center" id="priorityForm">
                                                 @csrf
                                                 @method('PATCH')
                                                 <select name="priority" id="priority" onchange="document.getElementById('priorityForm').submit()"
@@ -338,12 +400,14 @@
                                     </div>
                                 </div>
                                 
+                                @if(!empty($request->estimated_budget))
                                 <div class="flex">
-                                    <div class="w-32 text-neutral-500">Company:</div>
+                                    <div class="w-32 text-neutral-500">Est. Budget:</div>
                                     <div class="flex-1 text-neutral-800">
-                                        {{ $request['companyName'] ?? $request['company_name'] ?? 'N/A' }}
+                                        ₱{{ number_format($request->estimated_budget, 2) }}
                                     </div>
                                 </div>
+                                @endif
                             </div>
                         </div>
                         
@@ -353,16 +417,16 @@
                                 <div class="flex">
                                     <div class="w-32 text-neutral-500">Submitted:</div>
                                     <div class="flex-1 text-neutral-800">
-                                        {{ isset($request['submission_date']) ? date('M d, Y', strtotime($request['submission_date'])) : date('M d, Y', strtotime($request['created_at'])) }}
+                                        {{ $request->created_at ? $request->created_at->format('M d, Y') : 'N/A' }}
                                     </div>
                                 </div>
                                 
                                 <div class="flex">
                                     <div class="w-32 text-neutral-500">Deadline:</div>
                                     <div class="flex-1 text-neutral-800">
-                                        @if(isset($request['deadline']))
+                                        @if($request->deadline)
                                             @php 
-                                                $deadline = \Carbon\Carbon::parse($request['deadline']);
+                                                $deadline = \Carbon\Carbon::parse($request->deadline);
                                                 $isPast = $deadline->isPast();
                                                 $isClose = $deadline->diffInDays(now()) <= 3 && !$isPast;
                                             @endphp
@@ -387,20 +451,20 @@
                                     </div>
                                 </div>
                                 
-                                @if(!empty($request['reviewed_at']))
+                                @if(!empty($request->reviewed_at))
                                 <div class="flex">
                                     <div class="w-32 text-neutral-500">Reviewed:</div>
                                     <div class="flex-1 text-neutral-800">
-                                        {{ date('M d, Y', strtotime($request['reviewed_at'])) }}
+                                        {{ $request->reviewed_at->format('M d, Y') }}
                                     </div>
                                 </div>
                                 @endif
                                 
-                                @if(!empty($request['reviewed_by']))
+                                @if(!empty($request->approved_by))
                                 <div class="flex">
-                                    <div class="w-32 text-neutral-500">Reviewed by:</div>
+                                    <div class="w-32 text-neutral-500">Approved by:</div>
                                     <div class="flex-1 text-neutral-800">
-                                        {{ \App\Models\User::find($request['reviewed_by'])?->fullName ?? 'Admin #' . $request['reviewed_by'] }}
+                                        {{ \App\Models\User::find($request->approved_by)?->fullName ?? 'Admin #' . $request->approved_by }}
                                     </div>
                                 </div>
                                 @endif
@@ -435,7 +499,7 @@
                                 <div class="flex">
                                     <div class="w-36 text-neutral-500">Amount:</div>
                                     <div class="flex-1 text-neutral-800 font-semibold text-lg">
-                                        ₱{{ number_format($request['approved_budget'] ?? 0, 2) }}
+                                        ₱{{ number_format($request->approved_budget ?? 0, 2) }}
                                     </div>
                                 </div>
                                 
@@ -446,11 +510,11 @@
                                     </div>
                                 </div>
                                 
-                                @if(!empty($request['payment_due_date']))
+                                @if(!empty($request->payment_due_date))
                                 <div class="flex">
                                     <div class="w-36 text-neutral-500">Due Date:</div>
                                     <div class="flex-1 text-neutral-800">
-                                        {{ \Carbon\Carbon::parse($request['payment_due_date'])->format('M d, Y') }}
+                                        {{ \Carbon\Carbon::parse($request->payment_due_date)->format('M d, Y') }}
                                     </div>
                                 </div>
                                 @endif
@@ -477,15 +541,18 @@
             <!-- Attached Files -->
             <x-ui.card class="mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">Attached Files</h2>
+                    <div class="flex items-center gap-2">
+                        <x-lucide-paperclip class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Attached Files</h2>
+                    </div>
                 </div>
                 <div class="p-6">
-                    @if(isset($request['files']) && count($request['files']) > 0)
+                    @if($request->attachments && $request->attachments->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            @foreach($request['files'] as $file)
+                            @foreach($request->attachments as $file)
                                 <div class="bg-neutral-50 rounded-xl p-4 flex items-center">
                                     @php
-                                        $extension = strtolower(pathinfo($file['filename'], PATHINFO_EXTENSION));
+                                        $extension = strtolower(pathinfo($file->filename ?? $file->original_name ?? '', PATHINFO_EXTENSION));
                                         
                                         $iconInfo = match($extension) {
                                             'pdf' => ['icon' => 'file-text', 'color' => 'text-error-600'],
@@ -504,17 +571,17 @@
                                     
                                     <div class="ml-4 flex-1 min-w-0">
                                         <div class="text-sm font-medium text-neutral-900 truncate">
-                                            {{ $file['filename'] }}
+                                            {{ $file->filename ?? $file->original_name ?? 'Unknown file' }}
                                         </div>
                                         <div class="text-xs text-neutral-500">
-                                            {{ isset($file['uploaded_at']) ? date('M d, Y', strtotime($file['uploaded_at'])) : 'Unknown date' }}
-                                            @if(isset($file['file_size']))
-                                                · {{ $file['file_size'] }}
+                                            {{ $file->created_at ? $file->created_at->format('M d, Y') : 'Unknown date' }}
+                                            @if($file->file_size)
+                                                · {{ number_format($file->file_size / 1024, 2) }} KB
                                             @endif
                                         </div>
                                     </div>
                                     
-                                    <a href="{{ route('admin.requests.download-file', ['request' => $request['id'], 'file' => $file['id']]) }}" 
+                                    <a href="{{ route('admin.requests.download-file', ['request' => $request->id, 'file' => $file->id]) }}" 
                                        class="ml-4 p-2 text-neutral-500 hover:text-primary-600 rounded-full hover:bg-primary-50">
                                         <x-lucide-download class="w-5 h-5" />
                                     </a>
@@ -536,10 +603,13 @@
             <!-- Associated Tasks -->
             <x-ui.card class="mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">Associated Tasks</h2>
+                    <div class="flex items-center gap-2">
+                        <x-lucide-list-todo class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Associated Tasks</h2>
+                    </div>
                 </div>
                 <div class="p-6">
-                    @if(isset($request['tasks']) && count($request['tasks']) > 0)
+                    @if($request->project && $request->project->tasks && $request->project->tasks->count() > 0)
                         <div class="overflow-x-auto">
                             <table class="w-full whitespace-nowrap">
                                 <thead>
@@ -552,25 +622,25 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-neutral-100">
-                                    @foreach($request['tasks'] as $task)
+                                    @foreach($request->project->tasks as $task)
                                         <tr class="hover:bg-neutral-50">
                                             <td class="px-4 py-3">
                                                 <div class="font-medium text-neutral-900">
-                                                    {{ $task['title'] ?? 'Task #' . $task['id'] }}
+                                                    {{ $task->title ?? 'Task #' . $task->id }}
                                                 </div>
-                                                @if(!empty($task['description']))
+                                                @if(!empty($task->description))
                                                     <div class="text-neutral-500 text-sm truncate max-w-xs">
-                                                        {{ Str::limit($task['description'], 50) }}
+                                                        {{ Str::limit($task->description, 50) }}
                                                     </div>
                                                 @endif
                                             </td>
                                             <td class="px-4 py-3">
-                                                @if($task['status'] === 'completed')
+                                                @if($task->status === 'completed')
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
                                                         <span class="h-1.5 w-1.5 rounded-full bg-success-500 mr-1.5"></span>
                                                         Completed
                                                     </span>
-                                                @elseif($task['status'] === 'in_progress')
+                                                @elseif($task->status === 'in_progress')
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
                                                         <span class="h-1.5 w-1.5 rounded-full bg-warning-500 mr-1.5"></span>
                                                         In Progress
@@ -584,7 +654,7 @@
                                             </td>
                                             <td class="px-4 py-3">
                                                 @php
-                                                    $taskPriority = $task['priority'] ?? 'low';
+                                                    $taskPriority = $task->priority ?? 'low';
                                                     $priorityClasses = [
                                                         'low' => 'bg-info-100 text-info-800',
                                                         'medium' => 'bg-warning-100 text-warning-800',
@@ -656,43 +726,46 @@
             <!-- Client Info Card -->
             <x-ui.card class="mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">Client Information</h2>
+                    <div class="flex items-center gap-2">
+                        <x-lucide-user class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Client Information</h2>
+                    </div>
                 </div>
                 <div class="p-6">
-                    @if(isset($request['client']))
+                    @if($request->client)
                         <div class="flex items-center mb-6">
                             <div class="bg-primary-100 h-12 w-12 rounded-full flex items-center justify-center text-primary-600 mr-4">
                                 <x-lucide-user class="w-6 h-6" />
                             </div>
                             <div>
-                                <h3 class="text-lg font-medium text-neutral-900">{{ $request['client']['full_name'] ?? $request['client']['name'] ?? 'Client #' . $request['client']['id'] }}</h3>
+                                <h3 class="text-lg font-medium text-neutral-900">{{ $request->client->fullName ?? $request->client->name ?? 'Client #' . $request->client->id }}</h3>
                                 <div class="text-neutral-500 flex items-center">
-                                    <x-lucide-mail class="w-4 h-4 mr-2" />{{ $request['client']['email'] ?? 'No email' }}
+                                    <x-lucide-mail class="w-4 h-4 mr-2" />{{ $request->client->email ?? 'No email' }}
                                 </div>
                             </div>
                         </div>
                         
                         <div class="space-y-4">
-                            @if(!empty($request['client']['phone_number']))
+                            @if(!empty($request->client->phoneNumber))
                                 <div class="flex">
                                     <div class="w-8 flex-shrink-0 text-neutral-400">
                                         <x-lucide-phone class="w-4 h-4" />
                                     </div>
                                     <div>
                                         <div class="text-sm font-medium text-neutral-500">Phone</div>
-                                        <div class="text-neutral-900">{{ $request['client']['phone_number'] }}</div>
+                                        <div class="text-neutral-900">{{ $request->client->phoneNumber }}</div>
                                     </div>
                                 </div>
                             @endif
                             
-                            @if(!empty($request['company_name']))
+                            @if(!empty($request->company_name))
                                 <div class="flex">
                                     <div class="w-8 flex-shrink-0 text-neutral-400">
                                         <x-lucide-building-2 class="w-4 h-4" />
                                     </div>
                                     <div>
                                         <div class="text-sm font-medium text-neutral-500">Company</div>
-                                        <div class="text-neutral-900">{{ $request['company_name'] }}</div>
+                                        <div class="text-neutral-900">{{ $request->company_name }}</div>
                                     </div>
                                 </div>
                             @endif
@@ -703,13 +776,13 @@
                                 </div>
                                 <div>
                                     <div class="text-sm font-medium text-neutral-500">Client Since</div>
-                                    <div class="text-neutral-900">{{ isset($request['client']['created_at']) ? date('M d, Y', strtotime($request['client']['created_at'])) : 'Unknown' }}</div>
+                                    <div class="text-neutral-900">{{ $request->client->created_at ? $request->client->created_at->format('M d, Y') : 'Unknown' }}</div>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="mt-6 pt-4 border-t border-neutral-100">
-                            <a href="{{ route('admin.clients.show', $request['client']['id']) }}" 
+                            <a href="{{ route('admin.clients.show', $request->client->id) }}" 
                                class="inline-flex items-center text-primary-600 hover:text-primary-700">
                                 <span>View Client Profile</span>
                                 <x-lucide-chevron-right class="w-4 h-4 ml-1" />
@@ -730,10 +803,13 @@
             <!-- Admin Notes -->
             <x-ui.card class="mb-6">
                 <div class="px-6 py-4 border-b border-neutral-200">
-                    <h2 class="text-lg font-semibold text-primary-500">Admin Notes</h2>
+                    <div class="flex items-center gap-2">
+                        <x-lucide-sticky-note class="w-5 h-5 text-neutral-400" />
+                        <h2 class="text-lg font-medium text-neutral-700">Admin Notes</h2>
+                    </div>
                 </div>
                 <div class="p-6">
-                    <form action="{{ route('admin.requests.add-note', $request['id']) }}" method="POST" class="mb-6">
+                    <form action="{{ route('admin.requests.add-note', $request->id) }}" method="POST" class="mb-6">
                         @csrf
                         <div class="mb-3">
                             <textarea name="note" rows="3" required
@@ -748,9 +824,9 @@
                         </div>
                     </form>
                     
-                    @if(!empty($request['admin_notes']))
+                    @if(!empty($request->admin_notes))
                         <div class="bg-neutral-50 rounded-xl p-4 text-neutral-800 whitespace-pre-line text-sm">
-                            {!! nl2br(e($request['admin_notes'])) !!}
+                            {!! nl2br(e($request->admin_notes)) !!}
                         </div>
                     @else
                         <div class="text-center py-4">
@@ -758,11 +834,11 @@
                         </div>
                     @endif
                     
-                    @if($requestStatus === 'rejected' && !empty($request['rejection_reason']))
+                    @if($requestStatus === 'rejected' && !empty($request->rejection_reason))
                         <div class="mt-6">
                             <h3 class="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-2">Rejection Reason</h3>
                             <div class="bg-error-50 text-error-700 rounded-xl p-4 text-sm">
-                                {{ $request['rejection_reason'] }}
+                                {{ $request->rejection_reason }}
                             </div>
                         </div>
                     @endif
@@ -785,7 +861,7 @@
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         
         <div x-show="showApproveModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
-            <form action="{{ route('admin.requests.approve', $request['id']) }}" method="POST">
+            <form action="{{ route('admin.requests.approve', $request->id) }}" method="POST">
                 @csrf
                 <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4 flex justify-between items-center">
                     <h5 class="text-lg font-semibold text-neutral-800">Approve Request</h5>
@@ -1253,7 +1329,7 @@
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         
         <div x-show="showRejectModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
-            <form action="{{ route('admin.requests.reject', $request['id']) }}" method="POST">
+            <form action="{{ route('admin.requests.reject', $request->id) }}" method="POST">
                 @csrf
                 <div class="bg-neutral-50 border-b border-neutral-200 px-6 py-4 flex justify-between items-center">
                     <h5 class="text-lg font-semibold text-neutral-800">Reject Request</h5>
@@ -1304,7 +1380,7 @@
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         
         <div x-show="showCreateTaskModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
-            <form action="{{ route('admin.requests.approve', $request['id']) }}" method="POST">
+            <form action="{{ route('admin.requests.approve', $request->id) }}" method="POST">
                 @csrf
                 <input type="hidden" name="create_task" value="1">
                 
@@ -1320,14 +1396,14 @@
                         <input type="text" id="new_task_title" name="task_title" required
                                class="w-full rounded-xl border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
                                placeholder="Enter task title" 
-                               value="{{ isset($request['title']) ? 'Task for: ' . $request['title'] : 'New task for request #' . $request['id'] }}">
+                               value="{{ $request->project_name ? 'Task for: ' . $request->project_name : 'New task for request #' . $request->id }}">
                     </div>
                     
                     <div class="mb-5">
                         <label for="new_task_description" class="block text-sm font-medium text-neutral-700 mb-1">Description *</label>
                         <textarea id="new_task_description" name="task_description" rows="3" required
                                   class="w-full rounded-xl border border-neutral-300 px-4 py-2 text-neutral-800 focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-                                  placeholder="Enter task description">{{ 'Based on client request #' . $request['id'] }}</textarea>
+                                  placeholder="Enter task description">{{ 'Based on client request #' . $request->id }}</textarea>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

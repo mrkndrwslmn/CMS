@@ -843,6 +843,7 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::prefix('payouts')->name('payouts.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'index'])->name('index');
         Route::get('/export', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'export'])->name('export');
+        Route::get('/time-entry-approvals', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'timeEntryApprovals'])->name('time-entry-approvals');
         Route::get('/adiutor/{adiutorId}', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'adiutorEarnings'])->name('adiutor-earnings');
         Route::post('/approve-time-entries', [\App\Http\Controllers\Admin\PayoutManagementController::class, 'approveTimeEntries'])->name('approve-entries');
         
@@ -1097,6 +1098,9 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::post('/projects/{project}/assignments/{assignment}/approve-fixed-rate', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'approveFixedRate'])->name('projects.assignments.approve-fixed-rate');
     Route::post('/projects/{project}/assignments/{assignment}/revoke-fixed-rate', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'revokeFixedRateApproval'])->name('projects.assignments.revoke-fixed-rate');
     Route::put('/projects/{project}/assignments/{assignment}/payment', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'updateAssignmentPayment'])->name('projects.assignments.update-payment');
+    
+    // Time Entry Management for Hourly Rate Team Members
+    Route::get('/projects/{project}/adiutors/{adiutor}/time-entries', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'getAdiutorTimeEntries'])->name('projects.adiutor-time-entries');
     
     // Reporting and Analytics
     Route::prefix('reports')->name('reports.')->group(function () {

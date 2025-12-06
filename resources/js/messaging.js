@@ -8,6 +8,8 @@ class MessagingService {
         this.messaging = null;
         this.currentConversation = null;
         this.messagePollingInterval = null;
+        this.isInitialLoad = true;
+        this.loadedMessageIds = new Set();
     }
 
     /**
@@ -52,7 +54,14 @@ class MessagingService {
                 });
 
                 if (token) {
-                    await this.updateFcmToken(token);
+                    // Only update if token is different from cached token
+                    const cachedToken = localStorage.getItem('fcm_token');
+                    if (token !== cachedToken) {
+                        const success = await this.updateFcmToken(token);
+                        if (success) {
+                            localStorage.setItem('fcm_token', token);
+                        }
+                    }
                 }
             }
         } catch (error) {
@@ -166,11 +175,44 @@ class MessagingService {
             
             if (data.success) {
                 this.currentConversation = data.conversation.conversation_id;
-                this.renderMessages(data.messages.data);
+                const messages = data.messages.data;
+                
+                if (this.isInitialLoad) {
+                    // First load: render all messages
+                    this.renderMessages(messages);
+                    this.isInitialLoad = false;
+                    // Track all message IDs
+                    messages.forEach(msg => this.loadedMessageIds.add(msg.id));
+                } else {
+                    // Subsequent loads: only append new messages
+                    this.appendNewMessages(messages);
+                }
+                
                 this.startPolling(projectId);
             }
         } catch (error) {
             console.error('Error loading messages:', error);
+        }
+    }
+
+    /**
+     * Append only new messages (for polling updates)
+     */
+    appendNewMessages(messages) {
+        if (!messages || messages.length === 0) return;
+        
+        const container = document.getElementById('messages-container');
+        if (!container) return;
+        
+        // Filter to only new messages
+        const newMessages = messages.filter(msg => !this.loadedMessageIds.has(msg.id));
+        
+        if (newMessages.length > 0) {
+            newMessages.forEach(msg => {
+                container.insertAdjacentHTML('beforeend', this.createMessageElement(msg));
+                this.loadedMessageIds.add(msg.id);
+            });
+            this.scrollToBottom();
         }
     }
 
@@ -297,6 +339,15 @@ class MessagingService {
             clearInterval(this.messagePollingInterval);
             this.messagePollingInterval = null;
         }
+    }
+
+    /**
+     * Reset conversation state (call when switching conversations)
+     */
+    resetConversationState() {
+        this.isInitialLoad = true;
+        this.loadedMessageIds.clear();
+        this.stopPolling();
     }
 
     /**

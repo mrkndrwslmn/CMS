@@ -25,6 +25,7 @@ class BudgetChangeReviewed extends BaseMailable
             view: 'emails.budget-change-reviewed',
             with: [
                 'budgetRequest' => $this->budgetRequest,
+                'reviewedBy' => $this->budgetRequest->reviewer,
             ]
         );
     }

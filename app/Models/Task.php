@@ -251,8 +251,10 @@ aaaaaaaaaaaaaaaaaaa     * Get the form this task belongs to.
     /**
      * Update task progress based on subtask completion.
      * Called automatically when subtasks are added, removed, or toggled.
+     * 
+     * @param bool $autoComplete Whether to auto-complete task when all subtasks done (default: true)
      */
-    public function updateProgressFromSubtasks(): void
+    public function updateProgressFromSubtasks(bool $autoComplete = true): void
     {
         if (!$this->hasSubtasks()) {
             return; // Don't override manual progress if no subtasks
@@ -263,15 +265,19 @@ aaaaaaaaaaaaaaaaaaa     * Get the form this task belongs to.
             'progress_percentage' => $stats['percentage'],
         ]);
 
-        // If all subtasks are completed, mark task as completed
-        if ($stats['total'] > 0 && $stats['pending'] === 0 && $this->status !== 'completed') {
-            $this->update([
-                'status' => 'completed',
-                'completedAt' => now(),
-            ]);
+        // Only auto-complete if flag is true
+        if ($autoComplete) {
+            // If all subtasks are completed, mark task as completed
+            if ($stats['total'] > 0 && $stats['pending'] === 0 && $this->status !== 'completed') {
+                $this->update([
+                    'status' => 'completed',
+                    'completedAt' => now(),
+                ]);
+            }
         }
+        
         // If task was completed but subtasks are now incomplete, revert to in_progress
-        elseif ($stats['pending'] > 0 && $this->status === 'completed') {
+        if ($stats['pending'] > 0 && $this->status === 'completed') {
             $this->update([
                 'status' => 'in_progress',
                 'completedAt' => null,

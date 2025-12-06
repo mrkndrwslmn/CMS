@@ -78,12 +78,15 @@ class AuditLog extends Model
 
     /**
      * Log sensitive action
+     * @param string $action The action being performed
+     * @param array $metadata Additional metadata to log
+     * @param Model|null $model Optional model being acted upon
      */
-    public static function logSensitiveAction(string $action, array $metadata = []): void
+    public static function logSensitiveAction(string $action, array $metadata = [], $model = null): void
     {
         self::create([
-            'auditable_type' => null,
-            'auditable_id' => null,
+            'auditable_type' => $model ? get_class($model) : 'App\Models\User',
+            'auditable_id' => $model ? $model->getKey() : Auth::id(),
             'user_id' => Auth::id(),
             'action' => $action,
             'event_type' => 'sensitive_action',

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Services\DashboardStatsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Models\Document;
 use App\Models\Project;
@@ -14,43 +16,31 @@ use App\Models\ProjectFeedback;
 class ClientController extends Controller
 {
     use \App\Http\Controllers\Client\ClientMessagingMethods;
+    
+    protected DashboardStatsService $statsService;
+
+    public function __construct(DashboardStatsService $statsService)
+    {
+        $this->statsService = $statsService;
+    }
+
     /**
      * Show client dashboard
+     * OPTIMIZED: Uses cached stats and optimized queries
      */
     public function dashboard()
     {
-        \Log::info('Client Dashboard Accessed', ['user_id' => Auth::id()]);
-
-        // Increase memory limit for this operation
-        ini_set('memory_limit', '256M');
-        
         $user = Auth::user();
         
-        // Get dashboard statistics
-        $stats = [
-            // Active Projects: includes 'active', 'in_progress', and 'review' statuses (all ongoing work)
-            'activeProjects' => DB::table('projects')
-                ->where('client_id', $user->id)
-                ->whereIn('status', ['active', 'in_progress', 'review'])
-                ->count(),
-            'completedProjects' => DB::table('projects')
-                ->where('client_id', $user->id)
-                ->where('status', 'completed')
-                ->count(),
-            'pendingRequests' => DB::table('service_requests')
-                ->where('client_id', $user->id)
-                ->where('status', 'pending')
-                ->count(),
-            // Total Investment: sum of all confirmed payments made by this client
-            'totalSpent' => DB::table('payments')
-                ->where('client_id', $user->id)
-                ->where('status', 'confirmed')
-                ->sum('amount') ?? 0,
-        ];
+        // Get cached dashboard statistics (reduces 4 count queries to 1 cached call)
+        $stats = $this->statsService->getClientStats($user->id);
 
-        // Get recent projects
+        // Get recent projects with optimized query - removed redundant unique() and take()
         $recentProjects = DB::table('projects')
-            ->leftJoin('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
+            ->leftJoin('project_assignments', function($join) {
+                $join->on('projects.id', '=', 'project_assignments.project_id')
+                     ->whereNotIn('project_assignments.status', ['removed', 'declined']);
+            })
             ->leftJoin('users', 'project_assignments.adiutor_id', '=', 'users.id')
             ->where('projects.client_id', $user->id)
             ->select(
@@ -63,24 +53,21 @@ class ClientController extends Controller
                 'users.fullName as adiutor_name',
                 'projects.created_at'
             )
+            ->groupBy('projects.id', 'projects.title', 'projects.description', 'projects.status', 
+                      'projects.deadline', 'project_assignments.progress_percentage', 
+                      'users.fullName', 'projects.created_at')
             ->orderBy('projects.created_at', 'desc')
-            ->limit(20)
+            ->limit(5)
             ->get()
-            ->unique('id')
-            ->take(5)
             ->map(function ($project) {
-                // Convert date strings to Carbon instances
                 $project->created_at = Carbon::parse($project->created_at);
                 if ($project->deadline) {
                     $project->deadline = Carbon::parse($project->deadline);
                 }
                 
-                // Create assignedAdiutor object structure that the view expects
                 if ($project->adiutor_name) {
                     $project->assignedAdiutor = (object) [
-                        'user' => (object) [
-                            'fullName' => $project->adiutor_name
-                        ]
+                        'user' => (object) ['fullName' => $project->adiutor_name]
                     ];
                 } else {
                     $project->assignedAdiutor = null;
@@ -88,14 +75,14 @@ class ClientController extends Controller
                 return $project;
             });
 
-        // Get recent service requests
+        // Get recent service requests - simplified
         $recentRequests = DB::table('service_requests')
             ->where('client_id', $user->id)
+            ->select('id', 'service_type', 'status', 'created_at', 'updated_at')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
             ->map(function ($request) {
-                // Convert date strings to Carbon instances
                 $request->created_at = Carbon::parse($request->created_at);
                 if ($request->updated_at) {
                     $request->updated_at = Carbon::parse($request->updated_at);
@@ -103,105 +90,83 @@ class ClientController extends Controller
                 return $request;
             });
 
-        // Get recent notifications/messages
+        // Get recent notifications - optimized with single query
         try {
             $recentMessages = DB::table('notifications')
-                ->where('notifications.notifiable_id', $user->id)
-                ->where('notifications.notifiable_type', 'App\\Models\\User')
-                ->whereNull('notifications.read_at')
-                ->select(
-                    'notifications.id',
-                    'notifications.type',
-                    'notifications.data',
-                    'notifications.created_at'
-                )
-                ->orderBy('notifications.created_at', 'desc')
+                ->where('notifiable_id', $user->id)
+                ->where('notifiable_type', 'App\\Models\\User')
+                ->whereNull('read_at')
+                ->select('id', 'type', 'data', 'created_at')
+                ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get()
                 ->map(function ($notification) {
-                    // Convert date string to Carbon instance
                     $notification->created_at = Carbon::parse($notification->created_at);
-                    
-                    // Parse JSON data and extract message safely
                     $data = is_string($notification->data) ? json_decode($notification->data, true) : (array)$notification->data;
                     $notification->message = $data['message'] ?? $data['title'] ?? 'New notification';
-                    
-                    // Create a mock sender object structure that the view expects
-                    $notification->sender = (object) [
-                        'fullName' => $data['sender_name'] ?? 'System'
-                    ];
+                    $notification->sender = (object) ['fullName' => $data['sender_name'] ?? 'System'];
                     return $notification;
                 });
         } catch (\Exception $e) {
-            // If notifications fail, use empty collection
             $recentMessages = collect([]);
             \Log::error('Failed to load notifications: ' . $e->getMessage());
         }
 
-        // Get upcoming deadlines
+        // Get upcoming deadlines - optimized
         $upcomingDeadlines = DB::table('projects')
             ->where('client_id', $user->id)
             ->whereNotNull('deadline')
             ->where('deadline', '>', now())
             ->where('status', '!=', 'completed')
+            ->select('id', 'title', 'deadline', 'status', 'created_at')
             ->orderBy('deadline', 'asc')
             ->limit(5)
             ->get()
             ->map(function ($project) {
-                // Convert date strings to Carbon instances
                 $project->created_at = Carbon::parse($project->created_at);
                 $project->deadline = Carbon::parse($project->deadline);
                 return $project;
             });
         
-        // Get active announcements
-        $announcements = DB::table('announcements')
-            ->join('users', 'announcements.created_by', '=', 'users.id')
-            ->where('announcements.status', 'active')
-            ->where(function ($query) {
-                $query->where('announcements.target_audience', 'LIKE', '%client%')
-                      ->orWhere('announcements.target_audience', 'LIKE', '%all%');
-            })
-            ->where(function ($query) {
-                $query->whereNull('announcements.expires_at')
-                      ->orWhere('announcements.expires_at', '>', now());
-            })
-            ->where(function ($query) {
-                $query->whereNull('announcements.starts_at')
-                      ->orWhere('announcements.starts_at', '<=', now());
-            })
-            ->select(
-                'announcements.id',
-                'announcements.title',
-                'announcements.content',
-                'announcements.priority',
-                'announcements.status',
-                'announcements.starts_at',
-                'announcements.expires_at',
-                'announcements.created_at',
-                'users.fullName as creator_name'
-            )
-            ->orderByRaw("FIELD(announcements.priority, 'high', 'medium', 'low')")
-            ->orderBy('announcements.created_at', 'desc')
-            ->get()
-            ->map(function ($announcement) {
-                // Convert date strings to Carbon instances
-                $announcement->created_at = Carbon::parse($announcement->created_at);
-                if ($announcement->starts_at) {
-                    $announcement->starts_at = Carbon::parse($announcement->starts_at);
-                }
-                if ($announcement->expires_at) {
-                    $announcement->expires_at = Carbon::parse($announcement->expires_at);
-                }
-                
-                // Create creator object structure that the view expects
-                $announcement->creator = (object) [
-                    'fullName' => $announcement->creator_name
-                ];
-                return $announcement;
-            });
+        // Get active announcements - cached for 5 minutes
+        $announcements = Cache::remember("client_announcements_{$user->id}", 300, function () {
+            return DB::table('announcements')
+                ->join('users', 'announcements.created_by', '=', 'users.id')
+                ->where('announcements.status', 'active')
+                ->where(function ($query) {
+                    $query->where('announcements.target_audience', 'LIKE', '%client%')
+                          ->orWhere('announcements.target_audience', 'LIKE', '%all%');
+                })
+                ->where(function ($query) {
+                    $query->whereNull('announcements.expires_at')
+                          ->orWhere('announcements.expires_at', '>', now());
+                })
+                ->where(function ($query) {
+                    $query->whereNull('announcements.starts_at')
+                          ->orWhere('announcements.starts_at', '<=', now());
+                })
+                ->select(
+                    'announcements.id', 'announcements.title', 'announcements.content',
+                    'announcements.priority', 'announcements.status', 'announcements.starts_at',
+                    'announcements.expires_at', 'announcements.created_at',
+                    'users.fullName as creator_name'
+                )
+                ->orderByRaw("FIELD(announcements.priority, 'high', 'medium', 'low')")
+                ->orderBy('announcements.created_at', 'desc')
+                ->get()
+                ->map(function ($announcement) {
+                    $announcement->created_at = Carbon::parse($announcement->created_at);
+                    if ($announcement->starts_at) {
+                        $announcement->starts_at = Carbon::parse($announcement->starts_at);
+                    }
+                    if ($announcement->expires_at) {
+                        $announcement->expires_at = Carbon::parse($announcement->expires_at);
+                    }
+                    $announcement->creator = (object) ['fullName' => $announcement->creator_name];
+                    return $announcement;
+                });
+        });
         
-        // Ensure collections are always defined (convert to collections if they aren't already)
         $recentProjects = collect($recentProjects);
         $recentMessages = collect($recentMessages);
         $upcomingDeadlines = collect($upcomingDeadlines);
@@ -277,8 +242,9 @@ class ClientController extends Controller
                     $project->assignedAdiutor = null;
                 }
 
-                // Set progress from progress_percentage
-                $project->progress = $project->progress_percentage;
+                // Calculate progress dynamically from completed tasks
+                $projectModel = \App\Models\Project::find($project->id);
+                $project->progress = $projectModel ? $projectModel->calculateProgressFromTasks() : 0;
 
                 // Calculate if discounts were applied
                 $project->hasDiscounts = ($project->coupon_discount_amount > 0 || $project->loyalty_discount_amount > 0);
@@ -608,49 +574,71 @@ class ClientController extends Controller
             $serviceRequest = \App\Models\ServiceRequest::with(['payments', 'project.milestones'])->find($project->service_request_id);
         }
 
-        // Get project documents/attachments with access control
-        $documents = DB::table('documents')
-            ->leftJoin('tasks', 'documents.taskID', '=', 'tasks.taskID')
-            ->leftJoin('project_milestones', 'tasks.phase_id', '=', 'project_milestones.id')
-            ->leftJoin('users', 'documents.uploaded_by', '=', 'users.id')
-            ->where(function($query) use ($id) {
-                // Documents directly attached to project
-                $query->where('documents.project_id', $id)
-                    // Or documents attached to tasks in this project
-                    ->orWhere('tasks.project_id', $id);
-            })
-            ->where('documents.is_archived', false)
-            ->select(
-                'documents.*',
-                'tasks.taskTitle as task_name',
-                'tasks.taskID as task_id',
-                'tasks.phase_id',
-                'project_milestones.phase_name',
-                'project_milestones.is_paid as phase_is_paid',
-                'project_milestones.paid_at as phase_paid_at',
-                'users.fullName as uploaded_by_name'
-            )
-            ->orderBy('documents.created_at', 'desc')
+        // Get tasks with their deliverables for grouped display
+        // Only show approved deliverables OR non-deliverable documents for clients
+        $tasksWithDeliverables = \App\Models\Task::where('project_id', $id)
+            ->with(['documents' => function($query) {
+                $query->where('is_archived', false)
+                      ->where(function($q) {
+                          $q->where('is_deliverable', false)
+                            ->orWhere(function($sub) {
+                                $sub->where('is_deliverable', true)
+                                    ->where('is_approved', true);
+                            });
+                      })
+                      ->with('uploader')
+                      ->orderByDesc('created_at');
+            }, 'assignedUser'])
+            ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function($doc) use ($serviceRequest) {
-                // Determine if document is locked based on payment status
+            ->filter(function($task) {
+                return $task->documents->count() > 0;
+            });
+
+        // Get project-level documents (not associated with any task)
+        $projectLevelDocuments = \App\Models\Document::where('project_id', $id)
+            ->whereNull('taskID')
+            ->where('is_archived', false)
+            ->where(function($q) {
+                $q->where('is_deliverable', false)
+                  ->orWhere(function($sub) {
+                      $sub->where('is_deliverable', true)
+                          ->where('is_approved', true);
+                  });
+            })
+            ->with('uploader')
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Determine if documents are locked based on milestone payment
+        $tasksWithDeliverables = $tasksWithDeliverables->map(function($task) use ($serviceRequest) {
+            $task->documents = $task->documents->map(function($doc) use ($task, $serviceRequest) {
                 $isLocked = false;
-                
-                // If document is from a task with a phase/milestone
-                if ($doc->phase_id) {
-                    // Check if the service request uses milestone payments
-                    if ($serviceRequest && $serviceRequest->payment_type === 'milestone_payment') {
-                        // Lock if milestone/phase not paid yet
-                        // phase_is_paid should be 1/true for paid, 0/false for unpaid
-                        $isLocked = ($doc->phase_is_paid == 0 || $doc->phase_is_paid === false || $doc->phase_is_paid === null);
+                if ($task->phase_id && $serviceRequest && $serviceRequest->payment_type === 'milestone_payment') {
+                    $milestone = $serviceRequest->project->milestones->firstWhere('id', $task->phase_id);
+                    if ($milestone && !$milestone->is_paid) {
+                        $isLocked = true;
                     }
                 }
-                
                 $doc->is_locked = $isLocked;
                 return $doc;
             });
+            return $task;
+        });
 
-        return view('client.projects.show', compact('user', 'project', 'assignments', 'tasks', 'feedback', 'serviceRequest', 'documents'));
+        // Calculate project progress from completed tasks
+        $projectModel = \App\Models\Project::find($project->id);
+        $projectProgress = $projectModel ? $projectModel->calculateProgressFromTasks() : 0;
+        $taskStats = $projectModel ? $projectModel->getTaskStats() : [
+            'total' => 0,
+            'pending' => 0,
+            'in_progress' => 0,
+            'completed' => 0,
+            'cancelled' => 0,
+            'progress_percentage' => 0,
+        ];
+
+        return view('client.projects.show', compact('user', 'project', 'assignments', 'tasks', 'feedback', 'serviceRequest', 'tasksWithDeliverables', 'projectLevelDocuments', 'projectProgress', 'taskStats'));
     }
 
     /**

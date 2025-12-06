@@ -12,9 +12,9 @@
                 <h1 class="text-3xl font-bold text-gray-900">Upload New Document</h1>
                 <nav class="flex items-center space-x-2 text-sm text-gray-500 mt-2">
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-accent-500 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <a href="{{ route('admin.documents.index') }}" class="hover:text-accent-500 transition-colors">Documents</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <span class="text-gray-900">Upload New</span>
                 </nav>
             </div>
@@ -27,7 +27,7 @@
         <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-8 py-6">
             <div class="flex items-center text-white">
                 <div class="bg-white/20 rounded-full p-3 mr-4">
-                    <i class="fas fa-cloud-upload-alt text-2xl"></i>
+                    <x-lucide-cloud-upload class="w-6 h-6" />
                 </div>
                 <div>
                     <h2 class="text-2xl font-semibold">Document Upload</h2>
@@ -44,7 +44,7 @@
                 @if ($errors->any())
                     <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 mb-6">
                         <div class="flex items-start">
-                            <i class="fas fa-exclamation-circle text-red-500 mt-0.5 mr-3"></i>
+                            <x-lucide-alert-circle class="w-5 h-5 text-red-500 mt-0.5 mr-3" />
                             <div class="flex-1">
                                 <h3 class="text-red-800 font-semibold mb-2">Please correct the following errors:</h3>
                                 <ul class="list-disc list-inside space-y-1 text-red-700 text-sm">
@@ -101,7 +101,7 @@
                             class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent-50 file:text-accent-700 hover:file:bg-accent-100 cursor-pointer">
                     </div>
                     <div class="mt-2 flex items-start space-x-2 text-xs text-gray-500">
-                        <i class="fas fa-info-circle mt-0.5"></i>
+                        <x-lucide-info class="w-4 h-4 mt-0.5" />
                         <div>
                             <p><strong>Max file size:</strong> 10MB</p>
                             <p><strong>Supported formats:</strong> PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG</p>
@@ -110,14 +110,14 @@
                     <div id="file-preview" class="mt-3 hidden">
                         <div class="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
                             <div class="flex items-center space-x-3">
-                                <i class="fas fa-file-alt text-accent-500 text-xl"></i>
+                                <x-lucide-file-text class="w-5 h-5 text-accent-500" />
                                 <div>
                                     <p class="text-sm font-medium text-gray-900" id="file-name"></p>
                                     <p class="text-xs text-gray-500" id="file-size"></p>
                                 </div>
                             </div>
                             <button type="button" onclick="clearFile()" class="text-red-500 hover:text-red-700 transition-colors">
-                                <i class="fas fa-times-circle"></i>
+                                <x-lucide-x-circle class="w-5 h-5" />
                             </button>
                         </div>
                     </div>
@@ -179,7 +179,7 @@
                                     Mark as Private
                                 </label>
                                 <p class="text-sm text-gray-600 mt-1">
-                                    <i class="fas fa-lock text-gray-400 mr-1"></i>
+                                    <x-lucide-lock class="w-4 h-4 inline text-gray-400 mr-1" />
                                     Private documents are only visible to admins and associated users
                                 </p>
                             </div>
@@ -191,13 +191,13 @@
                 <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
                     <a href="{{ route('admin.documents.index') }}" 
                        class="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                        <i class="fas fa-times mr-2"></i>
+                        <x-lucide-x class="w-4 h-4 mr-2 inline" />
                         Cancel
                     </a>
                     <button 
                         type="submit" 
                         class="px-8 py-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white font-semibold rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all duration-200 shadow-lg shadow-accent-500/30 hover:shadow-xl hover:shadow-accent-500/40">
-                        <i class="fas fa-cloud-upload-alt mr-2"></i>
+                        <x-lucide-cloud-upload class="w-4 h-4 mr-2 inline" />
                         Upload Document
                     </button>
                 </div>
@@ -208,7 +208,7 @@
     <!-- Help Card -->
     <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div class="flex items-start">
-            <i class="fas fa-lightbulb text-blue-500 text-xl mt-0.5 mr-3"></i>
+            <x-lucide-lightbulb class="w-5 h-5 text-blue-500 mt-0.5 mr-3" />
             <div>
                 <h4 class="text-blue-900 font-semibold mb-1">Quick Tips</h4>
                 <ul class="text-sm text-blue-700 space-y-1">

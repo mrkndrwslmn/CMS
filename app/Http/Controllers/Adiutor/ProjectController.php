@@ -71,7 +71,12 @@ class ProjectController extends Controller
                 'clients.profilePic as client_photo',
                 'service_requests.service_type',
                 'service_requests.request_description',
-                'service_requests.payment_type'
+                'service_requests.payment_type',
+                'service_requests.requested_features',
+                'service_requests.requested_skills',
+                'service_requests.template_features',
+                'service_requests.template_skills',
+                'service_requests.has_customizations'
             )
             ->first();
         
@@ -79,6 +84,30 @@ class ProjectController extends Controller
             return redirect()->route('adiutor.projects.index')
                 ->with('error', 'Project not found or you do not have access to it.');
         }
+
+        // Create a service request object for the view (mimics the relationship)
+        $serviceRequest = null;
+        if ($project->service_request_id) {
+            $serviceRequest = (object) [
+                'service_type' => $project->service_type,
+                'request_description' => $project->request_description,
+                'payment_type' => $project->payment_type,
+                'requested_features' => $project->requested_features ? json_decode($project->requested_features, true) : [],
+                'requested_skills' => $project->requested_skills ? json_decode($project->requested_skills, true) : [],
+                'template_features' => $project->template_features ? json_decode($project->template_features, true) : [],
+                'template_skills' => $project->template_skills ? json_decode($project->template_skills, true) : [],
+                'has_customizations' => $project->has_customizations ?? false,
+                'effective_features' => $project->requested_features 
+                    ? json_decode($project->requested_features, true) 
+                    : ($project->template_features ? json_decode($project->template_features, true) : []),
+                'effective_skills' => $project->requested_skills 
+                    ? json_decode($project->requested_skills, true) 
+                    : ($project->template_skills ? json_decode($project->template_skills, true) : []),
+            ];
+        }
+        
+        // Attach service request to project for view compatibility
+        $project->serviceRequest = $serviceRequest;
         
         // Get project milestones if payment type is milestone
         $milestones = [];
@@ -93,6 +122,17 @@ class ProjectController extends Controller
         $tasks = DB::table('tasks')
             ->where('project_id', $id)
             ->where('assignedTo', $user->id)
+            ->select(
+                'taskID as id',
+                'taskTitle as title',
+                'taskDescription as description',
+                'status',
+                'priority',
+                'deadline',
+                'progress_percentage',
+                'completedAt',
+                'created_at'
+            )
             ->orderBy('created_at', 'desc')
             ->get();
         
@@ -114,6 +154,38 @@ class ProjectController extends Controller
         
         // Get recent activity/notes (placeholder - notes table doesn't exist yet)
         $activities = collect(); // Empty collection until notes system is implemented
+
+        // Get tasks with their deliverables for grouped display
+        $tasksWithDeliverables = \App\Models\Task::where('project_id', $id)
+            ->with(['documents' => function($query) {
+                $query->where('is_archived', false)
+                      ->with('uploader')
+                      ->orderByDesc('is_deliverable')
+                      ->orderByDesc('created_at');
+            }, 'assignedUser'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->filter(function($task) {
+                return $task->documents->count() > 0;
+            });
+
+        // Get project-level documents (not associated with any task)
+        $projectLevelDocuments = \App\Models\Document::where('project_id', $id)
+            ->whereNull('taskID')
+            ->where('is_archived', false)
+            ->with('uploader')
+            ->orderByDesc('is_deliverable')
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Count total and pending deliverables
+        $totalDeliverables = $tasksWithDeliverables->sum(function($task) {
+            return $task->documents->count();
+        }) + $projectLevelDocuments->count();
+
+        $pendingDeliverables = $tasksWithDeliverables->sum(function($task) {
+            return $task->documents->where('is_deliverable', true)->where('is_approved', false)->count();
+        }) + $projectLevelDocuments->where('is_deliverable', true)->where('is_approved', false)->count();
         
         return view('adiutor.projects.show', compact(
             'user',
@@ -121,7 +193,11 @@ class ProjectController extends Controller
             'milestones',
             'tasks',
             'teamMembers',
-            'activities'
+            'activities',
+            'tasksWithDeliverables',
+            'projectLevelDocuments',
+            'totalDeliverables',
+            'pendingDeliverables'
         ));
     }
 

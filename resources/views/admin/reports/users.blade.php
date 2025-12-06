@@ -11,19 +11,19 @@
             <div class="mb-4 sm:mb-0">
                 <nav class="flex items-center space-x-2 text-sm text-neutral-500 mt-1">
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-primary-600 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <a href="{{ route('admin.reports.index') }}" class="hover:text-primary-600 transition-colors">Reports</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <span class="text-neutral-700">User Analytics</span>
                 </nav>
             </div>
             <div class="flex gap-2">
                 <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 font-medium rounded-lg transition-colors">
-                    <i class="fas fa-print mr-2"></i>
+                    <x-lucide-printer class="w-4 h-4 mr-2" />
                     Print
                 </button>
                 <a href="{{ route('admin.reports.export', ['type' => 'users', 'period' => $period]) }}" class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
-                    <i class="fas fa-download mr-2"></i>
+                    <x-lucide-download class="w-4 h-4 mr-2" />
                     Export CSV
                 </a>
             </div>
@@ -57,13 +57,13 @@
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ number_format($stats['total_users']) }}</p>
                     <p class="text-xs text-neutral-500 mt-2 flex items-center">
                         <span class="flex h-4 w-4 rounded-full bg-primary-50 text-primary-600 items-center justify-center mr-1">
-                            <i class="fas fa-arrow-up text-[10px]"></i>
+                            <x-lucide-arrow-up class="w-2.5 h-2.5" />
                         </span>
                         +{{ number_format($stats['new_registrations']) }} new this period
                     </p>
                 </div>
                 <div class="h-12 w-12 shrink-0 rounded-full bg-primary-50 text-primary-500 flex items-center justify-center">
-                    <i class="fas fa-users text-lg"></i>
+                    <x-lucide-users class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -79,7 +79,7 @@
                     </p>
                 </div>
                 <div class="h-12 w-12 shrink-0 rounded-full bg-success-50 text-success-500 flex items-center justify-center">
-                    <i class="fas fa-user-tie text-lg"></i>
+                    <x-lucide-briefcase-business class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -95,7 +95,7 @@
                     </p>
                 </div>
                 <div class="h-12 w-12 shrink-0 rounded-full bg-warning-50 text-warning-500 flex items-center justify-center">
-                    <i class="fas fa-user-check text-lg"></i>
+                    <x-lucide-user-check class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -111,7 +111,7 @@
                     </p>
                 </div>
                 <div class="h-12 w-12 shrink-0 rounded-full bg-info-50 text-info-500 flex items-center justify-center">
-                    <i class="fas fa-user-clock text-lg"></i>
+                    <x-lucide-user-cog class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -125,7 +125,7 @@
                     <p class="text-xs text-neutral-500 mt-2">System administrators</p>
                 </div>
                 <div class="h-12 w-12 shrink-0 rounded-full bg-error-50 text-error-500 flex items-center justify-center">
-                    <i class="fas fa-user-shield text-lg"></i>
+                    <x-lucide-shield-check class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -139,7 +139,7 @@
                     <p class="text-xs text-neutral-500 mt-2">In last {{ $period }} days</p>
                 </div>
                 <div class="h-12 w-12 shrink-0 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center">
-                    <i class="fas fa-user-plus text-lg"></i>
+                    <x-lucide-user-plus class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -151,7 +151,7 @@
         <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-chart-line text-primary-500 mr-2"></i>
+                    <x-lucide-trending-up class="w-4 h-4 text-primary-500 mr-2" />
                     Registration Trend (Last {{ $period }} Days)
                 </h3>
             </div>
@@ -166,7 +166,7 @@
         <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-chart-pie text-primary-500 mr-2"></i>
+                    <x-lucide-pie-chart class="w-4 h-4 text-primary-500 mr-2" />
                     User Status by Role
                 </h3>
             </div>
@@ -182,7 +182,7 @@
     <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-neutral-200">
             <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                <i class="fas fa-star text-primary-500 mr-2"></i>
+                <x-lucide-star class="w-4 h-4 text-primary-500 mr-2" />
                 Most Active Users (by Task Participation)
             </h3>
         </div>
@@ -234,7 +234,7 @@
                     <tr>
                         <td colspan="5" class="px-6 py-12 text-center">
                             <div class="text-neutral-400">
-                                <i class="fas fa-users text-3xl mb-2"></i>
+                                <x-lucide-users class="w-8 h-8 mx-auto mb-2" />
                                 <p class="text-sm">No user data available</p>
                             </div>
                         </td>

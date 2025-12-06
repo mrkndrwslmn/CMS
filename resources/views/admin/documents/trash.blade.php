@@ -13,14 +13,14 @@
         </div>
         <div class="mt-4 sm:mt-0 flex space-x-3">
             <a href="{{ route('admin.documents.index') }}" class="flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Documents
+                <x-lucide-arrow-left class="w-4 h-4 mr-2" />Back to Documents
             </a>
             @if($documents->count() > 0)
             <form action="{{ route('admin.documents.empty-trash') }}" method="POST" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Empty Trash', 'Are you sure you want to permanently delete ALL documents in trash? This action cannot be undone!')">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="flex items-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
-                    <i class="fas fa-trash mr-2"></i>Empty Trash
+                    <x-lucide-trash-2 class="w-4 h-4 mr-2" />Empty Trash
                 </button>
             </form>
             @endif
@@ -35,7 +35,7 @@
                     <input type="text" name="search" value="{{ request('search') }}" 
                            placeholder="Search by file name..." 
                            class="w-full pl-10 pr-4 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                    <i class="fas fa-search absolute left-3 top-3 text-neutral-400"></i>
+                    <x-lucide-search class="w-4 h-4 absolute left-3 top-3 text-neutral-400" />
                 </div>
             </div>
             <button type="submit" class="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
@@ -60,7 +60,7 @@
                     <label for="selectAll" class="text-sm text-neutral-600">Select All</label>
                 </div>
                 <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm" onclick="return window.Alerts.confirmForm(event, 'Restore Documents', 'Restore selected documents?')">
-                    <i class="fas fa-undo mr-2"></i>Restore Selected
+                    <x-lucide-undo-2 class="w-4 h-4 mr-2 inline" />Restore Selected
                 </button>
             </div>
 
@@ -90,17 +90,17 @@
                                     <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-neutral-100 rounded-lg">
                                         @php
                                             $extension = strtolower(pathinfo($document->fileName, PATHINFO_EXTENSION));
-                                            $iconClass = match($extension) {
-                                                'pdf' => 'fa-file-pdf text-red-500',
-                                                'doc', 'docx' => 'fa-file-word text-blue-500',
-                                                'xls', 'xlsx' => 'fa-file-excel text-green-500',
-                                                'ppt', 'pptx' => 'fa-file-powerpoint text-orange-500',
-                                                'jpg', 'jpeg', 'png', 'gif', 'webp' => 'fa-file-image text-purple-500',
-                                                'zip', 'rar' => 'fa-file-archive text-yellow-500',
-                                                default => 'fa-file text-neutral-500',
+                                            $iconColor = match($extension) {
+                                                'pdf' => 'text-red-500',
+                                                'doc', 'docx' => 'text-blue-500',
+                                                'xls', 'xlsx' => 'text-green-500',
+                                                'ppt', 'pptx' => 'text-orange-500',
+                                                'jpg', 'jpeg', 'png', 'gif', 'webp' => 'text-purple-500',
+                                                'zip', 'rar' => 'text-yellow-500',
+                                                default => 'text-neutral-500',
                                             };
                                         @endphp
-                                        <i class="fas {{ $iconClass }} text-xl"></i>
+                                        <x-lucide-file class="w-5 h-5 {{ $iconColor }}" />
                                     </div>
                                     <div class="ml-3">
                                         <p class="text-sm font-medium text-neutral-900">{{ Str::limit($document->fileName, 40) }}</p>
@@ -127,14 +127,14 @@
                                     <form action="{{ route('admin.documents.restore', $document->documentID) }}" method="POST" class="inline">
                                         @csrf
                                         <button type="submit" class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Restore">
-                                            <i class="fas fa-undo"></i>
+                                            <x-lucide-undo-2 class="w-4 h-4" />
                                         </button>
                                     </form>
                                     <form action="{{ route('admin.documents.force-delete', $document->documentID) }}" method="POST" class="inline" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete Document', 'Permanently delete this document? This cannot be undone!')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Permanently">
-                                            <i class="fas fa-trash-alt"></i>
+                                            <x-lucide-trash-2 class="w-4 h-4" />
                                         </button>
                                     </form>
                                 </div>
@@ -155,12 +155,12 @@
         @else
         <div class="p-12 text-center">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 rounded-full mb-4">
-                <i class="fas fa-trash-alt text-2xl text-neutral-400"></i>
+                <x-lucide-trash-2 class="w-6 h-6 text-neutral-400" />
             </div>
             <h3 class="text-lg font-medium text-neutral-900 mb-2">Trash is Empty</h3>
             <p class="text-neutral-500 mb-4">No deleted documents found.</p>
             <a href="{{ route('admin.documents.index') }}" class="inline-flex items-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Documents
+                <x-lucide-arrow-left class="w-4 h-4 mr-2" />Back to Documents
             </a>
         </div>
         @endif

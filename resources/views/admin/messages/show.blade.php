@@ -171,6 +171,8 @@
     
     let currentChatType = new URLSearchParams(window.location.search).get('tab') || 'direct'; // 'direct' or 'group'
     let currentApiEndpoint = '';
+    let isInitialLoad = true;
+    let lastMessageId = null;
     
     const messageForm = document.getElementById('message-form');
     const messageTextarea = document.getElementById('message-textarea');
@@ -238,6 +240,10 @@
             sendButton.disabled = false;
         }
         
+        // Reset initial load flag when switching chat types
+        isInitialLoad = true;
+        lastMessageId = null;
+        
         // Reload messages for the selected chat type
         loadMessages();
         
@@ -297,19 +303,54 @@
             const data = await response.json();
             
             if (data.success) {
-                renderMessages(data.messages.data);
+                const messages = data.messages.data;
+                
+                if (isInitialLoad) {
+                    // First load: render all messages
+                    renderMessages(messages);
+                    isInitialLoad = false;
+                    if (messages.length > 0) {
+                        lastMessageId = messages[messages.length - 1].id;
+                    }
+                } else {
+                    // Subsequent loads: only append new messages
+                    appendNewMessages(messages);
+                }
+                
                 if (window.messagingService) {
                     await window.messagingService.updateUnreadCount();
                 }
             }
         } catch (error) {
             console.error('Error loading messages:', error);
-            messagesContainer.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Failed to load messages. Please refresh the page.
-                </div>
-            `;
+            if (isInitialLoad) {
+                messagesContainer.innerHTML = `
+                    <div class="alert alert-danger flex items-center gap-2">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                        Failed to load messages. Please refresh the page.
+                    </div>
+                `;
+            }
+        }
+    }
+
+    // Append only new messages (for polling updates)
+    function appendNewMessages(messages) {
+        if (!messages || messages.length === 0) return;
+        
+        // Get existing message IDs
+        const existingMessages = messagesContainer.querySelectorAll('[data-message-id]');
+        const existingIds = new Set(Array.from(existingMessages).map(el => parseInt(el.dataset.messageId)));
+        
+        // Filter to only new messages
+        const newMessages = messages.filter(msg => !existingIds.has(msg.id));
+        
+        if (newMessages.length > 0) {
+            newMessages.forEach(msg => {
+                messagesContainer.insertAdjacentHTML('beforeend', createMessageElement(msg));
+            });
+            lastMessageId = newMessages[newMessages.length - 1].id;
+            scrollToBottom();
         }
     }
 

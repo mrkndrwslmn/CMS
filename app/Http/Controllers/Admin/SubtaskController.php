@@ -54,7 +54,7 @@ class SubtaskController extends Controller
 
         // The model's boot method automatically updates task progress
 
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'subtask' => $subtask->load('assignee'),
@@ -84,7 +84,7 @@ class SubtaskController extends Controller
             'due_date' => $request->due_date,
         ]);
 
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'subtask' => $subtask->fresh()->load('assignee'),
@@ -103,7 +103,7 @@ class SubtaskController extends Controller
         
         $task = $subtask->task->fresh();
 
-        if (request()->ajax()) {
+        if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'is_completed' => $subtask->is_completed,
@@ -124,7 +124,7 @@ class SubtaskController extends Controller
 
         $task = $subtask->task->fresh();
 
-        if (request()->ajax()) {
+        if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'task_stats' => $task->getSubtasksStats(),
@@ -144,7 +144,7 @@ class SubtaskController extends Controller
 
         $task = $subtask->task->fresh();
 
-        if (request()->ajax()) {
+        if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'task_stats' => $task->getSubtasksStats(),
@@ -161,15 +161,17 @@ class SubtaskController extends Controller
     public function destroy(Subtask $subtask)
     {
         $task = $subtask->task;
+        $wasCompleted = $subtask->is_completed;
         
         // Soft delete
         $subtask->delete();
         
         // The model's boot method automatically updates task progress
 
-        if (request()->ajax()) {
+        if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
                 'success' => true,
+                'was_completed' => $wasCompleted,
                 'task_stats' => $task->fresh()->getSubtasksStats(),
                 'task_progress' => $task->fresh()->progress_percentage,
             ]);

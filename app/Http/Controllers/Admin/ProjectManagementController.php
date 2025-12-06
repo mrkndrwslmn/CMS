@@ -90,52 +90,67 @@ class ProjectManagementController extends Controller
 
     /**
      * Show the specified project
+     * OPTIMIZED: Uses aggregate queries instead of loading all records, caching for expensive calculations
      */
     public function show($id)
     {
-        $project = Project::with(['serviceRequest', 'client', 'adiutors', 'tasks.assignedUser', 'tasks.creator', 'assignments'])
+        $project = Project::with(['serviceRequest', 'client', 'adiutors', 'tasks.assignedUser', 'assignments'])
                          ->findOrFail($id);
 
-        // Calculate budget overview
-        $totalAllocated = $project->tasks->sum('allocated_budget') ?? 0;
-        $totalSpent = $project->tasks->sum('actual_cost') ?? 0;
+        // Calculate budget overview using aggregate queries (much faster than loading all records)
+        $taskBudgetStats = \DB::table('tasks')
+            ->where('project_id', $project->id)
+            ->selectRaw('COALESCE(SUM(allocated_budget), 0) as total_allocated, COALESCE(SUM(actual_cost), 0) as total_spent')
+            ->first();
         
-        // Calculate Adiutor Earnings - PHASE 2 ENHANCEMENT
-        // 1. Approved Time Entries (Hourly Rate)
-        $approvedTimeEntries = \App\Models\TimeEntry::whereHas('task', function($query) use ($project) {
-                $query->where('project_id', $project->id);
-            })
-            ->where('is_approved', true)
-            ->get();
+        $totalAllocated = $taskBudgetStats->total_allocated ?? 0;
+        $totalSpent = $taskBudgetStats->total_spent ?? 0;
         
-        $hourlyEarnings = $approvedTimeEntries->sum('calculated_amount') ?? 0;
-        $totalApprovedHours = $approvedTimeEntries->sum('duration_minutes') / 60;
+        // Calculate Adiutor Earnings using aggregate queries (OPTIMIZED)
+        // 1. Approved Time Entries (Hourly Rate) - aggregate query
+        $approvedTimeStats = \DB::table('time_entries')
+            ->join('tasks', 'time_entries.task_id', '=', 'tasks.taskID')
+            ->where('tasks.project_id', $project->id)
+            ->where('time_entries.is_approved', true)
+            ->selectRaw('COALESCE(SUM(time_entries.calculated_amount), 0) as total_amount, COALESCE(SUM(time_entries.duration_minutes), 0) as total_minutes, COUNT(*) as entry_count')
+            ->first();
         
-        // 2. Approved Fixed Rate Payments
-        $approvedFixedRates = $project->assignments()
+        $hourlyEarnings = $approvedTimeStats->total_amount ?? 0;
+        $totalApprovedHours = ($approvedTimeStats->total_minutes ?? 0) / 60;
+        $approvedEntryCount = $approvedTimeStats->entry_count ?? 0;
+        
+        // 2. Approved Fixed Rate Payments - aggregate query
+        $approvedFixedStats = \DB::table('project_assignments')
+            ->where('project_id', $project->id)
             ->where('payment_type', 'fixed_rate')
             ->where('fixed_rate_approved', true)
-            ->get();
+            ->selectRaw('COALESCE(SUM(agreed_rate), 0) as total_amount, COUNT(*) as count')
+            ->first();
         
-        $fixedRateEarnings = $approvedFixedRates->sum('agreed_rate') ?? 0;
+        $fixedRateEarnings = $approvedFixedStats->total_amount ?? 0;
+        $approvedFixedCount = $approvedFixedStats->count ?? 0;
         
-        // 3. Pending Fixed Rates (not yet approved)
-        $pendingFixedRates = $project->assignments()
+        // 3. Pending Fixed Rates - aggregate query
+        $pendingFixedStats = \DB::table('project_assignments')
+            ->where('project_id', $project->id)
             ->where('payment_type', 'fixed_rate')
             ->where('fixed_rate_approved', false)
             ->whereNotIn('status', ['removed', 'declined'])
-            ->get();
+            ->selectRaw('COALESCE(SUM(agreed_rate), 0) as total_amount, COUNT(*) as count')
+            ->first();
         
-        $pendingFixedRateAmount = $pendingFixedRates->sum('agreed_rate') ?? 0;
+        $pendingFixedRateAmount = $pendingFixedStats->total_amount ?? 0;
+        $pendingFixedCount = $pendingFixedStats->count ?? 0;
         
-        // 4. Pending Time Entries (not yet approved)
-        $pendingTimeEntries = \App\Models\TimeEntry::whereHas('task', function($query) use ($project) {
-                $query->where('project_id', $project->id);
-            })
-            ->where('is_approved', false)
-            ->get();
+        // 4. Pending Time Entries - aggregate query
+        $pendingTimeStats = \DB::table('time_entries')
+            ->join('tasks', 'time_entries.task_id', '=', 'tasks.taskID')
+            ->where('tasks.project_id', $project->id)
+            ->where('time_entries.is_approved', false)
+            ->selectRaw('COALESCE(SUM(time_entries.calculated_amount), 0) as total_amount')
+            ->first();
         
-        $pendingHourlyAmount = $pendingTimeEntries->sum('calculated_amount') ?? 0;
+        $pendingHourlyAmount = $pendingTimeStats->total_amount ?? 0;
         
         // Total Adiutor Earnings (Approved)
         $totalAdiutorEarnings = $hourlyEarnings + $fixedRateEarnings;
@@ -162,13 +177,13 @@ class ProjectManagementController extends Controller
                     'approved_amount' => $hourlyEarnings,
                     'approved_hours' => round($totalApprovedHours, 2),
                     'pending_amount' => $pendingHourlyAmount,
-                    'entry_count' => $approvedTimeEntries->count(),
+                    'entry_count' => $approvedEntryCount,
                 ],
                 'fixed_rate' => [
                     'approved_amount' => $fixedRateEarnings,
-                    'approved_count' => $approvedFixedRates->count(),
+                    'approved_count' => $approvedFixedCount,
                     'pending_amount' => $pendingFixedRateAmount,
-                    'pending_count' => $pendingFixedRates->count(),
+                    'pending_count' => $pendingFixedCount,
                 ],
                 'total_approved' => $totalAdiutorEarnings,
                 'total_pending' => $totalPendingEarnings,
@@ -178,147 +193,170 @@ class ProjectManagementController extends Controller
             ],
         ];
 
-        // Get available adiutors for assignment with detailed information
-        // Get project's required service type for skill matching
+        // Get available adiutors - OPTIMIZED with caching
         $projectServiceType = $project->serviceRequest ? $project->serviceRequest->service_type : null;
-
-        // Get IDs of adiutors already assigned to this project
         $assignedAdiutorIds = $project->adiutors->pluck('id')->toArray();
 
-        $availableAdiutors = User::where('role', 'adiutor')
-            ->whereNotIn('id', $assignedAdiutorIds) // Exclude already assigned adiutors
+        // Cache available adiutors calculation for 2 minutes (it's expensive)
+        $cacheKey = "project_{$id}_available_adiutors_" . md5(json_encode($assignedAdiutorIds) . $projectServiceType);
+        $availableAdiutors = \Cache::remember($cacheKey, now()->addMinutes(2), function () use ($assignedAdiutorIds, $projectServiceType) {
+            return $this->calculateAvailableAdiutors($assignedAdiutorIds, $projectServiceType);
+        });
+
+        // Get tasks with their deliverables for grouped display
+        $tasksWithDeliverables = \App\Models\Task::where('project_id', $id)
+            ->with(['documents' => function($query) {
+                $query->where('is_archived', false)
+                      ->with('uploader')
+                      ->orderByDesc('is_deliverable')
+                      ->orderByDesc('created_at');
+            }, 'assignedUser'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->filter(function($task) {
+                return $task->documents->count() > 0;
+            });
+
+        // Get project-level documents (not associated with any task)
+        $projectLevelDocuments = \App\Models\Document::where('project_id', $id)
+            ->whereNull('taskID')
+            ->where('is_archived', false)
+            ->with('uploader')
+            ->orderByDesc('is_deliverable')
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Count total and pending deliverables
+        $totalDeliverables = $tasksWithDeliverables->sum(function($task) {
+            return $task->documents->count();
+        }) + $projectLevelDocuments->count();
+
+        $pendingDeliverables = $tasksWithDeliverables->sum(function($task) {
+            return $task->documents->where('is_deliverable', true)->where('is_approved', false)->count();
+        }) + $projectLevelDocuments->where('is_deliverable', true)->where('is_approved', false)->count();
+
+        return view('admin.projects.show', compact('project', 'budgetOverview', 'availableAdiutors', 'tasksWithDeliverables', 'projectLevelDocuments', 'totalDeliverables', 'pendingDeliverables'));
+    }
+
+    /**
+     * Calculate available adiutors with ranking scores
+     * Extracted to a separate method for caching
+     */
+    private function calculateAvailableAdiutors(array $assignedAdiutorIds, ?string $projectServiceType): \Illuminate\Support\Collection
+    {
+        // Get active project counts in a single query for all adiutors
+        $activeProjectCounts = \DB::table('project_assignments')
+            ->select('adiutor_id', \DB::raw('COUNT(*) as count'))
+            ->whereIn('status', ['assigned', 'active', 'in_progress'])
+            ->groupBy('adiutor_id')
+            ->pluck('count', 'adiutor_id');
+
+        $adiutors = User::where('role', 'adiutor')
+            ->when(!empty($assignedAdiutorIds), function($q) use ($assignedAdiutorIds) {
+                $q->whereNotIn('id', $assignedAdiutorIds);
+            })
             ->with([
                 'calendarIntegration',
-                'adiutorProfile.skills',  // Load skills through adiutorProfile
-                'assignedProjects' => function($query) {
-                    $query->whereIn('project_assignments.status', ['assigned', 'active', 'in_progress']);
-                }
+                'adiutorProfile.skills',
             ])
-            ->get()
-            ->map(function ($adiutor) use ($projectServiceType) {
-                $skills = $adiutor->adiutorProfile ? $adiutor->adiutorProfile->skills : collect();
-                $activeProjectsCount = $adiutor->assignedProjects->count();
+            ->get();
+
+        return $adiutors->map(function ($adiutor) use ($projectServiceType, $activeProjectCounts) {
+            $skills = $adiutor->adiutorProfile ? $adiutor->adiutorProfile->skills : collect();
+            $activeProjectsCount = $activeProjectCounts[$adiutor->id] ?? 0;
+            
+            // Calculate workload score
+            $workloadScore = match(true) {
+                $activeProjectsCount == 0 => 30,
+                $activeProjectsCount <= 2 => 24,
+                $activeProjectsCount <= 4 => 18,
+                $activeProjectsCount <= 6 => 12,
+                default => 6,
+            };
+
+            // Calculate skill score
+            $contrib = 0.0;
+            $skillScore = 0;
+            
+            if ($projectServiceType && $skills->isNotEmpty()) {
+                $skillCategories = [
+                    'programming' => ['php', 'javascript', 'python', 'java', 'c#', 'ruby', 'typescript', 'node', 'laravel', 'django', 'react', 'vue', 'angular', 'flutter', 'swift', 'kotlin', 'api'],
+                    'design' => ['ui', 'ux', 'figma', 'photoshop', 'illustrator', 'graphic', 'logo', 'responsive', 'prototyp', 'adobe', 'web design'],
+                    'marketing' => ['seo', 'google ads', 'social media', 'content', 'email', 'copywriting'],
+                    'database' => ['mysql', 'mongodb', 'postgresql', 'sql', 'oracle', 'sqlite', 'database'],
+                    'mobile' => ['ios', 'android', 'mobile', 'swift', 'kotlin'],
+                    'devops' => ['docker', 'kubernetes', 'aws', 'azure', 'cloud', 'linux'],
+                    'web' => ['html', 'css', 'javascript', 'react', 'vue', 'angular', 'node', 'laravel', 'php', 'web'],
+                ];
                 
-                // Calculate ranking score
-                // New weighting: Skills (70 points) prioritized, Workload (30 points)
-                $skillScore = 0; // up to 70
-                $workloadScore = 0; // up to 30
-
-                // Workload Score (0-30 points)
-                // Lower workload = higher score
-                // 0 projects = 30 points, 1-2 = 24, 3-4 = 18, 5-6 = 12, 7+ = 6
-                if ($activeProjectsCount == 0) {
-                    $workloadScore = 30;
-                } elseif ($activeProjectsCount <= 2) {
-                    $workloadScore = 24;
-                } elseif ($activeProjectsCount <= 4) {
-                    $workloadScore = 18;
-                } elseif ($activeProjectsCount <= 6) {
-                    $workloadScore = 12;
-                } else {
-                    $workloadScore = 6;
+                $normalizedServiceType = strtolower(trim($projectServiceType));
+                $relevantKeywords = [];
+                
+                foreach ($skillCategories as $category => $keywords) {
+                    if (str_contains($normalizedServiceType, $category) || $category === $normalizedServiceType) {
+                        $relevantKeywords = array_merge($relevantKeywords, $keywords);
+                    }
                 }
-
-                // Skill Match Score (0-70 points)
-                // Use category-based matching for better service type to skill matching
-                $contrib = 0.0;
-                if ($projectServiceType && $skills->isNotEmpty()) {
-                    // Define skill categories for better matching
-                    $skillCategories = [
-                        'programming' => ['php', 'javascript', 'python', 'java', 'c#', 'ruby', 'typescript', 'node', 'laravel', 'django', 'react', 'vue', 'angular', 'flutter', 'swift', 'kotlin', 'api'],
-                        'design' => ['ui', 'ux', 'figma', 'photoshop', 'illustrator', 'graphic', 'logo', 'responsive', 'prototyp', 'adobe', 'web design'],
-                        'marketing' => ['seo', 'google ads', 'social media', 'content', 'email', 'copywriting'],
-                        'database' => ['mysql', 'mongodb', 'postgresql', 'sql', 'oracle', 'sqlite', 'database'],
-                        'mobile' => ['ios', 'android', 'mobile', 'swift', 'kotlin'],
-                        'devops' => ['docker', 'kubernetes', 'aws', 'azure', 'cloud', 'linux'],
-                        'web' => ['html', 'css', 'javascript', 'react', 'vue', 'angular', 'node', 'laravel', 'php', 'web'],
-                    ];
+                
+                if (empty($relevantKeywords)) {
+                    $relevantKeywords[] = str_replace(['-', '_', ' '], '', $normalizedServiceType);
+                }
+                
+                foreach ($skills as $skill) {
+                    $skillName = strtolower(str_replace(['-', '_', ' ', '/'], '', $skill->name));
                     
-                    $normalizedServiceType = strtolower(trim($projectServiceType));
-                    
-                    // Get relevant keywords for the service type
-                    $relevantKeywords = [];
-                    foreach ($skillCategories as $category => $keywords) {
-                        if (str_contains($normalizedServiceType, $category) || $category === $normalizedServiceType) {
-                            $relevantKeywords = array_merge($relevantKeywords, $keywords);
-                        }
-                    }
-                    
-                    // If no category match, use the service type itself
-                    if (empty($relevantKeywords)) {
-                        $relevantKeywords[] = str_replace(['-', '_', ' '], '', $normalizedServiceType);
-                    }
-                    
-                    // Check each skill against relevant keywords
-                    foreach ($skills as $skill) {
-                        $skillName = strtolower(str_replace(['-', '_', ' ', '/'], '', $skill->name));
-                        $isMatch = false;
-                        
-                        foreach ($relevantKeywords as $keyword) {
-                            $normalizedKeyword = str_replace(['-', '_', ' ', '/'], '', $keyword);
-                            if (str_contains($skillName, $normalizedKeyword) || str_contains($normalizedKeyword, $skillName)) {
-                                $isMatch = true;
-                                break;
-                            }
-                        }
-                        
-                        if ($isMatch) {
-                            // get proficiency (1-5) if available, else default to 3
+                    foreach ($relevantKeywords as $keyword) {
+                        $normalizedKeyword = str_replace(['-', '_', ' ', '/'], '', $keyword);
+                        if (str_contains($skillName, $normalizedKeyword) || str_contains($normalizedKeyword, $skillName)) {
                             $prof = 3;
-                            if (isset($skill->pivot) && isset($skill->pivot->proficiency_level)) {
+                            if (isset($skill->pivot->proficiency_level)) {
                                 $p = $skill->pivot->proficiency_level;
                                 if (is_numeric($p)) {
                                     $prof = max(1, min(5, (int)$p));
                                 } else {
-                                    // map common strings
                                     $pl = strtolower(trim($p));
-                                    if (in_array($pl, ['beginner','junior'])) $prof = 2;
-                                    elseif (in_array($pl, ['intermediate','mid'])) $prof = 3;
-                                    elseif (in_array($pl, ['advanced','senior','expert'])) $prof = 5;
+                                    $prof = match(true) {
+                                        in_array($pl, ['beginner','junior']) => 2,
+                                        in_array($pl, ['intermediate','mid']) => 3,
+                                        in_array($pl, ['advanced','senior','expert']) => 5,
+                                        default => 3,
+                                    };
                                 }
                             }
 
-                            $years = 0;
-                            if (isset($skill->pivot) && isset($skill->pivot->years_experience) && is_numeric($skill->pivot->years_experience)) {
-                                $years = max(0, min(20, (float)$skill->pivot->years_experience));
-                            }
+                            $years = isset($skill->pivot->years_experience) && is_numeric($skill->pivot->years_experience) 
+                                ? max(0, min(20, (float)$skill->pivot->years_experience)) 
+                                : 0;
 
-                            // Contribution formula: (proficiency/5) * (1 + years/10)
-                            // Max per-match contribution ~= 2 (when prof=5 and years>=10)
                             $contrib += ($prof / 5) * (1 + ($years / 10));
+                            break;
                         }
                     }
-
-                    // Scale contribution to skillScore cap (70). Each unit of contrib ≈ 20 points, but we cap at 70.
-                    $skillScore = min($contrib * 20, 70);
-                } elseif ($skills->isNotEmpty()) {
-                    // No explicit service type match, but adiutor has skills: give a small baseline
-                    $skillScore = 20;
-                } else {
-                    $skillScore = 0;
                 }
 
-                // Final aggregated score (0-100)
-                $score = round($skillScore + $workloadScore, 2);
-                
-                return [
-                    'id' => $adiutor->id,
-                    'fullName' => $adiutor->fullName,
-                    'email' => $adiutor->email,
-                    'calendar_connected' => $adiutor->calendarIntegration && $adiutor->calendarIntegration->is_connected,
-                    'skills' => $skills,
-                    'rating' => $adiutor->calculateAdiutorRating() ?? 0,
-                    'active_projects_count' => $activeProjectsCount,
-                    'rank_score' => $score,
-                    'skill_score' => $skillScore,
-                    'workload_score' => $workloadScore,
-                    'has_matching_skill' => ($contrib > 0),
-                ];
-            })
-            ->sortByDesc('rank_score') // Sort by rank score (highest first)
-            ->values(); // Reset array keys
+                $skillScore = min($contrib * 20, 70);
+            } elseif ($skills->isNotEmpty()) {
+                $skillScore = 20;
+            }
 
-        return view('admin.projects.show', compact('project', 'budgetOverview', 'availableAdiutors'));
+            $score = round($skillScore + $workloadScore, 2);
+            
+            return [
+                'id' => $adiutor->id,
+                'fullName' => $adiutor->fullName,
+                'email' => $adiutor->email,
+                'calendar_connected' => $adiutor->calendarIntegration && $adiutor->calendarIntegration->is_connected,
+                'skills' => $skills,
+                'rating' => $adiutor->calculateAdiutorRating() ?? 0,
+                'active_projects_count' => $activeProjectsCount,
+                'rank_score' => $score,
+                'skill_score' => $skillScore,
+                'workload_score' => $workloadScore,
+                'has_matching_skill' => ($contrib > 0),
+            ];
+        })
+        ->sortByDesc('rank_score')
+        ->values();
     }
 
     /**
@@ -1312,5 +1350,88 @@ class ProjectManagementController extends Controller
             'template_id' => $template->id,
             'milestones_created' => count($template->milestones_template),
         ]);
+    }
+
+    /**
+     * Get time entries for a specific adiutor on a project
+     * 
+     * @param Request $request
+     * @param Project $project
+     * @param User $adiutor
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAdiutorTimeEntries(Request $request, Project $project, User $adiutor)
+    {
+        try {
+            // Get time entries for this adiutor on this project
+            $timeEntries = \App\Models\TimeEntry::where('adiutor_id', $adiutor->id)
+                ->where('project_id', $project->id)
+                ->with(['task', 'approver:id,fullName'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($entry) {
+                    return [
+                        'id' => $entry->id,
+                        'task_title' => $entry->task?->taskTitle ?? 'No Task',
+                        'description' => $entry->description ?? '',
+                        'duration_minutes' => $entry->duration_minutes ?? 0,
+                        'hours' => round(($entry->duration_minutes ?? 0) / 60, 2),
+                        'hourly_rate' => (float) ($entry->hourly_rate ?? 0),
+                        'calculated_amount' => (float) ($entry->calculated_amount ?? 0),
+                        'is_approved' => (bool) $entry->is_approved,
+                        'is_billable' => (bool) ($entry->billable_minutes > 0),
+                        'approved_by' => $entry->approver?->fullName,
+                        'approved_at' => $entry->approved_at?->format('M d, Y H:i'),
+                        'entry_date' => $entry->start_time?->format('M d, Y') ?? $entry->created_at?->format('M d, Y'),
+                        'created_at' => $entry->created_at?->format('M d, Y H:i'),
+                    ];
+                });
+
+            // Get assignment info
+            $assignment = ProjectAssignment::where('project_id', $project->id)
+                ->where('adiutor_id', $adiutor->id)
+                ->first();
+
+            // Summary stats
+            $stats = [
+                'total_entries' => $timeEntries->count(),
+                'total_hours' => (float) $timeEntries->sum('hours'),
+                'pending_count' => $timeEntries->where('is_approved', false)->count(),
+                'pending_hours' => (float) $timeEntries->where('is_approved', false)->sum('hours'),
+                'pending_amount' => (float) $timeEntries->where('is_approved', false)->sum('calculated_amount'),
+                'approved_count' => $timeEntries->where('is_approved', true)->count(),
+                'approved_hours' => (float) $timeEntries->where('is_approved', true)->sum('hours'),
+                'approved_amount' => (float) $timeEntries->where('is_approved', true)->sum('calculated_amount'),
+                'hourly_rate' => (float) ($assignment?->hourly_rate ?? $assignment?->agreed_rate ?? $adiutor->hourlyRate ?? 0),
+                'max_hours' => $assignment?->max_hours,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'adiutor' => [
+                    'id' => $adiutor->id,
+                    'name' => $adiutor->fullName,
+                    'email' => $adiutor->email,
+                ],
+                'project' => [
+                    'id' => $project->id,
+                    'title' => $project->project_title,
+                ],
+                'time_entries' => $timeEntries->values(),
+                'stats' => $stats,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to get adiutor time entries', [
+                'project_id' => $project->id,
+                'adiutor_id' => $adiutor->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load time entries: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

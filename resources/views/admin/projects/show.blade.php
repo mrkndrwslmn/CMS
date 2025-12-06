@@ -54,10 +54,13 @@
             
             <h1 class="text-2xl font-semibold text-neutral-800 mb-1">{{ $project->title }}</h1>
             
-            <div class="text-neutral-500 flex items-center">
+            <div class="text-neutral-500 flex items-center mb-3">
                 <x-lucide-calendar class="w-4 h-4 mr-2" />
                 <span>Created {{ $project->created_at->format('F d, Y') }}</span>
             </div>
+            
+            <!-- Related Links -->
+            <x-ui.related-links :project="$project" role="admin" />
         </div>
         
         <div class="mt-4 sm:mt-0 flex flex-wrap gap-3">
@@ -523,6 +526,114 @@
                         @endif
                     </div>
                 </x-ui.card>
+
+                <!-- Deliverables Section - Grouped by Task -->
+                <x-ui.card class="mb-6">
+                    <div class="px-6 py-4 border-b border-neutral-100 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                            <x-lucide-package-check class="w-5 h-5 text-success-500" />
+                            Deliverables
+                            @if($totalDeliverables > 0)
+                                <span id="total-deliverables-badge" class="ml-2 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
+                                    {{ $totalDeliverables }}
+                                </span>
+                                @if($pendingDeliverables > 0)
+                                    <span id="pending-deliverables-badge" class="px-2 py-0.5 bg-warning-100 text-warning-700 text-xs font-medium rounded-full">
+                                        {{ $pendingDeliverables }} pending approval
+                                    </span>
+                                @endif
+                            @endif
+                        </h2>
+                        <a href="{{ route('admin.deliverables.pending') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+                            View All Pending
+                            <x-lucide-arrow-right class="w-4 h-4" />
+                        </a>
+                    </div>
+                    <div class="p-6">
+                        @if($tasksWithDeliverables->count() > 0 || $projectLevelDocuments->count() > 0)
+                            <div class="space-y-4">
+                                {{-- Project-level documents --}}
+                                @if($projectLevelDocuments->count() > 0)
+                                    <div x-data="{ open: true }" class="border border-neutral-200 rounded-xl overflow-hidden">
+                                        <button @click="open = !open" class="w-full flex items-center justify-between p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                    <x-lucide-folder class="w-5 h-5 text-primary-600" />
+                                                </div>
+                                                <div class="text-left">
+                                                    <h3 class="font-semibold text-neutral-800">Project Files</h3>
+                                                    <p class="text-sm text-neutral-500">{{ $projectLevelDocuments->count() }} file(s)</p>
+                                                </div>
+                                            </div>
+                                            <x-lucide-chevron-down class="w-5 h-5 text-neutral-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''" />
+                                        </button>
+                                        <div x-show="open" x-collapse class="border-t border-neutral-200">
+                                            <div class="p-4 space-y-2">
+                                                @foreach($projectLevelDocuments as $document)
+                                                    @include('admin.projects.partials.deliverable-item', ['document' => $document])
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Task-grouped deliverables --}}
+                                @foreach($tasksWithDeliverables as $task)
+                                    <div x-data="{ open: true }" class="border border-neutral-200 rounded-xl overflow-hidden">
+                                        <button @click="open = !open" class="w-full flex items-center justify-between p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                    <x-lucide-clipboard-list class="w-5 h-5 text-primary-600" />
+                                                </div>
+                                                <div class="text-left">
+                                                    <h3 class="font-semibold text-neutral-800">{{ $task->taskTitle }}</h3>
+                                                    <p class="text-sm text-neutral-500">
+                                                        {{ $task->documents->count() }} deliverable(s)
+                                                        @php
+                                                            $taskPending = $task->documents->where('is_deliverable', true)->where('is_approved', false)->count();
+                                                        @endphp
+                                                        @if($taskPending > 0)
+                                                            <span class="text-warning-600 task-pending-count" data-task-id="{{ $task->taskID }}">• {{ $taskPending }} pending</span>
+                                                        @endif
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                @php
+                                                    $statusConfig = match($task->status) {
+                                                        'completed' => ['bg' => 'bg-success-100', 'text' => 'text-success-700'],
+                                                        'in_progress' => ['bg' => 'bg-primary-100', 'text' => 'text-primary-700'],
+                                                        'pending' => ['bg' => 'bg-warning-100', 'text' => 'text-warning-700'],
+                                                        default => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-600']
+                                                    };
+                                                @endphp
+                                                <span class="px-2 py-1 text-xs font-medium rounded-full {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                                </span>
+                                                <x-lucide-chevron-down class="w-5 h-5 text-neutral-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''" />
+                                            </div>
+                                        </button>
+                                        <div x-show="open" x-collapse class="border-t border-neutral-200">
+                                            <div class="p-4 space-y-2">
+                                                @foreach($task->documents as $document)
+                                                    @include('admin.projects.partials.deliverable-item', ['document' => $document])
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-8">
+                                <div class="bg-neutral-100 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
+                                    <x-lucide-package-open class="w-8 h-8 text-neutral-400" />
+                                </div>
+                                <h3 class="text-neutral-500 text-base">No deliverables yet</h3>
+                                <p class="text-neutral-400 text-sm mt-1">Deliverables from tasks will appear here organized by task</p>
+                            </div>
+                        @endif
+                    </div>
+                </x-ui.card>
             </div>
 
             <!-- Right Column: Client Info, Related Service Request, Team -->
@@ -782,6 +893,14 @@
                                                     </div>
                                                 @endif
                                             </div>
+                                            
+                                            <!-- Time Entry Approval Button for Hourly Rate -->
+                                            <button type="button"
+                                                    onclick="showTimeEntriesModal({{ $adiutor->id }}, {{ json_encode($adiutor->fullName) }})"
+                                                    class="w-full mt-2 flex items-center justify-center gap-1.5 py-2 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-medium transition-colors border border-blue-200">
+                                                <x-lucide-clock class="w-3.5 h-3.5" />
+                                                View Time Entries
+                                            </button>
                                         @endif
                                     </div>
                                     
@@ -1316,6 +1435,125 @@
     </div>
 </div>
 
+<!-- Time Entries Modal for Hourly Rate Team Members -->
+<div id="timeEntriesModal" class="modal-overlay fixed inset-0 z-50 overflow-y-auto hidden" onclick="hideTimeEntriesModal()">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity z-40"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+        <div class="modal-content inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full relative z-50 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="sticky top-0 bg-white border-b border-neutral-100 px-6 py-4 flex items-center justify-between z-10">
+            <div>
+                <h2 class="text-xl font-bold text-neutral-900 flex items-center gap-2">
+                    <x-lucide-clock class="w-5 h-5 text-blue-600" />
+                    Time Entries: <span id="time_entries_adiutor_name" class="text-blue-600"></span>
+                </h2>
+                <p class="text-sm text-neutral-500 mt-1">
+                    Project: {{ $project->project_title }}
+                </p>
+            </div>
+            <button onclick="hideTimeEntriesModal()" class="text-neutral-400 hover:text-neutral-600 transition-colors">
+                <x-lucide-x class="w-6 h-6" />
+            </button>
+        </div>
+
+        <!-- Stats Summary -->
+        <div id="time_entries_stats" class="bg-neutral-50 px-6 py-4 border-b border-neutral-100">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white rounded-lg px-4 py-3 border border-neutral-200">
+                    <div class="text-xs text-neutral-500">Total Entries</div>
+                    <div class="text-lg font-bold text-neutral-900" id="stat_total_entries">-</div>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-3 border border-neutral-200">
+                    <div class="text-xs text-neutral-500">Total Hours</div>
+                    <div class="text-lg font-bold text-neutral-900" id="stat_total_hours">-</div>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-3 border border-warning-200">
+                    <div class="text-xs text-warning-600">Pending</div>
+                    <div class="text-lg font-bold text-warning-700" id="stat_pending">-</div>
+                </div>
+                <div class="bg-white rounded-lg px-4 py-3 border border-success-200">
+                    <div class="text-xs text-success-600">Approved</div>
+                    <div class="text-lg font-bold text-success-700" id="stat_approved">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 overflow-y-auto max-h-[50vh]" id="time_entries_content">
+            <!-- Loading State -->
+            <div id="time_entries_loading" class="flex items-center justify-center py-12">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            </div>
+            
+            <!-- Time Entries List -->
+            <div id="time_entries_list" class="hidden space-y-3">
+                <!-- Entries will be dynamically inserted here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="time_entries_empty" class="hidden text-center py-12">
+                <x-lucide-clock class="w-12 h-12 text-neutral-300 mx-auto mb-4" />
+                <p class="text-neutral-600">No time entries found for this adiutor on this project.</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="sticky bottom-0 bg-neutral-50 border-t border-neutral-100 px-6 py-4 flex justify-end gap-3">
+            <x-ui.button variant="secondary" onclick="hideTimeEntriesModal()">
+                Close
+            </x-ui.button>
+        </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time Entry Reject Modal -->
+<div id="timeEntryRejectModal" class="modal-overlay fixed inset-0 z-[60] overflow-y-auto hidden" onclick="hideTimeEntryRejectModal()">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity z-40"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+        <div class="modal-content inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full relative z-50" onclick="event.stopPropagation()">
+        <div class="bg-error-50 border-b border-error-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+            <h5 class="text-lg font-semibold text-error-800">Reject Time Entry</h5>
+            <button type="button" onclick="hideTimeEntryRejectModal()" class="text-error-500 hover:text-error-700">
+                <x-lucide-x class="w-5 h-5" />
+            </button>
+        </div>
+        
+        <form id="timeEntryRejectForm" onsubmit="return submitTimeEntryRejection(event)">
+            <div class="p-6">
+                <p class="text-sm text-neutral-600 mb-4">Please provide a reason for rejecting this time entry. The entry will be deleted.</p>
+                <input type="hidden" id="reject_time_entry_id" name="time_entry_id">
+                <div>
+                    <label for="reject_time_entry_reason" class="block text-sm font-medium text-neutral-700 mb-2">
+                        Rejection Reason <span class="text-error-500">*</span>
+                    </label>
+                    <textarea id="reject_time_entry_reason" name="rejection_reason" rows="3" required
+                              class="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-neutral-800 focus:border-error-500 focus:ring-2 focus:ring-error-500/20 transition-colors"
+                              placeholder="Explain why this time entry is being rejected..."></textarea>
+                </div>
+            </div>
+            <div class="bg-neutral-50 border-t border-neutral-100 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
+                <x-ui.button type="button" variant="secondary" onclick="hideTimeEntryRejectModal()">
+                    Cancel
+                </x-ui.button>
+                <x-ui.button type="submit" variant="danger" id="rejectTimeEntryBtn">
+                    <x-lucide-x class="w-4 h-4" />
+                    Reject Entry
+                </x-ui.button>
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
+
 <style>
 /* Modal CSS */
 .modal-overlay {
@@ -1347,6 +1585,114 @@
 <script>
 // Global variable for standard rate validation
 let adiutorStandardRate = 0;
+
+// Approve Deliverable via AJAX
+function approveDeliverable(documentId) {
+    const btn = document.getElementById(`approve-btn-${documentId}`);
+    const statusBadge = document.getElementById(`status-badge-${documentId}`);
+    const deliverableItem = document.getElementById(`deliverable-item-${documentId}`);
+    const taskId = deliverableItem ? deliverableItem.dataset.taskId : null;
+    
+    // Disable button and show loading state
+    btn.disabled = true;
+    btn.innerHTML = `
+        <svg class="animate-spin w-3.5 h-3.5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Approving...
+    `;
+    
+    fetch(`/admin/deliverables/${documentId}/approve`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update status badge to show approved
+            statusBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700';
+            statusBadge.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 mr-0.5"><path d="M20 6 9 17l-5-5"/></svg>
+                Approved
+            `;
+            
+            // Mark the item as no longer pending
+            if (deliverableItem) {
+                deliverableItem.dataset.isPending = 'false';
+            }
+            
+            // Remove the approve button
+            btn.remove();
+            
+            // Update pending counts
+            updatePendingCounts(taskId);
+            
+            // Show success message
+            if (window.Alerts) {
+                window.Alerts.success(data.message || 'Deliverable approved successfully!');
+            }
+        } else {
+            // Re-enable button on error
+            btn.disabled = false;
+            btn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 mr-1"><path d="M20 6 9 17l-5-5"/></svg>
+                Approve
+            `;
+            if (window.Alerts) {
+                window.Alerts.error(data.message || 'Failed to approve deliverable.');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        btn.disabled = false;
+        btn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 mr-1"><path d="M20 6 9 17l-5-5"/></svg>
+            Approve
+        `;
+        if (window.Alerts) {
+            window.Alerts.error('An error occurred. Please try again.');
+        }
+    });
+}
+
+// Update pending count badges after approval
+function updatePendingCounts(taskId) {
+    // Update main pending deliverables badge
+    const pendingBadge = document.getElementById('pending-deliverables-badge');
+    if (pendingBadge) {
+        const match = pendingBadge.textContent.match(/(\d+)/);
+        if (match) {
+            const count = parseInt(match[1]) - 1;
+            if (count > 0) {
+                pendingBadge.textContent = `${count} pending approval`;
+            } else {
+                pendingBadge.remove();
+            }
+        }
+    }
+    
+    // Update task-specific pending count if taskId provided
+    if (taskId) {
+        const taskPendingSpan = document.querySelector(`.task-pending-count[data-task-id="${taskId}"]`);
+        if (taskPendingSpan) {
+            const match = taskPendingSpan.textContent.match(/(\d+)/);
+            if (match) {
+                const count = parseInt(match[1]) - 1;
+                if (count > 0) {
+                    taskPendingSpan.textContent = `• ${count} pending`;
+                } else {
+                    taskPendingSpan.remove();
+                }
+            }
+        }
+    }
+}
 
 // Toggle complete button when force_complete checkbox is changed
 function toggleCompleteButton(checkbox) {
@@ -1417,6 +1763,266 @@ function hideAssignModal() {
     togglePaymentType('hourly_rate');
     document.getElementById('payment_type_hourly').checked = true;
 }
+
+// ====== TIME ENTRIES MODAL FUNCTIONS ======
+let currentTimeEntriesAdiutorId = null;
+
+function showTimeEntriesModal(adiutorId, adiutorName) {
+    currentTimeEntriesAdiutorId = adiutorId;
+    const modal = document.getElementById('timeEntriesModal');
+    
+    // Set adiutor name in header
+    document.getElementById('time_entries_adiutor_name').textContent = adiutorName;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    
+    // Reset states
+    document.getElementById('time_entries_loading').classList.remove('hidden');
+    document.getElementById('time_entries_list').classList.add('hidden');
+    document.getElementById('time_entries_empty').classList.add('hidden');
+    
+    // Fetch time entries
+    fetchTimeEntries(adiutorId);
+}
+
+function hideTimeEntriesModal() {
+    const modal = document.getElementById('timeEntriesModal');
+    modal.classList.add('hidden');
+    currentTimeEntriesAdiutorId = null;
+}
+
+function fetchTimeEntries(adiutorId) {
+    const projectId = {{ $project->id }};
+    
+    fetch(`/admin/projects/${projectId}/adiutors/${adiutorId}/time-entries`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('time_entries_loading').classList.add('hidden');
+        
+        if (data.success) {
+            updateTimeEntriesStats(data.stats);
+            
+            if (data.time_entries.length > 0) {
+                renderTimeEntries(data.time_entries);
+                document.getElementById('time_entries_list').classList.remove('hidden');
+            } else {
+                document.getElementById('time_entries_empty').classList.remove('hidden');
+            }
+        } else {
+            document.getElementById('time_entries_empty').classList.remove('hidden');
+            if (window.Alerts) {
+                window.Alerts.error(data.message || 'Failed to load time entries');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching time entries:', error);
+        document.getElementById('time_entries_loading').classList.add('hidden');
+        document.getElementById('time_entries_empty').classList.remove('hidden');
+        // Only show error alert if not a post-approval refresh
+        if (window.Alerts && !document.getElementById('time_entries_list').innerHTML) {
+            window.Alerts.error('Failed to load time entries: ' + error.message);
+        }
+    });
+}
+
+function updateTimeEntriesStats(stats) {
+    document.getElementById('stat_total_entries').textContent = stats.total_entries;
+    document.getElementById('stat_total_hours').textContent = stats.total_hours.toFixed(1) + ' hrs';
+    document.getElementById('stat_pending').textContent = `${stats.pending_count} (${stats.pending_hours.toFixed(1)} hrs)`;
+    document.getElementById('stat_approved').textContent = `${stats.approved_count} (₱${stats.approved_amount.toLocaleString('en-PH', {minimumFractionDigits: 2})})`;
+}
+
+function renderTimeEntries(entries) {
+    const container = document.getElementById('time_entries_list');
+    container.innerHTML = '';
+    
+    entries.forEach(entry => {
+        const isPending = !entry.is_approved;
+        const statusBadge = isPending 
+            ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-700"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 mr-1"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Pending</span>'
+            : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 mr-1"><path d="M20 6 9 17l-5-5"/></svg>Approved</span>';
+        
+        const actionsHtml = isPending ? `
+            <div class="flex items-center gap-2 mt-2 md:mt-0">
+                <button type="button" onclick="approveTimeEntry(${entry.id}, this)" 
+                        class="inline-flex items-center px-3 py-1.5 bg-success-500 hover:bg-success-600 text-white rounded-lg text-xs font-medium transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 mr-1"><path d="M20 6 9 17l-5-5"/></svg>
+                    Approve
+                </button>
+                <button type="button" onclick="showTimeEntryRejectModal(${entry.id})" 
+                        class="inline-flex items-center px-3 py-1.5 bg-error-50 hover:bg-error-100 text-error-700 rounded-lg text-xs font-medium transition-colors border border-error-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 mr-1"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    Reject
+                </button>
+            </div>
+        ` : `
+            <div class="text-xs text-neutral-500 mt-2 md:mt-0">
+                Approved by ${entry.approved_by || 'Admin'}<br>
+                <span class="text-neutral-400">${entry.approved_at || ''}</span>
+            </div>
+        `;
+
+        const entryHtml = `
+            <div class="time-entry-item p-4 bg-neutral-50 rounded-xl border border-neutral-200" data-entry-id="${entry.id}">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            ${statusBadge}
+                            <span class="text-xs text-neutral-500">${entry.entry_date}</span>
+                        </div>
+                        <p class="font-medium text-neutral-900 text-sm">${entry.task_title}</p>
+                        ${entry.description ? `<p class="text-xs text-neutral-600 mt-1">${entry.description}</p>` : ''}
+                        <div class="flex items-center gap-4 mt-2 text-xs text-neutral-600">
+                            <span class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 mr-1 text-neutral-400"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                ${entry.hours} hours
+                            </span>
+                            <span class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 mr-1 text-neutral-400"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                ₱${entry.hourly_rate.toLocaleString()}/hr
+                            </span>
+                            <span class="font-medium text-neutral-900">
+                                ₱${entry.calculated_amount.toLocaleString('en-PH', {minimumFractionDigits: 2})}
+                            </span>
+                        </div>
+                    </div>
+                    ${actionsHtml}
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', entryHtml);
+    });
+}
+
+function approveTimeEntry(entryId, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-3.5 h-3.5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Approving...';
+    
+    fetch(`/admin/payouts/time-entries/${entryId}/approve`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => {
+        // Check if it's a redirect (non-JSON response)
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        }
+        // If not JSON, it was probably a redirect/success
+        return { success: true, message: 'Time entry approved successfully!' };
+    })
+    .then(data => {
+        if (data.success || data.message?.includes('approved')) {
+            // Refresh the time entries
+            fetchTimeEntries(currentTimeEntriesAdiutorId);
+            if (window.Alerts) {
+                window.Alerts.success(data.message || 'Time entry approved successfully!');
+            }
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 mr-1"><path d="M20 6 9 17l-5-5"/></svg> Approve';
+            if (window.Alerts) {
+                window.Alerts.error(data.message || 'Failed to approve time entry');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        btn.disabled = false;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 mr-1"><path d="M20 6 9 17l-5-5"/></svg> Approve';
+        if (window.Alerts) {
+            window.Alerts.error('An error occurred. Please try again.');
+        }
+    });
+}
+
+function showTimeEntryRejectModal(entryId) {
+    document.getElementById('reject_time_entry_id').value = entryId;
+    document.getElementById('reject_time_entry_reason').value = '';
+    document.getElementById('timeEntryRejectModal').classList.remove('hidden');
+}
+
+function hideTimeEntryRejectModal() {
+    document.getElementById('timeEntryRejectModal').classList.add('hidden');
+    document.getElementById('reject_time_entry_id').value = '';
+    document.getElementById('reject_time_entry_reason').value = '';
+}
+
+function submitTimeEntryRejection(event) {
+    event.preventDefault();
+    
+    const entryId = document.getElementById('reject_time_entry_id').value;
+    const reason = document.getElementById('reject_time_entry_reason').value;
+    const btn = document.getElementById('rejectTimeEntryBtn');
+    
+    if (!reason.trim()) {
+        if (window.Alerts) {
+            window.Alerts.error('Please provide a rejection reason');
+        }
+        return false;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Rejecting...';
+    
+    fetch(`/admin/payouts/time-entries/${entryId}/reject`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({ rejection_reason: reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data.message?.includes('rejected')) {
+            hideTimeEntryRejectModal();
+            fetchTimeEntries(currentTimeEntriesAdiutorId);
+            if (window.Alerts) {
+                window.Alerts.success(data.message || 'Time entry rejected successfully!');
+            }
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Reject Entry';
+            if (window.Alerts) {
+                window.Alerts.error(data.message || 'Failed to reject time entry');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        btn.disabled = false;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Reject Entry';
+        if (window.Alerts) {
+            window.Alerts.error('An error occurred. Please try again.');
+        }
+    });
+    
+    return false;
+}
+// ====== END TIME ENTRIES MODAL FUNCTIONS ======
 
 // Toggle payment type fields
 function togglePaymentType(type) {
@@ -1494,11 +2100,11 @@ function selectAdiutor(adiutorId, adiutorName, rating) {
     let ratingHtml = '';
     for (let i = 0; i < 5; i++) {
         if (i < Math.floor(rating)) {
-            ratingHtml += '<i class="fas fa-star text-yellow-400"></i>';
+            ratingHtml += '<svg class="w-4 h-4 inline text-yellow-400 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
         } else if (i < rating) {
-            ratingHtml += '<i class="fas fa-star-half-alt text-yellow-400"></i>';
+            ratingHtml += '<svg class="w-4 h-4 inline text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="url(#half)"/><defs><linearGradient id="half"><stop offset="50%" stop-color="currentColor"/><stop offset="50%" stop-color="transparent"/></linearGradient></defs></svg>';
         } else {
-            ratingHtml += '<i class="far fa-star text-neutral-300"></i>';
+            ratingHtml += '<svg class="w-4 h-4 inline text-neutral-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
         }
     }
     ratingHtml += ` <span class="ml-1">${rating.toFixed(1)}</span>`;
@@ -1808,7 +2414,7 @@ function initializeSortable() {
             sortableInstance.option('disabled', false);
             taskList.classList.add('reorder-mode');
             reorderControls.classList.remove('hidden');
-            toggleBtn.innerHTML = '<i class="fas fa-times mr-1"></i> Exit Reorder Mode';
+            toggleBtn.innerHTML = '<svg class="w-4 h-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Exit Reorder Mode';
             toggleBtn.classList.remove('bg-gray-600');
             toggleBtn.classList.add('bg-red-600', 'hover:bg-red-700');
             
@@ -1845,7 +2451,7 @@ function exitReorderMode() {
     sortableInstance.option('disabled', true);
     taskList.classList.remove('reorder-mode');
     reorderControls.classList.add('hidden');
-    toggleBtn.innerHTML = '<i class="fas fa-sort mr-1"></i> Reorder Tasks';
+    toggleBtn.innerHTML = '<svg class="w-4 h-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg> Reorder Tasks';
     toggleBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
     toggleBtn.classList.add('bg-gray-600');
     
@@ -1866,7 +2472,7 @@ function saveTaskOrder() {
     
     // Disable save button and show loading
     saveBtn.disabled = true;
-    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
+    saveBtn.innerHTML = '<svg class="w-4 h-4 inline mr-1 animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving...';
     
     // Send AJAX request
     fetch('{{ route("admin.tasks.reorder") }}', {
@@ -1897,7 +2503,7 @@ function saveTaskOrder() {
     })
     .finally(() => {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Save Order';
+        saveBtn.innerHTML = '<svg class="w-4 h-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Order';
     });
 }
 </script>

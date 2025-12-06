@@ -13,12 +13,25 @@
 
     <!-- Header Section -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <x-ui.page-header 
-            title="Task Management"
-            subtitle="Manage and track all tasks"
-        />
+        <div>
+            <x-ui.page-header 
+                title="Task Management"
+                subtitle="Manage and track all tasks"
+            />
+            @if(isset($currentProject) && $currentProject)
+                <div class="mt-2 flex items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-primary-50 text-primary-700 border border-primary-200">
+                        <x-lucide-folder-kanban class="w-4 h-4" />
+                        Filtered by: {{ $currentProject->title }}
+                    </span>
+                    <a href="{{ route('admin.tasks.index') }}" class="text-sm text-neutral-500 hover:text-neutral-700">
+                        <x-lucide-x class="w-4 h-4" />
+                    </a>
+                </div>
+            @endif
+        </div>
         <div class="flex gap-2">
-            <x-ui.button href="{{ route('admin.tasks.create') }}" variant="primary" class="inline-flex items-center gap-2">
+            <x-ui.button href="{{ route('admin.tasks.create', request('project_id') ? ['project_id' => request('project_id')] : []) }}" variant="primary" class="inline-flex items-center gap-2">
                 <x-lucide-plus class="w-4 h-4" />
                 Create Task
             </x-ui.button>
@@ -131,13 +144,24 @@
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div>
                         <x-ui.select name="client" id="client" label="Client">
                             <option value="">All Clients</option>
                             @foreach($clients as $client)
                                 <option value="{{ $client->id }}" {{ request('client') == $client->id ? 'selected' : '' }}>
                                     {{ $client->fullName }}
+                                </option>
+                            @endforeach
+                        </x-ui.select>
+                    </div>
+                    
+                    <div>
+                        <x-ui.select name="project_id" id="project_id" label="Project">
+                            <option value="">All Projects</option>
+                            @foreach($projects as $project)
+                                <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>
+                                    {{ Str::limit($project->title, 30) }}
                                 </option>
                             @endforeach
                         </x-ui.select>

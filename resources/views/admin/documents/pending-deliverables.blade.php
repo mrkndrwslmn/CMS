@@ -13,7 +13,7 @@
         </div>
         <div class="mt-4 sm:mt-0 flex space-x-3">
             <a href="{{ route('admin.documents.index') }}" class="flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>All Documents
+                <x-lucide-arrow-left class="w-4 h-4 mr-2" />All Documents
             </a>
         </div>
     </div>
@@ -22,7 +22,7 @@
     <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
         <div class="flex items-start">
             <div class="flex-shrink-0">
-                <i class="fas fa-info-circle text-amber-500 text-xl"></i>
+                <x-lucide-info class="w-6 h-6 text-amber-500" />
             </div>
             <div class="ml-3">
                 <h3 class="text-sm font-medium text-amber-800">About Deliverable Approval</h3>
@@ -46,11 +46,11 @@
                                 <div class="flex-shrink-0">
                                     @if($deliverable->deliverable_type === 'link')
                                         <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-link text-blue-500 text-xl"></i>
+                                            <x-lucide-link class="w-6 h-6 text-blue-500" />
                                         </div>
                                     @else
                                         <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-file text-primary-500 text-xl"></i>
+                                            <x-lucide-file class="w-6 h-6 text-primary-500" />
                                         </div>
                                     @endif
                                 </div>
@@ -72,8 +72,8 @@
                                         
                                         <!-- Task Info -->
                                         @if($deliverable->task)
-                                            <span>
-                                                <i class="fas fa-tasks mr-1"></i>
+                                            <span class="inline-flex items-center">
+                                                <x-lucide-list-checks class="w-4 h-4 mr-1" />
                                                 <a href="{{ route('admin.tasks.show', $deliverable->taskID) }}" class="text-primary-500 hover:underline">
                                                     {{ Str::limit($deliverable->task->taskTitle, 40) }}
                                                 </a>
@@ -82,30 +82,30 @@
                                         
                                         <!-- Project Info -->
                                         @if($deliverable->task?->project)
-                                            <span>
-                                                <i class="fas fa-project-diagram mr-1"></i>
+                                            <span class="inline-flex items-center">
+                                                <x-lucide-folder-kanban class="w-4 h-4 mr-1" />
                                                 {{ Str::limit($deliverable->task->project->title, 30) }}
                                             </span>
                                         @endif
                                         
                                         <!-- Uploader -->
                                         @if($deliverable->uploader)
-                                            <span>
-                                                <i class="fas fa-user mr-1"></i>
+                                            <span class="inline-flex items-center">
+                                                <x-lucide-user class="w-4 h-4 mr-1" />
                                                 {{ $deliverable->uploader->fullName }}
                                             </span>
                                         @endif
                                         
                                         <!-- Upload Date -->
-                                        <span>
-                                            <i class="fas fa-clock mr-1"></i>
+                                        <span class="inline-flex items-center">
+                                            <x-lucide-clock class="w-4 h-4 mr-1" />
                                             {{ $deliverable->created_at->diffForHumans() }}
                                         </span>
                                         
                                         <!-- File Size (for files) -->
                                         @if($deliverable->deliverable_type === 'file' && $deliverable->fileSize)
-                                            <span>
-                                                <i class="fas fa-weight mr-1"></i>
+                                            <span class="inline-flex items-center">
+                                                <x-lucide-hard-drive class="w-4 h-4 mr-1" />
                                                 {{ number_format($deliverable->fileSize / 1024, 1) }} KB
                                             </span>
                                         @endif
@@ -115,7 +115,7 @@
                                     @if($deliverable->deliverable_type === 'link' && $deliverable->link_url)
                                         <div class="mt-2">
                                             <a href="{{ $deliverable->link_url }}" target="_blank" class="inline-flex items-center text-sm text-blue-500 hover:text-blue-700">
-                                                <i class="fas fa-external-link-alt mr-1"></i>
+                                                <x-lucide-external-link class="w-4 h-4 mr-1" />
                                                 {{ Str::limit($deliverable->link_url, 60) }}
                                             </a>
                                         </div>
@@ -124,9 +124,9 @@
                                     <!-- Rejection Info (if previously rejected) -->
                                     @if($deliverable->rejection_reason)
                                         <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
-                                            <p class="text-sm text-red-700">
-                                                <i class="fas fa-exclamation-circle mr-1"></i>
-                                                <strong>Previously Rejected:</strong> {{ $deliverable->rejection_reason }}
+                                            <p class="text-sm text-red-700 flex items-start">
+                                                <x-lucide-alert-circle class="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" />
+                                                <span><strong>Previously Rejected:</strong> {{ $deliverable->rejection_reason }}</span>
                                             </p>
                                             @if($deliverable->rejected_at)
                                                 <p class="text-xs text-red-500 mt-1">{{ $deliverable->rejected_at->format('M d, Y h:i A') }}</p>
@@ -143,13 +143,13 @@
                                     <a href="{{ route('admin.documents.download', $deliverable->documentID) }}" 
                                        class="p-2 text-neutral-500 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors"
                                        title="Download">
-                                        <i class="fas fa-download"></i>
+                                        <x-lucide-download class="w-5 h-5" />
                                     </a>
                                 @elseif($deliverable->deliverable_type === 'link')
                                     <a href="{{ $deliverable->link_url }}" target="_blank"
                                        class="p-2 text-neutral-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
                                        title="Open Link">
-                                        <i class="fas fa-external-link-alt"></i>
+                                        <x-lucide-external-link class="w-5 h-5" />
                                     </a>
                                 @endif
                                 
@@ -159,7 +159,7 @@
                                     <button type="submit" 
                                             class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center"
                                             onclick="return window.Alerts.confirmForm(event, 'Approve Deliverable', 'Approve this deliverable? The client will be able to view it.')">
-                                        <i class="fas fa-check mr-2"></i>Approve
+                                        <x-lucide-check class="w-4 h-4 mr-2" />Approve
                                     </button>
                                 </form>
                                 
@@ -167,7 +167,7 @@
                                 <button type="button" 
                                         class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center"
                                         onclick="openRejectModal({{ $deliverable->documentID }}, '{{ addslashes($deliverable->fileName) }}')">
-                                    <i class="fas fa-times mr-2"></i>Reject
+                                    <x-lucide-x class="w-4 h-4 mr-2" />Reject
                                 </button>
                             </div>
                         </div>
@@ -186,7 +186,7 @@
         <!-- Empty State -->
         <div class="bg-white rounded-xl shadow-sm p-12 text-center">
             <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-check-circle text-green-500 text-4xl"></i>
+                <x-lucide-check-circle class="w-10 h-10 text-green-500" />
             </div>
             <h3 class="text-lg font-medium text-neutral-900 mb-2">All Caught Up!</h3>
             <p class="text-neutral-500">There are no deliverables pending approval at the moment.</p>

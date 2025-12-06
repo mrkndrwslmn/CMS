@@ -297,6 +297,72 @@ class PayoutManagementController extends Controller
     }
 
     /**
+     * Display all pending time entry approvals
+     */
+    public function timeEntryApprovals(Request $request)
+    {
+        $query = TimeEntry::whereNotNull('end_time')
+            ->with(['adiutor', 'task.project', 'payout'])
+            ->orderBy('start_time', 'desc');
+
+        // Filter by status
+        $status = $request->get('status', 'pending');
+        if ($status === 'pending') {
+            $query->where('is_approved', false);
+        } elseif ($status === 'approved') {
+            $query->where('is_approved', true)->where('is_paid', false);
+        } elseif ($status === 'paid') {
+            $query->where('is_paid', true);
+        }
+        // 'all' = no filter
+
+        // Filter by adiutor
+        if ($request->has('adiutor') && $request->adiutor) {
+            $query->where('adiutor_id', $request->adiutor);
+        }
+
+        // Filter by project
+        if ($request->has('project') && $request->project) {
+            $query->where('project_id', $request->project);
+        }
+
+        // Filter by date range
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('start_time', '>=', $request->date_from);
+        }
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('start_time', '<=', $request->date_to);
+        }
+
+        $timeEntries = $query->paginate(30);
+
+        // Get statistics
+        $stats = [
+            'pending' => TimeEntry::whereNotNull('end_time')->where('is_approved', false)->count(),
+            'pending_amount' => TimeEntry::whereNotNull('end_time')->where('is_approved', false)->sum('calculated_amount'),
+            'approved' => TimeEntry::whereNotNull('end_time')->where('is_approved', true)->where('is_paid', false)->count(),
+            'approved_amount' => TimeEntry::whereNotNull('end_time')->where('is_approved', true)->where('is_paid', false)->sum('calculated_amount'),
+            'total_hours_pending' => TimeEntry::whereNotNull('end_time')->where('is_approved', false)->sum('duration_minutes') / 60,
+        ];
+
+        // Get all adiutors for filter
+        $adiutors = User::where('role', 'adiutor')
+            ->orderBy('fullName')
+            ->get(['id', 'fullName']);
+
+        // Get all projects for filter
+        $projects = \App\Models\Project::orderBy('title')->get(['id', 'title']);
+
+        return view('admin.payouts.time-entry-approvals', compact(
+            'timeEntries',
+            'stats',
+            'adiutors',
+            'projects',
+            'status'
+        ));
+    }
+
+    /**
      * Approve time entries in bulk
      */
     public function approveTimeEntries(Request $request)
@@ -338,6 +404,9 @@ class PayoutManagementController extends Controller
         $timeEntry = TimeEntry::findOrFail($id);
 
         if ($timeEntry->is_approved) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'This time entry has already been approved.'], 400);
+            }
             return redirect()->back()->with('error', 'This time entry has already been approved.');
         }
 
@@ -393,6 +462,9 @@ class PayoutManagementController extends Controller
                 $message = "Time entry approved with adjustment to {$request->adjusted_hours} hours.";
             }
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
             return redirect()->back()->with('success', $message);
 
         } catch (\Exception $e) {
@@ -401,6 +473,9 @@ class PayoutManagementController extends Controller
                 'time_entry_id' => $id,
                 'error' => $e->getMessage()
             ]);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to approve time entry. Please try again.'], 500);
+            }
             return redirect()->back()->with('error', 'Failed to approve time entry. Please try again.');
         }
     }
@@ -417,6 +492,9 @@ class PayoutManagementController extends Controller
         $timeEntry = TimeEntry::findOrFail($id);
 
         if ($timeEntry->is_approved) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Cannot reject an already approved time entry.'], 400);
+            }
             return redirect()->back()->with('error', 'Cannot reject an already approved time entry.');
         }
 
@@ -428,6 +506,9 @@ class PayoutManagementController extends Controller
         $task = \App\Models\Task::find($taskId);
         $task?->updateEarnings();
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Time entry rejected and removed.']);
+        }
         return redirect()->back()->with('success', 'Time entry rejected and removed.');
     }
 

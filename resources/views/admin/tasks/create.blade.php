@@ -180,6 +180,94 @@
                         </div>
                     </div>
                 </x-ui.card>
+
+                <!-- Subtasks Card -->
+                <x-ui.card x-data="subtasksManager()">
+                    <div class="px-6 py-4 border-b border-neutral-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-secondary-100 rounded-lg flex items-center justify-center mr-3">
+                                    <x-lucide-list-checks class="w-4 h-4 text-secondary-600" />
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-neutral-900">Subtasks</h2>
+                                    <p class="text-xs text-neutral-500">Break down the task into smaller steps</p>
+                                </div>
+                            </div>
+                            <span x-show="subtasks.length > 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700" x-text="subtasks.length + ' subtask' + (subtasks.length !== 1 ? 's' : '')"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Subtasks List -->
+                        <div id="subtasks-container" class="space-y-3">
+                            <template x-for="(subtask, index) in subtasks" :key="subtask.id">
+                                <div class="group relative bg-neutral-50 rounded-xl p-4 border border-neutral-200 hover:border-secondary-300 transition-all">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 w-6 h-6 bg-secondary-100 rounded-full flex items-center justify-center mt-1">
+                                            <span class="text-xs font-semibold text-secondary-600" x-text="index + 1"></span>
+                                        </div>
+                                        <div class="flex-1 space-y-3">
+                                            <!-- Subtask Title -->
+                                            <div>
+                                                <input type="text" 
+                                                       :name="'subtasks[' + index + '][title]'"
+                                                       x-model="subtask.title"
+                                                       @keydown.enter.prevent="handleEnterKey(index)"
+                                                       :data-subtask-index="index"
+                                                       class="w-full px-3 py-2 text-sm border-2 border-neutral-300 rounded-lg focus:border-secondary-500 focus:ring-2 focus:ring-secondary-200 transition-all subtask-title-input"
+                                                       placeholder="Subtask title..."
+                                                       required>
+                                            </div>
+                                            <!-- Subtask Description (Optional) -->
+                                            <div>
+                                                <textarea :name="'subtasks[' + index + '][description]'"
+                                                          x-model="subtask.description"
+                                                          rows="2"
+                                                          class="w-full px-3 py-2 text-sm border-2 border-neutral-300 rounded-lg focus:border-secondary-500 focus:ring-2 focus:ring-secondary-200 transition-all resize-none"
+                                                          placeholder="Description (optional)..."></textarea>
+                                            </div>
+                                        </div>
+                                        <!-- Remove Button -->
+                                        <button type="button" 
+                                                @click="removeSubtask(index)"
+                                                class="flex-shrink-0 p-1.5 text-neutral-400 hover:text-error-500 hover:bg-error-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                                            <x-lucide-trash-2 class="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div x-show="subtasks.length === 0" class="text-center py-8">
+                            <div class="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <x-lucide-list-plus class="w-6 h-6 text-neutral-400" />
+                            </div>
+                            <p class="text-sm text-neutral-500 mb-1">No subtasks yet</p>
+                            <p class="text-xs text-neutral-400">Add subtasks to break down the work</p>
+                        </div>
+
+                        <!-- Add Subtask Button -->
+                        <button type="button" 
+                                @click="addSubtask()"
+                                class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-dashed border-neutral-300 rounded-xl text-sm font-medium text-neutral-600 hover:border-secondary-400 hover:text-secondary-600 hover:bg-secondary-50 transition-all">
+                            <x-lucide-plus class="w-4 h-4" />
+                            Add Subtask
+                        </button>
+                        
+                        @error('subtasks')
+                            <p class="text-error-500 text-xs mt-2 flex items-center">
+                                <x-lucide-alert-circle class="w-3 h-3 mr-1" /> {{ $message }}
+                            </p>
+                        @enderror
+                        @error('subtasks.*')
+                            <p class="text-error-500 text-xs mt-2 flex items-center">
+                                <x-lucide-alert-circle class="w-3 h-3 mr-1" /> Please fill in all subtask titles
+                            </p>
+                        @enderror
+                    </div>
+                </x-ui.card>
             </div>
 
             <!-- Settings Sidebar -->
@@ -485,5 +573,62 @@
             });
         }
     });
+    
+    // Subtasks Manager Alpine Component
+    function subtasksManager() {
+        // Initialize with old values if validation failed
+        const oldSubtasks = @json(old('subtasks', []));
+        let initialSubtasks = [];
+        let nextId = 1;
+        
+        if (oldSubtasks && Array.isArray(oldSubtasks)) {
+            initialSubtasks = oldSubtasks.map((subtask, index) => ({
+                id: nextId++,
+                title: subtask.title || '',
+                description: subtask.description || ''
+            }));
+        }
+        
+        return {
+            subtasks: initialSubtasks,
+            nextId: nextId,
+            
+            addSubtask() {
+                this.subtasks.push({
+                    id: this.nextId++,
+                    title: '',
+                    description: ''
+                });
+                
+                // Focus the new subtask title input after DOM updates
+                this.$nextTick(() => {
+                    const newIndex = this.subtasks.length - 1;
+                    const newInput = this.$root.querySelector(`.subtask-title-input[data-subtask-index="${newIndex}"]`);
+                    if (newInput) {
+                        newInput.focus();
+                    }
+                });
+            },
+            
+            removeSubtask(index) {
+                this.subtasks.splice(index, 1);
+            },
+            
+            handleEnterKey(index) {
+                // If this is the last subtask, add a new one
+                if (index === this.subtasks.length - 1) {
+                    this.addSubtask();
+                } else {
+                    // Otherwise, focus the next subtask's title input
+                    this.$nextTick(() => {
+                        const nextInput = this.$root.querySelector(`.subtask-title-input[data-subtask-index="${index + 1}"]`);
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                    });
+                }
+            }
+        }
+    }
 </script>
 @endpush

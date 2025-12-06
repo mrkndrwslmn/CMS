@@ -409,14 +409,21 @@ class User extends Authenticatable
     /**
      * Calculate adiutor's average rating from projects they worked on
      * This is the new way to get adiutor ratings - derived from project feedback
+     * Cached for 5 minutes to improve performance
      */
     public function calculateAdiutorRating()
     {
-        return \DB::table('feedbacks')
-            ->join('project_assignments', 'feedbacks.project_id', '=', 'project_assignments.project_id')
-            ->where('project_assignments.adiutor_id', $this->id)
-            ->whereNotNull('feedbacks.rating')
-            ->avg('feedbacks.rating');
+        return \Cache::remember(
+            "adiutor_rating_{$this->id}",
+            now()->addMinutes(5),
+            function () {
+                return \DB::table('feedbacks')
+                    ->join('project_assignments', 'feedbacks.project_id', '=', 'project_assignments.project_id')
+                    ->where('project_assignments.adiutor_id', $this->id)
+                    ->whereNotNull('feedbacks.rating')
+                    ->avg('feedbacks.rating');
+            }
+        );
     }
 
     /**
@@ -508,13 +515,22 @@ class User extends Authenticatable
 
     /**
      * Update FCM token for push notifications
+     * Optimized: Uses direct DB query and skips if token unchanged
      */
     public function updateFcmToken(?string $token): void
     {
-        $this->update([
-            'fcm_token' => $token,
-            'fcm_token_updated_at' => $token ? now() : null,
-        ]);
+        // Skip update if token hasn't changed
+        if ($this->fcm_token === $token) {
+            return;
+        }
+        
+        // Use direct DB update to bypass Eloquent events for performance
+        \DB::table('users')
+            ->where('id', $this->id)
+            ->update([
+                'fcm_token' => $token,
+                'fcm_token_updated_at' => $token ? now() : null,
+            ]);
     }
 
     /**

@@ -3,7 +3,7 @@
 @section('title', 'Payout History')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-6 lg:px-8 py-8">
     <!-- Breadcrumb Navigation -->
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],

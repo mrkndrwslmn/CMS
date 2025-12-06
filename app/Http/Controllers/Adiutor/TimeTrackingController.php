@@ -34,6 +34,9 @@ class TimeTrackingController extends Controller
     {
         $adiutorId = Auth::id();
         
+        // Get pre-selected task if passed via query parameter
+        $preSelectedTaskId = $request->query('task');
+        
         // Get current week's time entries with optimized query and correct column names
         $startOfWeek = Carbon::now()->startOfWeek();
         $endOfWeek = Carbon::now()->endOfWeek();
@@ -94,7 +97,8 @@ class TimeTrackingController extends Controller
             'availableTasks',
             'todayHours',
             'weekHours',
-            'monthHours'
+            'monthHours',
+            'preSelectedTaskId'
         ));
     }
 

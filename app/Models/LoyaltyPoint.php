@@ -272,16 +272,18 @@ class LoyaltyPoint extends Model
      */
     public function calculateTier(): string
     {
-        $tiers = config('loyalty.tiers', [
-            'bronze' => 0,
-            'silver' => 5000,
-            'gold' => 15000,
-            'platinum' => 50000,
+        $tiersConfig = config('loyalty.tiers', [
+            'bronze' => ['points' => 0],
+            'silver' => ['points' => 5000],
+            'gold' => ['points' => 15000],
+            'platinum' => ['points' => 50000],
         ]);
 
         $currentTier = 'bronze';
 
-        foreach ($tiers as $tier => $requiredPoints) {
+        foreach ($tiersConfig as $tier => $tierData) {
+            // Handle both array and flat formats
+            $requiredPoints = is_array($tierData) ? ($tierData['points'] ?? 0) : $tierData;
             if ($this->lifetime_earned >= $requiredPoints) {
                 $currentTier = $tier;
             }
@@ -325,12 +327,18 @@ class LoyaltyPoint extends Model
     {
         $tier = $currentTier ?? $this->tier;
         
-        $tiers = config('loyalty.tiers', [
-            'bronze' => 0,
-            'silver' => 5000,
-            'gold' => 15000,
-            'platinum' => 50000,
+        $tiersConfig = config('loyalty.tiers', [
+            'bronze' => ['points' => 0],
+            'silver' => ['points' => 5000],
+            'gold' => ['points' => 15000],
+            'platinum' => ['points' => 50000],
         ]);
+
+        // Extract points from tier config (handle both array and flat formats)
+        $tiers = [];
+        foreach ($tiersConfig as $tierName => $tierData) {
+            $tiers[$tierName] = is_array($tierData) ? ($tierData['points'] ?? 0) : $tierData;
+        }
 
         $tierOrder = ['bronze', 'silver', 'gold', 'platinum'];
         $currentIndex = array_search($tier, $tierOrder);

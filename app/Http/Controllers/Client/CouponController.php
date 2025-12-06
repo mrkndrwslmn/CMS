@@ -77,12 +77,19 @@ class CouponController extends Controller
     {
         // Verify ownership
         if ($serviceRequest->client_id !== Auth::id()) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+            }
             abort(403, 'Unauthorized action.');
         }
 
         // Check if request is in correct status
         if (!in_array($serviceRequest->status, ['approved', 'pending_payment'])) {
-            return back()->withErrors(['error' => 'Coupon can only be applied to approved requests.']);
+            $message = 'Coupon can only be applied to approved requests.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->withErrors(['error' => $message]);
         }
 
         $request->validate([
@@ -94,7 +101,11 @@ class CouponController extends Controller
             $coupon = Coupon::where('code', strtoupper($request->coupon_code))->first();
 
             if (!$coupon) {
-                return back()->withErrors(['coupon_code' => 'Invalid coupon code.']);
+                $message = 'Invalid coupon code.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return back()->withErrors(['coupon_code' => $message]);
             }
 
             // Validate coupon
@@ -105,15 +116,32 @@ class CouponController extends Controller
             );
 
             if (!$validation['valid']) {
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $validation['message']], 422);
+                }
                 return back()->withErrors(['coupon_code' => $validation['message']]);
             }
 
             // Apply coupon
             $this->couponService->applyCouponToRequest($serviceRequest, $coupon);
 
-            return back()->with('success', "Coupon applied! You save ₱" . number_format($validation['discount'], 2));
+            $successMessage = "Coupon applied! You save ₱" . number_format($validation['discount'], 2);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => $successMessage,
+                    'discount' => $validation['discount'],
+                ]);
+            }
+            
+            return back()->with('success', $successMessage);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to apply coupon: ' . $e->getMessage()]);
+            $message = 'Failed to apply coupon: ' . $e->getMessage();
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 500);
+            }
+            return back()->withErrors(['error' => $message]);
         }
     }
 

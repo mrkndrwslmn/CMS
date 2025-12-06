@@ -3,7 +3,7 @@
 @section('title', $task->taskTitle)
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb Navigation -->
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
@@ -49,6 +49,9 @@
                                 {{ ucfirst($task->priority ?? 'Normal') }} Priority
                             </x-ui.badge>
                         </div>
+                        
+                        <!-- Related Links -->
+                        <x-ui.related-links :task="$task" role="adiutor" class="mt-3" />
                     </div>
                 </div>
             </div>
@@ -138,6 +141,61 @@
         </x-ui.card>
     </div>
 
+    <!-- Time Tracking / Hourly Rate Notice -->
+    @php
+        // Check if this is an hourly rate contract
+        $isHourlyContract = $task->requires_time_tracking 
+            || $task->hourly_rate 
+            || ($assignment && $assignment->payment_type === 'hourly_rate')
+            || ($assignment && $assignment->hourly_rate);
+        
+        // Determine the effective hourly rate (priority: task > assignment)
+        $effectiveRate = $task->hourly_rate 
+            ?? ($assignment->hourly_rate ?? null) 
+            ?? ($assignment->agreed_rate ?? null);
+    @endphp
+    @if($isHourlyContract)
+        <div class="bg-gradient-to-r from-info-50 to-primary-50 rounded-2xl p-6 border border-info-200 mb-8">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                        <x-lucide-clock class="w-6 h-6 text-info-600" />
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <p class="text-sm text-info-700 font-semibold">Hourly Rate Contract</p>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-info-100 text-info-700">
+                                <x-lucide-timer class="w-3 h-3 mr-1" />
+                                Time Tracked
+                            </span>
+                        </div>
+                        <p class="text-neutral-600 text-sm">
+                            This task is compensated based on tracked hours. 
+                            @if($effectiveRate)
+                                Your rate is <span class="font-semibold text-info-700">₱{{ number_format($effectiveRate, 2) }}/hour</span>.
+                            @endif
+                        </p>
+                        @if($task->total_hours_tracked)
+                            <p class="text-xs text-neutral-500 mt-1">
+                                Hours logged: <span class="font-medium">{{ number_format($task->total_hours_tracked, 2) }} hrs</span>
+                                @if($effectiveRate)
+                                    • Earned: <span class="font-medium text-success-600">₱{{ number_format($task->total_hours_tracked * $effectiveRate, 2) }}</span>
+                                @endif
+                            </p>
+                        @endif
+                    </div>
+                </div>
+                <a href="{{ route('adiutor.time-tracking.index', ['task' => $task->taskID]) }}" 
+                   target="_blank"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-info-600 text-white text-sm font-medium rounded-xl hover:bg-info-700 transition-colors shadow-sm">
+                    <x-lucide-play class="w-4 h-4" />
+                    Track Time
+                    <x-lucide-external-link class="w-3.5 h-3.5 ml-1 opacity-75" />
+                </a>
+            </div>
+        </div>
+    @endif
+
     <!-- Phase Information (if applicable) -->
     @if($task->phase_id && $task->phase_name)
         <div class="bg-primary-50 rounded-2xl p-6 border border-primary-200 mb-8">
@@ -207,6 +265,83 @@
                 </div>
             </x-ui.card>
 
+            <!-- Subtasks Section -->
+            @if(isset($subtasks) && $subtasks->count() > 0)
+            <x-ui.card>
+                <div class="px-6 py-4 bg-neutral-50 border-b border-neutral-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-neutral-800 flex items-center">
+                            <div class="w-8 h-8 bg-secondary-100 rounded-xl flex items-center justify-center mr-3">
+                                <x-lucide-list-checks class="w-4 h-4 text-secondary-600" />
+                            </div>
+                            Subtasks
+                        </h3>
+                        <span id="subtask-completed-counter" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700">
+                            {{ $subtasks->where('is_completed', true)->count() }}/{{ $subtasks->count() }} completed
+                        </span>
+                    </div>
+                </div>
+                <div class="px-6 py-5">
+                    <div class="space-y-3">
+                        @foreach($subtasks as $subtask)
+                        <div class="group flex items-start gap-3 p-3 rounded-lg transition-all {{ $subtask->is_completed ? 'bg-success-50 border border-success-200' : 'bg-neutral-50 border border-neutral-200 hover:border-secondary-300' }}"
+                             id="subtask-{{ $subtask->id }}">
+                            <div class="flex-shrink-0 mt-0.5">
+                                @if($task->status !== 'completed')
+                                <button type="button" 
+                                        onclick="toggleSubtask({{ $subtask->id }})"
+                                        class="focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-1 rounded-full">
+                                    <div id="subtask-icon-{{ $subtask->id }}" class="w-5 h-5 {{ $subtask->is_completed ? 'bg-success-500' : 'border-2 border-neutral-300 hover:border-secondary-500' }} rounded-full flex items-center justify-center transition-all">
+                                        @if($subtask->is_completed)
+                                            <x-lucide-check class="w-3 h-3 text-white" />
+                                        @endif
+                                    </div>
+                                </button>
+                                @else
+                                    <div class="w-5 h-5 {{ $subtask->is_completed ? 'bg-success-500' : 'border-2 border-neutral-300' }} rounded-full flex items-center justify-center">
+                                        @if($subtask->is_completed)
+                                            <x-lucide-check class="w-3 h-3 text-white" />
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p id="subtask-title-{{ $subtask->id }}" class="text-sm font-medium transition-all {{ $subtask->is_completed ? 'text-neutral-500 line-through' : 'text-neutral-800' }}">
+                                    {{ $subtask->title }}
+                                </p>
+                                @if($subtask->description)
+                                    <p class="text-xs text-neutral-500 mt-1">{{ $subtask->description }}</p>
+                                @endif
+                                @if($subtask->is_completed && $subtask->completed_at)
+                                    <p id="subtask-completed-{{ $subtask->id }}" class="text-xs text-success-600 mt-1 flex items-center gap-1">
+                                        <x-lucide-check-circle class="w-3 h-3" />
+                                        Completed {{ \Carbon\Carbon::parse($subtask->completed_at)->diffForHumans() }}
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    @php
+                        $completedCount = $subtasks->where('is_completed', true)->count();
+                        $totalCount = $subtasks->count();
+                        $progressPercent = $totalCount > 0 ? round(($completedCount / $totalCount) * 100) : 0;
+                    @endphp
+                    <div class="mt-4 pt-4 border-t border-neutral-100">
+                        <div class="flex items-center justify-between text-sm mb-2">
+                            <span class="text-neutral-500">Subtask Progress</span>
+                            <span id="subtask-progress-text" class="font-medium text-neutral-700">{{ $progressPercent }}%</span>
+                        </div>
+                        <div class="w-full bg-neutral-200 rounded-full h-2">
+                            <div id="subtask-progress-bar" class="bg-secondary-500 h-2 rounded-full transition-all" style="width: {{ $progressPercent }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </x-ui.card>
+            @endif
+
             <!-- Task Notes -->
             @if($task->notes)
                 <x-ui.card>
@@ -242,57 +377,90 @@
             @endif
 
             <!-- File Attachments -->
+            <!-- Deliverables Section (Files and Links) -->
             <x-ui.card>
                 <div class="px-6 py-4 bg-neutral-50 border-b border-neutral-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-neutral-800 flex items-center">
                             <div class="w-8 h-8 bg-primary-100 rounded-xl flex items-center justify-center mr-3">
-                                <x-lucide-paperclip class="w-4 h-4 text-primary-600" />
+                                <x-lucide-package-check class="w-4 h-4 text-primary-600" />
                             </div>
-                            Attachments
-                            @if(isset($taskFiles) && $taskFiles->count() > 0)
+                            Deliverables
+                            @if(isset($deliverables) && $deliverables->count() > 0)
                                 <span class="ml-2 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
-                                    {{ $taskFiles->count() }}
+                                    {{ $deliverables->count() }}
                                 </span>
                             @endif
                         </h3>
                         @if($task->status !== 'completed')
-                            <x-ui.button onclick="openUploadModal()" variant="primary" size="sm">
-                                <x-lucide-upload-cloud class="w-4 h-4 mr-2" />
-                                Upload
-                            </x-ui.button>
+                            <div class="flex items-center gap-2">
+                                <x-ui.button onclick="openAddLinkModal()" variant="secondary" size="sm">
+                                    <x-lucide-link class="w-4 h-4 mr-2" />
+                                    Add Link
+                                </x-ui.button>
+                                <x-ui.button onclick="openUploadModal()" variant="primary" size="sm">
+                                    <x-lucide-upload-cloud class="w-4 h-4 mr-2" />
+                                    Upload File
+                                </x-ui.button>
+                            </div>
                         @endif
                     </div>
                 </div>
                 <div class="px-6 py-5">
-                    @if(isset($taskFiles) && $taskFiles->count() > 0)
+                    @if(isset($deliverables) && $deliverables->count() > 0)
                         <div class="space-y-3">
-                            @foreach($taskFiles as $file)
+                            @foreach($deliverables as $deliverable)
                                 <div class="group flex items-center justify-between p-4 bg-neutral-50 hover:bg-neutral-100 rounded-xl transition-all border border-neutral-200 hover:border-primary-200">
                                     <div class="flex items-center space-x-4 flex-1 min-w-0">
                                         <div class="flex-shrink-0 w-12 h-12 bg-white rounded-xl flex items-center justify-center border border-neutral-200 group-hover:border-primary-200 transition-colors">
-                                            <x-lucide-file-text class="w-6 h-6 text-error-500" />
+                                            @if($deliverable->deliverable_type === 'link')
+                                                <x-lucide-link class="w-6 h-6 text-blue-500" />
+                                            @else
+                                                <x-lucide-file-text class="w-6 h-6 text-error-500" />
+                                            @endif
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <p class="font-medium text-neutral-800 truncate">{{ $file->fileName }}</p>
-                                            <p class="text-sm text-neutral-500 flex items-center">
+                                            <div class="flex items-center gap-2">
+                                                <p class="font-medium text-neutral-800 truncate">
+                                                    {{ $deliverable->fileName ?: ($deliverable->description ?: 'Untitled') }}
+                                                </p>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $deliverable->deliverable_type === 'link' ? 'bg-blue-100 text-blue-700' : 'bg-primary-100 text-primary-700' }}">
+                                                    {{ ucfirst($deliverable->deliverable_type ?? 'file') }}
+                                                </span>
+                                                @if($deliverable->is_approved)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
+                                                        <x-lucide-check class="w-3 h-3 mr-1" />
+                                                        Approved
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            @if($deliverable->description && $deliverable->fileName)
+                                                <p class="text-sm text-neutral-500 truncate">{{ $deliverable->description }}</p>
+                                            @endif
+                                            <p class="text-xs text-neutral-400 flex items-center mt-1">
                                                 <x-lucide-clock class="w-3 h-3 mr-1" />
-                                                {{ \Carbon\Carbon::parse($file->created_at)->diffForHumans() }}
+                                                {{ \Carbon\Carbon::parse($deliverable->created_at)->diffForHumans() }}
                                             </p>
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <x-ui.button href="{{ route('adiutor.tasks.download-file', $file->documentID) }}" variant="primary" size="sm">
-                                            <x-lucide-download class="w-4 h-4 mr-1" />
-                                            Download
-                                        </x-ui.button>
-                                        @if($file->uploaded_by == Auth::id())
-                                            <form action="{{ route('adiutor.tasks.delete-file', $file->documentID) }}" method="POST" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete File', 'Are you sure you want to delete this file?')">
+                                        @if($deliverable->deliverable_type === 'link' && $deliverable->link_url)
+                                            <a href="{{ $deliverable->link_url }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors">
+                                                <x-lucide-external-link class="w-4 h-4 mr-1" />
+                                                Open Link
+                                            </a>
+                                        @else
+                                            <x-ui.button href="{{ route('adiutor.tasks.download-file', $deliverable->documentID) }}" variant="primary" size="sm">
+                                                <x-lucide-download class="w-4 h-4 mr-1" />
+                                                Download
+                                            </x-ui.button>
+                                        @endif
+                                        @if($deliverable->uploaded_by == Auth::id() && $task->status !== 'completed')
+                                            <form action="{{ route('adiutor.tasks.delete-file', $deliverable->documentID) }}" method="POST" onsubmit="return window.Alerts.confirmDeleteForm(event, 'Delete Deliverable', 'Are you sure you want to delete this deliverable?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <x-ui.button type="submit" variant="danger" size="sm">
-                                                    <x-lucide-trash-2 class="w-4 h-4 mr-1" />
-                                                    Delete
+                                                    <x-lucide-trash-2 class="w-4 h-4" />
                                                 </x-ui.button>
                                             </form>
                                         @endif
@@ -303,14 +471,21 @@
                     @else
                         <div class="text-center py-12">
                             <div class="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <x-lucide-folder-open class="w-10 h-10 text-neutral-400" />
+                                <x-lucide-package-open class="w-10 h-10 text-neutral-400" />
                             </div>
-                            <p class="text-neutral-500 text-sm mb-4">No files uploaded yet</p>
+                            <p class="text-neutral-600 font-medium mb-2">No deliverables yet</p>
+                            <p class="text-neutral-500 text-sm mb-4">Upload files or add links to submit as deliverables for this task.</p>
                             @if($task->status !== 'completed')
-                                <x-ui.button onclick="openUploadModal()" variant="primary">
-                                    <x-lucide-upload-cloud class="w-4 h-4 mr-2" />
-                                    Upload Your First File
-                                </x-ui.button>
+                                <div class="flex items-center justify-center gap-3">
+                                    <x-ui.button onclick="openAddLinkModal()" variant="secondary">
+                                        <x-lucide-link class="w-4 h-4 mr-2" />
+                                        Add Link
+                                    </x-ui.button>
+                                    <x-ui.button onclick="openUploadModal()" variant="primary">
+                                        <x-lucide-upload-cloud class="w-4 h-4 mr-2" />
+                                        Upload File
+                                    </x-ui.button>
+                                </div>
                             @endif
                         </div>
                     @endif
@@ -451,13 +626,10 @@
                     <p class="text-neutral-600 text-sm mb-4">
                         Ready to mark this task as complete? This action will notify the admin and client.
                     </p>
-                    <form action="{{ route('adiutor.tasks.complete', $task->taskID) }}" method="POST">
-                        @csrf
-                        <x-ui.button type="submit" variant="success" class="w-full justify-center">
-                            <x-lucide-check-check class="w-4 h-4 mr-2" />
-                            Mark as Complete
-                        </x-ui.button>
-                    </form>
+                    <x-ui.button type="button" onclick="completeTask({{ $task->taskID }})" variant="success" class="w-full justify-center">
+                        <x-lucide-check-check class="w-4 h-4 mr-2" />
+                        Mark as Complete
+                    </x-ui.button>
                 </x-ui.card>
             @endif
 
@@ -559,37 +731,86 @@
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full" onclick="event.stopPropagation()">
         <div class="p-6 border-b border-neutral-200">
             <div class="flex items-center justify-between">
-                <h3 class="text-xl font-semibold text-neutral-800">Upload File</h3>
+                <h3 class="text-xl font-semibold text-neutral-800">Upload Deliverable File</h3>
                 <button type="button" onclick="closeUploadModal()" class="text-neutral-400 hover:text-neutral-600">
                     <x-lucide-x class="w-5 h-5" />
                 </button>
             </div>
         </div>
         
-        <form action="{{ route('adiutor.tasks.upload-file', $task->taskID) }}" method="POST" enctype="multipart/form-data" class="p-6">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-neutral-700 mb-2">Select File</label>
-                    <input type="file" name="file" required class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                    <p class="text-xs text-neutral-500 mt-2">Max file size: 10MB. Accepted formats: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, ZIP</p>
-                </div>
-                
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-neutral-700 mb-2">Description (Optional)</label>
-                    <textarea name="description" rows="3" class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Brief description of this file..."></textarea>
-                </div>
-                
-                <div class="flex space-x-3">
-                    <x-ui.button type="button" onclick="closeUploadModal()" variant="secondary" class="flex-1 justify-center">
-                        Cancel
-                    </x-ui.button>
-                    <x-ui.button type="submit" variant="primary" class="flex-1 justify-center">
-                        <x-lucide-upload class="w-4 h-4 mr-2" />
-                        Upload
-                    </x-ui.button>
-                </div>
-            </form>
+        <form id="uploadFileForm" class="p-6">
+            <input type="hidden" name="is_deliverable" value="1">
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-neutral-700 mb-2">Select File</label>
+                <input type="file" name="file" id="uploadFileInput" required class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                <p class="text-xs text-neutral-500 mt-2">Max file size: 10MB. Accepted formats: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, ZIP</p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-neutral-700 mb-2">Description (Optional)</label>
+                <textarea name="description" id="uploadFileDescription" rows="3" class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Brief description of this deliverable..."></textarea>
+            </div>
+            
+            <div class="flex space-x-3">
+                <x-ui.button type="button" onclick="closeUploadModal()" variant="secondary" class="flex-1 justify-center">
+                    Cancel
+                </x-ui.button>
+                <x-ui.button type="submit" variant="primary" class="flex-1 justify-center" id="uploadFileBtn">
+                    <x-lucide-upload class="w-4 h-4 mr-2" />
+                    Upload Deliverable
+                </x-ui.button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Link Modal -->
+<div id="addLinkModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full" onclick="event.stopPropagation()">
+        <div class="p-6 border-b border-neutral-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-neutral-800">Add Deliverable Link</h3>
+                <button type="button" onclick="closeAddLinkModal()" class="text-neutral-400 hover:text-neutral-600">
+                    <x-lucide-x class="w-5 h-5" />
+                </button>
+            </div>
         </div>
+        
+        <form id="addLinkForm" class="p-6">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-neutral-700 mb-2">Title *</label>
+                <input type="text" name="title" id="linkTitle" required 
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
+                       placeholder="e.g., Figma Design, GitHub Repo, Google Doc">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-neutral-700 mb-2">Link URL *</label>
+                <input type="url" name="link_url" id="linkUrl" required 
+                       class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
+                       placeholder="https://example.com/resource">
+                <p class="text-xs text-neutral-500 mt-2">Figma, GitHub, Google Drive, Notion, etc.</p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-neutral-700 mb-2">Description (Optional)</label>
+                <textarea name="description" id="linkDescription" rows="2"
+                          class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
+                          placeholder="Brief description..."></textarea>
+            </div>
+            
+            <div class="flex space-x-3">
+                <x-ui.button type="button" onclick="closeAddLinkModal()" variant="secondary" class="flex-1 justify-center">
+                    Cancel
+                </x-ui.button>
+                <x-ui.button type="submit" variant="primary" class="flex-1 justify-center" id="addLinkBtn">
+                    <x-lucide-link class="w-4 h-4 mr-2" />
+                    Add Link
+                </x-ui.button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Budget Change Request Modal -->
@@ -643,6 +864,221 @@
 @push('scripts')
     
 <script>
+// Complete Task Function
+async function completeTask(taskId, confirmNoDeliverables = false) {
+    // First confirmation - "Are you sure you want to mark this task as completed?"
+    if (!confirmNoDeliverables) {
+        const confirmed = await window.Alerts.confirm({
+            title: 'Complete Task',
+            message: 'Are you sure you want to mark this task as completed? This will notify the admin and client.',
+            confirmText: 'Yes, Complete',
+            cancelText: 'Cancel',
+            confirmVariant: 'success'
+        });
+        
+        if (!confirmed) return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        if (confirmNoDeliverables) {
+            formData.append('confirm_no_deliverables', '1');
+        }
+        
+        const response = await fetch(`/adiutor/tasks/${taskId}/complete`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        // Check if confirmation is required for no deliverables
+        if (data.requires_confirmation) {
+            const confirmNoDelivs = await window.Alerts.confirm({
+                title: 'Complete Without Deliverables?',
+                message: data.message,
+                confirmText: 'Yes, Complete Anyway',
+                cancelText: 'Cancel',
+                confirmVariant: 'warning'
+            });
+            
+            if (confirmNoDelivs) {
+                // Re-submit with confirmation
+                await completeTask(taskId, true);
+            }
+            return;
+        }
+        
+        if (data.success) {
+            window.Alerts?.success('Success', 'Task marked as completed!');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error(data.message || 'Failed to complete task');
+        }
+    } catch (error) {
+        console.error('Error completing task:', error);
+        window.Alerts?.error('Error', error.message || 'Failed to complete task. Please try again.');
+    }
+}
+
+// Toggle subtask completion
+async function toggleSubtask(subtaskId) {
+    try {
+        const response = await fetch(`/adiutor/subtasks/${subtaskId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const subtaskEl = document.getElementById(`subtask-${subtaskId}`);
+            const iconEl = document.getElementById(`subtask-icon-${subtaskId}`);
+            const titleEl = document.getElementById(`subtask-title-${subtaskId}`);
+            const completedEl = document.getElementById(`subtask-completed-${subtaskId}`);
+            
+            if (data.is_completed) {
+                subtaskEl.classList.remove('bg-neutral-50', 'border-neutral-200', 'hover:border-secondary-300');
+                subtaskEl.classList.add('bg-success-50', 'border-success-200');
+                iconEl.classList.remove('border-2', 'border-neutral-300', 'hover:border-secondary-500');
+                iconEl.classList.add('bg-success-500');
+                iconEl.innerHTML = '<svg class="w-3 h-3 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+                titleEl.classList.remove('text-neutral-800');
+                titleEl.classList.add('text-neutral-500', 'line-through');
+                
+                if (!completedEl) {
+                    const completedInfo = document.createElement('p');
+                    completedInfo.id = `subtask-completed-${subtaskId}`;
+                    completedInfo.className = 'text-xs text-success-600 mt-1 flex items-center gap-1';
+                    completedInfo.innerHTML = '<svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> Completed just now';
+                    titleEl.parentNode.appendChild(completedInfo);
+                }
+            } else {
+                subtaskEl.classList.add('bg-neutral-50', 'border-neutral-200', 'hover:border-secondary-300');
+                subtaskEl.classList.remove('bg-success-50', 'border-success-200');
+                iconEl.classList.add('border-2', 'border-neutral-300', 'hover:border-secondary-500');
+                iconEl.classList.remove('bg-success-500');
+                iconEl.innerHTML = '';
+                titleEl.classList.add('text-neutral-800');
+                titleEl.classList.remove('text-neutral-500', 'line-through');
+                
+                if (completedEl) {
+                    completedEl.remove();
+                }
+            }
+            
+            // Update progress bar and counters using task_stats
+            const progressBar = document.getElementById('subtask-progress-bar');
+            const progressText = document.getElementById('subtask-progress-text');
+            const completedCounter = document.getElementById('subtask-completed-counter');
+            
+            if (data.task_stats) {
+                const { completed, total, percentage } = data.task_stats;
+                
+                // Update progress bar width
+                if (progressBar) {
+                    progressBar.style.width = `${percentage}%`;
+                }
+                
+                // Update progress percentage text
+                if (progressText) {
+                    progressText.textContent = `${percentage}%`;
+                }
+                
+                // Update X/Y completed counter
+                if (completedCounter) {
+                    completedCounter.textContent = `${completed}/${total} completed`;
+                }
+            }
+            
+            // Show success toast notification
+            window.toast?.success('Subtask updated successfully');
+            
+            // Check if all subtasks are completed and task is not already completed
+            if (data.all_subtasks_completed && data.task_status !== 'completed') {
+                // Show confirmation dialog
+                showCompleteTaskConfirmation();
+            }
+        } else {
+            window.toast?.error('Failed to update subtask');
+        }
+    } catch (error) {
+        console.error('Error toggling subtask:', error);
+        window.toast?.error('An error occurred while updating subtask');
+    }
+}
+
+// Show confirmation dialog for completing the task
+function showCompleteTaskConfirmation() {
+    window.Alerts?.confirm(
+        'All Subtasks Completed!',
+        'All subtasks have been marked as completed. Would you like to mark the entire task as completed?',
+        async () => {
+            await markTaskAsCompleted();
+        },
+        () => {
+            // User cancelled - do nothing, task remains in progress
+            window.toast?.info('Task remains in progress. You can mark it as completed later.');
+        },
+        {
+            confirmText: 'Yes, Complete Task',
+            cancelText: 'No, Keep in Progress',
+            confirmVariant: 'success'
+        }
+    );
+}
+
+// Mark the task as completed
+async function markTaskAsCompleted() {
+    try {
+        const taskId = {{ $task->taskID }};
+        const response = await fetch(`/adiutor/tasks/${taskId}/complete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                confirm_no_deliverables: true
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            window.toast?.success('Task marked as completed!');
+            // Reload page to show updated status
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else if (data.requires_confirmation) {
+            // Task has no deliverables - show warning
+            window.Alerts?.warning('No Deliverables', data.message);
+        } else {
+            window.toast?.error(data.message || 'Failed to complete task');
+        }
+    } catch (error) {
+        console.error('Error completing task:', error);
+        window.toast?.error('An error occurred while completing the task');
+    }
+}
+
 function openUploadModal() {
     const modal = document.getElementById('uploadFileModal');
     modal.style.display = 'flex';
@@ -653,7 +1089,113 @@ function closeUploadModal() {
     const modal = document.getElementById('uploadFileModal');
     modal.style.display = 'none';
     modal.classList.add('hidden');
+    // Reset form
+    document.getElementById('uploadFileForm').reset();
 }
+
+function openAddLinkModal() {
+    const modal = document.getElementById('addLinkModal');
+    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
+}
+
+function closeAddLinkModal() {
+    const modal = document.getElementById('addLinkModal');
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
+    // Reset form
+    document.getElementById('addLinkForm').reset();
+}
+
+// Upload File Form Handler (AJAX)
+document.getElementById('uploadFileForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const submitBtn = document.getElementById('uploadFileBtn');
+    const originalBtnContent = submitBtn.innerHTML;
+    
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Uploading...';
+    
+    try {
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        formData.append('file', document.getElementById('uploadFileInput').files[0]);
+        formData.append('description', document.getElementById('uploadFileDescription').value);
+        formData.append('is_deliverable', '1');
+        
+        const response = await fetch('{{ route("adiutor.tasks.upload-file", $task->taskID) }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            closeUploadModal();
+            window.Alerts?.success('Success', data.message);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error(data.message || 'Failed to upload file');
+        }
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        window.Alerts?.error('Error', error.message || 'Failed to upload file. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnContent;
+    }
+});
+
+// Add Link Form Handler (AJAX)
+document.getElementById('addLinkForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const submitBtn = document.getElementById('addLinkBtn');
+    const originalBtnContent = submitBtn.innerHTML;
+    
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Adding...';
+    
+    try {
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        formData.append('title', document.getElementById('linkTitle').value);
+        formData.append('link_url', document.getElementById('linkUrl').value);
+        formData.append('description', document.getElementById('linkDescription').value);
+        
+        const response = await fetch('{{ route("adiutor.tasks.add-link-deliverable", $task->taskID) }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            closeAddLinkModal();
+            window.Alerts?.success('Success', data.message);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error(data.message || 'Failed to add link');
+        }
+    } catch (error) {
+        console.error('Error adding link:', error);
+        window.Alerts?.error('Error', error.message || 'Failed to add link. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnContent;
+    }
+});
 
 function openBudgetModal() {
     const modal = document.getElementById('budgetChangeModal');
@@ -669,6 +1211,7 @@ function closeBudgetModal() {
 
 // Close modal when clicking outside
 document.getElementById('uploadFileModal')?.addEventListener('click', closeUploadModal);
+document.getElementById('addLinkModal')?.addEventListener('click', closeAddLinkModal);
 document.getElementById('budgetChangeModal')?.addEventListener('click', closeBudgetModal);
 
 // Update Progress Function
@@ -735,64 +1278,94 @@ function updateProgress() {
     modal.querySelector('#progressForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const formData = new FormData();
         const progressValue = parseInt(progressInput.value) || 0;
-        formData.append('progress_percentage', progressValue);
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
         
-        const submitButton = this.querySelector('button[type="submit"]');
-        const originalText = submitButton.innerHTML;
-        submitButton.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Updating...';
-        submitButton.disabled = true;
-        
-        try {
-            const response = await fetch('{{ route("adiutor.tasks.update-progress", $task->taskID) }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                // Update progress display in page
-                const progressCard = document.querySelector('.text-2xl.font-semibold.text-primary-600');
-                if (progressCard) {
-                    progressCard.textContent = progressValue + '%';
-                }
-                
-                const progressBar = document.querySelector('.bg-primary-500.h-2.rounded-full');
-                if (progressBar) {
-                    progressBar.style.width = progressValue + '%';
-                }
-                
-                // Show success message
-                window.toast.success('Progress updated successfully!');
-                
-                // Close modal
-                modal.remove();
-                
-                // If progress is 100%, reload page to show completed status
-                if (progressValue === 100) {
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                }
-            } else {
-                throw new Error(data.message || 'Failed to update progress');
+        await submitProgressUpdate(progressValue, false, this, modal);
+    });
+}
+
+async function submitProgressUpdate(progressValue, confirmNoDeliverables, form, modal) {
+    const formData = new FormData();
+    formData.append('progress_percentage', progressValue);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+    if (confirmNoDeliverables) {
+        formData.append('confirm_no_deliverables', '1');
+    }
+    
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    submitButton.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Updating...';
+    submitButton.disabled = true;
+    
+    try {
+        const response = await fetch('{{ route("adiutor.tasks.update-progress", $task->taskID) }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
-        } catch (error) {
-            console.error('Error updating progress:', error);
-            
-            // Show error message
-            window.toast.error('Failed to update progress. Please try again.');
-        } finally {
+        });
+        
+        const data = await response.json();
+        
+        // Check if confirmation is required for no deliverables
+        if (data.requires_confirmation) {
             submitButton.innerHTML = originalText;
             submitButton.disabled = false;
+            
+            // Show confirmation modal
+            const confirmed = await window.Alerts.confirm({
+                title: 'Complete Task Without Deliverables?',
+                message: data.message,
+                confirmText: 'Yes, Complete Task',
+                cancelText: 'Cancel',
+                confirmVariant: 'warning'
+            });
+            
+            if (confirmed) {
+                // Re-submit with confirmation
+                await submitProgressUpdate(progressValue, true, form, modal);
+            }
+            return;
         }
-    });
+        
+        if (data.success) {
+            // Update progress display in page
+            const progressCard = document.querySelector('.text-2xl.font-semibold.text-primary-600');
+            if (progressCard) {
+                progressCard.textContent = progressValue + '%';
+            }
+            
+            const progressBar = document.querySelector('.bg-primary-500.h-2.rounded-full');
+            if (progressBar) {
+                progressBar.style.width = progressValue + '%';
+            }
+            
+            // Show success message
+            window.Alerts?.success('Success', 'Progress updated successfully!');
+            
+            // Close modal
+            modal.remove();
+            
+            // If progress is 100%, reload page to show completed status
+            if (progressValue === 100) {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            }
+        } else {
+            throw new Error(data.message || data.error || 'Failed to update progress');
+        }
+    } catch (error) {
+        console.error('Error updating progress:', error);
+        
+        // Show error message
+        window.Alerts?.error('Error', 'Failed to update progress. Please try again.');
+        
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    }
 }
 </script>
 

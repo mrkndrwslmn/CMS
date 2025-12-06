@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Adiutor;
 use App\Http\Controllers\Controller;
 use App\Models\TimeEntry;
 use App\Models\Task;
+use App\Models\Project;
 use App\Models\ProjectAssignment;
+use App\Models\ProjectMilestone;
 use App\Models\Payout;
 use App\Models\PayoutItem;
 use App\Models\User;
@@ -43,8 +45,11 @@ class EarningsController extends Controller
         // Get filter parameters
         $periodFilter = $request->get('period', 'all'); // all, month, week
         $statusFilter = $request->get('status', 'all'); // all, approved, pending, paid
+        $typeFilter = $request->get('type', 'all'); // all, hourly, fixed_rate, milestone
 
-        // Base query for time entries
+        // ===========================================
+        // TIME TRACKING / HOURLY EARNINGS
+        // ===========================================
         $timeEntriesQuery = TimeEntry::where('adiutor_id', $adiutorId)
             ->whereNotNull('end_time')
             ->with(['task.project', 'task.project.assignments' => function($query) use ($adiutorId) {
@@ -62,7 +67,7 @@ class EarningsController extends Controller
             ]);
         }
 
-        // Apply status filter
+        // Apply status filter for time entries
         if ($statusFilter === 'approved') {
             $timeEntriesQuery->where('is_approved', true)->where('is_paid', false);
         } elseif ($statusFilter === 'pending') {
@@ -71,25 +76,25 @@ class EarningsController extends Controller
             $timeEntriesQuery->where('is_paid', true);
         }
 
-        $timeEntries = $timeEntriesQuery->orderBy('start_time', 'desc')->paginate(20);
+        $timeEntries = $timeEntriesQuery->orderBy('start_time', 'desc')->get();
 
-        // Calculate earnings summary
-        $totalEarnings = TimeEntry::where('adiutor_id', $adiutorId)
+        // Hourly earnings calculations
+        $hourlyTotalEarnings = TimeEntry::where('adiutor_id', $adiutorId)
             ->whereNotNull('end_time')
             ->whereNotNull('calculated_amount')
             ->sum('calculated_amount');
 
-        $approvedEarnings = TimeEntry::where('adiutor_id', $adiutorId)
+        $hourlyApprovedEarnings = TimeEntry::where('adiutor_id', $adiutorId)
             ->whereNotNull('end_time')
             ->where('is_approved', true)
             ->where('is_paid', false)
             ->sum('calculated_amount');
 
-        $paidEarnings = TimeEntry::where('adiutor_id', $adiutorId)
+        $hourlyPaidEarnings = TimeEntry::where('adiutor_id', $adiutorId)
             ->where('is_paid', true)
             ->sum('calculated_amount');
 
-        $pendingApproval = TimeEntry::where('adiutor_id', $adiutorId)
+        $hourlyPendingApproval = TimeEntry::where('adiutor_id', $adiutorId)
             ->whereNotNull('end_time')
             ->where('is_approved', false)
             ->sum('calculated_amount');
@@ -99,7 +104,143 @@ class EarningsController extends Controller
             ->whereNotNull('end_time')
             ->sum('duration_minutes') / 60;
 
-        // Get earnings by project
+        // ===========================================
+        // FIXED RATE PROJECT EARNINGS
+        // ===========================================
+        // Fixed rate: Only withdrawable when PROJECT is completed
+        $fixedRateAssignments = ProjectAssignment::where('adiutor_id', $adiutorId)
+            ->where('payment_type', ProjectAssignment::PAYMENT_TYPE_FIXED)
+            ->with(['project'])
+            ->get();
+
+        $fixedRateTotalEarnings = 0;
+        $fixedRateApprovedEarnings = 0; // Approved by admin but project not complete
+        $fixedRateWithdrawableEarnings = 0; // Project completed, approved, and withdrawable
+        $fixedRatePaidEarnings = 0;
+        $fixedRatePendingApproval = 0;
+        $fixedRateEarningsDetails = [];
+
+        foreach ($fixedRateAssignments as $assignment) {
+            $amount = (float) $assignment->agreed_rate;
+            $fixedRateTotalEarnings += $amount;
+
+            $projectCompleted = $assignment->project && $assignment->project->status === 'completed';
+            
+            if ($assignment->fixed_rate_paid) {
+                $fixedRatePaidEarnings += $amount;
+            } elseif ($assignment->fixed_rate_approved) {
+                // Approved by admin
+                if ($projectCompleted) {
+                    // Project completed - can withdraw
+                    $fixedRateWithdrawableEarnings += $amount;
+                } else {
+                    // Approved but project not complete - not yet withdrawable
+                    $fixedRateApprovedEarnings += $amount;
+                }
+            } else {
+                // Not yet approved
+                $fixedRatePendingApproval += $amount;
+            }
+
+            // Add to details for display
+            $fixedRateEarningsDetails[] = [
+                'type' => 'fixed_rate',
+                'project' => $assignment->project,
+                'assignment' => $assignment,
+                'amount' => $amount,
+                'status' => $assignment->fixed_rate_paid ? 'paid' : 
+                           ($assignment->fixed_rate_approved ? ($projectCompleted ? 'withdrawable' : 'approved') : 'pending'),
+                'project_completed' => $projectCompleted,
+                'date' => $assignment->created_at,
+            ];
+        }
+
+        // ===========================================
+        // MILESTONE PAYMENT EARNINGS
+        // ===========================================
+        // Get milestones for projects where adiutor is assigned
+        $assignedProjectIds = ProjectAssignment::where('adiutor_id', $adiutorId)
+            ->pluck('project_id');
+
+        // Get milestones with their task assignments
+        $milestonesWithAssignments = ProjectMilestone::whereIn('project_id', $assignedProjectIds)
+            ->with(['project', 'tasks' => function($query) use ($adiutorId) {
+                $query->where('assignedTo', $adiutorId);
+            }])
+            ->get();
+
+        $milestoneTotalEarnings = 0;
+        $milestoneWithdrawableEarnings = 0; // Milestone is paid by client
+        $milestonePendingEarnings = 0; // Milestone not yet paid
+        $milestonePaidEarnings = 0; // Already paid to adiutor
+        $milestoneEarningsDetails = [];
+
+        foreach ($milestonesWithAssignments as $milestone) {
+            // Only count if adiutor has tasks in this milestone
+            if ($milestone->tasks->isEmpty()) {
+                continue;
+            }
+
+            // Calculate adiutor's share based on tasks assigned to them
+            // This is a simplified calculation - in production you might want
+            // a more sophisticated share calculation
+            $totalTasksInMilestone = Task::where('phase_id', $milestone->id)->count();
+            $adiutorTasksInMilestone = $milestone->tasks->count();
+            
+            if ($totalTasksInMilestone > 0) {
+                $adiutorShare = ($adiutorTasksInMilestone / $totalTasksInMilestone) * (float) $milestone->amount;
+            } else {
+                $adiutorShare = 0;
+            }
+
+            if ($adiutorShare > 0) {
+                $milestoneTotalEarnings += $adiutorShare;
+
+                // Check if milestone is paid by client
+                if ($milestone->is_paid) {
+                    // Milestone is paid - adiutor can withdraw
+                    $milestoneWithdrawableEarnings += $adiutorShare;
+                } else {
+                    $milestonePendingEarnings += $adiutorShare;
+                }
+
+                $milestoneEarningsDetails[] = [
+                    'type' => 'milestone',
+                    'milestone' => $milestone,
+                    'project' => $milestone->project,
+                    'tasks_count' => $adiutorTasksInMilestone,
+                    'total_tasks' => $totalTasksInMilestone,
+                    'amount' => $adiutorShare,
+                    'status' => $milestone->is_paid ? 'withdrawable' : 'pending',
+                    'date' => $milestone->completed_date ?? $milestone->created_at,
+                ];
+            }
+        }
+
+        // ===========================================
+        // FIXED BUDGET TASK EARNINGS
+        // ===========================================
+        $fixedBudgetEarnings = Task::where('assignedTo', $adiutorId)
+            ->where('use_fixed_budget', true)
+            ->where('status', 'completed')
+            ->sum('allocated_budget');
+
+        // ===========================================
+        // COMBINED TOTALS
+        // ===========================================
+        // Total earnings across all types
+        $totalEarnings = $hourlyTotalEarnings + $fixedRateTotalEarnings + $milestoneTotalEarnings + $fixedBudgetEarnings;
+
+        // Approved/Withdrawable earnings (available for payout)
+        $approvedEarnings = $hourlyApprovedEarnings + $fixedRateWithdrawableEarnings + $milestoneWithdrawableEarnings;
+
+        // Paid earnings
+        $paidEarnings = $hourlyPaidEarnings + $fixedRatePaidEarnings + $milestonePaidEarnings;
+
+        // Pending approval (not yet approved OR approved but not yet withdrawable)
+        $pendingApproval = $hourlyPendingApproval + $fixedRatePendingApproval + $fixedRateApprovedEarnings + $milestonePendingEarnings;
+
+        // Get earnings by project (hourly only for now)
         $earningsByProject = TimeEntry::where('adiutor_id', $adiutorId)
             ->whereNotNull('end_time')
             ->whereNotNull('calculated_amount')
@@ -114,14 +255,21 @@ class EarningsController extends Controller
             ->limit(5)
             ->get();
 
-        // Get fixed budget tasks earnings
-        $fixedBudgetEarnings = Task::where('assignedTo', $adiutorId)
-            ->where('use_fixed_budget', true)
-            ->where('status', 'completed')
-            ->sum('allocated_budget');
+        // Combine all earnings for display
+        $allEarningsDetails = collect($fixedRateEarningsDetails)
+            ->merge($milestoneEarningsDetails)
+            ->sortByDesc('date');
+
+        // Paginate time entries for display
+        $timeEntriesPaginated = TimeEntry::where('adiutor_id', $adiutorId)
+            ->whereNotNull('end_time')
+            ->with(['task.project', 'payout'])
+            ->orderBy('start_time', 'desc')
+            ->paginate(20);
 
         return view('adiutor.earnings.index', compact(
             'timeEntries',
+            'timeEntriesPaginated',
             'totalEarnings',
             'approvedEarnings',
             'paidEarnings',
@@ -132,7 +280,28 @@ class EarningsController extends Controller
             'fixedBudgetEarnings',
             'adiutor',
             'periodFilter',
-            'statusFilter'
+            'statusFilter',
+            'typeFilter',
+            // Hourly breakdown
+            'hourlyTotalEarnings',
+            'hourlyApprovedEarnings',
+            'hourlyPaidEarnings',
+            'hourlyPendingApproval',
+            // Fixed rate breakdown
+            'fixedRateTotalEarnings',
+            'fixedRateApprovedEarnings',
+            'fixedRateWithdrawableEarnings',
+            'fixedRatePaidEarnings',
+            'fixedRatePendingApproval',
+            'fixedRateEarningsDetails',
+            // Milestone breakdown
+            'milestoneTotalEarnings',
+            'milestoneWithdrawableEarnings',
+            'milestonePendingEarnings',
+            'milestonePaidEarnings',
+            'milestoneEarningsDetails',
+            // Combined details
+            'allEarningsDetails'
         ));
     }
 
@@ -157,18 +326,111 @@ class EarningsController extends Controller
     public function wallet(Request $request)
     {
         $adiutor = Auth::user();
+        $adiutorId = $adiutor->id;
 
-        // Wallet balances
-        $workEarningsBalance = $adiutor->work_earnings_balance ?? 0;
+        // ===========================================
+        // CALCULATE WORK EARNINGS USING SAME LOGIC AS INDEX
+        // ===========================================
+        
+        // --- HOURLY EARNINGS ---
+        $hourlyApprovedEarnings = TimeEntry::where('adiutor_id', $adiutorId)
+            ->whereNotNull('end_time')
+            ->where('is_approved', true)
+            ->where('is_paid', false)
+            ->sum('calculated_amount');
+
+        $hourlyPaidEarnings = TimeEntry::where('adiutor_id', $adiutorId)
+            ->where('is_paid', true)
+            ->sum('calculated_amount');
+
+        $hourlyPendingApproval = TimeEntry::where('adiutor_id', $adiutorId)
+            ->whereNotNull('end_time')
+            ->where('is_approved', false)
+            ->sum('calculated_amount');
+
+        // --- FIXED RATE EARNINGS ---
+        // Fixed rate: Only withdrawable when PROJECT is completed
+        $fixedRateAssignments = ProjectAssignment::where('adiutor_id', $adiutorId)
+            ->where('payment_type', ProjectAssignment::PAYMENT_TYPE_FIXED)
+            ->with(['project'])
+            ->get();
+
+        $fixedRateWithdrawableEarnings = 0;
+        $fixedRatePaidEarnings = 0;
+        $fixedRatePendingEarnings = 0;
+
+        foreach ($fixedRateAssignments as $assignment) {
+            $amount = (float) $assignment->agreed_rate;
+            $projectCompleted = $assignment->project && $assignment->project->status === 'completed';
+            
+            if ($assignment->fixed_rate_paid) {
+                $fixedRatePaidEarnings += $amount;
+            } elseif ($assignment->fixed_rate_approved && $projectCompleted) {
+                // Approved AND project completed - can withdraw
+                $fixedRateWithdrawableEarnings += $amount;
+            } else {
+                // Not approved OR approved but project not complete - pending
+                $fixedRatePendingEarnings += $amount;
+            }
+        }
+
+        // --- MILESTONE EARNINGS ---
+        // Milestone: Withdrawable when milestone is paid by client
+        $assignedProjectIds = ProjectAssignment::where('adiutor_id', $adiutorId)
+            ->pluck('project_id');
+
+        $milestonesWithAssignments = ProjectMilestone::whereIn('project_id', $assignedProjectIds)
+            ->with(['project', 'tasks' => function($query) use ($adiutorId) {
+                $query->where('assignedTo', $adiutorId);
+            }])
+            ->get();
+
+        $milestoneWithdrawableEarnings = 0;
+        $milestonePaidEarnings = 0;
+        $milestonePendingEarnings = 0;
+
+        foreach ($milestonesWithAssignments as $milestone) {
+            if ($milestone->tasks->isEmpty()) {
+                continue;
+            }
+
+            $totalTasksInMilestone = Task::where('phase_id', $milestone->id)->count();
+            $adiutorTasksInMilestone = $milestone->tasks->count();
+            
+            if ($totalTasksInMilestone > 0) {
+                $adiutorShare = ($adiutorTasksInMilestone / $totalTasksInMilestone) * (float) $milestone->amount;
+            } else {
+                $adiutorShare = 0;
+            }
+
+            if ($adiutorShare > 0) {
+                if ($milestone->is_paid) {
+                    // Milestone is paid by client - adiutor can withdraw
+                    $milestoneWithdrawableEarnings += $adiutorShare;
+                } else {
+                    $milestonePendingEarnings += $adiutorShare;
+                }
+            }
+        }
+
+        // --- COMBINED WALLET BALANCES ---
+        // Work earnings available for withdrawal (approved hourly + fixed rate with completed project + paid milestones)
+        $workEarningsBalance = $hourlyApprovedEarnings + $fixedRateWithdrawableEarnings + $milestoneWithdrawableEarnings;
+        
+        // Work earnings pending (not yet withdrawable)
+        $workEarningsPending = $hourlyPendingApproval + $fixedRatePendingEarnings + $milestonePendingEarnings;
+        
+        // Work earnings already withdrawn/paid
+        $workEarningsWithdrawn = $hourlyPaidEarnings + $fixedRatePaidEarnings + $milestonePaidEarnings;
+
+        // Referral credits (keep from user model as these are separate)
         $referralCreditsBalance = $adiutor->referral_credits ?? 0;
-        $totalAvailable = $workEarningsBalance + $referralCreditsBalance;
-        
-        $workEarningsPending = $adiutor->work_earnings_pending ?? 0;
         $referralCreditsPending = $adiutor->referral_credits_pending ?? 0;
-        $totalPending = $workEarningsPending + $referralCreditsPending;
-        
-        $workEarningsWithdrawn = $adiutor->work_earnings_withdrawn ?? 0;
         $referralCreditsWithdrawn = $adiutor->referral_credits_withdrawn ?? 0;
+
+        // Totals
+        $totalAvailable = $workEarningsBalance + $referralCreditsBalance;
+        $totalPending = $workEarningsPending + $referralCreditsPending;
         $totalWithdrawn = $workEarningsWithdrawn + $referralCreditsWithdrawn;
 
         // Get wallet transactions with filters

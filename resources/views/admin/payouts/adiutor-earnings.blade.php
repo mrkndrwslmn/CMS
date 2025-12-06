@@ -3,7 +3,7 @@
 @section('title', 'Adiutor Earnings - ' . $adiutor->fullName)
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home'],
@@ -116,11 +116,12 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Duration</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Amount</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-neutral-100">
                                 @foreach($timeEntries as $entry)
-                                <tr class="hover:bg-neutral-50 transition-colors">
+                                <tr class="hover:bg-neutral-50 transition-colors" id="time-entry-row-{{ $entry->id }}">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-800">
                                         {{ $entry->start_time->format('M d, Y') }}
                                         <div class="text-xs text-neutral-500">
@@ -138,7 +139,7 @@
                                         ₱{{ number_format($entry->calculated_amount ?? 0, 2) }}
                                         <div class="text-xs text-neutral-500">@ ₱{{ number_format($entry->hourly_rate ?? 0, 2) }}/hr</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap" id="status-cell-{{ $entry->id }}">
                                         @if($entry->is_paid)
                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-success-50 text-success-700">
                                                 <x-lucide-check-circle class="w-3 h-3" />
@@ -154,6 +155,28 @@
                                                 <x-lucide-clock class="w-3 h-3" />
                                                 Pending
                                             </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap" id="actions-cell-{{ $entry->id }}">
+                                        @if(!$entry->is_approved && !$entry->is_paid && $entry->end_time)
+                                            <div class="flex items-center gap-2">
+                                                <button type="button" 
+                                                        onclick="approveTimeEntry({{ $entry->id }})"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-success-500 hover:bg-success-600 rounded-lg transition-colors">
+                                                    <x-lucide-check class="w-3 h-3" />
+                                                    Approve
+                                                </button>
+                                                <button type="button"
+                                                        onclick="openRejectModal({{ $entry->id }})"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-error-500 hover:bg-error-600 rounded-lg transition-colors">
+                                                    <x-lucide-x class="w-3 h-3" />
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        @elseif(!$entry->end_time)
+                                            <span class="text-xs text-neutral-400">Timer active</span>
+                                        @else
+                                            <span class="text-xs text-neutral-400">—</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -298,4 +321,120 @@
         </div>
     </div>
 </div>
+
+<!-- Reject Time Entry Modal -->
+<div id="rejectModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+        <div class="fixed inset-0 bg-black/50 transition-opacity" onclick="closeRejectModal()"></div>
+        
+        <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
+            <form id="rejectForm" method="POST">
+                @csrf
+                <div class="bg-white px-6 pt-6 pb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-error-100 rounded-full flex items-center justify-center">
+                            <x-lucide-x-circle class="w-6 h-6 text-error-600" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-neutral-800">Reject Time Entry</h3>
+                            <p class="text-sm text-neutral-500">Please provide a reason for rejection.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="rejection_reason" class="block text-sm font-medium text-neutral-700 mb-1.5">Rejection Reason</label>
+                        <textarea name="rejection_reason" id="rejection_reason" rows="3" required
+                                  class="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-error-500/20 focus:border-error-500 transition-colors"
+                                  placeholder="Explain why this time entry is being rejected..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="bg-neutral-50 px-6 py-4 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeRejectModal()" 
+                            class="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-error-500 rounded-lg hover:bg-error-600 transition-colors">
+                        Reject Entry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    let currentRejectEntryId = null;
+
+    function approveTimeEntry(entryId) {
+        if (!confirm('Are you sure you want to approve this time entry?')) {
+            return;
+        }
+
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+        fetch(`{{ url('admin/payouts/time-entries') }}/${entryId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => {
+            if (response.ok) {
+                // Update the status cell
+                const statusCell = document.getElementById(`status-cell-${entryId}`);
+                statusCell.innerHTML = `
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary-50 text-primary-700">
+                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        Approved
+                    </span>
+                `;
+                
+                // Update the actions cell
+                const actionsCell = document.getElementById(`actions-cell-${entryId}`);
+                actionsCell.innerHTML = '<span class="text-xs text-neutral-400">—</span>';
+
+                // Show success message
+                if (window.toast) {
+                    window.toast.success('Time entry approved successfully');
+                } else {
+                    alert('Time entry approved successfully');
+                }
+            } else {
+                throw new Error('Failed to approve');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.disabled = false;
+            button.innerHTML = originalText;
+            if (window.toast) {
+                window.toast.error('Failed to approve time entry. Please try again.');
+            } else {
+                alert('Failed to approve time entry. Please try again.');
+            }
+        });
+    }
+
+    function openRejectModal(entryId) {
+        currentRejectEntryId = entryId;
+        document.getElementById('rejectForm').action = `{{ url('admin/payouts/time-entries') }}/${entryId}/reject`;
+        document.getElementById('rejectModal').classList.remove('hidden');
+    }
+
+    function closeRejectModal() {
+        document.getElementById('rejectModal').classList.add('hidden');
+        document.getElementById('rejection_reason').value = '';
+        currentRejectEntryId = null;
+    }
+</script>
+@endpush

@@ -11,19 +11,19 @@
             <div class="mb-4 sm:mb-0">
                 <nav class="flex items-center space-x-2 text-sm text-neutral-500 mt-1">
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-primary-600 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <a href="{{ route('admin.reports.index') }}" class="hover:text-primary-600 transition-colors">Reports</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <span class="text-neutral-700">Dashboard Analytics</span>
                 </nav>
             </div>
             <div class="flex gap-2">
                 <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 font-medium rounded-lg transition-colors">
-                    <i class="fas fa-print mr-2"></i>
+                    <x-lucide-printer class="w-4 h-4 mr-2" />
                     Print
                 </button>
                 <a href="{{ route('admin.reports.export', ['type' => 'dashboard', 'period' => $period]) }}" class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
-                    <i class="fas fa-download mr-2"></i>
+                    <x-lucide-download class="w-4 h-4 mr-2" />
                     Export CSV
                 </a>
             </div>
@@ -57,13 +57,13 @@
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ number_format($kpis['total_users']) }}</p>
                     <p class="text-xs text-neutral-500 mt-2 flex items-center">
                         <span class="flex h-4 w-4 rounded-full bg-primary-50 text-primary-600 items-center justify-center mr-1">
-                            <i class="fas fa-arrow-up text-[10px]"></i>
+                            <x-lucide-arrow-up class="w-2.5 h-2.5" />
                         </span>
                         +{{ number_format($kpis['new_users']) }} this period
                     </p>
                 </div>
                 <div class="h-12 w-12 flex-shrink-0 rounded-full bg-primary-50 text-primary-500 flex items-center justify-center">
-                    <i class="fas fa-users text-lg"></i>
+                    <x-lucide-users class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -76,13 +76,13 @@
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ number_format($kpis['total_tasks']) }}</p>
                     <p class="text-xs text-neutral-500 mt-2 flex items-center">
                         <span class="flex h-4 w-4 rounded-full bg-success-50 text-success-600 items-center justify-center mr-1">
-                            <i class="fas fa-check text-[10px]"></i>
+                            <x-lucide-check class="w-2.5 h-2.5" />
                         </span>
                         {{ number_format($kpis['completed_tasks']) }} completed
                     </p>
                 </div>
                 <div class="h-12 w-12 flex-shrink-0 rounded-full bg-warning-50 text-warning-500 flex items-center justify-center">
-                    <i class="fas fa-tasks text-lg"></i>
+                    <x-lucide-list-todo class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -95,13 +95,13 @@
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ number_format($kpis['total_requests']) }}</p>
                     <p class="text-xs text-neutral-500 mt-2 flex items-center">
                         <span class="flex h-4 w-4 rounded-full bg-warning-50 text-warning-600 items-center justify-center mr-1">
-                            <i class="fas fa-clock text-[10px]"></i>
+                            <x-lucide-clock class="w-2.5 h-2.5" />
                         </span>
                         {{ number_format($kpis['pending_requests']) }} pending
                     </p>
                 </div>
                 <div class="h-12 w-12 flex-shrink-0 rounded-full bg-success-50 text-success-500 flex items-center justify-center">
-                    <i class="fas fa-clipboard-list text-lg"></i>
+                    <x-lucide-clipboard-list class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -114,13 +114,13 @@
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ number_format($kpis['total_documents']) }}</p>
                     <p class="text-xs text-neutral-500 mt-2 flex items-center">
                         <span class="flex h-4 w-4 rounded-full bg-info-50 text-info-600 items-center justify-center mr-1">
-                            <i class="fas fa-hdd text-[10px]"></i>
+                            <x-lucide-hard-drive class="w-2.5 h-2.5" />
                         </span>
                         {{ number_format($kpis['document_size'] / 1024 / 1024, 2) }} MB
                     </p>
                 </div>
                 <div class="h-12 w-12 flex-shrink-0 rounded-full bg-info-50 text-info-500 flex items-center justify-center">
-                    <i class="fas fa-file-alt text-lg"></i>
+                    <x-lucide-file-text class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -132,7 +132,7 @@
         <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-chart-line text-primary-500 mr-2"></i>
+                    <x-lucide-trending-up class="w-4 h-4 text-primary-500 mr-2" />
                     User Growth (Last 12 Months)
                 </h3>
             </div>
@@ -147,7 +147,7 @@
         <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-chart-pie text-primary-500 mr-2"></i>
+                    <x-lucide-pie-chart class="w-4 h-4 text-primary-500 mr-2" />
                     Request Status Distribution
                 </h3>
             </div>
@@ -163,7 +163,7 @@
     <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden mb-6">
         <div class="px-5 py-4 border-b border-neutral-200">
             <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                <i class="fas fa-chart-bar text-primary-500 mr-2"></i>
+                <x-lucide-bar-chart-3 class="w-4 h-4 text-primary-500 mr-2" />
                 Task Completion Trend (Last 30 Days)
             </h3>
         </div>
@@ -180,7 +180,7 @@
         <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-trophy text-primary-500 mr-2"></i>
+                    <x-lucide-trophy class="w-4 h-4 text-primary-500 mr-2" />
                     Top Clients by Task Count
                 </h3>
             </div>
@@ -205,7 +205,7 @@
                     </div>
                     @empty
                     <div class="text-center py-8 text-neutral-400">
-                        <i class="fas fa-users text-3xl mb-2"></i>
+                        <x-lucide-users class="w-8 h-8 mx-auto mb-2" />
                         <p class="text-sm">No client data available</p>
                     </div>
                     @endforelse
@@ -217,7 +217,7 @@
         <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-user-check text-primary-500 mr-2"></i>
+                    <x-lucide-user-check class="w-4 h-4 text-primary-500 mr-2" />
                     Adiutor Performance
                 </h3>
             </div>
@@ -251,7 +251,7 @@
                     </div>
                     @empty
                     <div class="text-center py-8 text-neutral-400">
-                        <i class="fas fa-user-tie text-3xl mb-2"></i>
+                        <x-lucide-briefcase-business class="w-8 h-8 mx-auto mb-2" />
                         <p class="text-sm">No adiutor data available</p>
                     </div>
                     @endforelse

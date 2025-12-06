@@ -3,7 +3,7 @@
 @section('title', 'My Earnings')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-6 lg:px-8 py-8">
     <!-- Breadcrumb Navigation -->
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
@@ -48,7 +48,7 @@
                 <div>
                     <p class="text-sm font-medium text-neutral-500">Total Earnings</p>
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($totalEarnings, 2) }}</p>
-                    <p class="text-sm text-neutral-400 mt-2">{{ number_format($totalHours, 1) }} hours</p>
+                    <p class="text-sm text-neutral-400 mt-2">{{ number_format($totalHours, 1) }} hours tracked</p>
                 </div>
                 <div class="p-3 bg-neutral-50 rounded-xl">
                     <x-lucide-coins class="w-5 h-5 text-neutral-400" />
@@ -56,11 +56,11 @@
             </div>
         </div>
 
-        <!-- Approved (Available) -->
+        <!-- Withdrawable (Available) -->
         <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm font-medium text-neutral-500">Approved</p>
+                    <p class="text-sm font-medium text-neutral-500">Withdrawable</p>
                     <p class="text-2xl font-semibold text-success-600 mt-1">₱{{ number_format($approvedEarnings, 2) }}</p>
                     <p class="text-sm text-neutral-400 mt-2">Available for payout</p>
                 </div>
@@ -84,13 +84,13 @@
             </div>
         </div>
 
-        <!-- Pending Approval -->
+        <!-- Pending -->
         <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-sm font-medium text-neutral-500">Pending</p>
                     <p class="text-2xl font-semibold text-warning-600 mt-1">₱{{ number_format($pendingApproval, 2) }}</p>
-                    <p class="text-sm text-neutral-400 mt-2">Awaiting approval</p>
+                    <p class="text-sm text-neutral-400 mt-2">Awaiting approval/completion</p>
                 </div>
                 <div class="p-3 bg-warning-50 rounded-xl">
                     <x-lucide-clock class="w-5 h-5 text-warning-500" />
@@ -99,11 +99,174 @@
         </div>
     </div>
 
-    <!-- Earnings by Project -->
+    <!-- Earnings Breakdown by Type -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Hourly Earnings -->
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-blue-50 rounded-lg">
+                    <x-lucide-clock class="w-5 h-5 text-blue-500" />
+                </div>
+                <h3 class="text-lg font-semibold text-neutral-800">Time Tracking</h3>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Total</span>
+                    <span class="text-sm font-medium text-neutral-800">₱{{ number_format($hourlyTotalEarnings, 2) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Withdrawable</span>
+                    <span class="text-sm font-medium text-success-600">₱{{ number_format($hourlyApprovedEarnings, 2) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Paid</span>
+                    <span class="text-sm font-medium text-primary-600">₱{{ number_format($hourlyPaidEarnings, 2) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Pending</span>
+                    <span class="text-sm font-medium text-warning-600">₱{{ number_format($hourlyPendingApproval, 2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fixed Rate Earnings -->
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-purple-50 rounded-lg">
+                    <x-lucide-briefcase class="w-5 h-5 text-purple-500" />
+                </div>
+                <h3 class="text-lg font-semibold text-neutral-800">Fixed Rate Projects</h3>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Total</span>
+                    <span class="text-sm font-medium text-neutral-800">₱{{ number_format($fixedRateTotalEarnings, 2) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Withdrawable</span>
+                    <span class="text-sm font-medium text-success-600">₱{{ number_format($fixedRateWithdrawableEarnings, 2) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Paid</span>
+                    <span class="text-sm font-medium text-primary-600">₱{{ number_format($fixedRatePaidEarnings, 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-neutral-500">Pending</span>
+                    <div class="text-right">
+                        <span class="text-sm font-medium text-warning-600">₱{{ number_format($fixedRatePendingApproval + $fixedRateApprovedEarnings, 2) }}</span>
+                        @if($fixedRateApprovedEarnings > 0)
+                        <p class="text-xs text-neutral-400">₱{{ number_format($fixedRateApprovedEarnings, 2) }} approved, awaiting project completion</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Milestone Earnings -->
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-green-50 rounded-lg">
+                    <x-lucide-flag class="w-5 h-5 text-green-500" />
+                </div>
+                <h3 class="text-lg font-semibold text-neutral-800">Milestone Payments</h3>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Total</span>
+                    <span class="text-sm font-medium text-neutral-800">₱{{ number_format($milestoneTotalEarnings, 2) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Withdrawable</span>
+                    <span class="text-sm font-medium text-success-600">₱{{ number_format($milestoneWithdrawableEarnings, 2) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Paid</span>
+                    <span class="text-sm font-medium text-primary-600">₱{{ number_format($milestonePaidEarnings, 2) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-neutral-500">Pending</span>
+                    <span class="text-sm font-medium text-warning-600">₱{{ number_format($milestonePendingEarnings, 2) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixed Rate & Milestone Earnings Details -->
+    @if(count($fixedRateEarningsDetails) > 0 || count($milestoneEarningsDetails) > 0)
+    <x-ui.card class="mb-6">
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold text-neutral-800">Project & Milestone Earnings</h2>
+            <p class="text-sm text-neutral-500 mt-1">Fixed rate projects and milestone-based earnings</p>
+        </div>
+        <div class="space-y-3">
+            @foreach($fixedRateEarningsDetails as $earning)
+            <div class="flex items-center justify-between p-4 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <x-lucide-briefcase class="w-4 h-4 text-purple-500" />
+                        <h3 class="font-medium text-neutral-800">{{ $earning['project']->title ?? 'Unknown Project' }}</h3>
+                        <x-ui.badge variant="secondary" size="sm">Fixed Rate</x-ui.badge>
+                    </div>
+                    <p class="text-sm text-neutral-500 mt-1">
+                        @if($earning['status'] === 'paid')
+                            Paid on {{ $earning['assignment']->fixed_rate_approved_at?->format('M d, Y') ?? 'N/A' }}
+                        @elseif($earning['status'] === 'withdrawable')
+                            Project completed - Ready to withdraw
+                        @elseif($earning['status'] === 'approved')
+                            Approved - Awaiting project completion
+                        @else
+                            Pending approval
+                        @endif
+                    </p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xl font-semibold text-neutral-800">₱{{ number_format($earning['amount'], 2) }}</p>
+                    @if($earning['status'] === 'paid')
+                        <x-ui.badge variant="primary" size="sm">Paid</x-ui.badge>
+                    @elseif($earning['status'] === 'withdrawable')
+                        <x-ui.badge variant="success" size="sm">Withdrawable</x-ui.badge>
+                    @elseif($earning['status'] === 'approved')
+                        <x-ui.badge variant="info" size="sm">Approved</x-ui.badge>
+                    @else
+                        <x-ui.badge variant="warning" size="sm">Pending</x-ui.badge>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+
+            @foreach($milestoneEarningsDetails as $earning)
+            <div class="flex items-center justify-between p-4 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <x-lucide-flag class="w-4 h-4 text-green-500" />
+                        <h3 class="font-medium text-neutral-800">{{ $earning['milestone']->phase_name }}</h3>
+                        <x-ui.badge variant="secondary" size="sm">Milestone</x-ui.badge>
+                    </div>
+                    <p class="text-sm text-neutral-500 mt-1">
+                        {{ $earning['project']->title ?? 'Unknown Project' }} &bull; 
+                        {{ $earning['tasks_count'] }}/{{ $earning['total_tasks'] }} tasks assigned
+                    </p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xl font-semibold text-neutral-800">₱{{ number_format($earning['amount'], 2) }}</p>
+                    @if($earning['status'] === 'withdrawable')
+                        <x-ui.badge variant="success" size="sm">Withdrawable</x-ui.badge>
+                    @else
+                        <x-ui.badge variant="warning" size="sm">Pending Payment</x-ui.badge>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </x-ui.card>
+    @endif
+
+    <!-- Earnings by Project (Time Tracking) -->
     @if($earningsByProject->isNotEmpty())
     <x-ui.card class="mb-6">
         <div class="mb-4">
-            <h2 class="text-lg font-semibold text-neutral-800">Earnings by Project</h2>
+            <h2 class="text-lg font-semibold text-neutral-800">Time Tracking Earnings by Project</h2>
+            <p class="text-sm text-neutral-500 mt-1">Hourly work tracked across your projects</p>
         </div>
         <div class="space-y-3">
             @foreach($earningsByProject as $earning)
@@ -121,11 +284,14 @@
     </x-ui.card>
     @endif
 
-    <!-- Filters and Earnings -->
+    <!-- Filters and Time Tracking Earnings -->
     <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-neutral-100">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <h2 class="text-lg font-semibold text-neutral-800">Earnings</h2>
+                <div>
+                    <h2 class="text-lg font-semibold text-neutral-800">Time Tracking History</h2>
+                    <p class="text-sm text-neutral-500">Detailed log of your hourly work</p>
+                </div>
                 
                 <!-- Filters -->
                 <form method="GET" action="{{ route('adiutor.earnings.index') }}" class="flex flex-wrap items-center gap-3">
@@ -162,7 +328,7 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-neutral-100">
-                    @forelse($timeEntries as $entry)
+                    @forelse($timeEntriesPaginated as $entry)
                     <tr class="hover:bg-neutral-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
                             {{ $entry->start_time->format('M d, Y') }}
@@ -226,9 +392,9 @@
         </div>
 
         <!-- Pagination -->
-        @if($timeEntries->hasPages())
+        @if($timeEntriesPaginated->hasPages())
         <div class="px-6 py-4 border-t border-neutral-100">
-            {{ $timeEntries->links() }}
+            {{ $timeEntriesPaginated->links() }}
         </div>
         @endif
     </div>

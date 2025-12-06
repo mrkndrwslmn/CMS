@@ -7,7 +7,7 @@
     <div style="background: #3B82F6; padding: 40px 30px; text-align: center;">
         <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: white; letter-spacing: -0.5px;">
             Budget Change 
-            @if($request->status === 'approved')
+            @if($budgetRequest->status === 'approved')
             Approved
             @else
             Reviewed
@@ -27,15 +27,15 @@
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
                         <td colspan="2" style="padding: 0 0 16px 0; border-bottom: 1px solid #E5E7EB;">
-                            <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Project</p>
-                            <p style="margin: 0; font-size: 15px; color: #1F2937; font-weight: 600;">{{ $request->project->title ?? $request->project->serviceRequest->project_name }}</p>
+                            <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Task</p>
+                            <p style="margin: 0; font-size: 15px; color: #1F2937; font-weight: 600;">{{ $budgetRequest->task->taskTitle ?? 'N/A' }}</p>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2" style="padding: 16px 0; border-bottom: 1px solid #E5E7EB;">
                             <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Decision</p>
                             <p style="margin: 0; font-size: 15px; color: #1F2937; font-weight: 600;">
-                                @if($request->status === 'approved')
+                                @if($budgetRequest->status === 'approved')
                                 Approved
                                 @else
                                 Not Approved
@@ -45,17 +45,17 @@
                     </tr>
                     <tr>
                         <td colspan="2" style="padding: 16px 0; border-bottom: 1px solid #E5E7EB;">
-                            <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">{{ $request->status === 'approved' ? 'New Budget' : 'Current Budget' }}</p>
-                            <p style="margin: 0; font-size: 14px; color: #1F2937; font-weight: 500;">₱{{ number_format($request->status === 'approved' ? $request->requestedBudget : $request->currentBudget, 2) }}</p>
+                            <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">{{ $budgetRequest->status === 'approved' ? 'New Budget' : 'Current Budget' }}</p>
+                            <p style="margin: 0; font-size: 14px; color: #1F2937; font-weight: 500;">₱{{ number_format($budgetRequest->status === 'approved' ? $budgetRequest->requested_budget : $budgetRequest->current_budget, 2) }}</p>
                         </td>
                     </tr>
-                    @if($request->status === 'approved')
+                    @if($budgetRequest->status === 'approved')
                     <tr>
                         <td colspan="2" style="padding: 16px 0; border-bottom: 1px solid #E5E7EB;">
                             <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Change Amount</p>
                             <p style="margin: 0; font-size: 14px; font-weight: 600;">
                                 @php
-                                    $changeAmount = $request->requestedBudget - $request->currentBudget;
+                                    $changeAmount = $budgetRequest->requested_budget - $budgetRequest->current_budget;
                                     $isIncrease = $changeAmount > 0;
                                 @endphp
                                 <span style="color: {{ $isIncrease ? '#DC2626' : '#059669' }};">
@@ -68,23 +68,23 @@
                     <tr>
                         <td colspan="2" style="padding: 16px 0; border-bottom: 1px solid #E5E7EB;">
                             <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Reviewed By</p>
-                            <p style="margin: 0; font-size: 14px; color: #1F2937; font-weight: 500;">{{ $reviewedBy->name }}</p>
+                            <p style="margin: 0; font-size: 14px; color: #1F2937; font-weight: 500;">{{ $reviewedBy->fullName ?? 'Admin' }}</p>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2" style="padding: 16px 0 0 0;">
                             <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Decision Date</p>
-                            <p style="margin: 0; font-size: 14px; color: #1F2937; font-weight: 500;">{{ $request->updated_at->format('M d, Y') }}</p>
+                            <p style="margin: 0; font-size: 14px; color: #1F2937; font-weight: 500;">{{ $budgetRequest->reviewed_at ? $budgetRequest->reviewed_at->format('M d, Y') : $budgetRequest->updated_at->format('M d, Y') }}</p>
                         </td>
                     </tr>
                 </table>
             </div>
             
-            @if($request->review_notes)
+            @if($budgetRequest->review_notes)
             <!-- Review Notes -->
             <div style="margin-top: 16px; background: #EFF6FF; border-left: 3px solid #3B82F6; padding: 16px 20px;">
                 <p style="margin: 0; font-size: 14px; color: #4B5563; line-height: 1.7;">
-                    <strong style="color: #1F2937;">Notes:</strong> {{ $request->review_notes }}
+                    <strong style="color: #1F2937;">Notes:</strong> {{ $budgetRequest->review_notes }}
                 </p>
             </div>
             @endif
@@ -92,11 +92,7 @@
         
         <!-- CTA Button -->
         <div style="text-align: center; margin: 0 0 32px 0;">
-            @if($request->status === 'approved')
-            <a href="{{ route('client.billing') }}" style="display: inline-block; background: #3B82F6; color: white; padding: 14px 32px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 0;">View Updated Billing</a>
-            @else
-            <a href="{{ route('client.contact') }}" style="display: inline-block; background: #3B82F6; color: white; padding: 14px 32px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 0;">Contact Our Team</a>
-            @endif
+            <a href="{{ route('adiutor.tasks.show', $budgetRequest->task->taskID) }}" style="display: inline-block; background: #3B82F6; color: white; padding: 14px 32px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 0;">View Task</a>
         </div>
         
         <!-- Next Steps Section -->
@@ -104,14 +100,14 @@
             <p style="margin: 0 0 20px 0; font-size: 13px; font-weight: 600; color: #1F2937; text-transform: uppercase; letter-spacing: 0.5px;">Next Steps</p>
             
             <table style="width: 100%; border-collapse: collapse;">
-                @if($request->status === 'approved')
+                @if($budgetRequest->status === 'approved')
                 <tr>
                     <td style="width: 36px; padding: 0 0 20px 0; vertical-align: top;">
                         <span style="display: inline-block; width: 28px; height: 28px; background: #DBEAFE; color: #3B82F6; text-align: center; line-height: 28px; font-size: 13px; font-weight: 600; border: 1px solid #BFDBFE; border-radius: 50%;">1</span>
                     </td>
                     <td style="padding: 0 0 20px 12px; vertical-align: top;">
-                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Contract Update</p>
-                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">We'll update your project contract to reflect the new budget</p>
+                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Budget Updated</p>
+                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">The task budget has been updated to reflect the new amount</p>
                     </td>
                 </tr>
                 <tr>
@@ -119,8 +115,8 @@
                         <span style="display: inline-block; width: 28px; height: 28px; background: #DBEAFE; color: #3B82F6; text-align: center; line-height: 28px; font-size: 13px; font-weight: 600; border: 1px solid #BFDBFE; border-radius: 50%;">2</span>
                     </td>
                     <td style="padding: 0 0 20px 12px; vertical-align: top;">
-                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Billing Adjustment</p>
-                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">The change will be reflected in your next invoice</p>
+                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Continue Working</p>
+                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">You can now proceed with the task using the approved budget</p>
                     </td>
                 </tr>
                 <tr>
@@ -128,8 +124,8 @@
                         <span style="display: inline-block; width: 28px; height: 28px; background: #DBEAFE; color: #3B82F6; text-align: center; line-height: 28px; font-size: 13px; font-weight: 600; border: 1px solid #BFDBFE; border-radius: 50%;">3</span>
                     </td>
                     <td style="padding: 0 0 0 12px; vertical-align: top;">
-                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Project Enhancement</p>
-                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">We can proceed with the additional features and improvements</p>
+                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Track Progress</p>
+                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">Keep track of your progress and expenses within the new budget</p>
                     </td>
                 </tr>
                 @else
@@ -138,8 +134,8 @@
                         <span style="display: inline-block; width: 28px; height: 28px; background: #DBEAFE; color: #3B82F6; text-align: center; line-height: 28px; font-size: 13px; font-weight: 600; border: 1px solid #BFDBFE; border-radius: 50%;">1</span>
                     </td>
                     <td style="padding: 0 0 20px 12px; vertical-align: top;">
-                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Discuss Alternatives</p>
-                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">Let's explore options that fit within your approved budget</p>
+                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Review Feedback</p>
+                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">Check the rejection reason for more details</p>
                     </td>
                 </tr>
                 <tr>
@@ -147,8 +143,8 @@
                         <span style="display: inline-block; width: 28px; height: 28px; background: #DBEAFE; color: #3B82F6; text-align: center; line-height: 28px; font-size: 13px; font-weight: 600; border: 1px solid #BFDBFE; border-radius: 50%;">2</span>
                     </td>
                     <td style="padding: 0 0 20px 12px; vertical-align: top;">
-                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Revise Scope</p>
-                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">Adjust the project scope to match your current budget</p>
+                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Revise Request</p>
+                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">You may submit a new request with adjusted details</p>
                     </td>
                 </tr>
                 <tr>
@@ -156,8 +152,8 @@
                         <span style="display: inline-block; width: 28px; height: 28px; background: #DBEAFE; color: #3B82F6; text-align: center; line-height: 28px; font-size: 13px; font-weight: 600; border: 1px solid #BFDBFE; border-radius: 50%;">3</span>
                     </td>
                     <td style="padding: 0 0 0 12px; vertical-align: top;">
-                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Contact Support</p>
-                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">Reach out to discuss phased approaches or other solutions</p>
+                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1F2937;">Contact Admin</p>
+                        <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.6;">Reach out to discuss alternatives if needed</p>
                     </td>
                 </tr>
                 @endif

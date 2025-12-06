@@ -557,6 +557,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const charCount = document.getElementById('char-count');
     const messagesContainer = document.getElementById('messages-container');
     const messagingService = window.messagingService;
+    let isInitialLoad = true;
+    let lastMessageId = null;
 
     // Check if all required elements exist
     if (!messageForm || !messageTextarea || !attachmentsInput || !selectedFilesDiv || !charCount || !messagesContainer) {
@@ -577,26 +579,61 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data.success) {
-                renderMessages(data.messages.data);
+                const messages = data.messages.data;
+                
+                if (isInitialLoad) {
+                    // First load: render all messages
+                    renderMessages(messages);
+                    isInitialLoad = false;
+                    if (messages.length > 0) {
+                        lastMessageId = messages[messages.length - 1].id;
+                    }
+                } else {
+                    // Subsequent loads: only append new messages
+                    appendNewMessages(messages);
+                }
+                
                 if (window.messagingService) {
                     await window.messagingService.updateUnreadCount();
                 }
             }
         } catch (error) {
             console.error('Error loading messages:', error);
-            messagesContainer.innerHTML = `
-                <div class="rounded-xl bg-error-50 border border-error-200 p-4">
-                    <div class="flex items-start space-x-3">
-                        <svg class="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <div>
-                            <h3 class="text-sm font-medium text-error-800">Failed to load messages</h3>
-                            <p class="text-sm text-error-600 mt-1">Please refresh the page to try again.</p>
+            if (isInitialLoad) {
+                messagesContainer.innerHTML = `
+                    <div class="rounded-xl bg-error-50 border border-error-200 p-4">
+                        <div class="flex items-start space-x-3">
+                            <svg class="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <h3 class="text-sm font-medium text-error-800">Failed to load messages</h3>
+                                <p class="text-sm text-error-600 mt-1">Please refresh the page to try again.</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
+        }
+    }
+
+    // Append only new messages (for polling updates)
+    function appendNewMessages(messages) {
+        if (!messages || messages.length === 0) return;
+        
+        // Get existing message IDs
+        const existingMessages = messagesContainer.querySelectorAll('[data-message-id]');
+        const existingIds = new Set(Array.from(existingMessages).map(el => parseInt(el.dataset.messageId)));
+        
+        // Filter to only new messages
+        const newMessages = messages.filter(msg => !existingIds.has(msg.id));
+        
+        if (newMessages.length > 0) {
+            newMessages.forEach(msg => {
+                messagesContainer.insertAdjacentHTML('beforeend', createMessageElement(msg));
+            });
+            lastMessageId = newMessages[newMessages.length - 1].id;
+            scrollToBottom();
         }
     }
 

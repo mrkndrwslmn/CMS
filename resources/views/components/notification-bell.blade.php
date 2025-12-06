@@ -48,7 +48,7 @@
             <template x-if="!isLoading && notifications.length > 0">
                 <div>
                     <template x-for="notification in notifications" :key="notification.id">
-                        <div @click="markAsRead(notification.id)"
+                        <div @click="handleNotificationClick(notification)"
                              :class="notification.read_at ? 'bg-white' : 'bg-primary-50'"
                              class="px-4 py-3 border-b border-neutral-100 hover:bg-neutral-50 cursor-pointer transition-colors">
                             <div class="flex items-start gap-3">
@@ -93,47 +93,124 @@
             </a>
         </div>
     </div>
-</div><script>
+</div>@once
+<script>
+// Robust singleton notification polling with cross-tab coordination
+(function() {
+    // Prevent multiple initialization in the same page
+    if (window.notificationBellInitialized) return;
+    window.notificationBellInitialized = true;
+    
+    // In development, use longer intervals to reduce server load
+    const IS_DEV = {{ app()->environment('local') ? 'true' : 'false' }};
+    const POLL_INTERVAL = IS_DEV ? 300000 : 60000; // 5 min in dev, 60 sec in prod
+    const DEBOUNCE_TIME = IS_DEV ? 120000 : 30000; // 2 min debounce in dev
+    const STORAGE_KEY = 'notification_last_fetch';
+    
+    // Shared state for all notification bell instances
+    window.notificationState = {
+        notifications: [],
+        unreadCount: 0,
+        lastFetch: 0,
+        intervalId: null
+    };
+    
+    // Check if we should fetch (cross-tab debounce using localStorage)
+    function shouldFetch() {
+        try {
+            const lastFetch = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+            const now = Date.now();
+            return (now - lastFetch) >= DEBOUNCE_TIME;
+        } catch (e) {
+            return true; // If localStorage fails, allow fetch
+        }
+    }
+    
+    // Mark that we just fetched (for cross-tab coordination)
+    function markFetched() {
+        try {
+            localStorage.setItem(STORAGE_KEY, Date.now().toString());
+        } catch (e) {
+            // Ignore localStorage errors
+        }
+    }
+    
+    // Singleton fetch function with cross-tab debouncing
+    window.fetchNotificationsGlobal = async function(force = false) {
+        // Skip if another tab fetched recently (unless forced)
+        if (!force && !shouldFetch()) {
+            return window.notificationState;
+        }
+        
+        try {
+            markFetched();
+            window.notificationState.lastFetch = Date.now();
+            
+            const response = await fetch('{{ route("notifications.fetch") }}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) throw new Error('Fetch failed');
+            
+            const data = await response.json();
+            window.notificationState.notifications = data.notifications || [];
+            window.notificationState.unreadCount = data.unreadCount || 0;
+            
+            // Dispatch event for all Alpine components to update
+            window.dispatchEvent(new CustomEvent('notifications-updated', { 
+                detail: window.notificationState 
+            }));
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
+        return window.notificationState;
+    };
+    
+    // Clear any existing interval (safety measure)
+    if (window.notificationState.intervalId) {
+        clearInterval(window.notificationState.intervalId);
+    }
+    
+    // Initial fetch (forced)
+    window.fetchNotificationsGlobal(true);
+    
+    // Start single global polling interval (60 seconds)
+    window.notificationState.intervalId = setInterval(() => {
+        window.fetchNotificationsGlobal(false);
+    }, POLL_INTERVAL);
+})();
+
 function notificationBell() {
     return {
         isOpen: false,
         isLoading: false,
-        notifications: [],
-        unreadCount: 0,
-        pollingInterval: null,
-        initialLoadDone: false,
+        notifications: window.notificationState?.notifications || [],
+        unreadCount: window.notificationState?.unreadCount || 0,
         
         init() {
-            // Only start polling if no other instance is running
-            if (!window.notificationPollingActive) {
-                window.notificationPollingActive = true;
-                this.fetchNotifications(true); // Initial load with loading state
-                // Poll for new notifications every 60 seconds (reduced from 30s)
-                this.pollingInterval = setInterval(() => this.fetchNotifications(false), 60000);
+            // Listen for global updates
+            window.addEventListener('notifications-updated', (e) => {
+                this.notifications = e.detail.notifications;
+                this.unreadCount = e.detail.unreadCount;
+                this.isLoading = false;
+            });
+            
+            // Sync with current state
+            if (window.notificationState) {
+                this.notifications = window.notificationState.notifications;
+                this.unreadCount = window.notificationState.unreadCount;
             }
         },
         
         async fetchNotifications(showLoading = false) {
-            // Only show loading spinner on initial load or when no notifications cached
-            if (showLoading || !this.initialLoadDone) {
-                this.isLoading = true;
-            }
-            try {
-                const response = await fetch('{{ route("notifications.fetch") }}', {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                });
-                const data = await response.json();
-                this.notifications = data.notifications || [];
-                this.unreadCount = data.unreadCount || 0;
-                this.initialLoadDone = true;
-            } catch (error) {
-                console.error('Error fetching notifications:', error);
-            } finally {
-                this.isLoading = false;
-            }
+            if (showLoading) this.isLoading = true;
+            const state = await window.fetchNotificationsGlobal();
+            this.notifications = state.notifications;
+            this.unreadCount = state.unreadCount;
+            this.isLoading = false;
         },
         
         toggleDropdown() {
@@ -168,6 +245,20 @@ function notificationBell() {
                 }
             } catch (error) {
                 console.error('Error marking notification as read:', error);
+            }
+        },
+        
+        async handleNotificationClick(notification) {
+            // Mark as read first
+            await this.markAsRead(notification.id);
+            
+            // Close the dropdown
+            this.closeDropdown();
+            
+            // Redirect to action URL if available
+            const actionUrl = notification.data?.action_url;
+            if (actionUrl) {
+                window.location.href = actionUrl;
             }
         },
         
@@ -272,3 +363,4 @@ function notificationBell() {
     }
 }
 </script>
+@endonce

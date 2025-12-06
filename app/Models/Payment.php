@@ -23,11 +23,13 @@ class Payment extends Model
         'confirmed_at',
         'confirmed_by',
         'payment_details',
+        'notification_sent_at',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'confirmed_at' => 'datetime',
+        'notification_sent_at' => 'datetime',
         'payment_details' => 'array',
     ];
 

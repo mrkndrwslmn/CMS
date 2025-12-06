@@ -12,14 +12,22 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Breadcrumb -->
         <x-ui.breadcrumb :items="[
+            ['label' => 'Dashboard', 'url' => route('client.dashboard'), 'icon' => 'home'],
             ['label' => 'Service Requests', 'url' => route('client.requests'), 'icon' => 'file-text'],
             ['label' => 'Create Request', 'icon' => 'plus']
         ]" class="mb-6" />
 
         <!-- Header -->
-        <div class="text-center mb-12">
-            <h1 class="text-2xl font-semibold text-neutral-800 mb-4">Get Started with Your Project</h1>
-            <p class="text-neutral-600">Tell us about your needs and we'll match you with the perfect Adiutor</p>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 mb-8">
+            <div class="flex items-center gap-4">
+                <div class="p-4 bg-neutral-50 rounded-xl">
+                    <x-lucide-file-plus class="w-8 h-8 text-neutral-400" />
+                </div>
+                <div>
+                    <h1 class="text-2xl font-semibold text-neutral-800">Get Started with Your Project</h1>
+                    <p class="text-neutral-500 mt-1">Tell us about your needs and we'll match you with the perfect Adiutor</p>
+                </div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">

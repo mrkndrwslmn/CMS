@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class RequestManagementController extends Controller
 {
@@ -140,16 +141,15 @@ class RequestManagementController extends Controller
             'task_priority' => 'nullable|required_if:create_task,on|in:low,medium,high,urgent',
             'task_due_date' => 'nullable|date',
             'adiutor_id' => 'nullable|exists:users,id',
-            // Coupon fields
-            'attach_coupon' => 'nullable|boolean',
-            'coupon_id' => 'nullable|exists:coupons,id',
-            'create_new_coupon' => 'nullable|boolean',
-            'new_coupon_code' => 'nullable|required_if:create_new_coupon,on|string|max:50',
-            'new_coupon_name' => 'nullable|required_if:create_new_coupon,on|string|max:255',
+            // Coupon fields - matching view field names
+            'assign_coupon' => 'nullable',
+            'coupon_type' => 'nullable|in:existing,new',
+            'coupon_code' => 'nullable|string', // For existing coupon selection
+            'new_coupon_discount_type' => 'nullable|in:percentage,fixed',
+            'new_coupon_discount_value' => 'nullable|numeric|min:0',
             'new_coupon_description' => 'nullable|string',
-            'new_coupon_discount_type' => 'nullable|required_if:create_new_coupon,on|in:percentage,fixed_amount',
-            'new_coupon_discount_value' => 'nullable|required_if:create_new_coupon,on|numeric|min:0',
             'new_coupon_valid_until' => 'nullable|date',
+            'new_coupon_auto_apply' => 'nullable',
         ]);
 
         // Validate milestone percentages total 100% if milestone payment
@@ -198,23 +198,27 @@ class RequestManagementController extends Controller
             // Update request
             $serviceRequest->update($updateData);
             
-            // Handle coupon attachment
-            if ($request->has('attach_coupon') && $request->attach_coupon) {
+            // Handle coupon attachment - check for 'assign_coupon' from view
+            if ($request->has('assign_coupon') && $request->assign_coupon) {
                 $coupon = null;
+                $couponType = $request->input('coupon_type', 'existing');
                 
                 // Option 1: Create new request-specific coupon
-                if ($request->has('create_new_coupon') && $request->create_new_coupon) {
+                if ($couponType === 'new') {
+                    // Generate unique code if not provided
+                    $couponCode = strtoupper('SR' . $serviceRequest->id . '-' . Str::random(6));
+                    
                     $couponData = [
-                        'code' => $request->new_coupon_code,
-                        'name' => $request->new_coupon_name,
-                        'description' => $request->new_coupon_description,
-                        'discount_type' => $request->new_coupon_discount_type,
-                        'discount_value' => $request->new_coupon_discount_value,
-                        'max_discount_amount' => $request->new_coupon_max_discount ?? null,
+                        'code' => $couponCode,
+                        'name' => 'Approval Discount - Request #' . $serviceRequest->id,
+                        'description' => $request->new_coupon_description ?? 'Special discount for service request approval',
+                        'discount_type' => $request->new_coupon_discount_type ?? 'percentage',
+                        'discount_value' => $request->new_coupon_discount_value ?? 10,
+                        'max_discount_amount' => null,
                         'min_purchase_amount' => 0,
                         'valid_until' => $request->new_coupon_valid_until ?? now()->addDays(30),
-                        'stackable_with_loyalty_tier' => $request->new_coupon_stackable_tier ?? false,
-                        'stackable_with_points' => $request->new_coupon_stackable_points ?? true,
+                        'stackable_with_loyalty_tier' => false,
+                        'stackable_with_points' => true,
                     ];
                     
                     $coupon = $this->couponService->createRequestSpecificCoupon(
@@ -222,20 +226,49 @@ class RequestManagementController extends Controller
                         $serviceRequest,
                         Auth::user()
                     );
+                    
+                    Log::info('Created new coupon for service request', [
+                        'coupon_code' => $couponCode,
+                        'service_request_id' => $serviceRequest->id,
+                    ]);
                 }
-                // Option 2: Use existing coupon
-                elseif ($request->filled('coupon_id')) {
-                    $coupon = Coupon::find($request->coupon_id);
+                // Option 2: Use existing coupon (by code from dropdown)
+                elseif ($couponType === 'existing' && $request->filled('coupon_code')) {
+                    $coupon = Coupon::where('code', strtoupper($request->coupon_code))->first();
+                    
+                    if (!$coupon) {
+                        Log::warning('Existing coupon not found', ['coupon_code' => $request->coupon_code]);
+                    }
                 }
                 
                 // Apply the coupon if found
                 if ($coupon) {
-                    $this->couponService->autoAssignCouponToRequest($serviceRequest, $coupon);
-                    $couponApplied = $coupon; // Store for email notification after commit
-                    Log::info('Coupon applied to service request during approval', [
-                        'coupon_id' => $coupon->id,
-                        'service_request_id' => $serviceRequest->id,
-                    ]);
+                    // Check if auto-apply is enabled (default true for new coupons)
+                    $autoApply = $couponType === 'new' 
+                        ? ($request->has('new_coupon_auto_apply') ? true : false)
+                        : true;
+                    
+                    if ($autoApply) {
+                        $this->couponService->autoAssignCouponToRequest($serviceRequest, $coupon);
+                        $couponApplied = $coupon; // Store for email notification after commit
+                        Log::info('Coupon applied to service request during approval', [
+                            'coupon_id' => $coupon->id,
+                            'coupon_code' => $coupon->code,
+                            'service_request_id' => $serviceRequest->id,
+                            'auto_apply' => $autoApply,
+                        ]);
+                    } else {
+                        // Just assign coupon to request without applying discount yet
+                        $serviceRequest->update([
+                            'applied_coupon_id' => $coupon->id,
+                            'coupon_auto_applied' => false,
+                        ]);
+                        $couponApplied = $coupon;
+                        Log::info('Coupon assigned (not auto-applied) to service request', [
+                            'coupon_id' => $coupon->id,
+                            'service_request_id' => $serviceRequest->id,
+                        ]);
+                    }
                 }
             }
             

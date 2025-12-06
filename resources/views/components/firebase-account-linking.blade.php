@@ -1,7 +1,7 @@
 @if(config('firebase.authentication.enabled', true))
 <div class="bg-white border border-neutral-200 rounded-lg p-6 shadow-sm">
-    <h3 class="text-lg font-semibold text-neutral-900 mb-4">
-        <i class="fas fa-link text-primary-600 mr-2"></i>
+    <h3 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center">
+        <x-lucide-link class="w-5 h-5 text-primary-600 mr-2" />
         Social Account Integration
     </h3>
     
@@ -37,7 +37,7 @@
                                 <path fill="#1DA1F2" d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                             </svg>
                         @else
-                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                            <x-lucide-check-circle class="w-6 h-6 text-green-600" />
                         @endif
                     </div>
                     <div class="ml-3">
@@ -53,8 +53,8 @@
             </div>
             
             <div class="pt-4 border-t border-neutral-200">
-                <p class="text-sm text-neutral-600 mb-4">
-                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                <p class="text-sm text-neutral-600 mb-4 flex items-center">
+                    <x-lucide-info class="w-4 h-4 text-blue-500 mr-2" />
                     You can still use your email and password to log in as a backup method.
                 </p>
             </div>
@@ -66,7 +66,7 @@
             <div class="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+                        <x-lucide-info class="w-6 h-6 text-blue-600" />
                     </div>
                     <div class="ml-3">
                         <h4 class="text-sm font-medium text-blue-800">Link Social Accounts</h4>
@@ -95,7 +95,7 @@
                             </svg>
                             <span class="text-sm font-medium">Connect Google Account</span>
                         </div>
-                        <i class="fas fa-arrow-right text-neutral-400"></i>
+                        <x-lucide-arrow-right class="w-4 h-4 text-neutral-400" />
                     </button>
                     @endif
                     
@@ -110,7 +110,7 @@
                             </svg>
                             <span class="text-sm font-medium">Connect Apple Account</span>
                         </div>
-                        <i class="fas fa-arrow-right text-neutral-400"></i>
+                        <x-lucide-arrow-right class="w-4 h-4 text-neutral-400" />
                     </button>
                     @endif
                     
@@ -125,7 +125,7 @@
                             </svg>
                             <span class="text-sm font-medium">Connect Twitter Account</span>
                         </div>
-                        <i class="fas fa-arrow-right text-neutral-400"></i>
+                        <x-lucide-arrow-right class="w-4 h-4 text-neutral-400" />
                     </button>
                     @endif
                 </div>
@@ -137,7 +137,7 @@
         <div class="p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
-                    <i class="fas fa-info-circle text-neutral-500 text-xl"></i>
+                    <x-lucide-info class="w-6 h-6 text-neutral-500" />
                 </div>
                 <div class="ml-3">
                     <h4 class="text-sm font-medium text-neutral-800">Social Account Integration</h4>

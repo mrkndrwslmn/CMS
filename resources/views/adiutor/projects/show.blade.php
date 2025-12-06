@@ -3,7 +3,7 @@
 @section('title', 'Project Details')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb Navigation -->
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
@@ -31,7 +31,10 @@
                         {{ ucfirst($project->assignment_status) }}
                     </span>
                 </div>
-                <p class="text-neutral-500">{{ $project->service_type }}</p>
+                <p class="text-neutral-500 mb-3">{{ $project->service_type }}</p>
+                
+                <!-- Related Links -->
+                <x-ui.related-links :project="$project" role="adiutor" />
             </div>
             
             @if($project->assignment_status === 'active')
@@ -288,6 +291,114 @@
                         <p class="text-neutral-500">No tasks assigned yet</p>
                     </div>
                 @endif
+            </x-ui.card>
+
+            <!-- Deliverables Section - Grouped by Task -->
+            <x-ui.card class="mb-6">
+                <div class="px-6 py-4 border-b border-neutral-100 flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                        <x-lucide-package-check class="w-5 h-5 text-success-500" />
+                        Deliverables
+                        @if($totalDeliverables > 0)
+                            <span class="ml-2 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
+                                {{ $totalDeliverables }}
+                            </span>
+                            @if($pendingDeliverables > 0)
+                                <span class="px-2 py-0.5 bg-warning-100 text-warning-700 text-xs font-medium rounded-full">
+                                    {{ $pendingDeliverables }} pending approval
+                                </span>
+                            @endif
+                        @endif
+                    </h2>
+                    <a href="{{ route('adiutor.documents') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+                        View All Documents
+                        <x-lucide-arrow-right class="w-4 h-4" />
+                    </a>
+                </div>
+                <div class="p-6">
+                    @if($tasksWithDeliverables->count() > 0 || $projectLevelDocuments->count() > 0)
+                        <div class="space-y-4">
+                            {{-- Project-level documents --}}
+                            @if($projectLevelDocuments->count() > 0)
+                                <div x-data="{ open: true }" class="border border-neutral-200 rounded-xl overflow-hidden">
+                                    <button @click="open = !open" class="w-full flex items-center justify-between p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                <x-lucide-folder class="w-5 h-5 text-primary-600" />
+                                            </div>
+                                            <div class="text-left">
+                                                <h3 class="font-semibold text-neutral-800">Project Files</h3>
+                                                <p class="text-sm text-neutral-500">{{ $projectLevelDocuments->count() }} file(s)</p>
+                                            </div>
+                                        </div>
+                                        <x-lucide-chevron-down class="w-5 h-5 text-neutral-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''" />
+                                    </button>
+                                    <div x-show="open" x-collapse class="border-t border-neutral-200">
+                                        <div class="p-4 space-y-2">
+                                            @foreach($projectLevelDocuments as $document)
+                                                @include('adiutor.projects.partials.deliverable-item', ['document' => $document])
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Task-grouped deliverables --}}
+                            @foreach($tasksWithDeliverables as $task)
+                                <div x-data="{ open: true }" class="border border-neutral-200 rounded-xl overflow-hidden">
+                                    <button @click="open = !open" class="w-full flex items-center justify-between p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                <x-lucide-clipboard-list class="w-5 h-5 text-primary-600" />
+                                            </div>
+                                            <div class="text-left">
+                                                <h3 class="font-semibold text-neutral-800">{{ $task->taskTitle }}</h3>
+                                                <p class="text-sm text-neutral-500">
+                                                    {{ $task->documents->count() }} deliverable(s)
+                                                    @php
+                                                        $taskPending = $task->documents->where('is_deliverable', true)->where('is_approved', false)->count();
+                                                    @endphp
+                                                    @if($taskPending > 0)
+                                                        <span class="text-warning-600">• {{ $taskPending }} pending</span>
+                                                    @endif
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            @php
+                                                $statusConfig = match($task->status) {
+                                                    'completed' => ['bg' => 'bg-success-100', 'text' => 'text-success-700'],
+                                                    'in_progress' => ['bg' => 'bg-primary-100', 'text' => 'text-primary-700'],
+                                                    'pending' => ['bg' => 'bg-warning-100', 'text' => 'text-warning-700'],
+                                                    default => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-600']
+                                                };
+                                            @endphp
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                                {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                            </span>
+                                            <x-lucide-chevron-down class="w-5 h-5 text-neutral-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''" />
+                                        </div>
+                                    </button>
+                                    <div x-show="open" x-collapse class="border-t border-neutral-200">
+                                        <div class="p-4 space-y-2">
+                                            @foreach($task->documents as $document)
+                                                @include('adiutor.projects.partials.deliverable-item', ['document' => $document])
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-8">
+                            <div class="bg-neutral-100 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
+                                <x-lucide-package-open class="w-8 h-8 text-neutral-400" />
+                            </div>
+                            <h3 class="text-neutral-500 text-base">No deliverables yet</h3>
+                            <p class="text-neutral-400 text-sm mt-1">Deliverables from tasks will appear here organized by task</p>
+                        </div>
+                    @endif
+                </div>
             </x-ui.card>
 
             <!-- Recent Activity -->

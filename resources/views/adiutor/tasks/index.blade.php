@@ -3,7 +3,7 @@
 @section('title', 'My Tasks')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb Navigation -->
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
@@ -254,14 +254,11 @@
                                     View Details
                                 </x-ui.button>
                                 @if($task->status !== 'completed')
-                                    <form method="POST" action="{{ route('adiutor.tasks.complete', $task->taskID) }}" class="inline" onsubmit="event.stopPropagation();">
-                                        @csrf
-                                        <x-ui.button type="submit" onclick="return window.Alerts.confirmForm(event, 'Complete Task', 'Mark this task as completed?')" 
-                                                variant="success" size="sm">
-                                            <x-lucide-check class="w-4 h-4 mr-1" />
-                                            Mark Complete
-                                        </x-ui.button>
-                                    </form>
+                                    <x-ui.button type="button" onclick="event.stopPropagation(); completeTask({{ $task->taskID }})" 
+                                            variant="success" size="sm">
+                                        <x-lucide-check class="w-4 h-4 mr-1" />
+                                        Mark Complete
+                                    </x-ui.button>
                                 @endif
                             </div>
                             
@@ -306,3 +303,68 @@
     @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+async function completeTask(taskId, confirmNoDeliverables = false) {
+    // First confirmation - "Are you sure you want to mark this task as completed?"
+    if (!confirmNoDeliverables) {
+        const confirmed = await window.Alerts.confirm({
+            title: 'Complete Task',
+            message: 'Mark this task as completed?',
+            confirmText: 'Yes, Complete',
+            cancelText: 'Cancel',
+            confirmVariant: 'success'
+        });
+        
+        if (!confirmed) return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        if (confirmNoDeliverables) {
+            formData.append('confirm_no_deliverables', '1');
+        }
+        
+        const response = await fetch(`/adiutor/tasks/${taskId}/complete`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        // Check if confirmation is required for no deliverables
+        if (data.requires_confirmation) {
+            const confirmNoDelivs = await window.Alerts.confirm({
+                title: 'Complete Without Deliverables?',
+                message: data.message,
+                confirmText: 'Yes, Complete Anyway',
+                cancelText: 'Cancel',
+                confirmVariant: 'warning'
+            });
+            
+            if (confirmNoDelivs) {
+                // Re-submit with confirmation
+                await completeTask(taskId, true);
+            }
+            return;
+        }
+        
+        if (data.success) {
+            window.Alerts?.success('Success', 'Task marked as completed!');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error(data.message || 'Failed to complete task');
+        }
+    } catch (error) {
+        console.error('Error completing task:', error);
+        window.Alerts?.error('Error', error.message || 'Failed to complete task. Please try again.');
+    }
+}
+</script>
+@endpush

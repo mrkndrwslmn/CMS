@@ -53,7 +53,7 @@
                 <h1 class="text-2xl font-semibold text-neutral-800 mb-3">{{ $project->title }}</h1>
                 
                 <!-- Meta Information -->
-                <div class="flex flex-wrap items-center gap-4 text-sm text-neutral-500">
+                <div class="flex flex-wrap items-center gap-4 text-sm text-neutral-500 mb-3">
                     <div class="flex items-center gap-2">
                         <x-lucide-clock class="w-4 h-4 text-neutral-400" />
                         <span>Created {{ \Carbon\Carbon::parse($project->created_at)->format('M j, Y') }}</span>
@@ -66,6 +66,9 @@
                         </div>
                     @endif
                 </div>
+                
+                <!-- Related Links -->
+                <x-ui.related-links :project="$project" role="client" />
             </div>
 
             <!-- Action Buttons -->
@@ -73,7 +76,7 @@
                 {{-- Message Admin Button for Active Projects --}}
                 @if(in_array($project->status, ['active', 'in_progress', 'review']))
                     <a href="{{ route('client.messages.show', $project->id) }}" 
-                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
+                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-colors">
                         <x-lucide-message-square class="w-5 h-5" />
                         Message Admin
                     </a>
@@ -82,7 +85,7 @@
                 {{-- Request Revision Button for Completed/Review Projects --}}
                 @if(in_array($project->status, ['completed', 'review']))
                     <button onclick="openRevisionModal()" 
-                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-neutral-200 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50 transition-colors">
+                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-neutral-100 text-neutral-700 font-medium rounded-xl hover:bg-neutral-50 transition-colors">
                         <x-lucide-refresh-cw class="w-5 h-5" />
                         Request Revision
                     </button>
@@ -90,13 +93,13 @@
                 
                 @if($feedback)
                     <a href="{{ route('client.feedback') }}" 
-                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-primary-200 text-primary-600 font-medium rounded-lg hover:bg-primary-50 transition-colors">
+                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-neutral-100 text-primary-600 font-medium rounded-xl hover:bg-neutral-50 transition-colors">
                         <x-lucide-check-circle class="w-5 h-5" />
                         Feedback Submitted
                     </a>
                 @elseif($project->status === 'completed')
                     <a href="{{ route('client.feedback.create', $project->id) }}" 
-                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
+                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-colors">
                         <x-lucide-star class="w-5 h-5" />
                         Leave Feedback
                     </a>
@@ -110,22 +113,22 @@
         <div class="lg:col-span-2 space-y-6">
             <!-- Project Description -->
             <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
-                <h3 class="text-base font-medium text-neutral-800 mb-4 flex items-center">
-                    <x-lucide-file-text class="w-5 h-5 mr-2 text-primary-500" />
-                    Project Description
-                </h3>
-                <div class="text-neutral-600 leading-relaxed whitespace-pre-line">{{ $project->description }}</div>
+                <div class="flex items-center gap-2 mb-4">
+                    <x-lucide-file-text class="w-5 h-5 text-neutral-400" />
+                    <h3 class="text-lg font-medium text-neutral-700">Project Description</h3>
+                </div>
+                <div class="text-sm text-neutral-600 leading-relaxed whitespace-pre-line">{{ $project->description }}</div>
             </div>
 
             {{-- Service Requirements Section --}}
-            @if($project->serviceRequest && (!empty($project->serviceRequest->requested_features) || !empty($project->serviceRequest->requested_skills) || !empty($project->serviceRequest->template_features) || !empty($project->serviceRequest->template_skills)))
+            @if($serviceRequest && (!empty($serviceRequest->requested_features) || !empty($serviceRequest->requested_skills) || !empty($serviceRequest->template_features) || !empty($serviceRequest->template_skills)))
                 <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-base font-medium text-neutral-800 flex items-center">
-                            <x-lucide-layers class="w-5 h-5 mr-2 text-secondary-500" />
-                            Service Requirements
-                        </h3>
-                        @if($project->serviceRequest->has_customizations)
+                        <div class="flex items-center gap-2">
+                            <x-lucide-layers class="w-5 h-5 text-neutral-400" />
+                            <h3 class="text-lg font-medium text-neutral-700">Service Requirements</h3>
+                        </div>
+                        @if($serviceRequest->has_customizations)
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-50 text-primary-700">
                                 <x-lucide-edit-3 class="w-3 h-3 mr-1" />
                                 You Customized This
@@ -141,7 +144,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {{-- Features / What's Included --}}
                         @php
-                            $sr = $project->serviceRequest;
+                            $sr = $serviceRequest;
                             $displayFeatures = $sr->effective_features ?? [];
                         @endphp
                         @if(!empty($displayFeatures))
@@ -186,11 +189,11 @@
             <!-- Tasks -->
             @if($tasks && count($tasks) > 0)
                 <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
-                    <h3 class="text-base font-medium text-neutral-800 mb-4 flex items-center">
-                        <x-lucide-clipboard-list class="w-5 h-5 mr-2 text-primary-500" />
-                        Project Tasks
-                        <span class="ml-2 bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full text-xs font-medium">{{ count($tasks) }}</span>
-                    </h3>
+                    <div class="flex items-center gap-2 mb-4">
+                        <x-lucide-clipboard-list class="w-5 h-5 text-neutral-400" />
+                        <h3 class="text-lg font-medium text-neutral-700">Project Tasks</h3>
+                        <span class="bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded-full text-xs font-medium">{{ count($tasks) }}</span>
+                    </div>
                     <div class="space-y-4">
                         @foreach($tasks as $task)
                             <div class="border border-neutral-100 rounded-xl p-4 hover:border-primary-200 hover:bg-neutral-50/50 transition-colors">
@@ -255,11 +258,11 @@
             <!-- Team Members -->
             @if($assignments && count($assignments) > 0)
                 <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
-                    <h3 class="text-base font-medium text-neutral-800 mb-4 flex items-center">
-                        <x-lucide-users class="w-5 h-5 mr-2 text-primary-500" />
-                        Team Members
-                        <span class="ml-2 bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full text-xs font-medium">{{ count($assignments) }}</span>
-                    </h3>
+                    <div class="flex items-center gap-2 mb-4">
+                        <x-lucide-users class="w-5 h-5 text-neutral-400" />
+                        <h3 class="text-lg font-medium text-neutral-700">Team Members</h3>
+                        <span class="bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded-full text-xs font-medium">{{ count($assignments) }}</span>
+                    </div>
                     <div class="space-y-4">
                         @foreach($assignments as $assignment)
                             <div class="border border-neutral-100 rounded-xl p-4 hover:border-primary-200 hover:bg-neutral-50/50 transition-colors">
@@ -304,6 +307,51 @@
 
         <!-- Sidebar -->
         <div class="space-y-6">
+            <!-- Project Progress Card -->
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-neutral-100">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 {{ $projectProgress >= 100 ? 'bg-success-50' : 'bg-primary-50' }} rounded-xl">
+                            @if($projectProgress >= 100)
+                                <x-lucide-check-circle class="w-5 h-5 text-success-600" />
+                            @else
+                                <x-lucide-bar-chart-3 class="w-5 h-5 text-primary-600" />
+                            @endif
+                        </div>
+                        <h3 class="text-lg font-medium text-neutral-700">Project Progress</h3>
+                    </div>
+                </div>
+                
+                <div class="p-6">
+                    <!-- Progress Bar -->
+                    <div class="bg-neutral-50 rounded-xl p-4 mb-4 border border-neutral-100">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-medium text-neutral-500">Completion</span>
+                            <span class="text-sm font-semibold {{ $projectProgress >= 100 ? 'text-success-600' : 'text-neutral-800' }}">{{ $projectProgress }}%</span>
+                        </div>
+                        <div class="w-full bg-neutral-200 rounded-full h-2.5 overflow-hidden">
+                            <div class="{{ $projectProgress >= 100 ? 'bg-success-500' : 'bg-primary-600' }} h-2.5 rounded-full transition-all duration-500" style="width: {{ $projectProgress }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Task Stats -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-neutral-50 rounded-lg p-2 border border-neutral-100 text-center">
+                            <div class="text-lg font-bold text-neutral-800">{{ $taskStats['total'] }}</div>
+                            <div class="text-[10px] text-neutral-500 font-medium">Total</div>
+                        </div>
+                        <div class="bg-success-50 rounded-lg p-2 border border-success-100 text-center">
+                            <div class="text-lg font-bold text-success-700">{{ $taskStats['completed'] }}</div>
+                            <div class="text-[10px] text-success-600 font-medium">Done</div>
+                        </div>
+                        <div class="bg-primary-50 rounded-lg p-2 border border-primary-100 text-center">
+                            <div class="text-lg font-bold text-primary-700">{{ $taskStats['in_progress'] + $taskStats['pending'] }}</div>
+                            <div class="text-[10px] text-primary-600 font-medium">Ongoing</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Payment Status Card (if service request has payments) -->
             @if($serviceRequest && $serviceRequest->approved_budget && $serviceRequest->payment_type)
                 @php
@@ -316,37 +364,39 @@
                 @endphp
                 
                 <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
-                    <div class="bg-primary-600 p-6">
-                        <div class="inline-flex items-center justify-center w-12 h-12 bg-white rounded-full mb-4">
-                            @if($remainingBalance > 0)
-                                <x-lucide-credit-card class="w-6 h-6 text-warning-600" />
-                            @else
-                                <x-lucide-check-circle class="w-6 h-6 text-success-600" />
-                            @endif
+                    <div class="p-6 border-b border-neutral-100">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 {{ $remainingBalance > 0 ? 'bg-neutral-50' : 'bg-success-50' }} rounded-xl">
+                                @if($remainingBalance > 0)
+                                    <x-lucide-credit-card class="w-5 h-5 text-neutral-400" />
+                                @else
+                                    <x-lucide-check-circle class="w-5 h-5 text-success-600" />
+                                @endif
+                            </div>
+                            <h3 class="text-lg font-medium text-neutral-700">
+                                {{ $remainingBalance > 0 ? 'Payment Status' : 'Fully Paid!' }}
+                            </h3>
                         </div>
-                        
-                        <h3 class="text-xl font-semibold text-white mb-4">
-                            {{ $remainingBalance > 0 ? 'Payment Status' : 'Fully Paid!' }}
-                        </h3>
-                        
+                    </div>
+                    
+                    <div class="p-6">
                         <!-- Payment Progress Bar -->
-                        <div class="bg-primary-100 rounded-xl p-4 mb-4">
+                        <div class="bg-neutral-50 rounded-xl p-4 mb-4 border border-neutral-100">
                             <div class="flex justify-between items-center mb-2">
-                                <span class="text-xs font-medium text-primary-800">Progress</span>
-                                <span class="text-xs font-semibold text-primary-900">{{ number_format($paymentProgress, 1) }}%</span>
+                                <span class="text-xs font-medium text-neutral-500">Progress</span>
+                                <span class="text-xs font-semibold text-neutral-800">{{ number_format($paymentProgress, 1) }}%</span>
                             </div>
-                            <div class="w-full bg-primary-200 rounded-full h-2 overflow-hidden">
-                                <div class="bg-primary-800 h-2 rounded-full transition-all duration-500" style="width: {{ $paymentProgress }}%"></div>
+                            <div class="w-full bg-neutral-200 rounded-full h-2 overflow-hidden">
+                                <div class="bg-primary-600 h-2 rounded-full transition-all duration-500" style="width: {{ $paymentProgress }}%"></div>
                             </div>
-                            <div class="flex justify-between items-center mt-2 text-xs text-primary-700">
+                            <div class="flex justify-between items-center mt-2 text-xs text-neutral-500">
                                 <span>₱{{ number_format($totalPaid, 0) }} paid</span>
                                 <span>₱{{ number_format($totalBudget, 0) }} total</span>
                             </div>
                         </div>
-                    </div>
 
                     <!-- Payment Breakdown -->
-                    <div class="p-6 space-y-3">
+                    <div class="space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-neutral-600">Total Budget:</span>
                             <span class="text-sm font-medium text-neutral-800">₱{{ number_format($totalBudget, 2) }}</span>
@@ -355,10 +405,10 @@
                             <span class="text-sm text-neutral-600">Amount Paid:</span>
                             <span class="text-sm font-medium text-success-600">₱{{ number_format($totalPaid, 2) }}</span>
                         </div>
-                        <div class="h-px bg-neutral-200"></div>
+                        <div class="h-px bg-neutral-100"></div>
                         <div class="flex justify-between items-center">
                             <span class="text-sm font-medium text-neutral-700">Remaining Balance:</span>
-                            <span class="text-lg font-semibold {{ $remainingBalance > 0 ? 'text-warning-600' : 'text-success-600' }}">
+                            <span class="text-lg font-semibold {{ $remainingBalance > 0 ? 'text-neutral-800' : 'text-success-600' }}">
                                 ₱{{ number_format($remainingBalance, 2) }}
                             </span>
                         </div>
@@ -375,7 +425,7 @@
                             <p class="text-sm font-medium text-neutral-800">{{ $paidMilestones }} of {{ $totalMilestones }} phases paid</p>
                             
                             @if($currentPaymentDue > 0)
-                                <div class="mt-3 pt-3 border-t border-neutral-200">
+                                <div class="mt-3 pt-3 border-t border-neutral-100">
                                     <p class="text-xs text-neutral-600">Next Payment:</p>
                                     <p class="text-sm font-medium text-neutral-800">{{ $paymentDescription }}</p>
                                     <p class="text-lg font-semibold text-neutral-800 mt-1">₱{{ number_format($currentPaymentDue, 2) }}</p>
@@ -401,31 +451,32 @@
                     <!-- Pay Now Button -->
                     @if($currentPaymentDue > 0 && in_array($serviceRequest->status, ['pending_payment', 'approved', 'in_progress']))
                         <a href="{{ route('client.maya.checkout', $serviceRequest->id) }}" 
-                           class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors w-full">
-                            <x-lucide-wallet class="w-5 h-5" />
+                           class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-colors w-full mt-4">
+                            <x-lucide-wallet class="w-4 h-4" />
                             Pay Now
                         </a>
                     @else
-                        <div class="bg-primary-50 rounded-xl p-4 text-center border border-primary-200">
-                            <x-lucide-check-circle class="w-10 h-10 text-primary-500 mx-auto mb-2" />
-                            <p class="text-sm font-medium text-primary-800">All Payments Complete!</p>
+                        <div class="bg-success-50 rounded-xl p-4 text-center border border-success-100 mt-4">
+                            <x-lucide-check-circle class="w-10 h-10 text-success-600 mx-auto mb-2" />
+                            <p class="text-sm font-medium text-neutral-800">All Payments Complete!</p>
                         </div>
                     @endif
+                    </div>
                 </div>
             @endif
 
             <!-- Project Details Card -->
             <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
-                <div class="bg-neutral-50 border-b border-neutral-100 p-4">
-                    <h3 class="text-base font-medium text-neutral-800 flex items-center">
-                        <x-lucide-info class="w-5 h-5 mr-2 text-neutral-600" />
-                        Project Information
-                    </h3>
+                <div class="p-6 border-b border-neutral-100">
+                    <div class="flex items-center gap-2">
+                        <x-lucide-info class="w-5 h-5 text-neutral-400" />
+                        <h3 class="text-lg font-medium text-neutral-700">Project Information</h3>
+                    </div>
                 </div>
                 <div class="p-6 space-y-4">
                     @if($project->budget)
-                        <div class="pb-4 border-b border-neutral-200">
-                            <dt class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Project Budget</dt>
+                        <div class="pb-4 border-b border-neutral-100">
+                            <dt class="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Project Budget</dt>
                             
                             @if($serviceRequest && ($serviceRequest->coupon_discount_amount > 0 || $serviceRequest->loyalty_discount_amount > 0))
                                 <!-- Show breakdown if discounts applied -->
@@ -445,11 +496,11 @@
                                     </dd>
                                 @endif
                                 
-                                <dd class="text-lg font-bold text-primary-600 mt-2">₱{{ number_format($project->budget, 2) }}</dd>
+                                <dd class="text-lg font-semibold text-primary-600 mt-2">₱{{ number_format($project->budget, 2) }}</dd>
                                 <dd class="text-xs text-neutral-500 mt-1">Final amount (after discounts)</dd>
                             @else
                                 <!-- No discounts -->
-                                <dd class="text-lg font-bold text-primary-600">₱{{ number_format($project->budget, 2) }}</dd>
+                                <dd class="text-lg font-semibold text-primary-600">₱{{ number_format($project->budget, 2) }}</dd>
                             @endif
                             
                             @if($project->budget_type)
@@ -459,9 +510,9 @@
                     @endif
 
                     @if($project->deadline)
-                        <div class="pb-4 border-b border-neutral-200">
-                            <dt class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Deadline</dt>
-                            <dd class="text-sm font-semibold {{ \Carbon\Carbon::parse($project->deadline)->isPast() ? 'text-error-600' : 'text-neutral-900' }}">
+                        <div class="pb-4 border-b border-neutral-100">
+                            <dt class="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Deadline</dt>
+                            <dd class="text-sm font-medium {{ \Carbon\Carbon::parse($project->deadline)->isPast() ? 'text-error-600' : 'text-neutral-800' }}">
                                 {{ \Carbon\Carbon::parse($project->deadline)->format('F j, Y') }}
                             </dd>
                             @if(\Carbon\Carbon::parse($project->deadline)->isPast())
@@ -476,125 +527,108 @@
                     @endif
 
                     @if($project->started_at)
-                        <div class="pb-4 border-b border-neutral-200">
-                            <dt class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Started</dt>
-                            <dd class="text-sm font-bold text-neutral-900">{{ \Carbon\Carbon::parse($project->started_at)->format('M j, Y') }}</dd>
+                        <div class="pb-4 border-b border-neutral-100">
+                            <dt class="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Started</dt>
+                            <dd class="text-sm font-medium text-neutral-800">{{ \Carbon\Carbon::parse($project->started_at)->format('M j, Y') }}</dd>
                         </div>
                     @endif
 
                     @if($project->completed_at)
                         <div>
-                            <dt class="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Completed</dt>
-                            <dd class="text-sm font-bold text-success-600">{{ \Carbon\Carbon::parse($project->completed_at)->format('M j, Y') }}</dd>
+                            <dt class="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Completed</dt>
+                            <dd class="text-sm font-medium text-success-600">{{ \Carbon\Carbon::parse($project->completed_at)->format('M j, Y') }}</dd>
                         </div>
                     @endif
                 </div>
             </div>
 
-            <!-- Project Attachments Card -->
+            <!-- Project Deliverables Card - Grouped by Task -->
             <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
-                <div class="bg-neutral-50 border-b border-neutral-100 p-4">
-                    <h3 class="text-base font-medium text-neutral-800 flex items-center">
-                        <x-lucide-paperclip class="w-5 h-5 mr-2 text-neutral-600" />
-                        Project Attachments
-                    </h3>
+                <div class="p-6 border-b border-neutral-100">
+                    <div class="flex items-center gap-2">
+                        <x-lucide-package-check class="w-5 h-5 text-success-500" />
+                        <h3 class="text-lg font-medium text-neutral-700">Deliverables</h3>
+                        @php
+                            $totalDocs = $tasksWithDeliverables->sum(fn($t) => $t->documents->count()) + $projectLevelDocuments->count();
+                        @endphp
+                        @if($totalDocs > 0)
+                            <span class="ml-2 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
+                                {{ $totalDocs }}
+                            </span>
+                        @endif
+                    </div>
                 </div>
                 <div class="p-6">
-                    @if($documents && count($documents) > 0)
-                        <div class="space-y-3">
-                            @foreach($documents as $document)
-                                <div class="flex items-center justify-between p-4 bg-neutral-50 rounded-xl border border-neutral-100 hover:bg-neutral-100/50 transition-colors {{ $document->is_locked ? 'opacity-60' : '' }}">
-                                    <div class="flex items-start space-x-3 flex-1 min-w-0">
-                                        <!-- File Icon -->
-                                        <div class="shrink-0">
-                                            @if($document->is_locked)
-                                                <x-lucide-lock class="w-6 h-6 text-warning-500" />
-                                            @else
-                                                @php
-                                                    $extension = strtolower(pathinfo($document->fileName, PATHINFO_EXTENSION));
-                                                    $iconConfig = match($extension) {
-                                                        'pdf' => ['color' => 'text-error-600', 'bg' => 'bg-error-100'],
-                                                        'doc', 'docx' => ['color' => 'text-primary-600', 'bg' => 'bg-primary-100'],
-                                                        'xls', 'xlsx' => ['color' => 'text-success-600', 'bg' => 'bg-success-100'],
-                                                        'jpg', 'jpeg', 'png', 'gif', 'svg' => ['color' => 'text-purple-600', 'bg' => 'bg-purple-100'],
-                                                        'zip', 'rar', '7z' => ['color' => 'text-warning-600', 'bg' => 'bg-warning-100'],
-                                                        default => ['color' => 'text-neutral-600', 'bg' => 'bg-neutral-100']
-                                                    };
-                                                @endphp
-                                                <div class="w-10 h-10 rounded-lg {{ $iconConfig['bg'] }} flex items-center justify-center">
-                                                    <x-lucide-file class="w-5 h-5 {{ $iconConfig['color'] }}" />
-                                                </div>
-                                            @endif
+                    @if($tasksWithDeliverables->count() > 0 || $projectLevelDocuments->count() > 0)
+                        <div class="space-y-4">
+                            {{-- Project-level documents --}}
+                            @if($projectLevelDocuments->count() > 0)
+                                <div x-data="{ open: true }" class="border border-neutral-200 rounded-xl overflow-hidden">
+                                    <button @click="open = !open" class="w-full flex items-center justify-between p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                <x-lucide-folder class="w-5 h-5 text-primary-600" />
+                                            </div>
+                                            <div class="text-left">
+                                                <h3 class="font-semibold text-neutral-800">Project Files</h3>
+                                                <p class="text-sm text-neutral-500">{{ $projectLevelDocuments->count() }} file(s)</p>
+                                            </div>
                                         </div>
-
-                                        <!-- File Info -->
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center space-x-2 mb-1">
-                                                <p class="text-sm font-medium text-neutral-800 truncate">{{ $document->fileName }}</p>
-                                                @if($document->is_locked)
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-700">
-                                                        <x-lucide-lock class="w-3 h-3" />
-                                                        Locked
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            
-                                            <div class="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-                                                @if($document->fileSize)
-                                                    <span>{{ number_format($document->fileSize / 1024, 2) }} KB</span>
-                                                @endif
-                                                
-                                                @if($document->task_name)
-                                                    <span class="text-neutral-300">-</span>
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary-50 text-primary-700 font-medium">
-                                                        <x-lucide-clipboard-list class="w-3 h-3" />
-                                                        {{ $document->task_name }}
-                                                    </span>
-                                                @endif
-                                                
-                                                @if($document->uploaded_by_name)
-                                                    <span class="text-neutral-300">-</span>
-                                                    <span>Uploaded by {{ $document->uploaded_by_name }}</span>
-                                                @endif
-                                                
-                                                @if($document->created_at)
-                                                    <span class="text-neutral-300">-</span>
-                                                    <span>{{ \Carbon\Carbon::parse($document->created_at)->format('M j, Y') }}</span>
-                                                @endif
-                                            </div>
-
-                                            @if($document->is_locked)
-                                                <p class="text-xs text-warning-700 mt-2 font-medium flex items-center">
-                                                    <x-lucide-alert-triangle class="w-3 h-3 mr-1" />
-                                                    Complete milestone payment to unlock this document
-                                                </p>
-                                            @endif
+                                        <x-lucide-chevron-down class="w-5 h-5 text-neutral-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''" />
+                                    </button>
+                                    <div x-show="open" x-collapse class="border-t border-neutral-200">
+                                        <div class="p-4 space-y-2">
+                                            @foreach($projectLevelDocuments as $document)
+                                                @include('client.projects.partials.deliverable-item', ['document' => $document, 'project' => $project])
+                                            @endforeach
                                         </div>
                                     </div>
+                                </div>
+                            @endif
 
-                                    <!-- Download Button -->
-                                    <div class="shrink-0 ml-4">
-                                        @if($document->is_locked)
-                                            <button disabled class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-200 text-neutral-400 font-medium rounded-lg cursor-not-allowed">
-                                                <x-lucide-lock class="w-4 h-4" />
-                                                Locked
-                                            </button>
-                                        @else
-                                            <a href="{{ route('client.projects.documents.download', ['projectId' => $project->id, 'documentId' => $document->documentID]) }}" 
-                                               class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
-                                                <x-lucide-download class="w-4 h-4" />
-                                                Download
-                                            </a>
-                                        @endif
+                            {{-- Task-grouped deliverables --}}
+                            @foreach($tasksWithDeliverables as $task)
+                                <div x-data="{ open: true }" class="border border-neutral-200 rounded-xl overflow-hidden">
+                                    <button @click="open = !open" class="w-full flex items-center justify-between p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                <x-lucide-clipboard-list class="w-5 h-5 text-primary-600" />
+                                            </div>
+                                            <div class="text-left">
+                                                <h3 class="font-semibold text-neutral-800">{{ $task->taskTitle }}</h3>
+                                                <p class="text-sm text-neutral-500">{{ $task->documents->count() }} deliverable(s)</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            @php
+                                                $statusConfig = match($task->status) {
+                                                    'completed' => ['bg' => 'bg-success-100', 'text' => 'text-success-700'],
+                                                    'in_progress' => ['bg' => 'bg-primary-100', 'text' => 'text-primary-700'],
+                                                    'pending' => ['bg' => 'bg-warning-100', 'text' => 'text-warning-700'],
+                                                    default => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-600']
+                                                };
+                                            @endphp
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                                {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                            </span>
+                                            <x-lucide-chevron-down class="w-5 h-5 text-neutral-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''" />
+                                        </div>
+                                    </button>
+                                    <div x-show="open" x-collapse class="border-t border-neutral-200">
+                                        <div class="p-4 space-y-2">
+                                            @foreach($task->documents as $document)
+                                                @include('client.projects.partials.deliverable-item', ['document' => $document, 'project' => $project])
+                                            @endforeach
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
                         <div class="text-center py-12">
-                            <x-lucide-file class="w-16 h-16 text-neutral-300 mx-auto mb-4" />
-                            <p class="text-neutral-500 font-medium">No attachments available yet</p>
-                            <p class="text-neutral-400 text-sm mt-1">Documents will appear here once uploaded by your team</p>
+                            <x-lucide-package-open class="w-16 h-16 text-neutral-300 mx-auto mb-4" />
+                            <p class="text-neutral-500 font-medium">No deliverables available yet</p>
+                            <p class="text-neutral-400 text-sm mt-1">Deliverables will appear here once uploaded and approved by your team</p>
                         </div>
                     @endif
                 </div>
@@ -661,7 +695,7 @@
             <div>
                 <label class="block text-sm font-medium text-neutral-800 mb-3">Revision Scope</label>
                 <div class="space-y-3">
-                    <label class="flex items-start p-4 border border-neutral-200 rounded-xl cursor-pointer hover:border-warning-400 hover:bg-warning-50/50 transition-colors">
+                    <label class="flex items-start p-4 border border-neutral-100 rounded-xl cursor-pointer hover:border-warning-400 hover:bg-warning-50/50 transition-colors">
                         <input type="radio" name="revision_scope" value="project" checked class="mt-1 text-warning-600 focus:ring-warning-500" onchange="toggleTaskSelection(false)">
                         <div class="ml-3">
                             <span class="block font-medium text-neutral-800">Entire Project</span>
@@ -670,7 +704,7 @@
                     </label>
                     
                     @if($tasks && count($tasks) > 0)
-                        <label class="flex items-start p-4 border border-neutral-200 rounded-xl cursor-pointer hover:border-warning-400 hover:bg-warning-50/50 transition-colors">
+                        <label class="flex items-start p-4 border border-neutral-100 rounded-xl cursor-pointer hover:border-warning-400 hover:bg-warning-50/50 transition-colors">
                             <input type="radio" name="revision_scope" value="task" class="mt-1 text-warning-600 focus:ring-warning-500" onchange="toggleTaskSelection(true)">
                             <div class="ml-3">
                                 <span class="block font-medium text-neutral-800">Specific Task(s)</span>
@@ -685,7 +719,7 @@
             @if($tasks && count($tasks) > 0)
                 <div id="taskSelectionSection" class="hidden space-y-3">
                     <label class="block text-sm font-medium text-neutral-800">Select Task(s)</label>
-                    <div class="max-h-48 overflow-y-auto space-y-2 border border-neutral-200 rounded-xl p-3">
+                    <div class="max-h-48 overflow-y-auto space-y-2 border border-neutral-100 rounded-xl p-3">
                         @foreach($tasks as $task)
                             <label class="flex items-start p-3 hover:bg-neutral-50 rounded-lg cursor-pointer">
                                 <input type="checkbox" name="task_ids[]" value="{{ $task->taskID }}" class="mt-1 text-warning-600 focus:ring-warning-500">
@@ -711,7 +745,7 @@
                     name="reason" 
                     rows="5" 
                     required 
-                    class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500 resize-none"
+                    class="w-full px-4 py-3 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500 resize-none"
                     placeholder="Please describe in detail what needs to be revised and why...&#10;&#10;Examples:&#10;- The design doesn't match the approved mockups&#10;- Features are missing or not working as expected&#10;- Quality issues that need to be addressed"></textarea>
                 <p class="text-xs text-neutral-500 mt-1">Minimum 20 characters. Be specific to help the team understand your concerns.</p>
             </div>
@@ -726,14 +760,14 @@
                     id="revision_due_date" 
                     name="requested_due_date" 
                     min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                    class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500">
+                    class="w-full px-4 py-3 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500">
                 <p class="text-xs text-neutral-500 mt-1">When would you like the revision to be completed?</p>
             </div>
 
             <!-- Priority Level (Optional) -->
             <div>
                 <label class="block text-sm font-medium text-neutral-800 mb-2">Priority Level</label>
-                <select name="priority" class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500">
+                <select name="priority" class="w-full px-4 py-3 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500">
                     <option value="normal">Normal - No rush</option>
                     <option value="high">High - Needs attention soon</option>
                     <option value="urgent">Urgent - Critical issues</option>
@@ -741,16 +775,16 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="flex justify-end space-x-3 pt-4 border-t border-neutral-200">
+            <div class="flex justify-end space-x-3 pt-4 border-t border-neutral-100">
                 <button 
                     type="button" 
                     onclick="closeRevisionModal()"
-                    class="px-6 py-3 bg-neutral-200 text-neutral-700 font-medium rounded-lg hover:bg-neutral-300 transition-colors">
+                    class="px-6 py-3 bg-neutral-100 text-neutral-700 font-medium rounded-xl hover:bg-neutral-200 transition-colors">
                     Cancel
                 </button>
                 <button 
                     type="submit" 
-                    class="inline-flex items-center gap-2 px-6 py-3 bg-warning-600 text-white font-medium rounded-lg hover:bg-warning-700 transition-colors">
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-warning-600 text-white font-medium rounded-xl hover:bg-warning-700 transition-colors">
                     <x-lucide-check-circle class="w-5 h-5" />
                     Submit Revision Request
                 </button>
@@ -808,7 +842,7 @@
                     rows="5" 
                     required 
                     minlength="20"
-                    class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500 resize-none"
+                    class="w-full px-4 py-3 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500 resize-none"
                     placeholder="Please describe specifically what needs to be revised in this task...&#10;&#10;Be clear and detailed so the adiutor can understand your concerns."></textarea>
                 <p class="text-xs text-neutral-500 mt-1">Minimum 20 characters required.</p>
             </div>
@@ -823,13 +857,13 @@
                     id="task_revision_due_date" 
                     name="requested_due_date" 
                     min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                    class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500">
+                    class="w-full px-4 py-3 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500">
             </div>
 
             <!-- Priority Level -->
             <div>
                 <label class="block text-sm font-medium text-neutral-800 mb-2">Priority Level</label>
-                <select name="priority" class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500">
+                <select name="priority" class="w-full px-4 py-3 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500">
                     <option value="normal">Normal - No rush</option>
                     <option value="high">High - Needs attention soon</option>
                     <option value="urgent">Urgent - Critical issues</option>
@@ -837,16 +871,16 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="flex justify-end space-x-3 pt-4 border-t border-neutral-200">
+            <div class="flex justify-end space-x-3 pt-4 border-t border-neutral-100">
                 <button 
                     type="button" 
                     onclick="closeTaskRevisionModal()"
-                    class="px-6 py-3 bg-neutral-200 text-neutral-700 font-medium rounded-lg hover:bg-neutral-300 transition-colors">
+                    class="px-6 py-3 bg-neutral-100 text-neutral-700 font-medium rounded-xl hover:bg-neutral-200 transition-colors">
                     Cancel
                 </button>
                 <button 
                     type="submit" 
-                    class="inline-flex items-center gap-2 px-6 py-3 bg-warning-600 text-white font-medium rounded-lg hover:bg-warning-700 transition-colors">
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-warning-600 text-white font-medium rounded-xl hover:bg-warning-700 transition-colors">
                     <x-lucide-check-circle class="w-5 h-5" />
                     Submit Task Revision
                 </button>

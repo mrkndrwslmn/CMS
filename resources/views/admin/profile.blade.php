@@ -12,7 +12,7 @@
                 <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
                 <nav class="flex items-center space-x-2 text-sm text-gray-500 mt-2">
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-accent-500 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <span class="text-gray-900">Profile</span>
                 </nav>
             </div>
@@ -43,7 +43,7 @@
                 <!-- Body -->
                 <div class="p-6 space-y-4">
                     <div class="flex items-center text-gray-700">
-                        <i class="fas fa-envelope w-5 mr-3 text-gray-400"></i>
+                        <x-lucide-mail class="w-5 h-5 mr-3 text-gray-400" />
                         <div class="flex-1 min-w-0">
                             <p class="text-xs text-gray-500 mb-0.5">Email</p>
                             <p class="text-sm font-medium truncate">{{ $user->email }}</p>
@@ -52,7 +52,7 @@
 
                     @if($user->phoneNumber)
                         <div class="flex items-center text-gray-700">
-                            <i class="fas fa-phone w-5 mr-3 text-gray-400"></i>
+                            <x-lucide-phone class="w-5 h-5 mr-3 text-gray-400" />
                             <div class="flex-1">
                                 <p class="text-xs text-gray-500 mb-0.5">Phone</p>
                                 <p class="text-sm font-medium">{{ $user->phoneNumber }}</p>
@@ -61,7 +61,7 @@
                     @endif
 
                     <div class="flex items-center text-gray-700">
-                        <i class="fas fa-calendar-alt w-5 mr-3 text-gray-400"></i>
+                        <x-lucide-calendar class="w-5 h-5 mr-3 text-gray-400" />
                         <div class="flex-1">
                             <p class="text-xs text-gray-500 mb-0.5">Member Since</p>
                             <p class="text-sm font-medium">{{ $user->created_at->format('F Y') }}</p>
@@ -69,7 +69,7 @@
                     </div>
 
                     <div class="flex items-center text-gray-700">
-                        <i class="fas fa-clock w-5 mr-3 text-gray-400"></i>
+                        <x-lucide-clock class="w-5 h-5 mr-3 text-gray-400" />
                         <div class="flex-1">
                             <p class="text-xs text-gray-500 mb-0.5">Last Updated</p>
                             <p class="text-sm font-medium">{{ $user->updated_at->diffForHumans() }}</p>
@@ -106,7 +106,7 @@
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                        <i class="fas fa-user-edit text-gray-600 mr-2"></i>
+                        <x-lucide-user-pen class="w-5 h-5 text-gray-600 mr-2" />
                         Edit Profile Information
                     </h3>
                 </div>
@@ -172,7 +172,7 @@
 
                         <!-- Change Password Section -->
                         <h4 class="text-md font-semibold text-gray-800 mb-4 flex items-center">
-                            <i class="fas fa-lock text-gray-600 mr-2"></i>
+                            <x-lucide-lock class="w-5 h-5 text-gray-600 mr-2" />
                             Change Password
                         </h4>
                         <p class="text-sm text-gray-600 mb-4">Leave blank if you don't want to change your password</p>
@@ -189,7 +189,10 @@
                                     name="current_password"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all @error('current_password') border-red-500 @enderror">
                                 <button type="button" onclick="togglePassword('current_password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-eye" id="current_password_icon"></i>
+                                    <span id="current_password_icon" data-state="hidden">
+                                        <x-lucide-eye class="w-5 h-5 eye-icon" />
+                                        <x-lucide-eye-off class="w-5 h-5 eye-off-icon hidden" />
+                                    </span>
                                 </button>
                             </div>
                             @error('current_password')
@@ -209,7 +212,10 @@
                                     name="password"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all @error('password') border-red-500 @enderror">
                                 <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-eye" id="password_icon"></i>
+                                    <span id="password_icon" data-state="hidden">
+                                        <x-lucide-eye class="w-5 h-5 eye-icon" />
+                                        <x-lucide-eye-off class="w-5 h-5 eye-off-icon hidden" />
+                                    </span>
                                 </button>
                             </div>
                             @error('password')
@@ -229,7 +235,10 @@
                                     name="password_confirmation"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all">
                                 <button type="button" onclick="togglePassword('password_confirmation')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-eye" id="password_confirmation_icon"></i>
+                                    <span id="password_confirmation_icon" data-state="hidden">
+                                        <x-lucide-eye class="w-5 h-5 eye-icon" />
+                                        <x-lucide-eye-off class="w-5 h-5 eye-off-icon hidden" />
+                                    </span>
                                 </button>
                             </div>
                         </div>
@@ -243,7 +252,7 @@
                             <button 
                                 type="submit" 
                                 class="px-8 py-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white font-semibold rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all duration-200 shadow-lg shadow-accent-500/30 hover:shadow-xl hover:shadow-accent-500/40">
-                                <i class="fas fa-save mr-2"></i>
+                                <x-lucide-save class="w-4 h-4 mr-2" />
                                 Save Changes
                             </button>
                         </div>
@@ -259,16 +268,18 @@
 <script>
     function togglePassword(fieldId) {
         const field = document.getElementById(fieldId);
-        const icon = document.getElementById(fieldId + '_icon');
+        const iconContainer = document.getElementById(fieldId + '_icon');
+        const eyeIcon = iconContainer.querySelector('.eye-icon');
+        const eyeOffIcon = iconContainer.querySelector('.eye-off-icon');
         
         if (field.type === 'password') {
             field.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
+            eyeIcon.classList.add('hidden');
+            eyeOffIcon.classList.remove('hidden');
         } else {
             field.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
+            eyeIcon.classList.remove('hidden');
+            eyeOffIcon.classList.add('hidden');
         }
     }
 </script>

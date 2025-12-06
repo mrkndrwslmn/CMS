@@ -203,7 +203,7 @@ class MayaPaymentController extends Controller
         }
 
         try {
-            // Get payment record
+            // Get payment record with lock for update to prevent race conditions
             $payment = DB::table('payments')
                 ->where('payment_reference', $referenceNumber)
                 ->first();
@@ -214,13 +214,20 @@ class MayaPaymentController extends Controller
                     ->with('error', 'Payment record not found.');
             }
 
+            // Check if payment was already confirmed (prevent duplicate processing)
+            $alreadyConfirmed = $payment->status === 'confirmed';
+            
+            // Check if notifications were already sent (additional protection)
+            $notificationsSent = !empty($payment->notification_sent_at);
+
             // Verify payment with Maya
             $paymentDetails = json_decode($payment->payment_details, true);
             $checkoutId = $paymentDetails['checkout_id'] ?? null;
             $projectId = null;
             $serviceRequest = null;
 
-            if ($checkoutId) {
+            // Only process if payment is not already confirmed
+            if ($checkoutId && !$alreadyConfirmed) {
                 $verificationResponse = $this->mayaService->verifyPayment($checkoutId);
 
                 if (!$verificationResponse['error']) {
@@ -308,20 +315,70 @@ class MayaPaymentController extends Controller
                     // ========================================
                     // NON-CRITICAL OPERATIONS - OUTSIDE TRANSACTION
                     // These can fail without rolling back payment data
+                    // Only send notifications if they haven't been sent yet
                     // ========================================
-                    $this->processPostPaymentActions($payment, $serviceRequest);
+                    if (!$notificationsSent) {
+                        // Mark notifications as sent BEFORE sending to prevent race conditions
+                        DB::table('payments')
+                            ->where('id', $payment->id)
+                            ->update(['notification_sent_at' => now()]);
+                        
+                        $this->processPostPaymentActions($payment, $serviceRequest);
+                    } else {
+                        Log::info('Skipping notifications - already sent', [
+                            'payment_id' => $payment->id,
+                            'notification_sent_at' => $payment->notification_sent_at
+                        ]);
+                    }
 
                     Log::info('Payment confirmed successfully', [
                         'reference' => $referenceNumber,
                         'project_id' => $projectId
                     ]);
                 }
+            } elseif ($alreadyConfirmed) {
+                // Payment was already processed, just log and show success page
+                Log::info('Payment success page revisited (already confirmed)', [
+                    'reference' => $referenceNumber,
+                    'payment_id' => $payment->id
+                ]);
+            }
+
+            // Re-fetch payment to get updated data (in case it was just confirmed)
+            $payment = DB::table('payments')
+                ->where('payment_reference', $referenceNumber)
+                ->first();
+
+            // Calculate loyalty points earned for display
+            $paymentModel = \App\Models\Payment::find($payment->id);
+            $loyaltyPointsEarned = 0;
+            $isFirstProject = false;
+            $firstProjectBonus = 0;
+            
+            if ($paymentModel) {
+                $loyaltyPointsEarned = $this->loyaltyService->calculatePointsForPayment($paymentModel);
+                
+                // Check if this was a first project (for bonus display)
+                $user = Auth::user();
+                $isFirstProject = $user->serviceRequests()
+                    ->whereHas('payments', function ($query) {
+                        $query->where('status', 'completed');
+                    })
+                    ->count() === 1;
+                    
+                if ($isFirstProject) {
+                    $firstProjectBonus = config('loyalty.bonuses.first_project', 500);
+                    $loyaltyPointsEarned += $firstProjectBonus;
+                }
             }
 
             // Show success page
             return view('client.payments.maya-success', [
                 'payment' => $payment,
-                'serviceRequest' => DB::table('service_requests')->find($payment->service_request_id)
+                'serviceRequest' => DB::table('service_requests')->find($payment->service_request_id),
+                'loyaltyPointsEarned' => $loyaltyPointsEarned,
+                'isFirstProject' => $isFirstProject,
+                'firstProjectBonus' => $firstProjectBonus,
             ]);
         } catch (\Exception $e) {
             Log::error('Error processing payment success', [

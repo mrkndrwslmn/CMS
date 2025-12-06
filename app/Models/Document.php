@@ -431,26 +431,50 @@ class Document extends Model
     }
 
     /**
-     * Get the file icon class based on file type.
+     * Get the file icon name based on file type (Lucide icon names).
      */
     public function getFileIconAttribute(): string
     {
         $extension = strtolower($this->file_extension);
         
         return match($extension) {
-            'pdf' => 'fa-file-pdf text-red-500',
-            'doc', 'docx' => 'fa-file-word text-blue-500',
-            'xls', 'xlsx' => 'fa-file-excel text-green-500',
-            'ppt', 'pptx' => 'fa-file-powerpoint text-orange-500',
-            'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg' => 'fa-file-image text-purple-500',
-            'zip', 'rar', '7z', 'tar', 'gz' => 'fa-file-archive text-yellow-500',
-            'mp3', 'wav', 'ogg', 'flac' => 'fa-file-audio text-pink-500',
-            'mp4', 'avi', 'mov', 'wmv', 'mkv' => 'fa-file-video text-indigo-500',
-            'txt', 'log' => 'fa-file-alt text-gray-500',
-            'csv' => 'fa-file-csv text-green-600',
-            'json', 'xml' => 'fa-file-code text-cyan-500',
-            'html', 'css', 'js', 'php' => 'fa-file-code text-teal-500',
-            default => 'fa-file text-neutral-500',
+            'pdf' => 'file-text',
+            'doc', 'docx' => 'file-text',
+            'xls', 'xlsx' => 'file-spreadsheet',
+            'ppt', 'pptx' => 'presentation',
+            'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg' => 'image',
+            'zip', 'rar', '7z', 'tar', 'gz' => 'archive',
+            'mp3', 'wav', 'ogg', 'flac' => 'file-audio',
+            'mp4', 'avi', 'mov', 'wmv', 'mkv' => 'file-video',
+            'txt', 'log' => 'file-text',
+            'csv' => 'file-spreadsheet',
+            'json', 'xml' => 'file-code',
+            'html', 'css', 'js', 'php' => 'file-code',
+            default => 'file',
+        };
+    }
+
+    /**
+     * Get the file icon color class based on file type.
+     */
+    public function getFileIconColorAttribute(): string
+    {
+        $extension = strtolower($this->file_extension);
+        
+        return match($extension) {
+            'pdf' => 'text-red-500',
+            'doc', 'docx' => 'text-blue-500',
+            'xls', 'xlsx' => 'text-green-500',
+            'ppt', 'pptx' => 'text-orange-500',
+            'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg' => 'text-purple-500',
+            'zip', 'rar', '7z', 'tar', 'gz' => 'text-yellow-500',
+            'mp3', 'wav', 'ogg', 'flac' => 'text-pink-500',
+            'mp4', 'avi', 'mov', 'wmv', 'mkv' => 'text-indigo-500',
+            'txt', 'log' => 'text-gray-500',
+            'csv' => 'text-green-600',
+            'json', 'xml' => 'text-cyan-500',
+            'html', 'css', 'js', 'php' => 'text-teal-500',
+            default => 'text-neutral-500',
         };
     }
 

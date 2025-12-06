@@ -65,6 +65,47 @@
         </div>
     </div>
 
+    <!-- Loyalty Points Earned Card -->
+    @if(isset($loyaltyPointsEarned) && $loyaltyPointsEarned > 0)
+    <div class="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl border border-amber-200 shadow-sm overflow-hidden mb-6">
+        <div class="p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mr-4">
+                        <x-lucide-star class="w-8 h-8 text-amber-500" />
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-neutral-800">Loyalty Points Earned!</h3>
+                        <p class="text-sm text-neutral-600">These points have been added to your account</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-3xl font-bold text-amber-600">+{{ number_format($loyaltyPointsEarned) }}</p>
+                    <p class="text-sm text-neutral-500">points</p>
+                </div>
+            </div>
+            
+            @if(isset($isFirstProject) && $isFirstProject && isset($firstProjectBonus) && $firstProjectBonus > 0)
+            <div class="mt-4 pt-4 border-t border-amber-200">
+                <div class="flex items-center text-sm">
+                    <x-lucide-gift class="w-5 h-5 text-amber-500 mr-2" />
+                    <span class="text-neutral-700">
+                        Includes <span class="font-semibold text-amber-600">+{{ number_format($firstProjectBonus) }} bonus points</span> for your first project! 🎉
+                    </span>
+                </div>
+            </div>
+            @endif
+            
+            <div class="mt-4 pt-4 border-t border-amber-200">
+                <a href="{{ route('client.loyalty.dashboard') }}" class="inline-flex items-center text-sm text-amber-700 hover:text-amber-800 font-medium">
+                    <x-lucide-coins class="w-4 h-4 mr-1" />
+                    View your loyalty rewards →
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- What's Next Section -->
     <div class="bg-neutral-50 rounded-2xl p-8 mb-6 border border-neutral-100">
         <h3 class="text-xl font-semibold text-neutral-800 mb-6 flex items-center">

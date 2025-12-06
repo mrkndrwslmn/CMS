@@ -147,8 +147,13 @@ class Subtask extends Model
 
     /**
      * Mark the subtask as completed.
+    /**
+     * Mark the subtask as completed.
+     * 
+     * @param User $user The user completing the subtask
+     * @param bool $autoCompleteTask Whether to auto-complete task when all subtasks done
      */
-    public function markComplete(User $user): bool
+    public function markComplete(User $user, bool $autoCompleteTask = true): bool
     {
         $wasCompleted = $this->is_completed;
         
@@ -160,7 +165,7 @@ class Subtask extends Model
 
         // Update parent task progress if this is a new completion
         if (!$wasCompleted) {
-            $this->task->updateProgressFromSubtasks();
+            $this->task->updateProgressFromSubtasks($autoCompleteTask);
         }
 
         return true;
@@ -189,13 +194,16 @@ class Subtask extends Model
 
     /**
      * Toggle the completion status.
+     * 
+     * @param User $user The user toggling the subtask
+     * @param bool $autoCompleteTask Whether to auto-complete task when all subtasks done
      */
-    public function toggle(User $user): bool
+    public function toggle(User $user, bool $autoCompleteTask = true): bool
     {
         if ($this->is_completed) {
             return $this->markIncomplete();
         } else {
-            return $this->markComplete($user);
+            return $this->markComplete($user, $autoCompleteTask);
         }
     }
 

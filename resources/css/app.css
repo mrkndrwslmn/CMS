@@ -111,6 +111,18 @@
     --color-error-800: #991B1B;
     --color-error-900: #7F1D1D;
 
+    /* Info: Sky Blue */
+    --color-info-50: #F0F9FF;
+    --color-info-100: #E0F2FE;
+    --color-info-200: #BAE6FD;
+    --color-info-300: #7DD3FC;
+    --color-info-400: #38BDF8;
+    --color-info-500: #0EA5E9;
+    --color-info-600: #0284C7;
+    --color-info-700: #0369A1;
+    --color-info-800: #075985;
+    --color-info-900: #0C4A6E;
+
     /* Border Radius */
     --radius-xl: 1rem;
     --radius-2xl: 1.5rem;

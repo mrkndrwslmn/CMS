@@ -11,12 +11,12 @@
             <div class="mb-4 sm:mb-0">
                 <nav class="flex items-center space-x-2 text-sm text-neutral-500 mt-1">
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-primary-600 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <span class="text-neutral-700">Reports</span>
                 </nav>
             </div>
             <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
-                <i class="fas fa-print mr-2"></i>
+                <x-lucide-printer class="w-4 h-4 mr-2" />
                 Print Report
             </button>
         </div>
@@ -49,7 +49,7 @@
                 </div>
                 <div class="flex items-end">
                     <button type="submit" class="w-full px-4 py-2 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors">
-                        <i class="fas fa-filter mr-2"></i>Generate Report
+                        <x-lucide-filter class="w-4 h-4 inline mr-2" />Generate Report
                     </button>
                 </div>
             </form>
@@ -66,13 +66,13 @@
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">0</p>
                     <p class="text-xs text-neutral-500 mt-2 flex items-center">
                         <span class="flex h-4 w-4 rounded-full bg-primary-50 text-primary-600 items-center justify-center mr-1">
-                            <i class="fas fa-arrow-up text-[10px]"></i>
+                            <x-lucide-arrow-up class="w-2.5 h-2.5" />
                         </span>
                         +0 this period
                     </p>
                 </div>
                 <div class="h-12 w-12 flex-shrink-0 rounded-full bg-primary-50 text-primary-500 flex items-center justify-center">
-                    <i class="fas fa-users text-lg"></i>
+                    <x-lucide-users class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -85,13 +85,13 @@
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">0</p>
                     <p class="text-xs text-neutral-500 mt-2 flex items-center">
                         <span class="flex h-4 w-4 rounded-full bg-warning-50 text-warning-600 items-center justify-center mr-1">
-                            <i class="fas fa-tasks text-[10px]"></i>
+                            <x-lucide-list-todo class="w-2.5 h-2.5" />
                         </span>
                         0% completion rate
                     </p>
                 </div>
                 <div class="h-12 w-12 flex-shrink-0 rounded-full bg-warning-50 text-warning-500 flex items-center justify-center">
-                    <i class="fas fa-tasks text-lg"></i>
+                    <x-lucide-list-todo class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -104,13 +104,13 @@
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">0</p>
                     <p class="text-xs text-neutral-500 mt-2 flex items-center">
                         <span class="flex h-4 w-4 rounded-full bg-success-50 text-success-600 items-center justify-center mr-1">
-                            <i class="fas fa-arrow-up text-[10px]"></i>
+                            <x-lucide-arrow-up class="w-2.5 h-2.5" />
                         </span>
                         +0 new clients
                     </p>
                 </div>
                 <div class="h-12 w-12 flex-shrink-0 rounded-full bg-success-50 text-success-500 flex items-center justify-center">
-                    <i class="fas fa-briefcase text-lg"></i>
+                    <x-lucide-briefcase class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -123,13 +123,13 @@
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">0</p>
                     <p class="text-xs text-neutral-500 mt-2 flex items-center">
                         <span class="flex h-4 w-4 rounded-full bg-info-50 text-info-600 items-center justify-center mr-1">
-                            <i class="fas fa-file-alt text-[10px]"></i>
+                            <x-lucide-file-text class="w-2.5 h-2.5" />
                         </span>
                         0 MB total size
                     </p>
                 </div>
                 <div class="h-12 w-12 flex-shrink-0 rounded-full bg-info-50 text-info-500 flex items-center justify-center">
-                    <i class="fas fa-file-alt text-lg"></i>
+                    <x-lucide-file-text class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -141,7 +141,7 @@
         <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-chart-line text-primary-500 mr-2"></i>
+                    <x-lucide-trending-up class="w-4 h-4 text-primary-500 mr-2" />
                     User Activity Trend
                 </h3>
             </div>
@@ -156,7 +156,7 @@
         <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-chart-pie text-primary-500 mr-2"></i>
+                    <x-lucide-pie-chart class="w-4 h-4 text-primary-500 mr-2" />
                     Task Status Distribution
                 </h3>
             </div>
@@ -174,7 +174,7 @@
         <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-history text-primary-500 mr-2"></i>
+                    <x-lucide-history class="w-4 h-4 text-primary-500 mr-2" />
                     Recent Activities
                 </h3>
             </div>
@@ -183,7 +183,7 @@
                     <div class="flex items-center justify-center py-10 text-neutral-400">
                         <div class="text-center">
                             <div class="h-14 w-14 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
-                                <i class="fas fa-inbox text-neutral-400 text-xl"></i>
+                                <x-lucide-inbox class="w-5 h-5 text-neutral-400" />
                             </div>
                             <p class="text-sm text-neutral-500">No recent activities</p>
                         </div>
@@ -196,7 +196,7 @@
         <div class="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-neutral-200">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-trophy text-primary-500 mr-2"></i>
+                    <x-lucide-trophy class="w-4 h-4 text-primary-500 mr-2" />
                     Top Performers
                 </h3>
             </div>
@@ -205,7 +205,7 @@
                     <div class="flex items-center justify-center py-10 text-neutral-400">
                         <div class="text-center">
                             <div class="h-14 w-14 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
-                                <i class="fas fa-award text-neutral-400 text-xl"></i>
+                                <x-lucide-award class="w-5 h-5 text-neutral-400" />
                             </div>
                             <p class="text-sm text-neutral-500">No performance data available</p>
                         </div>
@@ -220,16 +220,16 @@
         <div class="px-5 py-4 border-b border-neutral-200">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                    <i class="fas fa-table text-primary-500 mr-2"></i>
+                    <x-lucide-table-2 class="w-4 h-4 text-primary-500 mr-2" />
                     Detailed Report Data
                 </h3>
                 <div class="flex space-x-2">
                     <button class="px-3 py-1.5 text-xs border border-neutral-300 bg-white text-neutral-700 rounded-md hover:bg-neutral-50 transition-colors flex items-center">
-                        <i class="fas fa-file-excel mr-1.5 text-success-600"></i>
+                        <x-lucide-file-spreadsheet class="w-3.5 h-3.5 mr-1.5 text-success-600" />
                         Export Excel
                     </button>
                     <button class="px-3 py-1.5 text-xs border border-neutral-300 bg-white text-neutral-700 rounded-md hover:bg-neutral-50 transition-colors flex items-center">
-                        <i class="fas fa-file-pdf mr-1.5 text-error-600"></i>
+                        <x-lucide-file-text class="w-3.5 h-3.5 mr-1.5 text-error-600" />
                         Export PDF
                     </button>
                 </div>
@@ -251,7 +251,7 @@
                             <td colspan="4" class="px-5 py-10 text-center">
                                 <div class="flex flex-col items-center justify-center text-neutral-400">
                                     <div class="h-16 w-16 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
-                                        <i class="fas fa-chart-bar text-neutral-400 text-2xl"></i>
+                                        <x-lucide-bar-chart-3 class="w-6 h-6 text-neutral-400" />
                                     </div>
                                     <p class="font-medium text-neutral-500">No report data available</p>
                                     <p class="text-xs text-neutral-400 mt-1">Select a time period and generate a report</p>

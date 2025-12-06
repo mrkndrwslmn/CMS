@@ -12,9 +12,9 @@
                 <h1 class="text-2xl font-semibold text-neutral-800">Edit Document</h1>
                 <nav class="flex items-center space-x-2 text-sm text-neutral-500 mt-2">
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-primary-500 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <a href="{{ route('admin.documents.index') }}" class="hover:text-primary-500 transition-colors">Documents</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <span class="text-neutral-700">Edit: {{ $document->fileName }}</span>
                 </nav>
             </div>
@@ -27,7 +27,7 @@
         <div class="bg-gradient-to-r from-primary-500 to-primary-600 px-8 py-6">
             <div class="flex items-center text-white">
                 <div class="bg-white/20 rounded-full p-3 mr-4">
-                    <i class="fas fa-edit text-2xl"></i>
+                    <x-lucide-pencil class="w-6 h-6" />
                 </div>
                 <div>
                     <h2 class="text-xl font-semibold">Edit Document Details</h2>
@@ -45,7 +45,7 @@
                 @if ($errors->any())
                     <div class="bg-error-50 border-l-4 border-error-500 rounded-lg p-4 mb-6">
                         <div class="flex items-start">
-                            <i class="fas fa-exclamation-circle text-error-500 mt-0.5 mr-3"></i>
+                            <x-lucide-alert-circle class="w-5 h-5 text-error-500 mt-0.5 mr-3" />
                             <div class="flex-1">
                                 <h3 class="text-error-800 font-semibold mb-2">Please correct the following errors:</h3>
                                 <ul class="list-disc list-inside space-y-1 text-error-700 text-sm">
@@ -93,15 +93,15 @@
                     <div class="bg-neutral-50 rounded-lg p-4 flex items-center justify-between">
                         <div class="flex items-center space-x-3">
                             <div class="bg-primary-100 p-3 rounded-lg">
-                                <i class="fas fa-file-alt text-primary-500 text-xl"></i>
+                                <x-lucide-file-text class="w-6 h-6 text-primary-500" />
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-neutral-900">{{ $document->fileName }}</p>
                                 <p class="text-xs text-neutral-500">{{ number_format($document->fileSize / 1024, 2) }} KB · {{ $document->fileType }}</p>
                             </div>
                         </div>
-                        <a href="{{ route('admin.documents.download', $document->documentID) }}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                            <i class="fas fa-download mr-1"></i> Download
+                        <a href="{{ route('admin.documents.download', $document->documentID) }}" class="text-primary-600 hover:text-primary-700 text-sm font-medium inline-flex items-center">
+                            <x-lucide-download class="w-4 h-4 mr-1" /> Download
                         </a>
                     </div>
                 </div>
@@ -174,8 +174,8 @@
                                 <label for="isPrivate" class="font-semibold text-neutral-900 cursor-pointer">
                                     Mark as Private
                                 </label>
-                                <p class="text-sm text-neutral-600 mt-1">
-                                    <i class="fas fa-lock text-neutral-400 mr-1"></i>
+                                <p class="text-sm text-neutral-600 mt-1 flex items-center">
+                                    <x-lucide-lock class="w-4 h-4 text-neutral-400 mr-1" />
                                     Private documents are only visible to admins and associated users
                                 </p>
                             </div>
@@ -186,14 +186,14 @@
                 <!-- Action Buttons -->
                 <div class="flex items-center justify-between pt-6 border-t border-neutral-200">
                     <a href="{{ route('admin.documents.show', $document->documentID) }}" 
-                       class="px-6 py-3 text-neutral-600 hover:text-neutral-800 font-medium transition-colors">
-                        <i class="fas fa-arrow-left mr-2"></i>
+                       class="px-6 py-3 text-neutral-600 hover:text-neutral-800 font-medium transition-colors inline-flex items-center">
+                        <x-lucide-arrow-left class="w-4 h-4 mr-2" />
                         Cancel
                     </a>
                     <button 
                         type="submit" 
-                        class="px-8 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40">
-                        <i class="fas fa-save mr-2"></i>
+                        class="px-8 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 inline-flex items-center">
+                        <x-lucide-save class="w-4 h-4 mr-2" />
                         Update Document
                     </button>
                 </div>

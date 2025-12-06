@@ -28,6 +28,20 @@ class SubtaskController extends Controller
     }
 
     /**
+     * Abort with proper response based on request type.
+     */
+    protected function abortUnauthorized()
+    {
+        if (request()->ajax() || request()->wantsJson()) {
+            abort(response()->json([
+                'success' => false,
+                'message' => 'You do not have access to this task.'
+            ], 403));
+        }
+        abort(403, 'You do not have access to this task.');
+    }
+
+    /**
      * Get subtasks for a task.
      */
     public function index(Task $task)
@@ -125,18 +139,25 @@ class SubtaskController extends Controller
     public function toggle(Subtask $subtask)
     {
         if (!$this->verifyTaskAccess($subtask->task)) {
-            abort(403, 'You do not have access to this task.');
+            $this->abortUnauthorized();
         }
 
-        $subtask->toggle(Auth::user());
+        // Toggle subtask but DON'T auto-complete task - let user confirm
+        $subtask->toggle(Auth::user(), false);
         $task = $subtask->task->fresh();
+        $stats = $task->getSubtasksStats();
+        
+        // Check if all subtasks are now completed
+        $allSubtasksCompleted = $stats['total'] > 0 && $stats['pending'] === 0;
 
-        if (request()->ajax()) {
+        if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'is_completed' => $subtask->is_completed,
-                'task_stats' => $task->getSubtasksStats(),
+                'task_stats' => $stats,
                 'task_progress' => $task->progress_percentage,
+                'all_subtasks_completed' => $allSubtasksCompleted,
+                'task_status' => $task->status,
             ]);
         }
 

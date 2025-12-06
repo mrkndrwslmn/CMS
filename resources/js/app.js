@@ -14,14 +14,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Only initialize messaging for authenticated users
     if (isAuthenticated) {
         try {
-            // Initialize Firebase messaging
+            // Initialize Firebase messaging (this handles token registration internally)
             await messagingService.initialize();
-            
-            // Request notification permission
-            await messagingService.requestNotificationPermission();
-            
-            // Setup foreground message listener
-            messagingService.setupForegroundMessageListener();
             
             // Update unread count
             await messagingService.updateUnreadCount();

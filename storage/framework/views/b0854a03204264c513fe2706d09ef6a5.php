@@ -1,3 +1,0 @@
-<svg x-bind:class="{ 'rotate-180': openSections.content }" class="w-4 h-4 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="m6 9 6 6 6-6"/>
-</svg><?php /**PATH C:\Users\marka\Projects\cms\storage\framework\views/c5db7acfb2b413631ccf51ca2856af3c.blade.php ENDPATH**/ ?>

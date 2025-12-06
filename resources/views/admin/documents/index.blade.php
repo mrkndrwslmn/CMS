@@ -13,13 +13,13 @@
         </div>
         <div class="mt-4 sm:mt-0 flex space-x-3">
             <a href="{{ route('admin.documents.trash') }}" class="flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
-                <i class="fas fa-trash-alt mr-2"></i>Trash
+                <x-lucide-trash-2 class="w-4 h-4 mr-2" />Trash
             </a>
             <a href="{{ route('admin.documents.bulk-create') }}" class="flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-colors">
-                <i class="fas fa-layer-group mr-2"></i>Bulk Upload
+                <x-lucide-layers class="w-4 h-4 mr-2" />Bulk Upload
             </a>
             <a href="{{ route('admin.documents.create') }}" class="flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                <i class="fas fa-plus mr-2"></i>Upload Document
+                <x-lucide-plus class="w-4 h-4 mr-2" />Upload Document
             </a>
         </div>
     </div>
@@ -35,7 +35,7 @@
                         <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['total_documents']) }}</div>
                     </div>
                     <div class="bg-primary-50 p-3 rounded-lg">
-                        <i class="fas fa-file-alt text-xl text-primary-500"></i>
+                        <x-lucide-file-text class="w-5 h-5 text-primary-500" />
                     </div>
                 </div>
             </div>
@@ -50,7 +50,7 @@
                         <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['total_size'] / (1024 * 1024), 2) }} MB</div>
                     </div>
                     <div class="bg-blue-50 p-3 rounded-lg">
-                        <i class="fas fa-database text-xl text-blue-500"></i>
+                        <x-lucide-database class="w-5 h-5 text-blue-500" />
                     </div>
                 </div>
             </div>
@@ -65,7 +65,7 @@
                         <div class="text-2xl font-bold text-primary-600">{{ number_format($stats['this_month']) }}</div>
                     </div>
                     <div class="bg-green-50 p-3 rounded-lg">
-                        <i class="fas fa-calendar-alt text-xl text-green-500"></i>
+                        <x-lucide-calendar class="w-5 h-5 text-green-500" />
                     </div>
                 </div>
             </div>
@@ -80,7 +80,7 @@
                         <div class="text-2xl font-bold text-primary-600">{{ count($stats['by_type']) }}</div>
                     </div>
                     <div class="bg-indigo-50 p-3 rounded-lg">
-                        <i class="fas fa-list-alt text-xl text-indigo-500"></i>
+                        <x-lucide-list class="w-5 h-5 text-indigo-500" />
                     </div>
                 </div>
             </div>
@@ -102,7 +102,7 @@
                         <label class="block text-sm font-medium text-neutral-700 mb-1">Search</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <i class="fas fa-search text-neutral-400"></i>
+                                <x-lucide-search class="w-4 h-4 text-neutral-400" />
                             </div>
                             <input type="text" 
                                    name="search" 
@@ -165,10 +165,10 @@
                     </div>
                     <div class="flex space-x-3 items-end">
                         <button type="submit" class="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
-                            <i class="fas fa-search mr-2"></i> Filter
+                            <x-lucide-search class="w-4 h-4 mr-2" /> Filter
                         </button>
                         <a href="{{ route('admin.documents.index') }}" class="flex-1 border border-neutral-300 text-neutral-700 hover:bg-neutral-100 py-2 px-4 rounded-lg flex items-center justify-center transition-colors">
-                            <i class="fas fa-times mr-2"></i> Clear
+                            <x-lucide-x class="w-4 h-4 mr-2" /> Clear
                         </a>
                     </div>
                 </div>
@@ -179,27 +179,27 @@
                     <span class="text-sm text-neutral-600">Active filters:</span>
                     @if(request('search'))
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                            <i class="fas fa-search mr-1"></i> "{{ request('search') }}"
+                            <x-lucide-search class="w-3 h-3 mr-1" /> "{{ request('search') }}"
                         </span>
                     @endif
                     @if(request('type'))
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            <i class="fas fa-file mr-1"></i> {{ strtoupper(request('type')) }}
+                            <x-lucide-file class="w-3 h-3 mr-1" /> {{ strtoupper(request('type')) }}
                         </span>
                     @endif
                     @if(request('client'))
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <i class="fas fa-user mr-1"></i> {{ $clients->firstWhere('id', request('client'))->fullName ?? 'Unknown' }}
+                            <x-lucide-user class="w-3 h-3 mr-1" /> {{ $clients->firstWhere('id', request('client'))->fullName ?? 'Unknown' }}
                         </span>
                     @endif
                     @if(request('project'))
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                            <i class="fas fa-project-diagram mr-1"></i> {{ $projects->firstWhere('id', request('project'))->project_name ?? 'Unknown' }}
+                            <x-lucide-folder-kanban class="w-3 h-3 mr-1" /> {{ $projects->firstWhere('id', request('project'))->project_name ?? 'Unknown' }}
                         </span>
                     @endif
                     @if(request('date_from') || request('date_to'))
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                            <i class="fas fa-calendar mr-1"></i> 
+                            <x-lucide-calendar class="w-3 h-3 mr-1" /> 
                             {{ request('date_from') ?? 'Start' }} - {{ request('date_to') ?? 'End' }}
                         </span>
                     @endif
@@ -212,7 +212,7 @@
             <div class="mb-8">
                 <div class="bg-white rounded-xl shadow-sm p-5 border border-neutral-100">
                     <h3 class="text-base font-semibold text-primary-500 mb-4 flex items-center">
-                        <i class="fas fa-chart-pie text-primary-500 mr-2"></i>
+                        <x-lucide-pie-chart class="w-4 h-4 text-primary-500 mr-2" />
                         Documents by Type
                     </h3>
                     <div class="max-w-md mx-auto">
@@ -235,7 +235,7 @@
                     </div>
                     <div class="w-full sm:w-auto sm:self-end">
                         <button type="submit" class="w-full sm:w-auto px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center" id="apply-bulk-action">
-                            <i class="fas fa-check mr-2"></i> Apply
+                            <x-lucide-check class="w-4 h-4 mr-2" /> Apply
                         </button>
                     </div>
                 </div>
@@ -252,9 +252,13 @@
                                     <a href="{{ route('admin.documents.index', array_merge(request()->query(), ['sort' => 'fileName', 'direction' => request('sort') === 'fileName' && request('direction') === 'asc' ? 'desc' : 'asc'])) }}" class="flex items-center hover:text-primary-600">
                                         File Name
                                         @if(request('sort') === 'fileName')
-                                            <i class="fas fa-sort-{{ request('direction') === 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                            @if(request('direction') === 'asc')
+                                                <x-lucide-chevron-up class="w-3 h-3 ml-1" />
+                                            @else
+                                                <x-lucide-chevron-down class="w-3 h-3 ml-1" />
+                                            @endif
                                         @else
-                                            <i class="fas fa-sort ml-1 text-neutral-400"></i>
+                                            <x-lucide-chevrons-up-down class="w-3 h-3 ml-1 text-neutral-400" />
                                         @endif
                                     </a>
                                 </th>
@@ -263,9 +267,13 @@
                                     <a href="{{ route('admin.documents.index', array_merge(request()->query(), ['sort' => 'fileSize', 'direction' => request('sort') === 'fileSize' && request('direction') === 'asc' ? 'desc' : 'asc'])) }}" class="flex items-center hover:text-primary-600">
                                         Size
                                         @if(request('sort') === 'fileSize')
-                                            <i class="fas fa-sort-{{ request('direction') === 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                            @if(request('direction') === 'asc')
+                                                <x-lucide-chevron-up class="w-3 h-3 ml-1" />
+                                            @else
+                                                <x-lucide-chevron-down class="w-3 h-3 ml-1" />
+                                            @endif
                                         @else
-                                            <i class="fas fa-sort ml-1 text-neutral-400"></i>
+                                            <x-lucide-chevrons-up-down class="w-3 h-3 ml-1 text-neutral-400" />
                                         @endif
                                     </a>
                                 </th>
@@ -275,9 +283,13 @@
                                     <a href="{{ route('admin.documents.index', array_merge(request()->query(), ['sort' => 'created_at', 'direction' => request('sort') === 'created_at' && request('direction') === 'asc' ? 'desc' : 'asc'])) }}" class="flex items-center hover:text-primary-600">
                                         Uploaded
                                         @if(request('sort') === 'created_at' || !request('sort'))
-                                            <i class="fas fa-sort-{{ (request('direction') ?? 'desc') === 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                            @if((request('direction') ?? 'desc') === 'asc')
+                                                <x-lucide-chevron-up class="w-3 h-3 ml-1" />
+                                            @else
+                                                <x-lucide-chevron-down class="w-3 h-3 ml-1" />
+                                            @endif
                                         @else
-                                            <i class="fas fa-sort ml-1 text-neutral-400"></i>
+                                            <x-lucide-chevrons-up-down class="w-3 h-3 ml-1 text-neutral-400" />
                                         @endif
                                     </a>
                                 </th>
@@ -292,7 +304,7 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         <a href="{{ route('admin.documents.show', $document->documentID) }}" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
-                                            <i class="fas {{ $document->file_icon ?? 'fa-file-alt text-neutral-400' }} mr-2"></i>
+                                            <x-lucide-file-text class="w-4 h-4 mr-2 text-neutral-400" />
                                             <div>
                                                 <span class="block">{{ Str::limit($document->fileName, 40) }}</span>
                                                 @if($document->description)
@@ -321,12 +333,12 @@
                                     <td class="px-6 py-4 text-sm">
                                         @if($document->task)
                                             <a href="{{ route('admin.tasks.show', $document->task->taskID) }}" class="text-primary-600 hover:text-primary-700 flex items-center">
-                                                <i class="fas fa-tasks text-xs mr-1"></i>
+                                                <x-lucide-list-checks class="w-3 h-3 mr-1" />
                                                 {{ Str::limit($document->task->taskTitle, 25) }}
                                             </a>
                                         @elseif($document->project)
                                             <a href="{{ route('admin.projects.show', $document->project->id) }}" class="text-primary-600 hover:text-primary-700 flex items-center">
-                                                <i class="fas fa-project-diagram text-xs mr-1"></i>
+                                                <x-lucide-folder-kanban class="w-3 h-3 mr-1" />
                                                 {{ Str::limit($document->project->project_name, 25) }}
                                             </a>
                                         @else
@@ -343,24 +355,24 @@
                                             <a href="{{ route('admin.documents.show', $document->documentID) }}" 
                                                class="text-primary-600 hover:text-primary-800 hover:bg-primary-50 p-2 rounded-lg transition-colors"
                                                title="View">
-                                                <i class="fas fa-eye"></i>
+                                                <x-lucide-eye class="w-4 h-4" />
                                             </a>
                                             <a href="{{ route('admin.documents.download', $document->documentID) }}" 
                                                class="text-primary-600 hover:text-primary-800 hover:bg-primary-50 p-2 rounded-lg transition-colors"
                                                title="Download">
-                                                <i class="fas fa-download"></i>
+                                                <x-lucide-download class="w-4 h-4" />
                                             </a>
                                             <a href="{{ route('admin.documents.edit', $document->documentID) }}" 
                                                class="text-primary-600 hover:text-primary-800 hover:bg-primary-50 p-2 rounded-lg transition-colors"
                                                title="Edit">
-                                                <i class="fas fa-edit"></i>
+                                                <x-lucide-pencil class="w-4 h-4" />
                                             </a>
                                             <button type="button" 
                                                     class="text-warning-600 hover:text-warning-800 hover:bg-warning-50 p-2 rounded-lg transition-colors delete-document" 
                                                     data-document-id="{{ $document->documentID }}"
                                                     data-document-name="{{ $document->fileName }}"
                                                     title="Move to Trash">
-                                                <i class="fas fa-trash"></i>
+                                                <x-lucide-trash-2 class="w-4 h-4" />
                                             </button>
                                         </div>
                                     </td>
@@ -370,7 +382,7 @@
                                     <td colspan="8" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center justify-center text-neutral-400">
                                             <div class="bg-neutral-100 p-6 rounded-full mb-4">
-                                                <i class="fas fa-folder-open text-4xl text-neutral-400"></i>
+                                                <x-lucide-folder-open class="w-10 h-10 text-neutral-400" />
                                             </div>
                                             <p class="text-lg font-medium text-neutral-500">No documents found</p>
                                             <p class="text-sm mt-1">
@@ -406,14 +418,14 @@
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-neutral-800">Move to Trash</h3>
                 <button type="button" class="text-neutral-400 hover:text-neutral-600 transition-colors" onclick="document.getElementById('deleteModal').style.display='none'">
-                    <i class="fas fa-times"></i>
+                    <x-lucide-x class="w-5 h-5" />
                 </button>
             </div>
         </div>
         <div class="px-6 py-4">
             <div class="flex items-start space-x-4">
                 <div class="bg-warning-100 p-3 rounded-full">
-                    <i class="fas fa-trash-alt text-warning-500"></i>
+                    <x-lucide-trash-2 class="w-5 h-5 text-warning-500" />
                 </div>
                 <div class="flex-1">
                     <p class="text-neutral-700 text-sm mb-2">This document will be moved to trash. You can restore it later from the Trash section.</p>

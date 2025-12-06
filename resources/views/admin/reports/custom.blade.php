@@ -15,9 +15,9 @@
             <div class="mb-4 sm:mb-0">
                 <nav class="flex items-center space-x-2 text-sm text-neutral-500 mt-1">
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-primary-600 transition-colors">Dashboard</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <a href="{{ route('admin.reports.index') }}" class="hover:text-primary-600 transition-colors">Reports</a>
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    <x-lucide-chevron-right class="w-3 h-3" />
                     <span class="text-neutral-700">Custom Report Builder</span>
                 </nav>
             </div>
@@ -31,7 +31,7 @@
     <div class="bg-white rounded-lg shadow-sm border border-neutral-200 mb-6">
         <div class="px-5 py-4 border-b border-neutral-200">
             <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                <i class="fas fa-chart-bar text-primary-500 mr-2"></i>
+                <x-lucide-bar-chart-3 class="w-4 h-4 text-primary-500 mr-2" />
                 Report Configuration
             </h3>
         </div>
@@ -134,16 +134,16 @@
                 <!-- Action Buttons -->
                 <div class="flex justify-between items-center pt-4 border-t border-neutral-200">
                     <button type="button" id="previewReport" class="inline-flex items-center px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-lg transition-colors">
-                        <i class="fas fa-eye mr-2"></i>
+                        <x-lucide-eye class="w-4 h-4 mr-2" />
                         Preview Report
                     </button>
                     <div class="flex gap-2">
                         <button type="button" id="saveTemplate" class="inline-flex items-center px-4 py-2 bg-secondary-500 hover:bg-secondary-600 text-white font-medium rounded-lg transition-colors">
-                            <i class="fas fa-save mr-2"></i>
+                            <x-lucide-save class="w-4 h-4 mr-2" />
                             Save Template
                         </button>
                         <button type="submit" id="generateReport" class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
-                            <i class="fas fa-chart-line mr-2"></i>
+                            <x-lucide-trending-up class="w-4 h-4 mr-2" />
                             Generate Report
                         </button>
                     </div>
@@ -156,7 +156,7 @@
     <div class="bg-white rounded-lg shadow-sm border border-neutral-200 mb-6">
         <div class="px-5 py-4 border-b border-neutral-200">
             <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                <i class="fas fa-bookmark text-primary-500 mr-2"></i>
+                <x-lucide-bookmark class="w-4 h-4 text-primary-500 mr-2" />
                 Quick Templates
             </h3>
         </div>
@@ -166,13 +166,13 @@
                 <div class="p-4 border border-neutral-200 rounded-lg hover:border-primary-300 cursor-pointer transition-colors" data-template="user-growth">
                     <div class="flex items-center mb-3">
                         <div class="h-10 w-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center mr-3">
-                            <i class="fas fa-users text-sm"></i>
+                            <x-lucide-users class="w-4 h-4" />
                         </div>
                         <h4 class="font-medium text-neutral-800">User Growth Analysis</h4>
                     </div>
                     <p class="text-sm text-neutral-600 mb-3">Track user registration trends, role distribution, and activity patterns over time.</p>
                     <div class="flex items-center text-xs text-neutral-500">
-                        <i class="fas fa-chart-line mr-1"></i>
+                        <x-lucide-trending-up class="w-3 h-3 mr-1" />
                         Line Chart + Summary
                     </div>
                 </div>
@@ -181,13 +181,13 @@
                 <div class="p-4 border border-neutral-200 rounded-lg hover:border-primary-300 cursor-pointer transition-colors" data-template="task-performance">
                     <div class="flex items-center mb-3">
                         <div class="h-10 w-10 rounded-full bg-success-100 text-success-600 flex items-center justify-center mr-3">
-                            <i class="fas fa-tasks text-sm"></i>
+                            <x-lucide-list-checks class="w-4 h-4" />
                         </div>
                         <h4 class="font-medium text-neutral-800">Task Performance</h4>
                     </div>
                     <p class="text-sm text-neutral-600 mb-3">Analyze task completion rates, overdue items, and adiutor productivity metrics.</p>
                     <div class="flex items-center text-xs text-neutral-500">
-                        <i class="fas fa-chart-bar mr-1"></i>
+                        <x-lucide-bar-chart-3 class="w-3 h-3 mr-1" />
                         Bar Chart + Table
                     </div>
                 </div>
@@ -196,13 +196,13 @@
                 <div class="p-4 border border-neutral-200 rounded-lg hover:border-primary-300 cursor-pointer transition-colors" data-template="revenue-overview">
                     <div class="flex items-center mb-3">
                         <div class="h-10 w-10 rounded-full bg-warning-100 text-warning-600 flex items-center justify-center mr-3">
-                            <i class="fas fa-dollar-sign text-sm"></i>
+                            <x-lucide-dollar-sign class="w-4 h-4" />
                         </div>
                         <h4 class="font-medium text-neutral-800">Revenue Overview</h4>
                     </div>
                     <p class="text-sm text-neutral-600 mb-3">Financial performance analysis with revenue trends and client billing overview.</p>
                     <div class="flex items-center text-xs text-neutral-500">
-                        <i class="fas fa-chart-area mr-1"></i>
+                        <x-lucide-area-chart class="w-3 h-3 mr-1" />
                         Area Chart + KPIs
                     </div>
                 </div>
@@ -211,13 +211,13 @@
                 <div class="p-4 border border-neutral-200 rounded-lg hover:border-primary-300 cursor-pointer transition-colors" data-template="storage-analysis">
                     <div class="flex items-center mb-3">
                         <div class="h-10 w-10 rounded-full bg-info-100 text-info-600 flex items-center justify-center mr-3">
-                            <i class="fas fa-hdd text-sm"></i>
+                            <x-lucide-hard-drive class="w-4 h-4" />
                         </div>
                         <h4 class="font-medium text-neutral-800">Storage Analysis</h4>
                     </div>
                     <p class="text-sm text-neutral-600 mb-3">Document storage usage, file type distribution, and upload patterns.</p>
                     <div class="flex items-center text-xs text-neutral-500">
-                        <i class="fas fa-chart-pie mr-1"></i>
+                        <x-lucide-pie-chart class="w-3 h-3 mr-1" />
                         Pie Chart + Details
                     </div>
                 </div>
@@ -226,13 +226,13 @@
                 <div class="p-4 border border-neutral-200 rounded-lg hover:border-primary-300 cursor-pointer transition-colors" data-template="client-activity">
                     <div class="flex items-center mb-3">
                         <div class="h-10 w-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
-                            <i class="fas fa-user-clock text-sm"></i>
+                            <x-lucide-user-clock class="w-4 h-4" />
                         </div>
                         <h4 class="font-medium text-neutral-800">Client Activity</h4>
                     </div>
                     <p class="text-sm text-neutral-600 mb-3">Client engagement metrics, service request patterns, and satisfaction scores.</p>
                     <div class="flex items-center text-xs text-neutral-500">
-                        <i class="fas fa-chart-line mr-1"></i>
+                        <x-lucide-trending-up class="w-3 h-3 mr-1" />
                         Mixed Charts
                     </div>
                 </div>
@@ -241,13 +241,13 @@
                 <div class="p-4 border border-neutral-200 rounded-lg hover:border-primary-300 cursor-pointer transition-colors" data-template="system-performance">
                     <div class="flex items-center mb-3">
                         <div class="h-10 w-10 rounded-full bg-error-100 text-error-600 flex items-center justify-center mr-3">
-                            <i class="fas fa-tachometer-alt text-sm"></i>
+                            <x-lucide-gauge class="w-4 h-4" />
                         </div>
                         <h4 class="font-medium text-neutral-800">System Performance</h4>
                     </div>
                     <p class="text-sm text-neutral-600 mb-3">System health metrics, response times, and resource utilization analysis.</p>
                     <div class="flex items-center text-xs text-neutral-500">
-                        <i class="fas fa-chart-line mr-1"></i>
+                        <x-lucide-trending-up class="w-3 h-3 mr-1" />
                         Real-time Metrics
                     </div>
                 </div>
@@ -259,7 +259,7 @@
     <div id="reportPreview" class="hidden bg-white rounded-lg shadow-sm border border-neutral-200">
         <div class="px-5 py-4 border-b border-neutral-200">
             <h3 class="text-sm font-semibold text-neutral-800 flex items-center">
-                <i class="fas fa-chart-area text-primary-500 mr-2"></i>
+                <x-lucide-area-chart class="w-4 h-4 text-primary-500 mr-2" />
                 Report Preview
             </h3>
         </div>
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Show loading state
-        dynamicFilters.innerHTML = '<div class="col-span-3 text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Loading filters...</div>';
+        dynamicFilters.innerHTML = '<div class="col-span-3 text-center py-4"><svg class="w-4 h-4 mr-2 inline animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Loading filters...</div>';
         
         // Fetch filter options from API
         fetch(`{{ url('admin/reports/custom/filters') }}/${reportType}`)
@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="mt-4 p-3 bg-info-50 rounded-lg">
                 <p class="text-sm text-info-700">
-                    <i class="fas fa-info-circle mr-1"></i>
+                    <svg class="w-4 h-4 mr-1 inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                     This is a preview based on ${previewData.total_records} records. Click "Generate Report" to create the full interactive report.
                 </p>
             </div>
@@ -601,7 +601,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('previewContent').innerHTML = `
             <div class="text-center py-8">
                 <div class="text-red-500 mb-4">
-                    <i class="fas fa-exclamation-triangle text-3xl"></i>
+                    <svg class="w-8 h-8 mx-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
                 </div>
                 <p class="text-red-600">${message}</p>
             </div>
@@ -612,7 +612,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(document.getElementById('customReportForm'));
         
         // Show loading state
-        generateButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+        generateButton.innerHTML = '<svg class="w-4 h-4 mr-2 inline animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Generating...';
         generateButton.disabled = true;
         
         // Make API call to generate full report
@@ -625,7 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            generateButton.innerHTML = '<i class="fas fa-chart-line mr-2"></i>Generate Report';
+            generateButton.innerHTML = '<svg class="w-4 h-4 mr-2 inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Generate Report';
             generateButton.disabled = false;
             
             if (data.success) {
@@ -636,7 +636,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error generating report:', error);
-            generateButton.innerHTML = '<i class="fas fa-chart-line mr-2"></i>Generate Report';
+            generateButton.innerHTML = '<svg class="w-4 h-4 mr-2 inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Generate Report';
             generateButton.disabled = false;
             window.toast.error('Error generating report. Please try again.');
         });
@@ -668,10 +668,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h4 class="font-medium text-neutral-800 mb-3">Export Options</h4>
                     <div class="flex gap-2">
                         <button onclick="exportReport('csv')" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-                            <i class="fas fa-file-csv mr-2"></i>Export CSV
+                            <svg class="w-4 h-4 mr-2 inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Export CSV
                         </button>
                         <button onclick="exportReport('pdf')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                            <i class="fas fa-file-pdf mr-2"></i>Export PDF
+                            <svg class="w-4 h-4 mr-2 inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>Export PDF
                         </button>
                     </div>
                 </div>
@@ -685,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ${exportHTML}
             <div class="mt-6 text-center">
                 <button onclick="resetForm()" class="px-6 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700 transition-colors">
-                    <i class="fas fa-arrow-left mr-2"></i>Create New Report
+                    <svg class="w-4 h-4 mr-2 inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Create New Report
                 </button>
             </div>
         `;

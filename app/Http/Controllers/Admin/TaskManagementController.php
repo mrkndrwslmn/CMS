@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Models\Subtask;
 use App\Models\User;
 use App\Models\Project;
 use App\Mail\TaskAssigned;
@@ -56,6 +57,11 @@ class TaskManagementController extends Controller
             $query->where('client_id', $request->client);
         }
         
+        // Project filter
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+        
         // Sort functionality
         $sort = $request->get('sort', 'created_at');
         $direction = $request->get('direction', 'desc');
@@ -66,29 +72,55 @@ class TaskManagementController extends Controller
         // Get filter options
         $clients = User::where('role', 'client')->orderBy('fullName')->get();
         $adiutors = User::where('role', 'adiutor')->orderBy('fullName')->get();
+        $projects = Project::orderBy('title')->get();
         
-        // Get statistics
+        // Get current project if filtered
+        $currentProject = null;
+        if ($request->filled('project_id')) {
+            $currentProject = Project::find($request->project_id);
+        }
+        
+        // Get statistics (filtered if project_id is set)
+        $statsQuery = Task::query();
+        if ($request->filled('project_id')) {
+            $statsQuery->where('project_id', $request->project_id);
+        }
+        
         $stats = [
-            'total_tasks' => Task::count(),
-            'pending_tasks' => Task::where('status', 'pending')->count(),
-            'in_progress_tasks' => Task::where('status', 'in_progress')->count(),
-            'completed_tasks' => Task::where('status', 'completed')->count(),
+            'total_tasks' => (clone $statsQuery)->count(),
+            'pending_tasks' => (clone $statsQuery)->where('status', 'pending')->count(),
+            'in_progress_tasks' => (clone $statsQuery)->where('status', 'in_progress')->count(),
+            'completed_tasks' => (clone $statsQuery)->where('status', 'completed')->count(),
         ];
         
-        return view('admin.tasks.index', compact('tasks', 'clients', 'adiutors', 'stats'));
+        return view('admin.tasks.index', compact('tasks', 'clients', 'adiutors', 'projects', 'currentProject', 'stats'));
     }
     
     public function show($id)
     {
-        $task = Task::with(['client', 'assignedUser', 'project.serviceRequest', 'creator', 'documents', 'phase'])->findOrFail($id);
+        $task = Task::with(['client', 'assignedUser', 'project.serviceRequest', 'creator', 'phase', 'subtasks'])->findOrFail($id);
+        
+        // Get ALL documents for this task (both deliverables and regular documents)
+        $allDocuments = \App\Models\Document::where('taskID', $id)
+            ->where('is_archived', false)
+            ->with('uploader')
+            ->orderByDesc('is_deliverable') // Deliverables first
+            ->orderByDesc('created_at')
+            ->get();
         
         // Get task history/activity log if available
         $activities = []; // This could be implemented with a separate Activity model
         
-        // Get adiutors for assignment dropdown
-        $adiutors = User::where('role', 'adiutor')->orderBy('fullName')->get();
+        // Get only team members of this task's project for assignment dropdown
+        $adiutors = DB::table('users')
+            ->join('project_assignments', 'users.id', '=', 'project_assignments.adiutor_id')
+            ->where('project_assignments.project_id', $task->project_id)
+            ->whereIn('project_assignments.status', ['assigned', 'accepted', 'in_progress'])
+            ->select('users.id', 'users.fullName')
+            ->orderBy('users.fullName')
+            ->get();
         
-        return view('admin.tasks.show', compact('task', 'activities', 'adiutors'));
+        return view('admin.tasks.show', compact('task', 'activities', 'adiutors', 'allDocuments'));
     }
     
     public function create(Request $request)
@@ -125,6 +157,10 @@ class TaskManagementController extends Controller
             'budget_cap' => 'nullable|numeric|min:0',
             'fixed_budget' => 'nullable|numeric|min:0',
             'requires_time_tracking' => 'nullable|boolean',
+            // Subtasks validation
+            'subtasks' => 'nullable|array',
+            'subtasks.*.title' => 'required_with:subtasks|string|max:255',
+            'subtasks.*.description' => 'nullable|string|max:1000',
         ]);
         
         // Get project and client_id from project
@@ -186,7 +222,7 @@ class TaskManagementController extends Controller
             'status' => $request->status,
             'notes' => $request->notes,
             'createdBy' => Auth::id(),
-            'dateAssigned' => $request->assignedTo ? now() : null,
+            'dateAssigned' => now(), 
         ];
         
         // Apply payment configuration based on type
@@ -207,6 +243,23 @@ class TaskManagementController extends Controller
         }
         
         $task = Task::create($taskData);
+        
+        // Create subtasks if provided
+        if ($request->has('subtasks') && is_array($request->subtasks)) {
+            $sortOrder = 0;
+            foreach ($request->subtasks as $subtaskData) {
+                if (!empty($subtaskData['title'])) {
+                    Subtask::create([
+                        'task_id' => $task->taskID,
+                        'title' => $subtaskData['title'],
+                        'description' => $subtaskData['description'] ?? null,
+                        'is_completed' => false,
+                        'sort_order' => $sortOrder++,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+            }
+        }
         
         // 🔔 Notify all admins about new task creation
         $admins = User::where('role', 'admin')->where('id', '!=', Auth::id())->get();

@@ -7,8 +7,8 @@
     <title>@yield('title', 'Admin Panel') - Treis Adiutor CMS</title>
     
     <!-- Favicon -->
-    <link rel="icon" href="@yield('favicon', 'https://qzdtlrbpjudrvffrnory.supabase.co/storage/v1/object/public/Treis%20Adiutor//favico.ico')" type="image/x-icon">
-    
+    <link rel="icon" href="@yield('favicon', '/favicon.svg')" type="image/x-icon">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,7 +48,7 @@
             <!-- Brand Header -->
             <div class="h-16 flex items-center justify-center border-b border-neutral-100 px-6">
                 <a href="/" class="flex items-center gap-2 group">
-                    <span class="text-xl font-branding text-primary-500 tracking-wide group-hover:text-primary-600 transition-colors">
+                    <span class="text-xl heading-serif text-primary-500 tracking-wide group-hover:text-primary-600 transition-colors">
                         TREIS ADIUTOR
                     </span>
                 </a>
@@ -155,9 +155,19 @@
                             <x-lucide-credit-card class="w-4 h-4" />
                             <span>Payments</span>
                         </a>
-                        <a href="{{ route('admin.payouts.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.payouts*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                        <a href="{{ route('admin.payouts.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.payouts.index', 'admin.payouts.show') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-landmark class="w-4 h-4" />
                             <span>Payouts</span>
+                        </a>
+                        <a href="{{ route('admin.payouts.time-entry-approvals') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.payouts.time-entry-approvals', 'admin.payouts.adiutor-earnings') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-clock class="w-4 h-4" />
+                            <span>Time Entry Approvals</span>
+                            @php
+                                $pendingTimeEntries = \App\Models\TimeEntry::whereNotNull('end_time')->where('is_approved', false)->count();
+                            @endphp
+                            @if($pendingTimeEntries > 0)
+                                <span class="ml-auto px-1.5 py-0.5 text-xs font-medium bg-warning-100 text-warning-700 rounded-full">{{ $pendingTimeEntries }}</span>
+                            @endif
                         </a>
                         <a href="{{ route('admin.earnings-analytics.payout-history') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.earnings-analytics.payout-history') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-history class="w-4 h-4" />

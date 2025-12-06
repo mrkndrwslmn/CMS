@@ -144,11 +144,8 @@
                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.revisions.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                     <x-lucide-rotate-ccw class="w-5 h-5" />
                                     Revisions
-                                    @php
-                                        $pendingRevisionsCount = Auth::user()->revisions()->whereIn('status', ['pending', 'in_progress'])->count();
-                                    @endphp
-                                    @if($pendingRevisionsCount > 0)
-                                        <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingRevisionsCount }}</span>
+                                    @if(($sidebarStats['pendingRevisionsCount'] ?? 0) > 0)
+                                        <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['pendingRevisionsCount'] }}</span>
                                     @endif
                                 </a>
                                 
@@ -156,11 +153,8 @@
                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.notifications.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                     <x-lucide-bell class="w-5 h-5" />
                                     All Notifications
-                                    @php
-                                        $unreadNotificationsCount = Auth::user()->unreadNotifications()->count();
-                                    @endphp
-                                    @if($unreadNotificationsCount > 0)
-                                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $unreadNotificationsCount }}</span>
+                                    @if(($sidebarStats['unreadNotificationsCount'] ?? 0) > 0)
+                                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['unreadNotificationsCount'] }}</span>
                                     @endif
                                 </a>
                             </div>
@@ -175,11 +169,8 @@
                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.referrals.dashboard') || request()->routeIs('client.referrals.share') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                     <x-lucide-users class="w-5 h-5" />
                                     Referrals
-                                    @php
-                                        $pendingReferralsCount = Auth::user()->referralsMade()->where('status', 'pending')->count();
-                                    @endphp
-                                    @if($pendingReferralsCount > 0)
-                                        <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingReferralsCount }}</span>
+                                    @if(($sidebarStats['pendingReferralsCount'] ?? 0) > 0)
+                                        <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['pendingReferralsCount'] }}</span>
                                     @endif
                                 </a>
                                 
@@ -199,11 +190,8 @@
                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.coupons.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                     <x-lucide-ticket class="w-5 h-5" />
                                     Coupons
-                                    @php
-                                        $activeCouponsCount = Auth::user()->coupons()->where('status', 'active')->where('valid_until', '>', now())->count();
-                                    @endphp
-                                    @if($activeCouponsCount > 0)
-                                        <span class="ml-auto bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $activeCouponsCount }}</span>
+                                    @if(($sidebarStats['activeCouponsCount'] ?? 0) > 0)
+                                        <span class="ml-auto bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['activeCouponsCount'] }}</span>
                                     @endif
                                 </a>
                                 
@@ -211,11 +199,8 @@
                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.loyalty.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                     <x-lucide-award class="w-5 h-5" />
                                     Loyalty Program
-                                    @php
-                                        $userPoints = Auth::user()->loyalty_points ?? 0;
-                                    @endphp
-                                    @if($userPoints > 0)
-                                        <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPoints) }}</span>
+                                    @if(($sidebarStats['userPoints'] ?? 0) > 0)
+                                        <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($sidebarStats['userPoints']) }}</span>
                                     @endif
                                 </a>
                                 
@@ -321,11 +306,8 @@
                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.revisions.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                     <x-lucide-rotate-ccw class="w-5 h-5" />
                     Revisions
-                    @php
-                        $pendingRevisionsCountMobile = Auth::user()->revisions()->whereIn('status', ['pending', 'in_progress'])->count();
-                    @endphp
-                    @if($pendingRevisionsCountMobile > 0)
-                        <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingRevisionsCountMobile }}</span>
+                    @if(($sidebarStats['pendingRevisionsCount'] ?? 0) > 0)
+                        <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['pendingRevisionsCount'] }}</span>
                     @endif
                 </a>
                 
@@ -333,11 +315,8 @@
                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.notifications.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                     <x-lucide-bell class="w-5 h-5" />
                     All Notifications
-                    @php
-                        $unreadNotificationsCountMobile = Auth::user()->unreadNotifications()->count();
-                    @endphp
-                    @if($unreadNotificationsCountMobile > 0)
-                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $unreadNotificationsCountMobile }}</span>
+                    @if(($sidebarStats['unreadNotificationsCount'] ?? 0) > 0)
+                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['unreadNotificationsCount'] }}</span>
                     @endif
                 </a>
                 
@@ -351,11 +330,8 @@
                        class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.referrals.dashboard') || request()->routeIs('client.referrals.share') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                         <x-lucide-users class="w-5 h-5" />
                         Referrals
-                        @php
-                            $pendingReferralsCountMobile = Auth::user()->referralsMade()->where('status', 'pending')->count();
-                        @endphp
-                        @if($pendingReferralsCountMobile > 0)
-                            <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $pendingReferralsCountMobile }}</span>
+                        @if(($sidebarStats['pendingReferralsCount'] ?? 0) > 0)
+                            <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['pendingReferralsCount'] }}</span>
                         @endif
                     </a>
                     
@@ -375,11 +351,8 @@
                        class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.coupons.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                         <x-lucide-ticket class="w-5 h-5" />
                         Coupons
-                        @php
-                            $activeCouponsCount = Auth::user()->coupons()->where('status', 'active')->where('valid_until', '>', now())->count();
-                        @endphp
-                        @if($activeCouponsCount > 0)
-                            <span class="ml-auto bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $activeCouponsCount }}</span>
+                        @if(($sidebarStats['activeCouponsCount'] ?? 0) > 0)
+                            <span class="ml-auto bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['activeCouponsCount'] }}</span>
                         @endif
                     </a>
                     
@@ -387,11 +360,8 @@
                        class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.loyalty.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                         <x-lucide-star class="w-5 h-5" />
                         Loyalty Program
-                        @php
-                            $userPointsMobile = Auth::user()->loyalty_points ?? 0;
-                        @endphp
-                        @if($userPointsMobile > 0)
-                            <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($userPointsMobile) }}</span>
+                        @if(($sidebarStats['userPoints'] ?? 0) > 0)
+                            <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($sidebarStats['userPoints']) }}</span>
                         @endif
                     </a>
                     

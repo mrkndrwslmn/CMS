@@ -54,6 +54,8 @@ RUN rm -rf /var/www/html/node_modules /var/www/html/package-lock.json
 COPY docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/scripts/startup.sh /usr/local/bin/startup.sh
+RUN chmod +x /usr/local/bin/startup.sh
 
 # Make sure we have the correct permissions
 RUN chown -R www-data:www-data /var/www/html \
@@ -68,11 +70,21 @@ RUN composer install --optimize-autoloader
 # We skip npm run build here to avoid timeout issues during build
 RUN npm install --prefer-offline --no-audit 2>&1 | grep -v "npm WARN" || true
 
+# Build frontend assets for production
+RUN npm run build
+
+# Pre-compile Laravel caches during build (not on every request)
+# This includes config, routes, views, and blade-icons
+RUN php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache \
+    && php artisan icons:cache 2>/dev/null || true
+
 # Create Laravel cron job
 RUN echo "* * * * * www-data /usr/local/bin/php /var/www/html/artisan schedule:run >> /dev/null 2>&1" >> /etc/crontab
 
 # Expose port 80
 EXPOSE 80
 
-# Start services using supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Start with our startup script that ensures caches are ready
+CMD ["/usr/local/bin/startup.sh"]

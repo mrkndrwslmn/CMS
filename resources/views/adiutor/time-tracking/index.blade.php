@@ -3,7 +3,7 @@
 @section('title', 'Time Tracking')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="timeTracker()">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="timeTracker()">
     <!-- Breadcrumb Navigation -->
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
@@ -53,7 +53,7 @@
                             @change="console.log('Task selected:', newTimer.task_id)">
                         <option value="">Choose a task...</option>
                         @foreach($availableTasks as $task)
-                            <option value="{{ $task->taskID }}">{{ $task->project->title }} - {{ $task->taskTitle }}</option>
+                            <option value="{{ $task->taskID }}" {{ isset($preSelectedTaskId) && $preSelectedTaskId == $task->taskID ? 'selected' : '' }}>{{ $task->project->title }} - {{ $task->taskTitle }}</option>
                         @endforeach
                     </select>
                     <p class="text-xs text-neutral-500 mt-1">Available tasks: {{ count($availableTasks) }}</p>
@@ -67,7 +67,7 @@
                 </div>
             </div>
             
-            <x-ui.button type="submit" :disabled="!newTimer.task_id || loading" variant="success">
+            <x-ui.button type="submit" x-bind:disabled="!newTimer.task_id || loading" variant="success">
                 <x-lucide-play class="w-4 h-4 mr-2" />
                 <span x-text="loading ? 'Starting...' : 'Start Timer'"></span>
             </x-ui.button>
@@ -239,10 +239,10 @@ function timeTracker() {
             @if($activeTimer)
             timer: {
                 id: {{ $activeTimer->id }},
-                task_name: '{{ $activeTimer->task->taskTitle }}',
-                project_name: '{{ $activeTimer->task->project->title }}',
-                description: '{{ $activeTimer->description }}',
-                start_time: '{{ $activeTimer->start_time->toISOString() }}'
+                task_name: @json($activeTimer->task->taskTitle),
+                project_name: @json($activeTimer->task->project->title),
+                description: @json($activeTimer->description ?? ''),
+                start_time: @json($activeTimer->start_time->toIso8601String())
             },
             @else
             timer: null,
@@ -250,7 +250,7 @@ function timeTracker() {
             elapsed: 0
         },
         newTimer: {
-            task_id: '',
+            task_id: '{{ $preSelectedTaskId ?? '' }}',
             description: ''
         },
         message: {
@@ -268,17 +268,25 @@ function timeTracker() {
         },
         
         updateElapsedTime() {
-            if (this.activeTimer.timer) {
+            if (this.activeTimer.timer && this.activeTimer.timer.start_time) {
                 const start = new Date(this.activeTimer.timer.start_time);
-                const now = new Date();
-                this.activeTimer.elapsed = Math.floor((now - start) / 1000);
+                if (!isNaN(start.getTime())) {
+                    const now = new Date();
+                    this.activeTimer.elapsed = Math.floor((now - start) / 1000);
+                } else {
+                    console.error('Invalid start_time:', this.activeTimer.timer.start_time);
+                    this.activeTimer.elapsed = 0;
+                }
             }
         },
         
         formatTime(seconds) {
+            if (isNaN(seconds) || seconds < 0) {
+                return '00:00:00';
+            }
             const hours = Math.floor(seconds / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = seconds % 60;
+            const secs = Math.floor(seconds % 60);
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         },
         

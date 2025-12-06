@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Adiutor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Models\Subtask;
 use App\Models\Document;
 use App\Models\Project;
 use App\Models\User;
@@ -117,11 +118,17 @@ class TaskController extends Controller
             ->where('adiutor_id', $user->id)
             ->first();
         
-        // Get task files
-        $taskFiles = DB::table('documents')
+        // Get task deliverables (files and links marked as deliverables)
+        $deliverables = DB::table('documents')
             ->where('taskID', $taskId)
+            ->where('is_deliverable', true)
             ->where('is_archived', false)
             ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Get subtasks for this task
+        $subtasks = Subtask::where('task_id', $taskId)
+            ->orderBy('sort_order')
             ->get();
         
         // Check for pending budget change request
@@ -130,7 +137,7 @@ class TaskController extends Controller
             ->where('status', 'pending')
             ->first();
         
-        return view('adiutor.tasks.show', compact('user', 'task', 'assignment', 'taskFiles', 'pendingBudgetRequest'));
+        return view('adiutor.tasks.show', compact('user', 'task', 'assignment', 'deliverables', 'subtasks', 'pendingBudgetRequest'));
     }
 
     /**
@@ -389,6 +396,26 @@ class TaskController extends Controller
             'notes' => $request->completion_notes ? $task->notes . "\n\nCompletion Notes: " . $request->completion_notes : $task->notes,
         ]);
         
+        // Auto-complete any approved revision requests for this task
+        $completedRevisions = \App\Models\RevisionRequest::where('task_id', $task->taskID)
+            ->where('status', 'approved')
+            ->where('assigned_adiutor_id', Auth::id())
+            ->get();
+        
+        foreach ($completedRevisions as $revision) {
+            $revision->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+                'completed_by' => Auth::id(),
+                'admin_notes' => ($revision->admin_notes ?? '') . "\n\nAuto-completed when task was marked as completed."
+            ]);
+            
+            // Notify the client that revision is completed
+            if ($revision->requestedBy) {
+                $revision->requestedBy->notify(new \App\Notifications\RevisionCompletedNotification($revision));
+            }
+        }
+        
         // Update project progress
         if ($task->project) {
             $task->project->syncProgressToAssignments();
@@ -458,7 +485,7 @@ class TaskController extends Controller
             'requested_budget' => $request->requested_budget,
             'difference' => $request->requested_budget - ($task->allocated_budget ?? 0),
             'reason' => $request->reason,
-        ]);
+        ], $budgetRequest);
         
         // Send email notifications to all admins
         $admins = User::where('role', 'admin')->get();
@@ -497,6 +524,9 @@ class TaskController extends Controller
             ->first();
             
         if (!$task) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Task not found or you do not have access to it.'], 404);
+            }
             return redirect()->back()
                 ->withErrors(['error' => 'Task not found or you do not have access to it.']);
         }
@@ -572,8 +602,15 @@ class TaskController extends Controller
                 ? 'Deliverable uploaded successfully. It will be visible to the client once approved by an admin.'
                 : 'File uploaded successfully to cloud storage.';
             
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $successMessage]);
+            }
+            
             return redirect()->back()->with('success', $successMessage);
         } else {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to upload file: ' . $uploadResult['error']], 500);
+            }
             return redirect()->back()->withErrors(['error' => 'Failed to upload file: ' . $uploadResult['error']]);
         }
     }
@@ -600,6 +637,9 @@ class TaskController extends Controller
             ->first();
             
         if (!$task) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Task not found or you do not have access to it.'], 404);
+            }
             return redirect()->back()
                 ->withErrors(['error' => 'Task not found or you do not have access to it.']);
         }
@@ -609,7 +649,7 @@ class TaskController extends Controller
             'taskID' => $taskId,
             'uploaded_by' => $user->id,
             'fileName' => $request->title,
-            'filePath' => null, // No file path for links
+            'filePath' => '', // Empty string for links (column cannot be null)
             'fileType' => 'link',
             'fileSize' => 0,
             'description' => $request->description,
@@ -633,6 +673,13 @@ class TaskController extends Controller
                 Auth::user()->fullName,
                 true // is deliverable
             ));
+        }
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Link deliverable added successfully. It will be visible to the client once approved by an admin.'
+            ]);
         }
         
         return redirect()->back()->with('success', 'Link deliverable added successfully. It will be visible to the client once approved by an admin.');
@@ -719,17 +766,14 @@ class TaskController extends Controller
         $user = Auth::user();
         
         $request->validate([
-            'progress_percentage' => 'required|integer|min:0|max:100'
+            'progress_percentage' => 'required|integer|min:0|max:100',
+            'confirm_no_deliverables' => 'nullable|boolean'
         ]);
 
-        // Get task and verify ownership
-        $task = DB::table('tasks')
-            ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('project_assignments', 'projects.id', '=', 'project_assignments.project_id')
-            ->where('tasks.taskID', $taskId)
-            ->where('tasks.assignedTo', $user->id)
-            ->where('project_assignments.adiutor_id', $user->id)
-            ->select('tasks.*', 'projects.client_id')
+        // Get task with deliverables and verify ownership
+        $task = Task::with('deliverables')
+            ->where('taskID', $taskId)
+            ->where('assignedTo', $user->id)
             ->first();
 
         if (!$task) {
@@ -737,6 +781,15 @@ class TaskController extends Controller
         }
 
         $progressPercentage = $request->input('progress_percentage');
+
+        // If trying to set to 100% (complete), check for deliverables
+        if ($progressPercentage == 100 && !$task->hasDeliverables() && !$request->boolean('confirm_no_deliverables')) {
+            return response()->json([
+                'requires_confirmation' => true,
+                'message' => 'This task has no deliverables, documents, or links attached. Are you sure you want to mark it as 100% complete?',
+                'task_id' => $task->taskID,
+            ], 422);
+        }
 
         // Update task progress
         DB::table('tasks')

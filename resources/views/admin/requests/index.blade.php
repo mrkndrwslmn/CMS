@@ -7,9 +7,9 @@
 <div class="px-6 py-8">
     <!-- Breadcrumb -->
     <x-ui.breadcrumb :items="[
-        ['label' => 'Home', 'url' => route('admin.dashboard'), 'icon' => 'home'],
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
         ['label' => 'Requests', 'icon' => 'file-text']
-    ]" class="mb-4" />
+    ]" />
 
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
@@ -30,21 +30,21 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <x-ui.card class="p-5">
-            <div class="flex justify-between items-start">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
                     <p class="text-sm font-medium text-neutral-500">Total Requests</p>
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['total_requests'] }}</p>
                 </div>
-                <div class="p-3 bg-primary-50 rounded-xl">
-                    <x-lucide-file-text class="w-5 h-5 text-primary-500" />
+                <div class="p-3 bg-neutral-50 rounded-xl">
+                    <x-lucide-file-text class="w-5 h-5 text-neutral-400" />
                 </div>
             </div>
         </x-ui.card>
         
-        <x-ui.card class="p-5">
-            <div class="flex justify-between items-start">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
                     <p class="text-sm font-medium text-neutral-500">Pending</p>
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['pending_requests'] }}</p>
@@ -55,8 +55,8 @@
             </div>
         </x-ui.card>
         
-        <x-ui.card class="p-5">
-            <div class="flex justify-between items-start">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
                     <p class="text-sm font-medium text-neutral-500">Approved</p>
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['approved_requests'] }}</p>
@@ -67,8 +67,8 @@
             </div>
         </x-ui.card>
         
-        <x-ui.card class="p-5">
-            <div class="flex justify-between items-start">
+        <x-ui.card class="p-6">
+            <div class="flex items-start justify-between">
                 <div>
                     <p class="text-sm font-medium text-neutral-500">Rejected</p>
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['rejected_requests'] }}</p>
@@ -84,8 +84,8 @@
     <x-ui.card class="mb-6">
         <div class="px-6 py-4 border-b border-neutral-200">
             <div class="flex items-center gap-2">
-                <x-lucide-filter class="w-5 h-5 text-primary-500" />
-                <h2 class="text-lg font-semibold text-neutral-800">Search & Filters</h2>
+                <x-lucide-filter class="w-5 h-5 text-neutral-400" />
+                <h2 class="text-lg font-medium text-neutral-700">Search & Filters</h2>
             </div>
         </div>
         <div class="p-6">
@@ -97,7 +97,7 @@
                         id="search" 
                         name="search" 
                         :value="request('search')"
-                        placeholder="Search requests..."
+                        placeholder="Search requests...""
                     />
                 </div>
                 
@@ -162,8 +162,8 @@
     <x-ui.card class="overflow-hidden mb-6">
         <div class="px-6 py-4 border-b border-neutral-200">
             <div class="flex items-center gap-2">
-                <x-lucide-list class="w-5 h-5 text-primary-500" />
-                <h2 class="text-lg font-semibold text-neutral-800">Client Requests</h2>
+                <x-lucide-list class="w-5 h-5 text-neutral-400" />
+                <h2 class="text-lg font-medium text-neutral-700">Client Requests</h2>
             </div>
         </div>
         <div class="p-6">

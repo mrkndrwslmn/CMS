@@ -152,13 +152,25 @@ class TaskDeliverableController extends Controller
     /**
      * Approve a deliverable.
      */
-    public function approve(Document $deliverable)
+    public function approve(Request $request, Document $deliverable)
     {
         if (!$deliverable->is_deliverable) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Deliverable not found.'], 404);
+            }
             abort(404, 'Deliverable not found.');
         }
 
         $deliverable->approve(Auth::user());
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Deliverable approved successfully.',
+                'approved_by' => Auth::user()->fullName,
+                'approved_at' => now()->format('M d, Y h:i A'),
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Deliverable approved.');
     }

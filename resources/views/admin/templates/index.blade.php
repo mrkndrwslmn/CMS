@@ -12,7 +12,7 @@
             <p class="text-neutral-500 text-sm">Create and manage reusable project templates for faster project setup</p>
         </div>
         <a href="{{ route('admin.templates.create') }}" class="mt-4 sm:mt-0 flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-            <i class="fas fa-plus mr-2"></i>Create Template
+            <x-lucide-plus class="w-4 h-4 mr-2" />Create Template
         </a>
     </div>
 
@@ -26,7 +26,7 @@
                     <p class="text-2xl font-bold text-neutral-900">{{ $templates->total() }}</p>
                 </div>
                 <div class="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
-                    <i class="fas fa-file-alt text-blue-600"></i>
+                    <x-lucide-file-text class="w-5 h-5 text-blue-600" />
                 </div>
             </div>
         </div>
@@ -39,7 +39,7 @@
                     <p class="text-2xl font-bold text-green-600">{{ $templates->where('is_active', true)->count() }}</p>
                 </div>
                 <div class="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg">
-                    <i class="fas fa-check-circle text-green-600"></i>
+                    <x-lucide-check-circle class="w-5 h-5 text-green-600" />
                 </div>
             </div>
         </div>
@@ -52,7 +52,7 @@
                     <p class="text-2xl font-bold text-red-600">{{ $templates->where('is_active', false)->count() }}</p>
                 </div>
                 <div class="flex items-center justify-center w-10 h-10 bg-red-100 rounded-lg">
-                    <i class="fas fa-times-circle text-red-600"></i>
+                    <x-lucide-x-circle class="w-5 h-5 text-red-600" />
                 </div>
             </div>
         </div>
@@ -65,7 +65,7 @@
                     <p class="text-2xl font-bold text-purple-600">{{ $categories->count() }}</p>
                 </div>
                 <div class="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-lg">
-                    <i class="fas fa-tags text-purple-600"></i>
+                    <x-lucide-tags class="w-5 h-5 text-purple-600" />
                 </div>
             </div>
         </div>
@@ -108,10 +108,10 @@
             <!-- Actions -->
             <div class="flex items-end space-x-2">
                 <button type="submit" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                    <i class="fas fa-search mr-2"></i>Filter
+                    <x-lucide-search class="w-4 h-4 inline mr-2" />Filter
                 </button>
                 <a href="{{ route('admin.templates.index') }}" class="px-4 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg transition-colors">
-                    <i class="fas fa-times mr-2"></i>Clear
+                    <x-lucide-x class="w-4 h-4 inline mr-2" />Clear
                 </a>
             </div>
         </form>
@@ -139,7 +139,7 @@
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
                                             <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
-                                                <i class="fas fa-file-alt text-white text-sm"></i>
+                                                <x-lucide-file-text class="w-4 h-4 text-white" />
                                             </div>
                                         </div>
                                         <div class="ml-4">
@@ -191,18 +191,22 @@
                                     <div class="flex items-center space-x-2">
                                         <a href="{{ route('admin.templates.show', $template) }}" 
                                            class="text-blue-600 hover:text-blue-900 transition-colors" title="View">
-                                            <i class="fas fa-eye"></i>
+                                            <x-lucide-eye class="w-4 h-4" />
                                         </a>
                                         <a href="{{ route('admin.templates.edit', $template) }}" 
                                            class="text-indigo-600 hover:text-indigo-900 transition-colors" title="Edit">
-                                            <i class="fas fa-edit"></i>
+                                            <x-lucide-pencil class="w-4 h-4" />
                                         </a>
                                         <form action="{{ route('admin.templates.toggle', $template) }}" method="POST" class="inline">
                                             @csrf
                                             <button type="submit" 
                                                     class="{{ $template->is_active ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900' }} transition-colors" 
                                                     title="{{ $template->is_active ? 'Deactivate' : 'Activate' }}">
-                                                <i class="fas fa-{{ $template->is_active ? 'pause' : 'play' }}"></i>
+                                                @if($template->is_active)
+                                                    <x-lucide-pause class="w-4 h-4" />
+                                                @else
+                                                    <x-lucide-play class="w-4 h-4" />
+                                                @endif
                                             </button>
                                         </form>
                                         <form action="{{ route('admin.templates.duplicate', $template) }}" method="POST" class="inline">
@@ -210,7 +214,7 @@
                                             <button type="submit" 
                                                     class="text-purple-600 hover:text-purple-900 transition-colors" 
                                                     title="Duplicate">
-                                                <i class="fas fa-copy"></i>
+                                                <x-lucide-copy class="w-4 h-4" />
                                             </button>
                                         </form>
                                         <form action="{{ route('admin.templates.destroy', $template) }}" method="POST" class="inline" 
@@ -220,7 +224,7 @@
                                             <button type="submit" 
                                                     class="text-red-600 hover:text-red-900 transition-colors" 
                                                     title="Delete">
-                                                <i class="fas fa-trash"></i>
+                                                <x-lucide-trash-2 class="w-4 h-4" />
                                             </button>
                                         </form>
                                     </div>
@@ -238,7 +242,7 @@
         @else
             <div class="text-center py-12">
                 <div class="w-24 h-24 mx-auto mb-4 bg-neutral-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-file-alt text-neutral-400 text-2xl"></i>
+                    <x-lucide-file-text class="w-8 h-8 text-neutral-400" />
                 </div>
                 <h3 class="text-lg font-medium text-neutral-900 mb-2">No templates found</h3>
                 <p class="text-neutral-500 mb-6">
@@ -250,7 +254,7 @@
                 </p>
                 <a href="{{ route('admin.templates.create') }}" 
                    class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                    <i class="fas fa-plus mr-2"></i>Create Template
+                    <x-lucide-plus class="w-4 h-4 mr-2" />Create Template
                 </a>
             </div>
         @endif
