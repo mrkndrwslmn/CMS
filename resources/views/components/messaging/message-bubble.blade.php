@@ -50,7 +50,7 @@
             : 'bg-white border border-neutral-100 text-neutral-800 rounded-bl-md shadow-sm' }}">
             
             {{-- Message Text --}}
-            <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">{{ $message->message }}</p>
+            <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">{!! \App\Services\MessagingService::formatMentions($message->message, $isSender) !!}</p>
             
             {{-- Attachments --}}
             @if($hasAttachments)

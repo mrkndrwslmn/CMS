@@ -162,9 +162,15 @@
                     Requester
                 </h3>
                 <div class="text-center">
-                    <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <span class="text-2xl font-semibold text-primary-700">{{ strtoupper(substr($withdrawal->user->fullName, 0, 1)) }}</span>
-                    </div>
+                    @if($withdrawal->user->profilePic)
+                        <img src="{{ $withdrawal->user->getProfilePictureUrl() }}" 
+                             alt="{{ $withdrawal->user->fullName }}" 
+                             class="w-16 h-16 rounded-full object-cover mx-auto mb-3">
+                    @else
+                        <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl font-semibold text-primary-700">{{ strtoupper(substr($withdrawal->user->fullName, 0, 1)) }}</span>
+                        </div>
+                    @endif
                     <p class="font-medium text-neutral-800">{{ $withdrawal->user->fullName }}</p>
                     <p class="text-sm text-neutral-500">{{ $withdrawal->user->email }}</p>
                 </div>

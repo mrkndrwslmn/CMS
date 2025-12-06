@@ -91,12 +91,25 @@
             <form id="message-form">
                 @csrf
                 <div class="space-y-3">
-                    <div>
+                    <div class="relative">
+                        <!-- Mention Autocomplete Dropdown -->
+                        <div id="mention-dropdown" class="hidden absolute bottom-full left-0 mb-2 z-50 bg-white border border-neutral-200 rounded-xl shadow-lg max-h-60 overflow-y-auto w-64">
+                            <div class="p-2 text-xs font-medium text-neutral-500 border-b border-neutral-100">
+                                <span class="flex items-center gap-1">
+                                    <x-lucide-at-sign class="w-3.5 h-3.5" />
+                                    Mention someone
+                                </span>
+                            </div>
+                            <div id="mention-list" class="py-1">
+                                <!-- Members will be populated here -->
+                            </div>
+                        </div>
+                        
                         <x-ui.textarea 
                             id="message-textarea"
                             name="message" 
                             rows="3" 
-                            placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
+                            placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line, @ to mention)"
                             required
                             maxlength="5000"
                         />
@@ -151,6 +164,22 @@
 .animate-fade-in {
     animation: fadeIn 0.3s ease-in;
 }
+
+/* Mention tag styling */
+.mention-tag {
+    display: inline;
+    text-decoration: none;
+    border-radius: 0.25rem;
+}
+
+.mention-tag:hover {
+    text-decoration: underline;
+}
+
+/* Mention dropdown item hover state */
+.mention-item:hover, .mention-item.selected {
+    background-color: rgb(243 244 246);
+}
 </style>
 
 <script>
@@ -174,6 +203,12 @@
     let isInitialLoad = true;
     let lastMessageId = null;
     
+    // Mention system variables
+    let mentionedUsers = []; // Array of user IDs that have been mentioned
+    let mentionDropdownOpen = false;
+    let mentionSearchStart = -1;
+    let selectedMentionIndex = 0;
+    
     const messageForm = document.getElementById('message-form');
     const messageTextarea = document.getElementById('message-textarea');
     const attachmentsInput = document.getElementById('attachments');
@@ -181,6 +216,8 @@
     const charCount = document.getElementById('char-count');
     const messagesContainer = document.getElementById('messages-container');
     const messagingService = window.messagingService;
+    const mentionDropdown = document.getElementById('mention-dropdown');
+    const mentionList = document.getElementById('mention-list');
 
     // Initialize chat type on page load
     function initializeChatType() {
@@ -190,6 +227,10 @@
     // Switch between direct and group chat
     function switchChatType(type) {
         currentChatType = type;
+        
+        // Reset mentions when switching chat types
+        mentionedUsers = [];
+        closeMentionDropdown();
         
         // Update API endpoint
         if (type === 'group') {
@@ -393,6 +434,193 @@
         return window.MessagingUtils.escapeHtml(text);
     }
 
+    // =====================================================
+    // MENTION SYSTEM
+    // =====================================================
+    
+    // Open mention dropdown and filter members
+    function openMentionDropdown(searchTerm = '') {
+        if (currentChatType !== 'group' || !groupChatMembers.length) return;
+        
+        const currentUserId = {{ auth()->id() }};
+        const filteredMembers = groupChatMembers.filter(member => {
+            // Don't show current user in mentions
+            if (member.id === currentUserId) return false;
+            // Filter by search term
+            if (searchTerm) {
+                return member.name.toLowerCase().includes(searchTerm.toLowerCase());
+            }
+            return true;
+        });
+        
+        if (filteredMembers.length === 0) {
+            closeMentionDropdown();
+            return;
+        }
+        
+        // Build dropdown content
+        mentionList.innerHTML = filteredMembers.map((member, index) => `
+            <div class="mention-item flex items-center gap-3 px-3 py-2 cursor-pointer ${index === selectedMentionIndex ? 'selected' : ''}"
+                 data-user-id="${member.id}"
+                 data-user-name="${escapeHtml(member.name)}"
+                 onclick="selectMention(${member.id}, '${escapeHtml(member.name).replace(/'/g, "\\'")}')">
+                <img src="${member.pic || '/images/default-avatar.png'}" 
+                     alt="${escapeHtml(member.name)}" 
+                     class="w-8 h-8 rounded-full object-cover border border-neutral-200">
+                <div class="flex-1 min-w-0">
+                    <div class="font-medium text-sm text-neutral-900 truncate">${escapeHtml(member.name)}</div>
+                    <div class="text-xs text-neutral-500 capitalize">${member.role}</div>
+                </div>
+            </div>
+        `).join('');
+        
+        // Show dropdown (positioned via CSS)
+        mentionDropdown.classList.remove('hidden');
+        mentionDropdownOpen = true;
+        selectedMentionIndex = 0;
+        updateMentionSelection();
+    }
+    
+    // Close mention dropdown
+    function closeMentionDropdown() {
+        mentionDropdown.classList.add('hidden');
+        mentionDropdownOpen = false;
+        mentionSearchStart = -1;
+        selectedMentionIndex = 0;
+    }
+    
+    // Update visual selection in dropdown
+    function updateMentionSelection() {
+        const items = mentionList.querySelectorAll('.mention-item');
+        items.forEach((item, index) => {
+            if (index === selectedMentionIndex) {
+                item.classList.add('selected');
+            } else {
+                item.classList.remove('selected');
+            }
+        });
+    }
+    
+    // Select a mention from dropdown
+    function selectMention(userId, userName) {
+        const textarea = messageTextarea;
+        const cursorPos = textarea.selectionStart;
+        const textBefore = textarea.value.substring(0, mentionSearchStart);
+        const textAfter = textarea.value.substring(cursorPos);
+        
+        // Insert the mention
+        const mentionText = `@${userName} `;
+        textarea.value = textBefore + mentionText + textAfter;
+        
+        // Add user to mentioned list if not already there
+        if (!mentionedUsers.includes(userId)) {
+            mentionedUsers.push(userId);
+        }
+        
+        // Set cursor position after the mention
+        const newCursorPos = mentionSearchStart + mentionText.length;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        textarea.focus();
+        
+        // Update character count
+        charCount.textContent = textarea.value.length;
+        
+        closeMentionDropdown();
+    }
+    
+    // Handle textarea input for @ detection
+    messageTextarea.addEventListener('input', (e) => {
+        charCount.textContent = e.target.value.length;
+        
+        // Only enable mentions for group chat
+        if (currentChatType !== 'group') {
+            closeMentionDropdown();
+            return;
+        }
+        
+        const textarea = e.target;
+        const cursorPos = textarea.selectionStart;
+        const textBeforeCursor = textarea.value.substring(0, cursorPos);
+        
+        // Check if we're in a mention (after @ and before space)
+        const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+        
+        if (lastAtIndex !== -1) {
+            const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+            
+            // Check if there's a space after the @, which would mean the mention is complete
+            if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+                mentionSearchStart = lastAtIndex;
+                openMentionDropdown(textAfterAt);
+                return;
+            }
+        }
+        
+        closeMentionDropdown();
+    });
+    
+    // Handle keyboard navigation in mention dropdown
+    messageTextarea.addEventListener('keydown', (e) => {
+        if (!mentionDropdownOpen) {
+            // Original enter-to-send behavior
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                messageForm.dispatchEvent(new Event('submit'));
+            }
+            return;
+        }
+        
+        const items = mentionList.querySelectorAll('.mention-item');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedMentionIndex = Math.min(selectedMentionIndex + 1, items.length - 1);
+            updateMentionSelection();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedMentionIndex = Math.max(selectedMentionIndex - 1, 0);
+            updateMentionSelection();
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+            e.preventDefault();
+            const selectedItem = items[selectedMentionIndex];
+            if (selectedItem) {
+                const userId = parseInt(selectedItem.dataset.userId);
+                const userName = selectedItem.dataset.userName;
+                selectMention(userId, userName);
+            }
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeMentionDropdown();
+        }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!mentionDropdown.contains(e.target) && e.target !== messageTextarea) {
+            closeMentionDropdown();
+        }
+    });
+    
+    // Parse mentions from message text (to sync mentionedUsers array)
+    function parseMentionsFromText(text) {
+        const mentionPattern = /@([^@\s]+(?:\s[^@\s]+)*?)(?=\s|$|@)/g;
+        const foundMentions = [];
+        let match;
+        
+        while ((match = mentionPattern.exec(text)) !== null) {
+            const mentionName = match[1].trim();
+            // Find matching user
+            const user = groupChatMembers.find(m => 
+                m.name.toLowerCase() === mentionName.toLowerCase()
+            );
+            if (user && !foundMentions.includes(user.id)) {
+                foundMentions.push(user.id);
+            }
+        }
+        
+        return foundMentions;
+    }
+
     // Handle form submission
     messageForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -407,6 +635,17 @@
         const files = attachmentsInput.files;
         for (let i = 0; i < files.length; i++) {
             formData.append('attachments[]', files[i]);
+        }
+        
+        // Add mentions for group chat
+        if (currentChatType === 'group') {
+            // Parse mentions from the final message text
+            const finalMentions = parseMentionsFromText(message);
+            // Merge with tracked mentions and dedupe
+            const allMentions = [...new Set([...mentionedUsers, ...finalMentions])];
+            allMentions.forEach(userId => {
+                formData.append('mentions[]', userId);
+            });
         }
 
         try {
@@ -425,10 +664,11 @@
                 messagesContainer.insertAdjacentHTML('beforeend', createMessageElement(data.message));
                 scrollToBottom();
                 
-                // Reset form
+                // Reset form and mentions
                 messageForm.reset();
                 selectedFilesDiv.innerHTML = '';
                 charCount.textContent = '0';
+                mentionedUsers = [];
             } else {
                 window.toast.error('Failed to send message. Please try again.');
             }
@@ -436,11 +676,6 @@
             console.error('Error sending message:', error);
             window.toast.error('Failed to send message. Please try again.');
         }
-    });
-
-    // Character count
-    messageTextarea.addEventListener('input', (e) => {
-        charCount.textContent = e.target.value.length;
     });
 
     // Handle file selection
@@ -454,14 +689,6 @@
                 ${file.name}
             </span>
         `).join('');
-    });
-
-    // Enable Enter to send (Shift+Enter for new line)
-    messageTextarea.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            messageForm.dispatchEvent(new Event('submit'));
-        }
     });
 
     // Start polling for new messages every 5 seconds

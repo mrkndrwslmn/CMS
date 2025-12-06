@@ -178,9 +178,9 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $payout->adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($payout->adiutor->fullName) }}" 
+                                    <img src="{{ $payout->adiutor->getProfilePictureUrl() }}" 
                                          alt="{{ $payout->adiutor->fullName }}" 
-                                         class="w-8 h-8 rounded-full">
+                                         class="w-8 h-8 rounded-full object-cover">
                                     <div>
                                         <div class="text-sm font-medium text-neutral-800">{{ $payout->adiutor->fullName }}</div>
                                         <div class="text-xs text-neutral-400">{{ $payout->adiutor->email }}</div>

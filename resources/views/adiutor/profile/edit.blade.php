@@ -3,7 +3,7 @@
 @section('title', 'Edit Profile')
 
 @section('content')
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'url' => route('adiutor.dashboard')],
@@ -38,7 +38,7 @@
                     <h3 class="text-lg font-semibold text-neutral-800 mb-4">Profile Picture</h3>
                     <div class="text-center">
                         <div class="mb-4">
-                            @if($user->profilePicture)
+                            @if($user->profilePic)
                                 <img src="{{ $user->getProfilePictureUrl() }}" 
                                      alt="{{ $user->fullName }}" 
                                      class="w-32 h-32 rounded-full mx-auto object-cover border-4 border-neutral-100" 

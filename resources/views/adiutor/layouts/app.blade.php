@@ -74,34 +74,7 @@
                 </button>
             </div>
             
-            <!-- User Profile Card -->
-            <div class="px-3 py-4 border-b border-neutral-100">
-                <div class="flex items-center gap-3 px-2">
-                    <img src="{{ auth()->user()->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->fullName) }}" 
-                         alt="{{ auth()->user()->fullName }}" 
-                         class="w-10 h-10 rounded-full ring-2 ring-neutral-100">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-neutral-900 truncate">{{ auth()->user()->fullName }}</p>
-                        <p class="text-xs text-primary-600 font-medium">Adiutor</p>
-                    </div>
-                </div>
-            </div>
-            
             <nav class="mt-2 px-3 overflow-y-auto pb-6" style="max-height: calc(100vh - 140px);" x-data="sidebarNav()">
-                <!-- Quick Actions -->
-                <div class="mb-4 flex gap-2">
-                    <a href="{{ route('adiutor.projects.index') }}?action=new" 
-                       class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-xs font-medium">
-                        <x-lucide-folder-plus class="w-3.5 h-3.5" />
-                        New Project
-                    </a>
-                    <a href="{{ route('adiutor.tasks.index') }}?action=create" 
-                       class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50 rounded-lg transition-colors text-xs font-medium">
-                        <x-lucide-plus class="w-3.5 h-3.5" />
-                        Add Task
-                    </a>
-                </div>
-
                 <!-- Dashboard -->
                 <a href="{{ route('adiutor.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg mb-1 transition-all duration-200 {{ request()->routeIs('adiutor.dashboard') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
                     <x-lucide-layout-dashboard class="w-5 h-5" />
@@ -292,9 +265,9 @@
                     <!-- Quick User Menu (Mobile-friendly) -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-neutral-50 transition-colors">
-                            <img src="{{ auth()->user()->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->fullName) }}" 
+                            <img src="{{ auth()->user()->getProfilePictureUrl() }}" 
                                  alt="{{ auth()->user()->fullName }}" 
-                                 class="w-8 h-8 rounded-full ring-2 ring-neutral-100">
+                                 class="w-8 h-8 rounded-full ring-2 ring-neutral-100 object-cover">
                             <x-lucide-chevron-down class="w-4 h-4 text-neutral-400 hidden sm:block" />
                         </button>
                         

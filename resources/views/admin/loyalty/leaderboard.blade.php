@@ -95,9 +95,15 @@
                             <td class="px-4 py-3">
                                 @if($loyalty->user)
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                                        <span class="text-sm font-bold text-primary-700">{{ strtoupper(substr($loyalty->user->fullName ?? 'U', 0, 1)) }}</span>
-                                    </div>
+                                    @if($loyalty->user->profilePic)
+                                        <img src="{{ $loyalty->user->getProfilePictureUrl() }}" 
+                                             alt="{{ $loyalty->user->fullName }}" 
+                                             class="w-10 h-10 rounded-full object-cover">
+                                    @else
+                                        <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                                            <span class="text-sm font-bold text-primary-700">{{ strtoupper(substr($loyalty->user->fullName ?? 'U', 0, 1)) }}</span>
+                                        </div>
+                                    @endif
                                     <div>
                                         <p class="text-sm font-medium text-neutral-800">{{ $loyalty->user->fullName }}</p>
                                         <p class="text-xs text-neutral-500">{{ $loyalty->user->email }}</p>

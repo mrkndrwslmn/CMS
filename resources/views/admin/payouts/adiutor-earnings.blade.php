@@ -15,9 +15,9 @@
     <div class="mb-8">
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-center gap-4">
-                <img src="{{ $adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($adiutor->fullName) }}" 
+                <img src="{{ $adiutor->getProfilePictureUrl() }}" 
                      alt="{{ $adiutor->fullName }}" 
-                     class="w-16 h-16 rounded-full border-2 border-neutral-200">
+                     class="w-16 h-16 rounded-full border-2 border-neutral-200 object-cover">
                 <div>
                     <h1 class="text-2xl font-semibold text-neutral-800">{{ $adiutor->fullName }}</h1>
                     <p class="text-sm text-neutral-500">{{ $adiutor->email }}</p>

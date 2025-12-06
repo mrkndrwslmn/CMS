@@ -238,6 +238,9 @@
                             <option value="in_progress" {{ old('status', $task->status) === 'in_progress' ? 'selected' : '' }}>
                                 In Progress
                             </option>
+                            <option value="pending_approval" {{ old('status', $task->status) === 'pending_approval' ? 'selected' : '' }}>
+                                Pending Approval
+                            </option>
                             <option value="completed" {{ old('status', $task->status) === 'completed' ? 'selected' : '' }}>
                                 Completed
                             </option>

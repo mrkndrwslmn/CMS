@@ -112,7 +112,7 @@
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-8 w-8">
-                                            <img src="{{ $request->adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($request->adiutor->fullName) }}" 
+                                            <img src="{{ $request->adiutor->getProfilePictureUrl() }}" 
                                                  alt="{{ $request->adiutor->fullName }}"
                                                  class="w-8 h-8 rounded-full object-cover">
                                         </div>

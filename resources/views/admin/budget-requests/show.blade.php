@@ -189,7 +189,7 @@
                 </div>
                 <div class="p-6">
                     <div class="text-center mb-4">
-                        <img src="{{ $budgetRequest->adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($budgetRequest->adiutor->fullName) }}" 
+                        <img src="{{ $budgetRequest->adiutor->getProfilePictureUrl() }}" 
                              alt="{{ $budgetRequest->adiutor->fullName }}"
                              class="w-16 h-16 rounded-full mx-auto mb-3 object-cover">
                         <p class="font-medium text-neutral-800">{{ $budgetRequest->adiutor->fullName }}</p>

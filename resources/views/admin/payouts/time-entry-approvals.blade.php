@@ -193,9 +193,9 @@
                         <tr class="hover:bg-neutral-50 transition-colors" id="time-entry-row-{{ $entry->id }}">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $entry->adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($entry->adiutor->fullName ?? 'U') }}" 
+                                    <img src="{{ $entry->adiutor->getProfilePictureUrl() }}" 
                                          alt="{{ $entry->adiutor->fullName ?? 'Unknown' }}" 
-                                         class="w-8 h-8 rounded-full">
+                                         class="w-8 h-8 rounded-full object-cover">
                                     <div>
                                         <a href="{{ route('admin.payouts.adiutor-earnings', $entry->adiutor_id) }}" 
                                            class="text-sm font-medium text-neutral-800 hover:text-primary-600">

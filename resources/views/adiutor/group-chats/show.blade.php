@@ -54,11 +54,15 @@
                 <div class="flex -space-x-2">
                     @foreach($groupChat->members as $member)
                         <div class="relative group">
-                            <div class="w-8 h-8 rounded-full bg-primary-50 border-2 border-white flex items-center justify-center">
-                                <span class="text-primary-600 text-xs font-medium">
-                                    {{ substr($member->fullName, 0, 1) }}
-                                </span>
-                            </div>
+                            @if($member->profilePic)
+                                <img src="{{ $member->getProfilePictureUrl() }}" alt="{{ $member->fullName }}" class="w-8 h-8 rounded-full border-2 border-white object-cover">
+                            @else
+                                <div class="w-8 h-8 rounded-full bg-primary-50 border-2 border-white flex items-center justify-center">
+                                    <span class="text-primary-600 text-xs font-medium">
+                                        {{ substr($member->fullName, 0, 1) }}
+                                    </span>
+                                </div>
+                            @endif
                             <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                                 {{ $member->fullName }}
                                 @if($member->role === 'admin')
@@ -96,11 +100,15 @@
                                 <!-- Sender Info -->
                                 @if(!$isOwnMessage)
                                     <div class="flex items-center gap-2 mb-1 px-4">
-                                        <div class="w-6 h-6 rounded-full bg-primary-50 flex items-center justify-center">
-                                            <span class="text-primary-600 text-xs font-medium">
-                                                {{ substr($message->sender->fullName, 0, 1) }}
-                                            </span>
-                                        </div>
+                                        @if($message->sender->profilePic)
+                                            <img src="{{ $message->sender->getProfilePictureUrl() }}" alt="{{ $message->sender->fullName }}" class="w-6 h-6 rounded-full object-cover">
+                                        @else
+                                            <div class="w-6 h-6 rounded-full bg-primary-50 flex items-center justify-center">
+                                                <span class="text-primary-600 text-xs font-medium">
+                                                    {{ substr($message->sender->fullName, 0, 1) }}
+                                                </span>
+                                            </div>
+                                        @endif
                                         <span class="text-sm font-medium text-neutral-700">{{ $message->sender->fullName }}</span>
                                         @if($message->sender->role === 'admin')
                                             <span class="text-xs text-primary-600 font-medium">(Admin)</span>
@@ -111,7 +119,7 @@
                                 <!-- Message Bubble -->
                                 <div class="relative group">
                                     <div class="px-4 py-3 rounded-2xl {{ $isOwnMessage ? 'bg-primary-600 text-white' : 'bg-white text-neutral-800 border border-neutral-200' }}">
-                                        <p class="text-sm whitespace-pre-wrap break-words">{{ $message->message }}</p>
+                                        <p class="text-sm whitespace-pre-wrap break-words">{!! \App\Services\MessagingService::formatMentions($message->message, $isOwnMessage) !!}</p>
                                     </div>
                                     <div class="mt-1 px-4 text-xs text-neutral-500">
                                         {{ \Carbon\Carbon::parse($message->created_at)->format('M j, Y g:i A') }}
@@ -140,17 +148,29 @@
                 <form id="message-form" onsubmit="sendMessage(event)">
                     @csrf
                     <div class="space-y-3">
-                        <div>
+                        <div class="relative">
                             <textarea 
                                 id="message-textarea"
                                 name="message" 
                                 rows="3" 
-                                placeholder="Type your message... (Press Enter to send, Shift+Enter for new line)"
+                                placeholder="Type your message... (Press Enter to send, Shift+Enter for new line, @ to mention)"
                                 required
                                 maxlength="5000"
-                                onkeydown="handleKeyPress(event)"
-                                oninput="updateCharCount()"
                                 class="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none text-sm placeholder-neutral-400 transition-colors"></textarea>
+                            
+                            <!-- Mention Autocomplete Dropdown -->
+                            <div id="mention-dropdown" class="hidden absolute bottom-full left-0 mb-2 z-50 bg-white border border-neutral-200 rounded-xl shadow-lg max-h-60 overflow-y-auto w-64">
+                                <div class="p-2 text-xs font-medium text-neutral-500 border-b border-neutral-100">
+                                    <span class="flex items-center gap-1">
+                                        <x-lucide-at-sign class="w-3.5 h-3.5" />
+                                        Mention someone
+                                    </span>
+                                </div>
+                                <div id="mention-list" class="py-1">
+                                    <!-- Members will be populated here -->
+                                </div>
+                            </div>
+                            
                             <div class="mt-1 flex items-center justify-between">
                                 <span class="text-xs text-neutral-500">
                                     <span id="char-count" class="font-medium">0</span>/5000 characters
@@ -171,29 +191,260 @@
     </x-ui.card>
 </div>
 
+<style>
+/* Mention tag styling */
+.mention-tag {
+    display: inline;
+    text-decoration: none;
+    border-radius: 0.25rem;
+}
+
+.mention-tag:hover {
+    text-decoration: underline;
+}
+
+/* Mention dropdown item hover state */
+.mention-item:hover, .mention-item.selected {
+    background-color: rgb(243 244 246);
+}
+</style>
+
 <script>
 let projectId = {{ $project->id }};
 let groupChatId = {{ $groupChat->id }};
 let isArchived = {{ $groupChat->status === 'archived' ? 'true' : 'false' }};
 
-// Auto-scroll to bottom on load
+// Group chat members for mentions
+@php
+    $membersData = $groupChat->members->map(function($m) {
+        return [
+            'id' => $m->id,
+            'name' => $m->fullName,
+            'pic' => $m->profilePic ? $m->getProfilePictureUrl() : null,
+            'role' => $m->role
+        ];
+    })->toArray();
+@endphp
+const groupChatMembers = @json($membersData);
+
+// Mention system variables
+let mentionedUsers = [];
+let mentionDropdownOpen = false;
+let mentionSearchStart = -1;
+let selectedMentionIndex = 0;
+
+const currentUserId = {{ $user->id }};
+
+// These will be initialized after DOM is ready
+let messageTextarea, mentionDropdown, mentionList;
+
+// Initialize everything when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
+    // Get DOM elements first
+    messageTextarea = document.getElementById('message-textarea');
+    mentionDropdown = document.getElementById('mention-dropdown');
+    mentionList = document.getElementById('mention-list');
+    
+    // Scroll to bottom
     scrollToBottom();
+    
+    // Initialize mention system
+    if (messageTextarea && mentionDropdown && mentionList) {
+        // Handle textarea input for @ detection
+        messageTextarea.addEventListener('input', handleMentionInput);
+        
+        // Handle keyboard navigation in mention dropdown
+        messageTextarea.addEventListener('keydown', handleMentionKeydown);
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (mentionDropdown && !mentionDropdown.contains(e.target) && e.target !== messageTextarea) {
+                closeMentionDropdown();
+            }
+        });
+        
+        console.log('Mention system initialized', { 
+            members: groupChatMembers.length,
+            textarea: !!messageTextarea,
+            dropdown: !!mentionDropdown
+        });
+    } else {
+        console.warn('Mention system could not be initialized - elements not found');
+    }
 });
 
-// Character counter
-function updateCharCount() {
-    const textarea = document.getElementById('message-textarea');
+// Handle input for mention detection
+function handleMentionInput(e) {
     const charCount = document.getElementById('char-count');
-    charCount.textContent = textarea.value.length;
+    charCount.textContent = e.target.value.length;
+    
+    const textarea = e.target;
+    const cursorPos = textarea.selectionStart;
+    const textBeforeCursor = textarea.value.substring(0, cursorPos);
+    
+    // Check if we're in a mention (after @ and before space)
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+        const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+        
+        // Check if there's a space after the @, which would mean the mention is complete
+        if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+            mentionSearchStart = lastAtIndex;
+            openMentionDropdown(textAfterAt);
+            return;
+        }
+    }
+    
+    closeMentionDropdown();
 }
 
-// Handle Enter key to send
-function handleKeyPress(event) {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        document.getElementById('message-form').dispatchEvent(new Event('submit'));
+// Handle keyboard navigation
+function handleMentionKeydown(e) {
+    if (!mentionDropdownOpen) {
+        // Original enter-to-send behavior
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.getElementById('message-form').dispatchEvent(new Event('submit'));
+        }
+        return;
     }
+    
+    const items = mentionList.querySelectorAll('.mention-item');
+    
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedMentionIndex = Math.min(selectedMentionIndex + 1, items.length - 1);
+        updateMentionSelection();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedMentionIndex = Math.max(selectedMentionIndex - 1, 0);
+        updateMentionSelection();
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        const selectedItem = items[selectedMentionIndex];
+        if (selectedItem) {
+            const userId = parseInt(selectedItem.dataset.userId);
+            const userName = selectedItem.dataset.userName;
+            selectMention(userId, userName);
+        }
+    } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeMentionDropdown();
+    }
+}
+
+// Open mention dropdown and filter members
+function openMentionDropdown(searchTerm = '') {
+    if (!groupChatMembers.length) return;
+    
+    const filteredMembers = groupChatMembers.filter(member => {
+        // Don't show current user in mentions
+        if (member.id === currentUserId) return false;
+        // Filter by search term
+        if (searchTerm) {
+            return member.name.toLowerCase().includes(searchTerm.toLowerCase());
+        }
+        return true;
+    });
+    
+    if (filteredMembers.length === 0) {
+        closeMentionDropdown();
+        return;
+    }
+    
+    // Build dropdown content
+    mentionList.innerHTML = filteredMembers.map((member, index) => `
+        <div class="mention-item flex items-center gap-3 px-3 py-2 cursor-pointer ${index === selectedMentionIndex ? 'selected' : ''}"
+             data-user-id="${member.id}"
+             data-user-name="${escapeHtml(member.name)}"
+             onclick="selectMention(${member.id}, '${escapeHtml(member.name).replace(/'/g, "\\'")}')">
+            ${member.pic 
+                ? `<img src="${escapeHtml(member.pic)}" alt="${escapeHtml(member.name)}" class="w-8 h-8 rounded-full border border-neutral-200 object-cover">`
+                : `<div class="w-8 h-8 rounded-full bg-primary-50 border border-neutral-200 flex items-center justify-center">
+                    <span class="text-primary-600 text-xs font-medium">
+                        ${escapeHtml(member.name.substring(0, 1))}
+                    </span>
+                </div>`
+            }
+            <div class="flex-1 min-w-0">
+                <div class="font-medium text-sm text-neutral-900 truncate">${escapeHtml(member.name)}</div>
+                <div class="text-xs text-neutral-500 capitalize">${member.role}</div>
+            </div>
+        </div>
+    `).join('');
+    
+    mentionDropdown.classList.remove('hidden');
+    mentionDropdownOpen = true;
+    selectedMentionIndex = 0;
+    updateMentionSelection();
+}
+
+// Close mention dropdown
+function closeMentionDropdown() {
+    mentionDropdown.classList.add('hidden');
+    mentionDropdownOpen = false;
+    mentionSearchStart = -1;
+    selectedMentionIndex = 0;
+}
+
+// Update visual selection in dropdown
+function updateMentionSelection() {
+    const items = mentionList.querySelectorAll('.mention-item');
+    items.forEach((item, index) => {
+        if (index === selectedMentionIndex) {
+            item.classList.add('selected');
+        } else {
+            item.classList.remove('selected');
+        }
+    });
+}
+
+// Select a mention from dropdown
+function selectMention(userId, userName) {
+    const textarea = messageTextarea;
+    const cursorPos = textarea.selectionStart;
+    const textBefore = textarea.value.substring(0, mentionSearchStart);
+    const textAfter = textarea.value.substring(cursorPos);
+    
+    // Insert the mention
+    const mentionText = `@${userName} `;
+    textarea.value = textBefore + mentionText + textAfter;
+    
+    // Add user to mentioned list if not already there
+    if (!mentionedUsers.includes(userId)) {
+        mentionedUsers.push(userId);
+    }
+    
+    // Set cursor position after the mention
+    const newCursorPos = mentionSearchStart + mentionText.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    textarea.focus();
+    
+    // Update character count
+    document.getElementById('char-count').textContent = textarea.value.length;
+    
+    closeMentionDropdown();
+}
+
+// Parse mentions from message text
+function parseMentionsFromText(text) {
+    const mentionPattern = /@([^@\s]+(?:\s[^@\s]+)*?)(?=\s|$|@)/g;
+    const foundMentions = [];
+    let match;
+    
+    while ((match = mentionPattern.exec(text)) !== null) {
+        const mentionName = match[1].trim();
+        // Find matching user
+        const user = groupChatMembers.find(m => 
+            m.name.toLowerCase() === mentionName.toLowerCase()
+        );
+        if (user && !foundMentions.includes(user.id)) {
+            foundMentions.push(user.id);
+        }
+    }
+    
+    return foundMentions;
 }
 
 // Send message function
@@ -212,9 +463,22 @@ function sendMessage(event) {
         return;
     }
     
+    // Parse mentions from the final message text
+    const finalMentions = parseMentionsFromText(messageText);
+    // Merge with tracked mentions and dedupe
+    const allMentions = [...new Set([...mentionedUsers, ...finalMentions])];
+    
     // Disable button to prevent double submission
     sendBtn.disabled = true;
     sendBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...';
+    
+    // Build request body with mentions
+    const requestBody = {
+        message: messageText
+    };
+    if (allMentions.length > 0) {
+        requestBody.mentions = allMentions;
+    }
     
     // Send via API
     fetch(`/api/group-chats/${groupChatId}`, {
@@ -223,16 +487,15 @@ function sendMessage(event) {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         },
-        body: JSON.stringify({
-            message: messageText
-        })
+        body: JSON.stringify(requestBody)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Reset form
+            // Reset form and mentions
             form.reset();
-            updateCharCount();
+            document.getElementById('char-count').textContent = '0';
+            mentionedUsers = [];
             
             // Append new message to the chat
             const messagesContainer = document.getElementById('messages-container');
@@ -262,8 +525,6 @@ function createMessagesDiv() {
 }
 
 // Create message element using shared utility
-const currentUserId = {{ $user->id }};
-
 function createMessageElement(message) {
     return window.MessagingUtils.createMessageElement(message, currentUserId, {
         showSenderInfo: true,
@@ -276,9 +537,15 @@ function formatMessageTime(timestamp) {
     return window.MessagingUtils.formatDateTime(timestamp);
 }
 
-// Escape HTML - use shared utility
+// Escape HTML - local fallback in case MessagingUtils not loaded yet
 function escapeHtml(text) {
-    return window.MessagingUtils.escapeHtml(text);
+    if (!text) return '';
+    if (window.MessagingUtils && window.MessagingUtils.escapeHtml) {
+        return window.MessagingUtils.escapeHtml(text);
+    }
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function scrollToBottom() {

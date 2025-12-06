@@ -107,9 +107,15 @@
                         <!-- Client Header -->
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold text-lg">
-                                    {{ strtoupper(substr($client->fullName, 0, 1)) }}
-                                </div>
+                                @if($client->profilePic)
+                                    <img src="{{ $client->getProfilePictureUrl() }}" 
+                                         alt="{{ $client->fullName }}" 
+                                         class="w-12 h-12 rounded-full object-cover">
+                                @else
+                                    <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold text-lg">
+                                        {{ strtoupper(substr($client->fullName, 0, 1)) }}
+                                    </div>
+                                @endif
                                 <div>
                                     <h3 class="font-medium text-neutral-800 client-name">{{ $client->fullName }}</h3>
                                     <p class="text-xs text-neutral-400">Client ID: #{{ $client->id }}</p>

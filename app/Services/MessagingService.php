@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\GroupChat;
 use App\Models\Project;
 use App\Models\User;
+use App\Notifications\MentionNotification;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -114,13 +115,15 @@ class MessagingService
      * @param GroupChat $groupChat
      * @param string $content
      * @param array $attachments
+     * @param array $mentionedUserIds Array of user IDs that were @mentioned
      * @return array{success: bool, message?: Message, error?: string}
      */
     public function sendGroupMessage(
         User $sender,
         GroupChat $groupChat,
         string $content,
-        array $attachments = []
+        array $attachments = [],
+        array $mentionedUserIds = []
     ): array {
         try {
             // Validate access
@@ -159,6 +162,11 @@ class MessagingService
 
             // Send push notifications to members
             $this->sendGroupMessageNotifications($message, $groupChat, $sender);
+
+            // Send mention notifications to specifically mentioned users
+            if (!empty($mentionedUserIds)) {
+                $this->sendMentionNotifications($message, $groupChat, $sender, $mentionedUserIds);
+            }
 
             return [
                 'success' => true,
@@ -435,6 +443,105 @@ class MessagingService
     }
 
     /**
+     * Send mention notifications to specifically mentioned users
+     * 
+     * @param Message $message
+     * @param GroupChat $groupChat
+     * @param User $sender
+     * @param array $mentionedUserIds
+     * @return void
+     */
+    protected function sendMentionNotifications(
+        Message $message,
+        GroupChat $groupChat,
+        User $sender,
+        array $mentionedUserIds
+    ): void {
+        // Filter out the sender and get only valid group members
+        $memberIds = $groupChat->members()->pluck('user_id')->toArray();
+        $validMentionIds = array_intersect($mentionedUserIds, $memberIds);
+        $validMentionIds = array_diff($validMentionIds, [$sender->id]);
+
+        if (empty($validMentionIds)) {
+            return;
+        }
+
+        $mentionedUsers = User::whereIn('id', $validMentionIds)->get();
+
+        foreach ($mentionedUsers as $user) {
+            try {
+                // Send in-app notification
+                $user->notify(new MentionNotification($sender, $groupChat, $message));
+
+                // Send FCM push notification for mention (with higher priority)
+                $this->sendMentionPushNotification($message, $groupChat, $sender, $user);
+
+                Log::info('Mention notification sent', [
+                    'message_id' => $message->id,
+                    'sender_id' => $sender->id,
+                    'mentioned_user_id' => $user->id,
+                    'group_chat_id' => $groupChat->id,
+                ]);
+
+            } catch (\Exception $e) {
+                Log::warning('Failed to send mention notification', [
+                    'message_id' => $message->id,
+                    'mentioned_user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Send FCM push notification specifically for mentions
+     * 
+     * @param Message $message
+     * @param GroupChat $groupChat
+     * @param User $sender
+     * @param User $recipient
+     * @return void
+     */
+    protected function sendMentionPushNotification(
+        Message $message,
+        GroupChat $groupChat,
+        User $sender,
+        User $recipient
+    ): void {
+        try {
+            // Create a modified notification with mention-specific title
+            $messagePreview = strlen($message->message) > 80 
+                ? substr($message->message, 0, 80) . '...' 
+                : $message->message;
+
+            $notification = [
+                'title' => "📢 {$sender->fullName} mentioned you",
+                'body' => "in {$groupChat->getDisplayName()}: {$messagePreview}",
+            ];
+
+            $data = [
+                'type' => 'mention',
+                'group_chat_id' => (string) $groupChat->id,
+                'message_id' => (string) $message->id,
+                'sender_id' => (string) $sender->id,
+                'sender_name' => $sender->fullName,
+                'project_id' => (string) $groupChat->project_id,
+                'role' => $recipient->role,
+                'click_action' => "/{$recipient->role}/group-chats/{$groupChat->id}",
+            ];
+
+            $this->firebaseService->sendToUser($recipient, $data, $notification);
+
+        } catch (\Exception $e) {
+            Log::warning('Failed to send mention push notification', [
+                'message_id' => $message->id,
+                'recipient_id' => $recipient->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Create a highlight snippet for search results
      * 
      * @param string $message
@@ -471,5 +578,39 @@ class MessagingService
         );
 
         return $snippet;
+    }
+
+    /**
+     * Format message text with highlighted @mentions
+     * 
+     * @param string $text The message text
+     * @param bool $isSender Whether the current user is the sender (affects styling)
+     * @return string HTML-safe string with formatted mentions
+     */
+    public static function formatMentions(string $text, bool $isSender = false): string
+    {
+        if (empty($text)) {
+            return '';
+        }
+
+        // First escape the HTML to prevent XSS
+        $escapedText = e($text);
+
+        // Style classes based on message sender
+        $mentionClasses = $isSender
+            ? 'mention-tag mention-sender cursor-pointer font-semibold bg-white/20 hover:bg-white/30 text-white px-1 py-0.5 rounded transition-colors'
+            : 'mention-tag mention-receiver cursor-pointer font-semibold bg-primary-100 hover:bg-primary-200 text-primary-700 px-1 py-0.5 rounded transition-colors';
+
+        // Match @mentions - name consists of words separated by single spaces
+        // A mention is a capitalized name (1-3 words typically)
+        $pattern = '/@([A-Z][a-z]+(?:\s[A-Z][a-z]+){0,2})(?=\s|$|[,\.!\?;:])/';
+
+        return preg_replace_callback($pattern, function ($matches) use ($mentionClasses) {
+            $name = trim($matches[1]);
+            $escapedName = e($name);
+            return '<span class="' . $mentionClasses . '" data-mention-name="' . $escapedName . '"'
+                . ' onclick="window.MessagingUtils && window.MessagingUtils.handleMentionClick(event, \'' . addslashes($escapedName) . '\')"'
+                . ' title="Click to mention ' . $escapedName . '">@' . $escapedName . '</span>';
+        }, $escapedText);
     }
 }

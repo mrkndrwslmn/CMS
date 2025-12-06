@@ -80,11 +80,17 @@
                 <x-ui.card class="p-6">
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 bg-primary-50 rounded-full flex items-center justify-center">
-                                <span class="text-primary-600 font-semibold text-lg">
-                                    {{ substr($review->client_name, 0, 1) }}
-                                </span>
-                            </div>
+                            @if(isset($review->client_photo) && $review->client_photo)
+                                <img src="{{ $review->client_photo }}" 
+                                     alt="{{ $review->client_name }}" 
+                                     class="w-12 h-12 rounded-full object-cover">
+                            @else
+                                <div class="w-12 h-12 bg-primary-50 rounded-full flex items-center justify-center">
+                                    <span class="text-primary-600 font-semibold text-lg">
+                                        {{ substr($review->client_name, 0, 1) }}
+                                    </span>
+                                </div>
+                            @endif
                             <div>
                                 <h3 class="font-semibold text-neutral-800">{{ $review->client_name }}</h3>
                                 <p class="text-sm text-neutral-500">

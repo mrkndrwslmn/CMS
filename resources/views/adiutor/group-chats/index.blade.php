@@ -206,11 +206,15 @@
                                 <!-- Member Avatars -->
                                 <div class="flex -space-x-2">
                                     @foreach($groupChat->members->take(3) as $member)
-                                        <div class="w-6 h-6 rounded-full bg-primary-100 border-2 border-white flex items-center justify-center" title="{{ $member->fullName }}">
-                                            <span class="text-primary-700 text-xs font-medium">
-                                                {{ substr($member->firstName, 0, 1) }}{{ substr($member->lastName, 0, 1) }}
-                                            </span>
-                                        </div>
+                                        @if($member->profilePic)
+                                            <img src="{{ $member->getProfilePictureUrl() }}" alt="{{ $member->fullName }}" class="w-6 h-6 rounded-full border-2 border-white object-cover" title="{{ $member->fullName }}">
+                                        @else
+                                            <div class="w-6 h-6 rounded-full bg-primary-100 border-2 border-white flex items-center justify-center" title="{{ $member->fullName }}">
+                                                <span class="text-primary-700 text-xs font-medium">
+                                                    {{ substr($member->firstName, 0, 1) }}{{ substr($member->lastName, 0, 1) }}
+                                                </span>
+                                            </div>
+                                        @endif
                                     @endforeach
                                     @if($groupChat->members->count() > 3)
                                         <div class="w-6 h-6 rounded-full bg-neutral-200 border-2 border-white flex items-center justify-center">

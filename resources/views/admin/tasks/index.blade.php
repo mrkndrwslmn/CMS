@@ -118,6 +118,7 @@
                             <option value="">All Statuses</option>
                             <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                            <option value="pending_approval" {{ request('status') === 'pending_approval' ? 'selected' : '' }}>Pending Approval</option>
                             <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
                             <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                         </x-ui.select>
@@ -129,6 +130,7 @@
                             <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Low</option>
                             <option value="medium" {{ request('priority') === 'medium' ? 'selected' : '' }}>Medium</option>
                             <option value="high" {{ request('priority') === 'high' ? 'selected' : '' }}>High</option>
+                            <option value="urgent" {{ request('priority') === 'urgent' ? 'selected' : '' }}>Urgent</option>
                         </x-ui.select>
                     </div>
                     
@@ -278,29 +280,31 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php
                                         $statusConfig = [
-                                            'pending' => ['class' => 'bg-warning-100 text-warning-800', 'icon' => 'clock'],
-                                            'in_progress' => ['class' => 'bg-info-100 text-info-800', 'icon' => 'loader'],
-                                            'completed' => ['class' => 'bg-success-100 text-success-800', 'icon' => 'check-circle'],
-                                            'cancelled' => ['class' => 'bg-neutral-100 text-neutral-800', 'icon' => 'circle-slash'],
+                                            'pending' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'clock', 'text' => 'Pending'],
+                                            'in_progress' => ['class' => 'bg-info-100 text-info-700', 'icon' => 'loader', 'text' => 'In Progress'],
+                                            'pending_approval' => ['class' => 'bg-purple-100 text-purple-700', 'icon' => 'eye', 'text' => 'Pending Approval'],
+                                            'completed' => ['class' => 'bg-success-100 text-success-700', 'icon' => 'check-circle', 'text' => 'Completed'],
+                                            'cancelled' => ['class' => 'bg-error-100 text-error-700', 'icon' => 'x-circle', 'text' => 'Cancelled'],
                                         ];
-                                        $sConfig = $statusConfig[$task->status] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'icon' => 'circle'];
+                                        $sConfig = $statusConfig[$task->status] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle-dashed', 'text' => ucfirst(str_replace('_', ' ', $task->status))];
                                     @endphp
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $sConfig['class'] }}">
-                                        <x-dynamic-component :component="'lucide-' . $sConfig['icon']" class="w-3.5 h-3.5" />
-                                        {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $sConfig['class'] }}">
+                                        <x-dynamic-component :component="'lucide-' . $sConfig['icon']" class="w-3 h-3" />
+                                        {{ $sConfig['text'] }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php
                                         $priorityConfig = [
-                                            'low' => ['class' => 'bg-success-100 text-success-800', 'icon' => 'arrow-down'],
-                                            'medium' => ['class' => 'bg-warning-100 text-warning-800', 'icon' => 'minus'],
-                                            'high' => ['class' => 'bg-error-100 text-error-800', 'icon' => 'arrow-up'],
+                                            'low' => ['class' => 'bg-info-100 text-info-700', 'icon' => 'arrow-down'],
+                                            'medium' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'minus'],
+                                            'high' => ['class' => 'bg-orange-100 text-orange-700', 'icon' => 'arrow-up'],
+                                            'urgent' => ['class' => 'bg-error-100 text-error-700', 'icon' => 'alert-triangle'],
                                         ];
-                                        $pConfig = $priorityConfig[$task->priority] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'icon' => 'circle'];
+                                        $pConfig = $priorityConfig[$task->priority] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle-dashed'];
                                     @endphp
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $pConfig['class'] }}">
-                                        <x-dynamic-component :component="'lucide-' . $pConfig['icon']" class="w-3.5 h-3.5" />
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $pConfig['class'] }}">
+                                        <x-dynamic-component :component="'lucide-' . $pConfig['icon']" class="w-3 h-3" />
                                         {{ ucfirst($task->priority) }}
                                     </span>
                                 </td>
@@ -381,6 +385,7 @@
                                 <option value="">Select Status</option>
                                 <option value="pending">Pending</option>
                                 <option value="in_progress">In Progress</option>
+                                <option value="pending_approval">Pending Approval</option>
                                 <option value="completed">Completed</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>

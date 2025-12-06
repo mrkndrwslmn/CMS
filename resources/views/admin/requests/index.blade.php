@@ -97,7 +97,7 @@
                         id="search" 
                         name="search" 
                         :value="request('search')"
-                        placeholder="Search requests...""
+                        placeholder="Search requests..."
                     />
                 </div>
                 
@@ -108,6 +108,10 @@
                         <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
                         <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                        <option value="pending_payment" {{ request('status') == 'pending_payment' ? 'selected' : '' }}>Pending Payment</option>
+                        <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                        <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
                     </x-ui.select>
                 </div>
 
@@ -288,23 +292,44 @@
                                     </td>
                                     <td class="px-3 py-4 whitespace-nowrap">
                                         @if($request->status === 'pending')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-700">
-                                                <x-lucide-clock class="w-3 h-3 mr-1" />
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-700">
+                                                <x-lucide-clock class="w-3 h-3" />
                                                 Pending
                                             </span>
                                         @elseif($request->status === 'approved')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
-                                                <x-lucide-check-circle class="w-3 h-3 mr-1" />
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
+                                                <x-lucide-check-circle class="w-3 h-3" />
                                                 Approved
                                             </span>
                                         @elseif($request->status === 'rejected')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-700">
-                                                <x-lucide-x-circle class="w-3 h-3 mr-1" />
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-700">
+                                                <x-lucide-x-circle class="w-3 h-3" />
                                                 Rejected
                                             </span>
+                                        @elseif($request->status === 'pending_payment')
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-700">
+                                                <x-lucide-credit-card class="w-3 h-3" />
+                                                Pending Payment
+                                            </span>
+                                        @elseif($request->status === 'paid')
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
+                                                <x-lucide-check-circle class="w-3 h-3" />
+                                                Paid
+                                            </span>
+                                        @elseif($request->status === 'in_progress')
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-700">
+                                                <x-lucide-loader class="w-3 h-3" />
+                                                In Progress
+                                            </span>
+                                        @elseif($request->status === 'completed')
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
+                                                <x-lucide-check-circle class="w-3 h-3" />
+                                                Completed
+                                            </span>
                                         @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700">
-                                                {{ ucfirst($request->status ?? 'Unknown') }}
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700">
+                                                <x-lucide-circle-dashed class="w-3 h-3" />
+                                                {{ ucfirst(str_replace('_', ' ', $request->status ?? 'Unknown')) }}
                                             </span>
                                         @endif
                                     </td>
@@ -318,15 +343,17 @@
                                             ];
                                             $priorityClass = $priorityClasses[$request->priority ?? 'low'] ?? 'bg-neutral-100 text-neutral-700';
                                         @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $priorityClass }}">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $priorityClass }}">
                                             @if($request->priority === 'low')
-                                                <x-lucide-arrow-down class="w-3 h-3 mr-1" />
+                                                <x-lucide-arrow-down class="w-3 h-3" />
                                             @elseif($request->priority === 'medium')
-                                                <x-lucide-minus class="w-3 h-3 mr-1" />
+                                                <x-lucide-minus class="w-3 h-3" />
                                             @elseif($request->priority === 'high')
-                                                <x-lucide-arrow-up class="w-3 h-3 mr-1" />
+                                                <x-lucide-arrow-up class="w-3 h-3" />
                                             @elseif($request->priority === 'urgent')
-                                                <x-lucide-alert-triangle class="w-3 h-3 mr-1" />
+                                                <x-lucide-alert-triangle class="w-3 h-3" />
+                                            @else
+                                                <x-lucide-circle-dashed class="w-3 h-3" />
                                             @endif
                                             {{ ucfirst($request->priority ?? 'Low') }}
                                         </span>

@@ -432,9 +432,9 @@
                     Client
                 </h2>
                 <div class="flex items-center space-x-4 mb-4">
-                    <img src="{{ $project->client_photo ?? 'https://ui-avatars.com/api/?name=' . urlencode($project->client_name) }}" 
+                    <img src="{{ $project->client_photo ?? 'https://ui-avatars.com/api/?name=' . urlencode($project->client_name) . '&background=random' }}" 
                          alt="{{ $project->client_name }}" 
-                         class="w-16 h-16 rounded-full">
+                         class="w-16 h-16 rounded-full object-cover">
                     <div>
                         <h3 class="font-medium text-neutral-800">{{ $project->client_name }}</h3>
                         <p class="text-sm text-neutral-500">{{ $project->client_email }}</p>
@@ -462,9 +462,9 @@
                     <div class="space-y-3">
                         @foreach($teamMembers as $member)
                             <div class="flex items-center space-x-3">
-                                <img src="{{ $member->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($member->fullName) }}" 
+                                <img src="{{ $member->getProfilePictureUrl() }}" 
                                      alt="{{ $member->fullName }}" 
-                                     class="w-10 h-10 rounded-full">
+                                     class="w-10 h-10 rounded-full object-cover">
                                 <div class="flex-1">
                                     <p class="font-medium text-neutral-800">{{ $member->fullName }}</p>
                                     <p class="text-xs text-neutral-500">{{ $member->role ?? 'Team Member' }}</p>

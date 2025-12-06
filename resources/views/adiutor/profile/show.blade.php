@@ -3,7 +3,7 @@
 @section('title', 'My Profile')
 
 @section('content')
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'url' => route('adiutor.dashboard')],

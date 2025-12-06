@@ -150,6 +150,8 @@ class GroupChatController extends Controller
                 'message' => 'required|string|max:5000',
                 'attachments' => 'nullable|array|max:5',
                 'attachments.*' => "file|max:{$maxSize}|mimes:{$extensions}",
+                'mentions' => 'nullable|array',
+                'mentions.*' => 'integer|exists:users,id',
             ], [
                 'attachments.max' => 'You can upload a maximum of 5 files.',
                 'attachments.*.mimes' => 'Unsupported file type. ' . $this->getHumanReadableFileTypes() . ' are allowed.',
@@ -165,12 +167,14 @@ class GroupChatController extends Controller
 
             // Use MessagingService to send the message
             $attachments = $request->hasFile('attachments') ? $request->file('attachments') : [];
+            $mentions = $request->input('mentions', []);
 
             $result = $this->messagingService->sendGroupMessage(
                 $user,
                 $groupChat,
                 $request->message,
-                $attachments
+                $attachments,
+                $mentions
             );
 
             if (!$result['success']) {

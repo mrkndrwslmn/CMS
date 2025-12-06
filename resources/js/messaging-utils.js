@@ -110,7 +110,7 @@ export const MessagingUtils = {
                 <div class="max-w-[70%]">
                     ${senderInfoHtml}
                     <div class="rounded-2xl px-4 py-3 ${bubbleClass}">
-                        <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">${this.escapeHtml(message.message)}</p>
+                        <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">${this.formatMentions(message.message, isSender)}</p>
                         ${attachmentsHtml}
                     </div>
                     <div class="flex items-center gap-1.5 mt-1.5 px-1 text-xs text-neutral-400 ${isSender ? 'justify-end' : 'justify-start'}">
@@ -185,6 +185,76 @@ export const MessagingUtils = {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    },
+
+    /**
+     * Format message text with highlighted, clickable @mentions
+     * 
+     * @param {string} text - Message text that may contain @mentions
+     * @param {boolean} isSender - Whether the current user is the sender (affects styling)
+     * @returns {string} HTML string with mentions wrapped in styled, clickable spans
+     */
+    formatMentions(text, isSender = false) {
+        if (!text) return '';
+        
+        // First escape the HTML
+        const escapedText = this.escapeHtml(text);
+        
+        // Match @mentions - name consists of words separated by single spaces
+        // A mention ends when we encounter: double space, punctuation followed by space, newline, or end of string
+        // The key fix: we need to match names that are likely real names (1-3 words typically)
+        // Pattern: @ followed by a capitalized word, optionally followed by more capitalized words
+        const mentionPattern = /@([A-Z][a-z]+(?:\s[A-Z][a-z]+){0,2})(?=\s|$|[,\.!\?;:])/g;
+        
+        // Style classes based on message sender
+        const mentionClasses = isSender
+            ? 'mention-tag mention-sender cursor-pointer font-semibold bg-white/20 hover:bg-white/30 text-white px-1 py-0.5 rounded transition-colors'
+            : 'mention-tag mention-receiver cursor-pointer font-semibold bg-primary-100 hover:bg-primary-200 text-primary-700 px-1 py-0.5 rounded transition-colors';
+        
+        return escapedText.replace(mentionPattern, (match, name) => {
+            const trimmedName = name.trim();
+            return `<span class="${mentionClasses}" data-mention-name="${this.escapeHtml(trimmedName)}" onclick="window.MessagingUtils.handleMentionClick(event, '${this.escapeHtml(trimmedName).replace(/'/g, "\\'")}')" title="Click to mention ${this.escapeHtml(trimmedName)}">@${this.escapeHtml(trimmedName)}</span>`;
+        });
+    },
+
+    /**
+     * Handle click on a mention tag - adds the mentioned person to the message input
+     * 
+     * @param {Event} event - Click event
+     * @param {string} name - The name of the mentioned person
+     */
+    handleMentionClick(event, name) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const textarea = document.getElementById('message-textarea');
+        if (!textarea) return;
+        
+        // Get current cursor position or end of text
+        const cursorPos = textarea.selectionStart || textarea.value.length;
+        const textBefore = textarea.value.substring(0, cursorPos);
+        const textAfter = textarea.value.substring(cursorPos);
+        
+        // Add space before @ if needed
+        const needsSpace = textBefore.length > 0 && !textBefore.endsWith(' ') && !textBefore.endsWith('\n');
+        const mentionText = (needsSpace ? ' ' : '') + `@${name} `;
+        
+        // Insert the mention
+        textarea.value = textBefore + mentionText + textAfter;
+        
+        // Set cursor position after the mention
+        const newCursorPos = cursorPos + mentionText.length;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        textarea.focus();
+        
+        // Update character count if it exists
+        const charCount = document.getElementById('char-count');
+        if (charCount) {
+            charCount.textContent = textarea.value.length;
+        }
+        
+        // Trigger input event to update any mention tracking
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
     },
 
     /**

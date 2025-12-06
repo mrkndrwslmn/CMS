@@ -295,6 +295,7 @@
                                     class="w-full px-3 py-2 text-sm border-2 border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all @error('status') border-error-500 @enderror">
                                 <option value="pending" {{ old('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="in_progress" {{ old('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                <option value="pending_approval" {{ old('status') === 'pending_approval' ? 'selected' : '' }}>Pending Approval</option>
                                 <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>Completed</option>
                                 <option value="cancelled" {{ old('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                             </select>

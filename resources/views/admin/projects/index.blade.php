@@ -139,7 +139,8 @@
                         <option value="">All Statuses</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                         <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                        <option value="review" {{ request('status') == 'review' ? 'selected' : '' }}>Review</option>
+                        <option value="review" {{ request('status') == 'review' ? 'selected' : '' }}>In Review</option>
+                        <option value="on_hold" {{ request('status') == 'on_hold' ? 'selected' : '' }}>On Hold</option>
                         <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
                         <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                     </select>
@@ -270,16 +271,17 @@
                             <td class="px-6 py-4">
                                 @php
                                     $statusConfig = [
-                                        'active' => ['class' => 'bg-primary-50 text-primary-700', 'text' => 'Active'],
-                                        'in_progress' => ['class' => 'bg-info-50 text-info-700', 'text' => 'In Progress'],
-                                        'review' => ['class' => 'bg-purple-50 text-purple-700', 'text' => 'Review'],
-                                        'completed' => ['class' => 'bg-success-50 text-success-700', 'text' => 'Completed'],
-                                        'cancelled' => ['class' => 'bg-error-50 text-error-700', 'text' => 'Cancelled'],
-                                        'on_hold' => ['class' => 'bg-neutral-100 text-neutral-700', 'text' => 'On Hold'],
+                                        'active' => ['class' => 'bg-primary-100 text-primary-700', 'icon' => 'play-circle', 'text' => 'Active'],
+                                        'in_progress' => ['class' => 'bg-info-100 text-info-700', 'icon' => 'loader', 'text' => 'In Progress'],
+                                        'review' => ['class' => 'bg-purple-100 text-purple-700', 'icon' => 'eye', 'text' => 'In Review'],
+                                        'completed' => ['class' => 'bg-success-100 text-success-700', 'icon' => 'check-circle', 'text' => 'Completed'],
+                                        'cancelled' => ['class' => 'bg-error-100 text-error-700', 'icon' => 'x-circle', 'text' => 'Cancelled'],
+                                        'on_hold' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'pause-circle', 'text' => 'On Hold'],
                                     ];
-                                    $config = $statusConfig[$project->status] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'text' => ucfirst($project->status)];
+                                    $config = $statusConfig[$project->status] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle-dashed', 'text' => ucfirst(str_replace('_', ' ', $project->status))];
                                 @endphp
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium {{ $config['class'] }}">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $config['class'] }}">
+                                    <x-dynamic-component :component="'lucide-' . $config['icon']" class="w-3 h-3" />
                                     {{ $config['text'] }}
                                 </span>
                             </td>
@@ -287,14 +289,14 @@
                                 @if($project->priority)
                                     @php
                                         $priorityConfig = [
-                                            'low' => ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'arrow-down'],
-                                            'medium' => ['class' => 'bg-warning-50 text-warning-700', 'icon' => 'minus'],
-                                            'high' => ['class' => 'bg-orange-50 text-orange-700', 'icon' => 'arrow-up'],
-                                            'urgent' => ['class' => 'bg-error-50 text-error-700', 'icon' => 'alert-triangle'],
+                                            'low' => ['class' => 'bg-info-100 text-info-700', 'icon' => 'arrow-down'],
+                                            'medium' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'minus'],
+                                            'high' => ['class' => 'bg-orange-100 text-orange-700', 'icon' => 'arrow-up'],
+                                            'urgent' => ['class' => 'bg-error-100 text-error-700', 'icon' => 'alert-triangle'],
                                         ];
-                                        $pConfig = $priorityConfig[$project->priority] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'minus'];
+                                        $pConfig = $priorityConfig[$project->priority] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle-dashed'];
                                     @endphp
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium {{ $pConfig['class'] }}">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $pConfig['class'] }}">
                                         <x-dynamic-component :component="'lucide-' . $pConfig['icon']" class="w-3 h-3" />
                                         {{ ucfirst($project->priority) }}
                                     </span>
@@ -325,10 +327,17 @@
                                 <div class="flex -space-x-2">
                                     @if($project->adiutors->count() > 0)
                                         @foreach($project->adiutors->take(3) as $adiutor)
-                                            <div class="h-8 w-8 rounded-full bg-primary-600 border-2 border-white flex items-center justify-center text-white text-xs font-medium"
-                                                 title="{{ $adiutor->fullName }}">
-                                                {{ substr($adiutor->fullName, 0, 1) }}
-                                            </div>
+                                            @if($adiutor->profilePic)
+                                                <img src="{{ $adiutor->getProfilePictureUrl() }}" 
+                                                     alt="{{ $adiutor->fullName }}" 
+                                                     class="h-8 w-8 rounded-full border-2 border-white object-cover"
+                                                     title="{{ $adiutor->fullName }}">
+                                            @else
+                                                <div class="h-8 w-8 rounded-full bg-primary-600 border-2 border-white flex items-center justify-center text-white text-xs font-medium"
+                                                     title="{{ $adiutor->fullName }}">
+                                                    {{ substr($adiutor->fullName, 0, 1) }}
+                                                </div>
+                                            @endif
                                         @endforeach
                                         @if($project->adiutors->count() > 3)
                                             <div class="h-8 w-8 rounded-full bg-neutral-200 border-2 border-white flex items-center justify-center text-neutral-600 text-xs font-medium">

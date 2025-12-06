@@ -18,35 +18,33 @@
             <div class="flex items-center mb-2">
                 @php
                     $statusConfig = [
-                        'active' => ['class' => 'bg-info-100 text-info-800', 'label' => 'Active', 'icon' => 'play-circle'],
-                        'in_progress' => ['class' => 'bg-primary-100 text-primary-800', 'label' => 'In Progress', 'icon' => 'loader'],
-                        'review' => ['class' => 'bg-warning-100 text-warning-800', 'label' => 'Review', 'icon' => 'eye'],
-                        'completed' => ['class' => 'bg-success-100 text-success-800', 'label' => 'Completed', 'icon' => 'check-circle'],
-                        'cancelled' => ['class' => 'bg-error-100 text-error-800', 'label' => 'Cancelled', 'icon' => 'x-circle'],
-                        'on_hold' => ['class' => 'bg-neutral-100 text-neutral-800', 'label' => 'On Hold', 'icon' => 'pause-circle'],
+                        'active' => ['class' => 'bg-primary-100 text-primary-700', 'label' => 'Active', 'icon' => 'play-circle'],
+                        'in_progress' => ['class' => 'bg-info-100 text-info-700', 'label' => 'In Progress', 'icon' => 'loader'],
+                        'review' => ['class' => 'bg-purple-100 text-purple-700', 'label' => 'In Review', 'icon' => 'eye'],
+                        'completed' => ['class' => 'bg-success-100 text-success-700', 'label' => 'Completed', 'icon' => 'check-circle'],
+                        'cancelled' => ['class' => 'bg-error-100 text-error-700', 'label' => 'Cancelled', 'icon' => 'x-circle'],
+                        'on_hold' => ['class' => 'bg-warning-100 text-warning-700', 'label' => 'On Hold', 'icon' => 'pause-circle'],
                     ];
-                    $config = $statusConfig[$project->status] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'label' => ucfirst($project->status), 'icon' => 'circle'];
+                    $config = $statusConfig[$project->status] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'label' => ucfirst($project->status), 'icon' => 'circle'];
                 @endphp
                 
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $config['class'] }} mr-3">
-                    @php $statusIcon = 'lucide-' . $config['icon']; @endphp
-                    <x-dynamic-component :component="$statusIcon" class="w-3.5 h-3.5 mr-1.5" />
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium {{ $config['class'] }} mr-3">
+                    <x-dynamic-component :component="'lucide-' . $config['icon']" class="w-3.5 h-3.5" />
                     {{ $config['label'] }}
                 </span>
                 
                 @if($project->priority)
                     @php
                         $priorityConfig = [
-                            'low' => ['class' => 'bg-info-100 text-info-800', 'icon' => 'arrow-down'],
-                            'medium' => ['class' => 'bg-warning-100 text-warning-800', 'icon' => 'minus'],
-                            'high' => ['class' => 'bg-orange-100 text-orange-800', 'icon' => 'arrow-up'],
-                            'urgent' => ['class' => 'bg-error-100 text-error-800', 'icon' => 'alert-triangle'],
+                            'low' => ['class' => 'bg-info-100 text-info-700', 'icon' => 'arrow-down'],
+                            'medium' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'minus'],
+                            'high' => ['class' => 'bg-orange-100 text-orange-700', 'icon' => 'arrow-up'],
+                            'urgent' => ['class' => 'bg-error-100 text-error-700', 'icon' => 'alert-triangle'],
                         ];
-                        $pConfig = $priorityConfig[$project->priority] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'icon' => 'circle'];
+                        $pConfig = $priorityConfig[$project->priority] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle'];
                     @endphp
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $pConfig['class'] }}">
-                        @php $priorityIcon = 'lucide-' . $pConfig['icon']; @endphp
-                        <x-dynamic-component :component="$priorityIcon" class="w-3.5 h-3.5 mr-1.5" />
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium {{ $pConfig['class'] }}">
+                        <x-dynamic-component :component="'lucide-' . $pConfig['icon']" class="w-3.5 h-3.5" />
                         {{ ucfirst($project->priority) }} Priority
                     </span>
                 @endif
@@ -472,16 +470,17 @@
                                                     <h3 class="font-semibold text-neutral-900">{{ $task->taskTitle }}</h3>
                                                     @php
                                                         $taskStatusConfig = [
-                                                            'pending' => ['class' => 'bg-warning-100 text-warning-800', 'label' => 'Pending'],
-                                                            'in_progress' => ['class' => 'bg-primary-100 text-primary-800', 'label' => 'In Progress'],
-                                                            'completed' => ['class' => 'bg-success-100 text-success-800', 'label' => 'Completed'],
-                                                            'on_hold' => ['class' => 'bg-neutral-100 text-neutral-800', 'label' => 'On Hold'],
-                                                            'cancelled' => ['class' => 'bg-error-100 text-error-800', 'label' => 'Cancelled'],
-                                                            'pending_approval' => ['class' => 'bg-info-100 text-info-800', 'label' => 'Pending Approval'],
+                                                            'pending' => ['class' => 'bg-warning-100 text-warning-700', 'label' => 'Pending', 'icon' => 'clock'],
+                                                            'in_progress' => ['class' => 'bg-info-100 text-info-700', 'label' => 'In Progress', 'icon' => 'loader'],
+                                                            'completed' => ['class' => 'bg-success-100 text-success-700', 'label' => 'Completed', 'icon' => 'check-circle'],
+                                                            'on_hold' => ['class' => 'bg-neutral-100 text-neutral-700', 'label' => 'On Hold', 'icon' => 'pause-circle'],
+                                                            'cancelled' => ['class' => 'bg-error-100 text-error-700', 'label' => 'Cancelled', 'icon' => 'x-circle'],
+                                                            'pending_approval' => ['class' => 'bg-purple-100 text-purple-700', 'label' => 'Pending Approval', 'icon' => 'eye'],
                                                         ];
-                                                        $taskConfig = $taskStatusConfig[$task->status] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'label' => 'Unknown'];
+                                                        $taskConfig = $taskStatusConfig[$task->status] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'label' => 'Unknown', 'icon' => 'circle-dashed'];
                                                     @endphp
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $taskConfig['class'] }}">
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium {{ $taskConfig['class'] }}">
+                                                        <x-dynamic-component :component="'lucide-' . $taskConfig['icon']" class="w-3 h-3" />
                                                         {{ $taskConfig['label'] }}
                                                     </span>
                                                 </div>
@@ -601,13 +600,14 @@
                                             <div class="flex items-center gap-2">
                                                 @php
                                                     $statusConfig = match($task->status) {
-                                                        'completed' => ['bg' => 'bg-success-100', 'text' => 'text-success-700'],
-                                                        'in_progress' => ['bg' => 'bg-primary-100', 'text' => 'text-primary-700'],
-                                                        'pending' => ['bg' => 'bg-warning-100', 'text' => 'text-warning-700'],
-                                                        default => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-600']
+                                                        'completed' => ['bg' => 'bg-success-100', 'text' => 'text-success-700', 'icon' => 'check-circle'],
+                                                        'in_progress' => ['bg' => 'bg-info-100', 'text' => 'text-info-700', 'icon' => 'loader'],
+                                                        'pending' => ['bg' => 'bg-warning-100', 'text' => 'text-warning-700', 'icon' => 'clock'],
+                                                        default => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-600', 'icon' => 'circle-dashed']
                                                     };
                                                 @endphp
-                                                <span class="px-2 py-1 text-xs font-medium rounded-full {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                                    <x-dynamic-component :component="'lucide-' . $statusConfig['icon']" class="w-3 h-3" />
                                                     {{ ucfirst(str_replace('_', ' ', $task->status)) }}
                                                 </span>
                                                 <x-lucide-chevron-down class="w-5 h-5 text-neutral-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''" />
@@ -653,9 +653,15 @@
                         <div class="p-3 bg-neutral-50 rounded-xl">
                             <!-- Client Profile -->
                             <div class="flex items-center gap-3 mb-3">
-                                <div class="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 shadow-sm">
-                                    {{ substr($project->client->fullName, 0, 1) }}
-                                </div>
+                                @if($project->client->profilePic)
+                                    <img src="{{ $project->client->getProfilePictureUrl() }}" 
+                                         alt="{{ $project->client->fullName }}" 
+                                         class="w-10 h-10 rounded-full object-cover flex-shrink-0 shadow-sm">
+                                @else
+                                    <div class="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 shadow-sm">
+                                        {{ substr($project->client->fullName, 0, 1) }}
+                                    </div>
+                                @endif
                                 <div class="flex-1 min-w-0">
                                     <h3 class="font-medium text-neutral-900 text-sm truncate">{{ $project->client->fullName }}</h3>
                                     <p class="text-xs text-neutral-500 truncate">{{ $project->client->email }}</p>
@@ -778,9 +784,15 @@
                                 <div class="group p-3 bg-neutral-50 hover:bg-neutral-100/80 rounded-xl transition-colors">
                                     <!-- Member Info Row -->
                                     <div class="flex items-center gap-3 mb-3">
-                                        <div class="w-9 h-9 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 shadow-sm">
-                                            {{ substr($adiutor->fullName, 0, 1) }}
-                                        </div>
+                                        @if($adiutor->profilePic)
+                                            <img src="{{ $adiutor->getProfilePictureUrl() }}" 
+                                                 alt="{{ $adiutor->fullName }}" 
+                                                 class="w-9 h-9 rounded-full object-cover flex-shrink-0 shadow-sm">
+                                        @else
+                                            <div class="w-9 h-9 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 shadow-sm">
+                                                {{ substr($adiutor->fullName, 0, 1) }}
+                                            </div>
+                                        @endif
                                         <div class="flex-1 min-w-0">
                                             <p class="font-medium text-neutral-900 text-sm truncate">{{ $adiutor->fullName }}</p>
                                             <p class="text-xs text-neutral-500 truncate">{{ $adiutor->email }}</p>
@@ -1107,9 +1119,15 @@
                                             </td>
                                             <td class="px-4 py-4 whitespace-nowrap">
                                                 <div class="flex items-center">
-                                                    <div class="flex-shrink-0 h-10 w-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                                                        {{ substr($adiutor['fullName'], 0, 1) }}
-                                                    </div>
+                                                    @if(isset($adiutor['profilePic']) && $adiutor['profilePic'])
+                                                        <img src="{{ $adiutor['profilePic'] }}" 
+                                                             alt="{{ $adiutor['fullName'] }}" 
+                                                             class="h-10 w-10 rounded-full object-cover mr-3">
+                                                    @else
+                                                        <div class="flex-shrink-0 h-10 w-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                                                            {{ substr($adiutor['fullName'], 0, 1) }}
+                                                        </div>
+                                                    @endif
                                                     <div>
                                                         <div class="text-sm font-medium text-neutral-900">{{ $adiutor['fullName'] }}</div>
                                                         <div class="text-xs text-neutral-500 flex items-center gap-0.5">

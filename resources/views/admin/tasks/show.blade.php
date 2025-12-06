@@ -20,27 +20,29 @@
             <div class="flex items-center gap-2 mb-2">
                 @php
                     $statusConfig = [
-                        'pending' => ['class' => 'bg-warning-100 text-warning-800', 'icon' => 'clock'],
-                        'in_progress' => ['class' => 'bg-info-100 text-info-800', 'icon' => 'loader'],
-                        'completed' => ['class' => 'bg-success-100 text-success-800', 'icon' => 'check-circle'],
-                        'cancelled' => ['class' => 'bg-neutral-100 text-neutral-800', 'icon' => 'circle-slash'],
+                        'pending' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'clock', 'text' => 'Pending'],
+                        'in_progress' => ['class' => 'bg-info-100 text-info-700', 'icon' => 'loader', 'text' => 'In Progress'],
+                        'pending_approval' => ['class' => 'bg-purple-100 text-purple-700', 'icon' => 'eye', 'text' => 'Pending Approval'],
+                        'completed' => ['class' => 'bg-success-100 text-success-700', 'icon' => 'check-circle', 'text' => 'Completed'],
+                        'cancelled' => ['class' => 'bg-error-100 text-error-700', 'icon' => 'x-circle', 'text' => 'Cancelled'],
                     ];
-                    $sConfig = $statusConfig[$task['status']] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'icon' => 'circle'];
+                    $sConfig = $statusConfig[$task['status']] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle-dashed', 'text' => ucfirst(str_replace('_', ' ', $task['status']))];
                 @endphp
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm font-medium {{ $sConfig['class'] }}">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium {{ $sConfig['class'] }}">
                     <x-dynamic-component :component="'lucide-' . $sConfig['icon']" class="w-3.5 h-3.5" />
-                    {{ ucfirst(str_replace('_', ' ', $task['status'])) }}
+                    {{ $sConfig['text'] }}
                 </span>
                 
                 @php
                     $priorityConfig = [
-                        'low' => ['class' => 'bg-success-100 text-success-800', 'icon' => 'arrow-down'],
-                        'medium' => ['class' => 'bg-warning-100 text-warning-800', 'icon' => 'minus'],
-                        'high' => ['class' => 'bg-error-100 text-error-800', 'icon' => 'arrow-up'],
+                        'low' => ['class' => 'bg-info-100 text-info-700', 'icon' => 'arrow-down'],
+                        'medium' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'minus'],
+                        'high' => ['class' => 'bg-orange-100 text-orange-700', 'icon' => 'arrow-up'],
+                        'urgent' => ['class' => 'bg-error-100 text-error-700', 'icon' => 'alert-triangle'],
                     ];
-                    $pConfig = $priorityConfig[$task['priority']] ?? ['class' => 'bg-neutral-100 text-neutral-800', 'icon' => 'circle'];
+                    $pConfig = $priorityConfig[$task['priority']] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle-dashed'];
                 @endphp
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm font-medium {{ $pConfig['class'] }}">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium {{ $pConfig['class'] }}">
                     <x-dynamic-component :component="'lucide-' . $pConfig['icon']" class="w-3.5 h-3.5" />
                     {{ ucfirst($task['priority']) }} Priority
                 </span>
@@ -128,9 +130,9 @@
                                 <div class="flex">
                                     <div class="w-32 text-neutral-500">Status:</div>
                                     <div class="flex-1 text-neutral-800">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $sConfig['class'] }}">
-                                            <x-dynamic-component :component="'lucide-' . $sConfig['icon']" class="w-3.5 h-3.5" />
-                                            {{ ucfirst(str_replace('_', ' ', $task['status'])) }}
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $sConfig['class'] }}">
+                                            <x-dynamic-component :component="'lucide-' . $sConfig['icon']" class="w-3 h-3" />
+                                            {{ $sConfig['text'] }}
                                         </span>
                                     </div>
                                 </div>
@@ -138,8 +140,8 @@
                                 <div class="flex">
                                     <div class="w-32 text-neutral-500">Priority:</div>
                                     <div class="flex-1">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $pConfig['class'] }}">
-                                            <x-dynamic-component :component="'lucide-' . $pConfig['icon']" class="w-3.5 h-3.5" />
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $pConfig['class'] }}">
+                                            <x-dynamic-component :component="'lucide-' . $pConfig['icon']" class="w-3 h-3" />
                                             {{ ucfirst($task['priority']) }}
                                         </span>
                                     </div>
@@ -149,8 +151,8 @@
                                 <div class="flex">
                                     <div class="w-32 text-neutral-500">Phase:</div>
                                     <div class="flex-1">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700">
-                                            <x-lucide-layers class="w-3.5 h-3.5" />
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                                            <x-lucide-layers class="w-3 h-3" />
                                             {{ $task->phase->phase_name }}
                                         </span>
                                     </div>

@@ -79,6 +79,7 @@ class ProfileController extends Controller
         $user = Auth::user();
         
         $validator = Validator::make($request->all(), [
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'bio' => 'nullable|string|max:1000',
             'title' => 'nullable|string|max:255',
             'standard_hourly_rate' => 'nullable|numeric|min:0|max:999999.99',
@@ -97,6 +98,25 @@ class ProfileController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            try {
+                $r2Service = app(\App\Services\CloudflareR2Service::class);
+                $result = $r2Service->uploadProfilePicture($request->file('profile_picture'), $user->id);
+                
+                if ($result['success']) {
+                    // Update user's profile picture
+                    DB::table('users')->where('id', $user->id)->update([
+                        'profilePic' => $result['url'],
+                        'updated_at' => now(),
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Profile picture upload failed: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Failed to upload profile picture. Please try again.');
+            }
         }
 
         $profileData = [

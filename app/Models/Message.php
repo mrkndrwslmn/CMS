@@ -90,11 +90,20 @@ class Message extends Model
     }
 
     /**
-     * Scope a query to only include messages for a specific project
+     * Scope a query to only include messages for a specific project (excludes group chat messages)
      */
     public function scopeForProject($query, $projectId)
     {
-        return $query->where('project_id', $projectId);
+        return $query->where('project_id', $projectId)
+                     ->whereNull('group_chat_id');
+    }
+
+    /**
+     * Scope a query to only include direct messages (non-group chat)
+     */
+    public function scopeDirectMessages($query)
+    {
+        return $query->whereNull('group_chat_id');
     }
 
     /**

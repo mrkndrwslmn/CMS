@@ -216,9 +216,15 @@
                         <tr class="hover:bg-neutral-50 transition-colors">
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
-                                    <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold mr-3">
-                                        {{ substr($adiutor->fullName, 0, 1) }}
-                                    </div>
+                                    @if($adiutor->profilePic)
+                                        <img src="{{ $adiutor->getProfilePictureUrl() }}" 
+                                             alt="{{ $adiutor->fullName }}" 
+                                             class="w-10 h-10 rounded-full object-cover mr-3">
+                                    @else
+                                        <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold mr-3">
+                                            {{ substr($adiutor->fullName, 0, 1) }}
+                                        </div>
+                                    @endif
                                     <div>
                                         <p class="text-sm font-medium text-neutral-700">{{ $adiutor->fullName }}</p>
                                         <p class="text-xs text-neutral-400">{{ $adiutor->email }}</p>
@@ -267,9 +273,15 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             @forelse($clientSatisfaction as $client)
                 <div class="p-4 bg-neutral-50 rounded-xl text-center">
-                    <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold mx-auto mb-3">
-                        {{ substr($client->fullName, 0, 1) }}
-                    </div>
+                    @if($client->profilePic)
+                        <img src="{{ $client->getProfilePictureUrl() }}" 
+                             alt="{{ $client->fullName }}" 
+                             class="w-12 h-12 rounded-full object-cover mx-auto mb-3">
+                    @else
+                        <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold mx-auto mb-3">
+                            {{ substr($client->fullName, 0, 1) }}
+                        </div>
+                    @endif
                     <p class="text-sm font-medium text-neutral-700 truncate">{{ $client->fullName }}</p>
                     <div class="flex items-center justify-center gap-1 mt-2">
                         <x-lucide-star class="w-4 h-4 text-warning-400 fill-warning-400" />

@@ -189,11 +189,15 @@
                                     <!-- Last Message -->
                                     @if($conversation->lastMessage)
                                         <div class="flex items-start gap-3">
-                                            <div class="w-7 h-7 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                                <span class="text-xs font-medium text-neutral-600">
-                                                    {{ substr($conversation->lastMessage->sender->fullName, 0, 1) }}
-                                                </span>
-                                            </div>
+                                            @if($conversation->lastMessage->sender->profilePic)
+                                                <img src="{{ $conversation->lastMessage->sender->getProfilePictureUrl() }}" alt="{{ $conversation->lastMessage->sender->fullName }}" class="w-7 h-7 rounded-full object-cover flex-shrink-0">
+                                            @else
+                                                <div class="w-7 h-7 bg-neutral-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <span class="text-xs font-medium text-neutral-600">
+                                                        {{ substr($conversation->lastMessage->sender->fullName, 0, 1) }}
+                                                    </span>
+                                                </div>
+                                            @endif
                                             <div class="flex-1 min-w-0">
                                                 <p class="text-sm font-medium text-neutral-700 mb-0.5">
                                                     {{ $conversation->lastMessage->sender->fullName }}

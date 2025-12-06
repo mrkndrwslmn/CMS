@@ -34,51 +34,34 @@
             <div class="flex items-center gap-2 mb-2">
                 @php
                     $requestStatus = $request->status ?? 'pending';
-                    $statusBadgeClasses = [
-                        'pending' => 'bg-warning-100 text-warning-800',
-                        'approved' => 'bg-success-100 text-success-800',
-                        'rejected' => 'bg-error-100 text-error-800',
-                        'pending_payment' => 'bg-warning-100 text-warning-800',
-                        'paid' => 'bg-success-100 text-success-800',
+                    $statusConfig = [
+                        'pending' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'clock', 'label' => 'Pending'],
+                        'approved' => ['class' => 'bg-success-100 text-success-700', 'icon' => 'check-circle', 'label' => 'Approved'],
+                        'rejected' => ['class' => 'bg-error-100 text-error-700', 'icon' => 'x-circle', 'label' => 'Rejected'],
+                        'pending_payment' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'credit-card', 'label' => 'Pending Payment'],
+                        'paid' => ['class' => 'bg-success-100 text-success-700', 'icon' => 'check-circle', 'label' => 'Paid'],
+                        'in_progress' => ['class' => 'bg-primary-100 text-primary-700', 'icon' => 'loader', 'label' => 'In Progress'],
+                        'completed' => ['class' => 'bg-success-100 text-success-700', 'icon' => 'check-circle', 'label' => 'Completed'],
                     ];
-                    $statusBadgeClass = $statusBadgeClasses[$requestStatus] ?? 'bg-neutral-100 text-neutral-800';
+                    $currentStatus = $statusConfig[$requestStatus] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle-dashed', 'label' => ucfirst(str_replace('_', ' ', $requestStatus))];
                 @endphp
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $statusBadgeClass }} mr-3">
-                    @if($requestStatus === 'pending')
-                        <span class="h-2 w-2 rounded-full bg-warning-500 mr-1.5"></span>Pending
-                    @elseif($requestStatus === 'approved')
-                        <span class="h-2 w-2 rounded-full bg-success-500 mr-1.5"></span>Approved
-                    @elseif($requestStatus === 'rejected')
-                        <span class="h-2 w-2 rounded-full bg-error-500 mr-1.5"></span>Rejected
-                    @elseif($requestStatus === 'pending_payment')
-                        <span class="h-2 w-2 rounded-full bg-warning-500 mr-1.5"></span>Pending Payment
-                    @elseif($requestStatus === 'paid')
-                        <span class="h-2 w-2 rounded-full bg-success-500 mr-1.5"></span>Paid
-                    @else
-                        <span class="h-2 w-2 rounded-full bg-neutral-500 mr-1.5"></span>{{ ucfirst($requestStatus) }}
-                    @endif
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium {{ $currentStatus['class'] }} mr-3">
+                    <x-dynamic-component :component="'lucide-' . $currentStatus['icon']" class="w-3.5 h-3.5" />
+                    {{ $currentStatus['label'] }}
                 </span>
                 
                 @php
                     $requestPriority = $request->priority ?? 'low';
-                    $priorityBadgeClasses = [
-                        'low' => 'bg-info-100 text-info-800',
-                        'medium' => 'bg-warning-100 text-warning-800',
-                        'high' => 'bg-orange-100 text-orange-800',
-                        'urgent' => 'bg-error-100 text-error-800'
+                    $priorityConfig = [
+                        'low' => ['class' => 'bg-info-100 text-info-700', 'icon' => 'arrow-down'],
+                        'medium' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'minus'],
+                        'high' => ['class' => 'bg-orange-100 text-orange-700', 'icon' => 'arrow-up'],
+                        'urgent' => ['class' => 'bg-error-100 text-error-700', 'icon' => 'alert-triangle'],
                     ];
-                    $priorityBadgeClass = $priorityBadgeClasses[$requestPriority] ?? 'bg-neutral-100 text-neutral-800';
-                    
-                    $priorityIcons = [
-                        'low' => 'arrow-down',
-                        'medium' => 'minus',
-                        'high' => 'arrow-up',
-                        'urgent' => 'alert-triangle'
-                    ];
-                    $priorityIcon = $priorityIcons[$requestPriority] ?? 'circle';
+                    $currentPriority = $priorityConfig[$requestPriority] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle'];
                 @endphp
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $priorityBadgeClass }}">
-                    <x-dynamic-component :component="'lucide-' . $priorityIcon" class="w-3.5 h-3.5 mr-1.5" />
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium {{ $currentPriority['class'] }}">
+                    <x-dynamic-component :component="'lucide-' . $currentPriority['icon']" class="w-3.5 h-3.5" />
                     {{ ucfirst($requestPriority) }} Priority
                 </span>
             </div>
@@ -635,33 +618,32 @@
                                                 @endif
                                             </td>
                                             <td class="px-4 py-3">
-                                                @if($task->status === 'completed')
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800">
-                                                        <span class="h-1.5 w-1.5 rounded-full bg-success-500 mr-1.5"></span>
-                                                        Completed
-                                                    </span>
-                                                @elseif($task->status === 'in_progress')
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
-                                                        <span class="h-1.5 w-1.5 rounded-full bg-warning-500 mr-1.5"></span>
-                                                        In Progress
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
-                                                        <span class="h-1.5 w-1.5 rounded-full bg-neutral-500 mr-1.5"></span>
-                                                        Pending
-                                                    </span>
-                                                @endif
+                                                @php
+                                                    $taskStatus = $task->status ?? 'pending';
+                                                    $taskStatusConfig = [
+                                                        'completed' => ['class' => 'bg-success-100 text-success-700', 'icon' => 'check-circle'],
+                                                        'in_progress' => ['class' => 'bg-primary-100 text-primary-700', 'icon' => 'loader'],
+                                                        'pending' => ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle-dashed'],
+                                                        'on_hold' => ['class' => 'bg-warning-100 text-warning-700', 'icon' => 'pause-circle'],
+                                                        'cancelled' => ['class' => 'bg-error-100 text-error-700', 'icon' => 'x-circle'],
+                                                    ];
+                                                    $currentTaskStatus = $taskStatusConfig[$taskStatus] ?? ['class' => 'bg-neutral-100 text-neutral-700', 'icon' => 'circle-dashed'];
+                                                @endphp
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $currentTaskStatus['class'] }}">
+                                                    <x-dynamic-component :component="'lucide-' . $currentTaskStatus['icon']" class="w-3 h-3" />
+                                                    {{ ucfirst(str_replace('_', ' ', $taskStatus)) }}
+                                                </span>
                                             </td>
                                             <td class="px-4 py-3">
                                                 @php
                                                     $taskPriority = $task->priority ?? 'low';
                                                     $priorityClasses = [
-                                                        'low' => 'bg-info-100 text-info-800',
-                                                        'medium' => 'bg-warning-100 text-warning-800',
-                                                        'high' => 'bg-orange-100 text-orange-800',
-                                                        'urgent' => 'bg-error-100 text-error-800',
+                                                        'low' => 'bg-info-100 text-info-700',
+                                                        'medium' => 'bg-warning-100 text-warning-700',
+                                                        'high' => 'bg-orange-100 text-orange-700',
+                                                        'urgent' => 'bg-error-100 text-error-700',
                                                     ];
-                                                    $priorityClass = $priorityClasses[$taskPriority] ?? 'bg-neutral-100 text-neutral-800';
+                                                    $priorityClass = $priorityClasses[$taskPriority] ?? 'bg-neutral-100 text-neutral-700';
                                                     
                                                     $priorityIcons = [
                                                         'low' => 'arrow-down',
@@ -669,10 +651,10 @@
                                                         'high' => 'arrow-up',
                                                         'urgent' => 'alert-triangle',
                                                     ];
-                                                    $priorityIcon = $priorityIcons[$taskPriority] ?? 'circle';
+                                                    $priorityIcon = $priorityIcons[$taskPriority] ?? 'circle-dashed';
                                                 @endphp
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $priorityClass }}">
-                                                    <x-dynamic-component :component="'lucide-' . $priorityIcon" class="w-3 h-3 mr-1" />
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium {{ $priorityClass }}">
+                                                    <x-dynamic-component :component="'lucide-' . $priorityIcon" class="w-3 h-3" />
                                                     {{ ucfirst($taskPriority) }}
                                                 </span>
                                             </td>

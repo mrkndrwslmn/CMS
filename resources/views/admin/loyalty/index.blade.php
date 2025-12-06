@@ -163,15 +163,21 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center">
                                 <div class="h-10 w-10 flex-shrink-0">
-                                    <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                                        <span class="text-primary-600 font-semibold text-sm">
-                                            {{ substr($lp->user->first_name, 0, 1) }}{{ substr($lp->user->last_name, 0, 1) }}
-                                        </span>
-                                    </div>
+                                    @if($lp->user->profilePic)
+                                        <img src="{{ $lp->user->getProfilePictureUrl() }}" 
+                                             alt="{{ $lp->user->fullName }}" 
+                                             class="h-10 w-10 rounded-full object-cover">
+                                    @else
+                                        <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
+                                            <span class="text-primary-600 font-semibold text-sm">
+                                                {{ substr($lp->user->fullName ?? 'U', 0, 1) }}
+                                            </span>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-neutral-900">
-                                        {{ $lp->user->first_name }} {{ $lp->user->last_name }}
+                                        {{ $lp->user->fullName }}
                                     </div>
                                     <div class="text-sm text-neutral-500">{{ $lp->user->email }}</div>
                                 </div>

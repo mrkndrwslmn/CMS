@@ -84,9 +84,9 @@
                 </div>
                 <div class="p-6">
                     <div class="flex items-start gap-4">
-                        <img src="{{ $payout->adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($payout->adiutor->fullName) }}" 
+                        <img src="{{ $payout->adiutor->getProfilePictureUrl() }}" 
                              alt="{{ $payout->adiutor->fullName }}" 
-                             class="w-16 h-16 rounded-full border-2 border-neutral-100">
+                             class="w-16 h-16 rounded-full border-2 border-neutral-100 object-cover">
                         <div class="flex-1">
                             <h4 class="text-lg font-semibold text-neutral-800">{{ $payout->adiutor->fullName }}</h4>
                             <p class="text-sm text-neutral-500">{{ $payout->adiutor->email }}</p>

@@ -114,9 +114,15 @@
                         <div class="flex items-start space-x-4 flex-1">
                             <!-- Avatar -->
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                                    {{ substr($referral->referred->fullName ?? 'U', 0, 1) }}
-                                </div>
+                                @if($referral->referred && $referral->referred->profilePic)
+                                    <img src="{{ $referral->referred->getProfilePictureUrl() }}" 
+                                         alt="{{ $referral->referred->fullName }}" 
+                                         class="w-12 h-12 rounded-full object-cover">
+                                @else
+                                    <div class="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                                        {{ substr($referral->referred->fullName ?? 'U', 0, 1) }}
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Info -->

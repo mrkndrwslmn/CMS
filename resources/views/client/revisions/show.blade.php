@@ -105,9 +105,15 @@
             <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 mb-6">
                 <h2 class="text-lg font-semibold text-neutral-800 mb-4">Assignment</h2>
                 <div class="flex items-center space-x-4">
-                    <div class="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
-                        {{ substr($revision->assignedAdiutor->fullName, 0, 1) }}
-                    </div>
+                    @if($revision->assignedAdiutor->profilePic)
+                        <img src="{{ $revision->assignedAdiutor->getProfilePictureUrl() }}" 
+                             alt="{{ $revision->assignedAdiutor->fullName }}" 
+                             class="w-10 h-10 rounded-full object-cover">
+                    @else
+                        <div class="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {{ substr($revision->assignedAdiutor->fullName, 0, 1) }}
+                        </div>
+                    @endif
                     <div>
                         <p class="font-medium text-neutral-800">{{ $revision->assignedAdiutor->fullName }}</p>
                         <p class="text-sm text-neutral-500">Assigned Adiutor</p>

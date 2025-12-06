@@ -346,6 +346,7 @@ class AdminController extends Controller
         $user = Auth::user();
 
         $request->validate([
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'fullName' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'phoneNumber' => 'nullable|string|max:20',
@@ -359,6 +360,24 @@ class AdminController extends Controller
                 throw ValidationException::withMessages([
                     'current_password' => 'Current password is incorrect.',
                 ]);
+            }
+        }
+
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            try {
+                $r2Service = app(\App\Services\CloudflareR2Service::class);
+                $result = $r2Service->uploadProfilePicture($request->file('profile_picture'), $user->id);
+                
+                if ($result['success']) {
+                    User::where('id', $user->id)->update([
+                        'profilePic' => $result['url'],
+                        'updated_at' => now(),
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Admin profile picture upload failed: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Failed to upload profile picture. Please try again.');
             }
         }
 

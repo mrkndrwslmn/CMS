@@ -227,11 +227,17 @@
                         <div>
                             <p class="text-xs text-neutral-500 mb-1">Requested By</p>
                             <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                                    <span class="text-sm font-medium text-primary-600">
-                                        {{ substr($revision->requestedBy->fullName ?? 'U', 0, 1) }}
-                                    </span>
-                                </div>
+                                @if($revision->requestedBy && $revision->requestedBy->profilePic)
+                                    <img src="{{ $revision->requestedBy->getProfilePictureUrl() }}" 
+                                         alt="{{ $revision->requestedBy->fullName }}" 
+                                         class="w-8 h-8 rounded-full object-cover">
+                                @else
+                                    <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                                        <span class="text-sm font-medium text-primary-600">
+                                            {{ substr($revision->requestedBy->fullName ?? 'U', 0, 1) }}
+                                        </span>
+                                    </div>
+                                @endif
                                 <div>
                                     <p class="text-sm font-medium text-neutral-800">
                                         {{ $revision->requestedBy->fullName ?? 'Unknown' }}

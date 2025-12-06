@@ -147,8 +147,8 @@
                                 <td class="py-4 px-5">
                                     <div class="flex items-center">
                                         @if($adiutor->profilePic)
-                                            <img src="{{ asset('storage/' . $adiutor->profilePic) }}" 
-                                                 class="h-10 w-10 rounded-full object-cover mr-3" alt="">
+                                            <img src="{{ $adiutor->getProfilePictureUrl() }}" 
+                                                 class="h-10 w-10 rounded-full object-cover mr-3" alt="{{ $adiutor->fullName }}">
                                         @else
                                             <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center mr-3">
                                                 <span class="text-primary-600 font-semibold">{{ substr($adiutor->fullName, 0, 1) }}</span>

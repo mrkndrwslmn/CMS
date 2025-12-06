@@ -114,7 +114,7 @@
                     @foreach($pendingBudgetRequests->take(2) as $request)
                         <div class="p-3 bg-warning-50 rounded-xl border border-warning-100">
                             <h4 class="font-medium text-warning-900 text-sm">{{ $request->project_title }}</h4>
-                            <p class="text-xs text-warning-700 mt-1">₱{{ number_format($request->requested_amount, 2) }} - {{ ucfirst($request->type) }}</p>
+                            <p class="text-xs text-warning-700 mt-1">₱{{ number_format($request->requested_budget, 2) }} requested</p>
                             <p class="text-xs text-warning-600">{{ \Carbon\Carbon::parse($request->created_at)->diffForHumans() }}</p>
                         </div>
                     @endforeach

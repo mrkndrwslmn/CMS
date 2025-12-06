@@ -113,9 +113,48 @@
 
                 <!-- Body -->
                 <div class="p-6">
-                    <form action="{{ route('admin.profile.update') }}" method="POST">
+                    <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
+
+                        <!-- Profile Picture -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Profile Picture
+                            </label>
+                            <div class="flex items-center gap-4">
+                                <div class="flex-shrink-0">
+                                    @if($user->profilePic)
+                                        <img src="{{ $user->getProfilePictureUrl() }}" 
+                                             alt="{{ $user->fullName }}" 
+                                             class="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                                             id="adminProfilePreview">
+                                    @else
+                                        <div class="w-16 h-16 rounded-full bg-accent-500 flex items-center justify-center border-2 border-gray-200" 
+                                             id="adminProfilePreview">
+                                            <span class="text-xl font-bold text-white">{{ substr($user->fullName, 0, 1) }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="flex-1">
+                                    <input type="file" 
+                                           name="profile_picture" 
+                                           id="adminProfilePictureInput" 
+                                           class="hidden" 
+                                           accept="image/*">
+                                    <button type="button" 
+                                            onclick="document.getElementById('adminProfilePictureInput').click()" 
+                                            class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                                        <x-lucide-upload class="w-4 h-4" />
+                                        Change Picture
+                                    </button>
+                                    <p class="text-xs text-gray-500 mt-1">JPG, PNG up to 2MB</p>
+                                    @error('profile_picture')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Full Name -->
                         <div class="mb-6">
@@ -282,5 +321,34 @@
             eyeOffIcon.classList.add('hidden');
         }
     }
+
+    // Profile picture preview
+    document.addEventListener('DOMContentLoaded', function() {
+        const profileInput = document.getElementById('adminProfilePictureInput');
+        const profilePreview = document.getElementById('adminProfilePreview');
+        
+        if (profileInput) {
+            profileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (profilePreview.tagName === 'IMG') {
+                            profilePreview.src = e.target.result;
+                        } else {
+                            // Replace div with img
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.alt = "Profile Preview";
+                            img.className = "w-16 h-16 rounded-full object-cover border-2 border-gray-200";
+                            img.id = "adminProfilePreview";
+                            profilePreview.parentNode.replaceChild(img, profilePreview);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
 </script>
 @endsection

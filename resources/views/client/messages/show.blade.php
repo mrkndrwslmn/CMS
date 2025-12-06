@@ -113,7 +113,7 @@
 </div>
 
 <!-- Schedule Meeting Modal -->
-<div id="scheduleMeetingModal" class="fixed inset-0 bg-neutral-900/50 z-50 items-center justify-center p-4" style="display: none;">
+<div id="scheduleMeetingModal" class="fixed inset-0 bg-neutral-900/50 z-50 hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl border border-neutral-100 shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         <!-- Modal Header -->
         <div class="bg-primary-600 px-6 py-4 rounded-t-2xl flex items-center justify-between">
@@ -212,12 +212,16 @@
 <script>
     // Meeting Modal Functions
     function openScheduleMeetingModal() {
-        document.getElementById('scheduleMeetingModal').classList.remove('hidden');
+        const modal = document.getElementById('scheduleMeetingModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
         document.body.style.overflow = 'hidden'; // Prevent background scrolling
     }
 
     function closeScheduleMeetingModal() {
-        document.getElementById('scheduleMeetingModal').classList.add('hidden');
+        const modal = document.getElementById('scheduleMeetingModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
         document.body.style.overflow = ''; // Restore scrolling
         document.getElementById('schedule-meeting-form').reset();
     }

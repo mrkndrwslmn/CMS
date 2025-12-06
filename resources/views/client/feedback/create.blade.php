@@ -60,9 +60,9 @@
             @if($project->assignments->count() > 0)
                 <div class="flex-shrink-0 flex -space-x-2">
                     @foreach($project->assignments->take(3) as $assignment)
-                        <img src="{{ $assignment->adiutor->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode($assignment->adiutor->fullName) . '&background=2563EB&color=fff' }}" 
+                        <img src="{{ $assignment->adiutor->getProfilePictureUrl() }}" 
                              alt="{{ $assignment->adiutor->fullName }}" 
-                             class="w-10 h-10 rounded-full border-2 border-white"
+                             class="w-10 h-10 rounded-full border-2 border-white object-cover"
                              title="{{ $assignment->adiutor->fullName }}">
                     @endforeach
                     @if($project->assignments->count() > 3)

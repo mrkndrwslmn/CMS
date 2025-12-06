@@ -72,9 +72,9 @@
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" 
                                 class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-neutral-50 transition-colors">
-                            <img src="{{ auth()->user()->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->fullName) }}" 
+                            <img src="{{ auth()->user()->getProfilePictureUrl() }}" 
                                  alt="{{ auth()->user()->fullName }}" 
-                                 class="w-8 h-8 rounded-full ring-2 ring-neutral-100">
+                                 class="w-8 h-8 rounded-full ring-2 ring-neutral-100 object-cover">
                             <x-lucide-chevron-down class="w-4 h-4 text-neutral-400" />
                         </button>
                         
@@ -250,9 +250,9 @@
             <div class="px-4 py-3 space-y-1">
                 <!-- User Info -->
                 <div class="flex items-center gap-3 px-3 py-3 bg-neutral-50 rounded-xl mb-3">
-                    <img src="{{ auth()->user()->profilePic ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->fullName) }}" 
+                    <img src="{{ auth()->user()->getProfilePictureUrl() }}" 
                          alt="{{ auth()->user()->fullName }}" 
-                         class="w-10 h-10 rounded-full ring-2 ring-neutral-200">
+                         class="w-10 h-10 rounded-full ring-2 ring-neutral-200 object-cover">
                     <div>
                         <p class="text-sm font-medium text-neutral-900">{{ auth()->user()->fullName }}</p>
                         <p class="text-xs text-neutral-500">{{ auth()->user()->email }}</p>
