@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\GroupChat;
 use App\Models\Message;
 use App\Models\Project;
+use App\Models\User;
 
 class AdiutorController extends Controller
 {
@@ -178,22 +179,33 @@ class AdiutorController extends Controller
         $user = Auth::user();
         
         // Get all clients this adiutor has worked with
-        $clients = DB::table('project_assignments')
+        $clientsData = DB::table('project_assignments')
             ->join('projects', 'project_assignments.project_id', '=', 'projects.id')
             ->join('users', 'projects.client_id', '=', 'users.id')
             ->where('project_assignments.adiutor_id', $user->id)
             ->select(
                 'users.id',
-                'users.fullName',
-                'users.email',
-                'users.phoneNumber',
                 DB::raw('COUNT(projects.id) as total_projects'),
                 DB::raw('SUM(CASE WHEN project_assignments.status = "completed" THEN 1 ELSE 0 END) as completed_projects'),
                 DB::raw('MAX(project_assignments.created_at) as last_project_date')
             )
-            ->groupBy('users.id', 'users.fullName', 'users.email', 'users.phoneNumber')
+            ->groupBy('users.id')
             ->orderBy('last_project_date', 'desc')
-            ->get();
+            ->get()
+            ->keyBy('id');
+        
+        // Get User models with the stats attached
+        $clients = User::whereIn('id', $clientsData->pluck('id'))
+            ->get()
+            ->map(function($client) use ($clientsData) {
+                $stats = $clientsData->get($client->id);
+                $client->total_projects = $stats->total_projects ?? 0;
+                $client->completed_projects = $stats->completed_projects ?? 0;
+                $client->last_project_date = $stats->last_project_date ?? null;
+                return $client;
+            })
+            ->sortByDesc('last_project_date')
+            ->values();
         
         return view('adiutor.clients.index', compact('user', 'clients'));
     }

@@ -85,7 +85,7 @@
             <!-- Project Filter -->
             <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-2">Project</label>
-                <select name="project" class="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-colors">
+                <select name="project" class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
                     <option value="">All Projects</option>
                     @foreach($projects as $project)
                         <option value="{{ $project->id }}" {{ request('project') == $project->id ? 'selected' : '' }}>
@@ -98,7 +98,7 @@
             <!-- Status Filter -->
             <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-2">Status</label>
-                <select name="status" class="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-colors">
+                <select name="status" class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
                     <option value="all">All Statuses</option>
                     <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                     <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
@@ -109,7 +109,7 @@
             <!-- Priority Filter -->
             <div>
                 <label class="block text-sm font-medium text-neutral-700 mb-2">Priority</label>
-                <select name="priority" class="w-full rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-colors">
+                <select name="priority" class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
                     <option value="all">All Priorities</option>
                     <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>Urgent</option>
                     <option value="high" {{ request('priority') == 'high' ? 'selected' : '' }}>High</option>
@@ -141,28 +141,31 @@
                                 <div class="flex items-center space-x-3 mb-2">
                                     <h3 class="text-xl font-semibold text-neutral-800 hover:text-primary-600 transition-colors">{{ $task->taskTitle }}</h3>
                                     @php
-                                        $statusVariant = match($task->status) {
-                                            'completed' => 'success',
-                                            'in_progress' => 'primary',
-                                            'pending' => 'warning',
-                                            default => 'neutral'
+                                        $statusConfig = match($task->status) {
+                                            'completed' => ['variant' => 'success', 'icon' => 'check-circle'],
+                                            'in_progress' => ['variant' => 'primary', 'icon' => 'loader'],
+                                            'pending' => ['variant' => 'warning', 'icon' => 'clock'],
+                                            'pending_approval' => ['variant' => 'info', 'icon' => 'clock'],
+                                            'cancelled' => ['variant' => 'neutral', 'icon' => 'x-circle'],
+                                            default => ['variant' => 'neutral', 'icon' => 'circle-dashed']
                                         };
                                     @endphp
-                                    <x-ui.badge variant="{{ $statusVariant }}">
+                                    <x-ui.badge variant="{{ $statusConfig['variant'] }}">
+                                        <x-dynamic-component :component="'lucide-' . $statusConfig['icon']" class="w-3 h-3 mr-1" />
                                         {{ ucfirst(str_replace('_', ' ', $task->status)) }}
                                     </x-ui.badge>
                                     @if($task->priority)
                                         @php
-                                            $priorityVariant = match($task->priority) {
-                                                'urgent' => 'error',
-                                                'high' => 'warning',
-                                                'medium' => 'primary',
-                                                'low' => 'neutral',
-                                                default => 'neutral'
+                                            $priorityConfig = match($task->priority) {
+                                                'urgent' => ['variant' => 'error', 'icon' => 'alert-triangle'],
+                                                'high' => ['variant' => 'warning', 'icon' => 'alert-triangle'],
+                                                'medium' => ['variant' => 'primary', 'icon' => 'flag'],
+                                                'low' => ['variant' => 'neutral', 'icon' => 'flag'],
+                                                default => ['variant' => 'neutral', 'icon' => 'flag']
                                             };
                                         @endphp
-                                        <x-ui.badge variant="{{ $priorityVariant }}">
-                                            <x-lucide-flag class="w-3 h-3 mr-1" />
+                                        <x-ui.badge variant="{{ $priorityConfig['variant'] }}">
+                                            <x-dynamic-component :component="'lucide-' . $priorityConfig['icon']" class="w-3 h-3 mr-1" />
                                             {{ ucfirst($task->priority) }}
                                         </x-ui.badge>
                                     @endif

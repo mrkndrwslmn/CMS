@@ -116,6 +116,22 @@ class PaymentManagementController extends Controller
         if ($request->status === 'confirmed' && $oldStatus !== 'confirmed') {
             $payment->confirmed_at = now();
             $payment->confirmed_by = auth()->id();
+            
+            // Process referral completion when payment is confirmed
+            try {
+                $referralService = app(\App\Services\ReferralService::class);
+                $referralService->processReferralCompletion($payment);
+                
+                \Log::info('Referral completion processed after admin payment confirmation', [
+                    'payment_id' => $payment->id,
+                    'client_id' => $payment->client_id,
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to process referral completion after admin confirmation', [
+                    'payment_id' => $payment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         $payment->save();

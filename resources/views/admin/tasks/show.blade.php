@@ -753,13 +753,15 @@
 </div>
 
 <!-- Update Status Modal -->
-<div class="modal hidden fixed inset-0 z-50 overflow-y-auto" id="statusUpdateModal" tabindex="-1" aria-hidden="true">
+<div class="modal hidden fixed inset-0 z-50 overflow-y-auto" id="statusUpdateModal" tabindex="-1" aria-hidden="true" x-data="statusUpdateHandler()">
     <div class="fixed inset-0 bg-black/50 transition-opacity" data-dismiss="modal"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
         <div class="modal-dialog max-w-md w-full relative pointer-events-auto">
             <div class="modal-content rounded-2xl shadow-lg border-0 bg-white">
-            <form action="{{ route('admin.tasks.update-status', $task['taskID']) }}" method="POST">
+            <form action="{{ route('admin.tasks.update-status', $task['taskID']) }}" method="POST" @submit.prevent="handleSubmit">
                 @csrf
+                @method('PATCH')
+                <input type="hidden" name="confirm_no_deliverables" x-model="confirmNoDeliverables">
                 <div class="modal-header bg-neutral-50 border-b border-neutral-100 px-6 py-4 rounded-t-2xl flex items-center justify-between">
                     <h5 class="text-lg font-semibold text-neutral-800 flex items-center gap-2">
                         <x-lucide-refresh-cw class="w-5 h-5 text-primary-500" />
@@ -788,10 +790,13 @@
                     <x-ui.button type="button" variant="secondary" class="mr-2" data-dismiss="modal">
                         Cancel
                     </x-ui.button>
-                    <x-ui.button type="submit" variant="primary">
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            :disabled="isSubmitting">
                         <x-lucide-check class="w-4 h-4 mr-1" />
-                        Update Status
-                    </x-ui.button>
+                        <span x-show="!isSubmitting">Update Status</span>
+                        <span x-show="isSubmitting" x-cloak>Updating...</span>
+                    </button>
                 </div>
             </form>
             </div>
@@ -1084,6 +1089,80 @@
                 if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
                 if (seconds < 604800) return Math.floor(seconds / 86400) + ' days ago';
                 return date.toLocaleDateString();
+            }
+        }
+    }
+    
+    // Status Update Handler Alpine Component
+    function statusUpdateHandler() {
+        return {
+            isSubmitting: false,
+            confirmNoDeliverables: '0',
+            
+            async handleSubmit(event) {
+                if (this.isSubmitting) return;
+                
+                this.isSubmitting = true;
+                const form = event.target;
+                const formData = new FormData(form);
+                
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Check if confirmation is required
+                    if (response.status === 422 && data.requires_confirmation) {
+                        const confirmed = await window.Alerts.confirm({
+                            title: 'No Deliverables Found',
+                            message: data.message || 'This task has no deliverables. Do you want to proceed with marking it as completed?'
+                        });
+                        
+                        if (confirmed) {
+                            // Set confirmation flag and resubmit
+                            this.confirmNoDeliverables = '1';
+                            // Wait a tick for Alpine to update the hidden input
+                            await this.$nextTick();
+                            this.handleSubmit(event);
+                        } else {
+                            this.isSubmitting = false;
+                        }
+                        return;
+                    }
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Failed to update status');
+                    }
+                    
+                    if (data.success) {
+                        window.toast.success(data.message || 'Task status updated successfully');
+                        // Close modal and reload page to show updated status
+                        const modal = document.getElementById('statusUpdateModal');
+                        if (modal) {
+                            modal.classList.add('hidden');
+                            modal.classList.remove('flex');
+                        }
+                        // Reload page after a brief delay
+                        setTimeout(() => window.location.reload(), 500);
+                    } else {
+                        throw new Error(data.message || 'Failed to update status');
+                    }
+                } catch (error) {
+                    console.error('Error updating status:', error);
+                    window.toast.error(error.message || 'Failed to update task status.');
+                } finally {
+                    this.isSubmitting = false;
+                    // Reset confirmation flag
+                    this.confirmNoDeliverables = '0';
+                }
             }
         }
     }

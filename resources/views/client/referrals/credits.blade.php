@@ -52,33 +52,45 @@
     <!-- Credits Overview Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Available Credits -->
-        <div class="bg-success-600 rounded-2xl shadow-sm p-6 text-white">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-sm font-medium opacity-90">Available to Withdraw</h3>
-                <x-lucide-wallet class="w-5 h-5 opacity-80" />
+        <div class="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm font-medium text-neutral-500">Available to Withdraw</p>
+                    <p class="text-2xl font-semibold text-success-600 mt-1">₱{{ number_format($availableCredits, 2) }}</p>
+                    <p class="text-sm text-neutral-400 mt-2">Ready for withdrawal</p>
+                </div>
+                <div class="p-3 bg-success-50 rounded-xl">
+                    <x-lucide-wallet class="w-5 h-5 text-success-500" />
+                </div>
             </div>
-            <p class="text-3xl font-semibold mb-1">₱{{ number_format($availableCredits, 2) }}</p>
-            <p class="text-sm opacity-90">Ready for withdrawal</p>
         </div>
 
         <!-- Pending Credits -->
-        <div class="bg-warning-600 rounded-2xl shadow-sm p-6 text-white">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-sm font-medium opacity-90">Pending Approval</h3>
-                <x-lucide-clock class="w-5 h-5 opacity-80" />
+        <div class="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm font-medium text-neutral-500">Pending Approval</p>
+                    <p class="text-2xl font-semibold text-warning-600 mt-1">₱{{ number_format($pendingCredits, 2) }}</p>
+                    <p class="text-sm text-neutral-400 mt-2">In withdrawal requests</p>
+                </div>
+                <div class="p-3 bg-warning-50 rounded-xl">
+                    <x-lucide-clock class="w-5 h-5 text-warning-500" />
+                </div>
             </div>
-            <p class="text-3xl font-semibold mb-1">₱{{ number_format($pendingCredits, 2) }}</p>
-            <p class="text-sm opacity-90">In withdrawal requests</p>
         </div>
 
         <!-- Total Withdrawn -->
-        <div class="bg-primary-600 rounded-2xl shadow-sm p-6 text-white">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-sm font-medium opacity-90">Total Withdrawn</h3>
-                <x-lucide-check-circle class="w-5 h-5 opacity-80" />
+        <div class="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm font-medium text-neutral-500">Total Withdrawn</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($withdrawnCredits, 2) }}</p>
+                    <p class="text-sm text-neutral-400 mt-2">All-time withdrawals</p>
+                </div>
+                <div class="p-3 bg-primary-50 rounded-xl">
+                    <x-lucide-check-circle class="w-5 h-5 text-primary-500" />
+                </div>
             </div>
-            <p class="text-3xl font-semibold mb-1">₱{{ number_format($withdrawnCredits, 2) }}</p>
-            <p class="text-sm opacity-90">All-time withdrawals</p>
         </div>
     </div>
 

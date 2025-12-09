@@ -10,6 +10,9 @@
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     
+    <!-- Preload Critical Fonts (Branding) -->
+    <link rel="preload" href="{{ Vite::asset('resources/fonts/Stereofunk.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous" fetchpriority="high">
+    
     <!-- Firebase Configuration -->
     <script>
         window.firebaseConfig = {
@@ -103,7 +106,13 @@
                                     <x-lucide-layout-dashboard class="w-5 h-5" />
                                     Dashboard
                                 </a>
-                                
+                                                                
+                                <a href="{{ url('/services') }}" 
+                                class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.requests.create') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    <x-lucide-search class="w-5 h-5" />
+                                    Browse Services
+                                </a>
+
                                 <a href="{{ route('client.tasks') }}" 
                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.tasks') || request()->routeIs('client.projects.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                     <x-lucide-folder class="w-5 h-5" />
@@ -266,6 +275,12 @@
                     Dashboard
                 </a>
                 
+                <a href="{{ url('/services') }}" 
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.requests.create') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                    <x-lucide-search class="w-5 h-5" />
+                    Browse Services
+                </a>
+
                 <a href="{{ route('client.tasks') }}" 
                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.tasks') || request()->routeIs('client.projects.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                     <x-lucide-folder class="w-5 h-5" />
@@ -415,18 +430,6 @@
                 }
             });
         </script>
-        <!-- Flash Messages -->
-        @if(session('success'))
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <x-ui.alert type="success">{{ session('success') }}</x-ui.alert>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <x-ui.alert type="error">{{ session('error') }}</x-ui.alert>
-            </div>
-        @endif
 
         @yield('content')
     </main>

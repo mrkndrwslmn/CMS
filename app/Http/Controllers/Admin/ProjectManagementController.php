@@ -18,7 +18,9 @@ use App\Mail\AdiutorRemovedFromProjectMail;
 use App\Notifications\ProjectCompletedNotification;
 use App\Notifications\ProjectCreatedNotification;
 use App\Notifications\ProjectStatusChangedNotification;
+use App\Notifications\ProjectReopenedNotification;
 use App\Notifications\AdiutorRemovedFromProjectNotification;
+use App\Services\LoyaltyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -158,9 +160,13 @@ class ProjectManagementController extends Controller
         // Total Pending Earnings
         $totalPendingEarnings = $pendingHourlyAmount + $pendingFixedRateAmount;
         
-        // Remaining budget after earnings
+        // Remaining budget after task allocations
         $remainingBudget = ($project->budget ?? 0) - $totalAllocated;
-        $remainingAfterEarnings = ($project->budget ?? 0) - $totalAdiutorEarnings;
+        
+        // Remaining budget after both allocations AND earnings
+        $remainingAfterEarnings = ($project->budget ?? 0) - $totalAllocated - $totalAdiutorEarnings;
+        
+        // Projected remaining after pending approvals
         $projectedRemaining = $remainingAfterEarnings - $totalPendingEarnings;
 
         $budgetOverview = [
@@ -571,6 +577,12 @@ class ProjectManagementController extends Controller
             'notes' => $request->completion_notes ? $project->notes . "\n\nCompletion Notes: " . $request->completion_notes : $project->notes,
         ]);
 
+        // Award loyalty points for project completion
+        if ($project->serviceRequest) {
+            $loyaltyService = app(LoyaltyService::class);
+            $loyaltyService->awardProjectCompletionBonus($project->serviceRequest);
+        }
+
         // Create notification for client
         $client = User::find($project->client_id);
         if ($client) {
@@ -618,6 +630,12 @@ class ProjectManagementController extends Controller
         
         $project->update($updateData);
 
+        // Award loyalty points for project completion
+        if ($request->status === 'completed' && $oldStatus !== 'completed' && $project->serviceRequest) {
+            $loyaltyService = app(LoyaltyService::class);
+            $loyaltyService->awardProjectCompletionBonus($project->serviceRequest);
+        }
+
         // 🔔 Notify client about status change
         if ($project->client) {
             $project->client->notify(new ProjectStatusChangedNotification($project, $oldStatus, Auth::user()->fullName));
@@ -651,6 +669,87 @@ class ProjectManagementController extends Controller
         }
 
         return redirect()->back()->with('success', 'Project status updated successfully.');
+    }
+
+    /**
+     * Reopen a completed or cancelled project
+     */
+    public function reopen(Request $request, $id)
+    {
+        $request->validate([
+            'reopen_reason' => 'required|string|max:1000',
+            'new_status' => 'required|in:active,in_progress,review',
+            'reopen_tasks' => 'nullable|boolean',
+        ]);
+
+        $project = Project::with(['client', 'adiutors', 'tasks'])->findOrFail($id);
+        $oldStatus = $project->status;
+        
+        // Only allow reopening completed or cancelled projects
+        if (!in_array($project->status, ['completed', 'cancelled'])) {
+            return redirect()->back()
+                ->with('error', 'Only completed or cancelled projects can be reopened.');
+        }
+        
+        $newStatus = $request->new_status;
+        
+        // Update project
+        $reopenNote = "[REOPENED on " . now()->format('M d, Y h:i A') . " by " . Auth::user()->fullName . "]\n";
+        $reopenNote .= "Previous status: " . ucfirst($oldStatus) . "\n";
+        $reopenNote .= "Reason: " . $request->reopen_reason;
+        
+        $project->update([
+            'status' => $newStatus,
+            'completed_at' => null,
+            'notes' => $project->notes 
+                ? $project->notes . "\n\n" . $reopenNote 
+                : $reopenNote,
+        ]);
+        
+        // Optionally reopen completed tasks
+        $reopenedTasksCount = 0;
+        if ($request->boolean('reopen_tasks')) {
+            $reopenedTasksCount = $project->tasks()
+                ->whereIn('status', ['completed', 'cancelled'])
+                ->update([
+                    'status' => 'in_progress',
+                    'updated_at' => now()
+                ]);
+        }
+        
+        // 🔔 Notify client about project reopening
+        try {
+            if ($project->client) {
+                $project->client->notify(new ProjectReopenedNotification(
+                    $project, 
+                    $oldStatus, 
+                    $request->reopen_reason,
+                    Auth::user()->fullName
+                ));
+            }
+            
+            // 🔔 Notify assigned adiutors about project reopening
+            foreach ($project->adiutors as $adiutor) {
+                $adiutor->notify(new ProjectReopenedNotification(
+                    $project, 
+                    $oldStatus, 
+                    $request->reopen_reason,
+                    Auth::user()->fullName
+                ));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send project reopened notification', [
+                'project_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        $successMessage = 'Project reopened successfully and set to "' . ucfirst(str_replace('_', ' ', $newStatus)) . '".';
+        if ($reopenedTasksCount > 0) {
+            $successMessage .= ' ' . $reopenedTasksCount . ' task(s) were also reopened.';
+        }
+        
+        return redirect()->back()->with('success', $successMessage);
     }
 
     /**

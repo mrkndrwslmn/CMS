@@ -30,6 +30,7 @@
     src: url('../fonts/Stereofunk.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
@@ -37,6 +38,7 @@
     src: url('../fonts/Alphacorsa.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
 }
 
 /* ========================================
@@ -61,6 +63,19 @@
     --color-primary-800: #1E3A8A;
     --color-primary-900: #172554;
     --color-primary-950: #0F172A;
+
+    /* Secondary: Purple - Accent & Highlights */
+    --color-secondary-50: #FAF5FF;
+    --color-secondary-100: #F3E8FF;
+    --color-secondary-200: #E9D5FF;
+    --color-secondary-300: #D8B4FE;
+    --color-secondary-400: #C084FC;
+    --color-secondary-500: #A855F7;
+    --color-secondary-600: #9333EA;
+    --color-secondary-700: #7E22CE;
+    --color-secondary-800: #6B21A8;
+    --color-secondary-900: #581C87;
+    --color-secondary-950: #3B0764;
 
     /* Neutral: Slate - Text, Borders, Backgrounds */
     --color-neutral-50: #F8FAFC;

@@ -9,7 +9,8 @@ export default defineConfig({
                 'resources/css/app.css', 
                 'resources/js/app.js',
                 'resources/js/messaging.js',
-                'resources/js/firebase-auth.js'
+                'resources/js/firebase-auth.js',
+                'resources/js/chatbot.js'
             ],
             refresh: true,
         }),
@@ -22,6 +23,7 @@ export default defineConfig({
         hmr: {
             host: 'localhost',
             protocol: 'ws',
+            clientPort: 5173,
         },
         watch: {
             usePolling: true,

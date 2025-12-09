@@ -217,7 +217,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
                                     @if($adiutor->profilePic)
-                                        <img src="{{ $adiutor->getProfilePictureUrl() }}" 
+                                        <img src="{{ filter_var($adiutor->profilePic, FILTER_VALIDATE_URL) ? $adiutor->profilePic : asset('storage/' . $adiutor->profilePic) }}" 
                                              alt="{{ $adiutor->fullName }}" 
                                              class="w-10 h-10 rounded-full object-cover mr-3">
                                     @else

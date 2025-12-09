@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Payout;
 use App\Models\PayoutItem;
+use App\Models\ProjectAssignment;
 use App\Models\TimeEntry;
 use App\Models\User;
 use App\Models\WalletTransaction;
@@ -70,8 +71,8 @@ class PayoutManagementController extends Controller
         $stats = [
             'pending' => Payout::where('status', 'pending')->count(),
             'processing' => Payout::where('status', 'processing')->count(),
-            'completed' => Payout::where('status', 'completed')->whereMonth('completed_at', Carbon::now()->month)->count(),
-            'total_this_month' => Payout::where('status', 'completed')
+            'paid' => Payout::where('status', 'paid')->whereMonth('completed_at', Carbon::now()->month)->count(),
+            'total_this_month' => Payout::where('status', 'paid')
                 ->whereMonth('completed_at', Carbon::now()->month)
                 ->sum('amount'),
         ];
@@ -122,7 +123,7 @@ class PayoutManagementController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $payout = Payout::findOrFail($id);
+        $payout = Payout::with('items')->findOrFail($id);
 
         if (!in_array($payout->status, ['pending', 'processing'])) {
             return redirect()->back()->withErrors(['error' => 'Only pending or processing payouts can be completed.']);
@@ -140,7 +141,7 @@ class PayoutManagementController extends Controller
 
             // Update payout
             $payout->update([
-                'status' => 'completed',
+                'status' => 'paid',
                 'reference_number' => $request->reference_number,
                 'proof_of_payment' => $proofPath,
                 'notes' => $request->notes ? ($payout->notes ? $payout->notes . "\n\n" . $request->notes : $request->notes) : $payout->notes,
@@ -149,7 +150,55 @@ class PayoutManagementController extends Controller
             ]);
 
             // Mark all time entries as paid
-            $payout->timeEntries()->update(['is_paid' => true]);
+            foreach ($payout->items as $item) {
+                if ($item->item_type === 'time_entry' && $item->timeEntry) {
+                    $item->timeEntry->update(['is_paid' => true]);
+                } elseif (in_array($item->item_type, ['fixed_task', 'fixed_rate']) && $item->project_id) {
+                    // Mark fixed rate assignment as paid
+                    $assignment = ProjectAssignment::where('project_id', $item->project_id)
+                        ->where('adiutor_id', $payout->adiutor_id)
+                        ->where('payment_type', ProjectAssignment::PAYMENT_TYPE_FIXED)
+                        ->first();
+                    if ($assignment) {
+                        $assignment->update(['fixed_rate_paid' => true]);
+                    }
+                } elseif ($item->item_type === 'milestone' && $item->milestone_id) {
+                    // Mark milestone as paid to adiutor
+                    $milestone = \App\Models\ProjectMilestone::find($item->milestone_id);
+                    if ($milestone) {
+                        $milestone->update([
+                            'adiutor_paid' => true,
+                            'adiutor_paid_at' => now(),
+                            'adiutor_payout_id' => $payout->id,
+                        ]);
+                    }
+                } elseif ($item->item_type === 'referral') {
+                    // Move referral credits from available to withdrawn NOW (when paid)
+                    $adiutor = $payout->adiutor;
+                    if ($adiutor) {
+                        $adiutor->update([
+                            'referral_credits' => max(0, $adiutor->referral_credits - $item->amount),
+                            'referral_credits_withdrawn' => $adiutor->referral_credits_withdrawn + $item->amount,
+                        ]);
+                    }
+                }
+            }
+
+            // Create wallet transaction for the payout
+            $adiutor = $payout->adiutor;
+            $currentBalance = $adiutor->work_earnings_balance ?? 0;
+            
+            WalletTransaction::create([
+                'user_id' => $payout->adiutor_id,
+                'wallet_type' => 'work_earnings',
+                'transaction_type' => 'withdrawn',
+                'amount' => -$payout->amount,
+                'balance_before' => $currentBalance,
+                'balance_after' => $currentBalance - $payout->amount,
+                'description' => 'Payout ' . $payout->payout_number . ' - ' . $request->reference_number,
+                'performed_by' => auth()->id(),
+                'status' => 'completed',
+            ]);
 
             DB::commit();
 
@@ -199,8 +248,8 @@ class PayoutManagementController extends Controller
 
         $payout = Payout::findOrFail($id);
 
-        if ($payout->status === 'completed') {
-            return redirect()->back()->withErrors(['error' => 'Completed payouts cannot be cancelled.']);
+        if ($payout->status === 'paid') {
+            return redirect()->back()->withErrors(['error' => 'Paid payouts cannot be cancelled.']);
         }
 
         DB::beginTransaction();

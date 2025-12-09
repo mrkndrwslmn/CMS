@@ -35,7 +35,7 @@ function showClientDetails(client) {
         <div class="space-y-6">
             <!-- Client Header -->
             <div class="flex items-center space-x-4">
-                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center text-white font-bold text-2xl">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-info-500 to-info-600 flex items-center justify-center text-white font-bold text-2xl">
                     ${client.fullName.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -49,12 +49,12 @@ function showClientDetails(client) {
                 <h5 class="font-semibold text-gray-900 mb-3">Contact Information</h5>
                 <div class="space-y-2">
                     <div class="flex items-center text-sm">
-                        <i class="fas fa-envelope text-accent-500 w-6"></i>
+                        <i class="fas fa-envelope text-info-500 w-6"></i>
                         <span class="text-gray-700">${client.email}</span>
                     </div>
                     ${client.phoneNumber ? `
                         <div class="flex items-center text-sm">
-                            <i class="fas fa-phone text-accent-500 w-6"></i>
+                            <i class="fas fa-phone text-info-500 w-6"></i>
                             <span class="text-gray-700">${client.phoneNumber}</span>
                         </div>
                     ` : ''}
@@ -88,7 +88,7 @@ function showClientDetails(client) {
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h5 class="font-semibold text-gray-900 mb-2">Last Activity</h5>
                     <p class="text-sm text-gray-600">
-                        <i class="fas fa-calendar-alt text-accent-500 mr-2"></i>
+                        <i class="fas fa-calendar-alt text-info-500 mr-2"></i>
                         ${new Date(client.last_project_date).toLocaleDateString('en-US', { 
                             year: 'numeric', 
                             month: 'long', 

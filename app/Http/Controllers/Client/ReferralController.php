@@ -19,8 +19,8 @@ class ReferralController extends Controller
     public function __construct(ReferralService $referralService)
     {
         $this->referralService = $referralService;
-        $this->middleware('auth');
-        $this->middleware('role:client,adiutor'); // Allow both clients and adiutors
+        $this->middleware('auth')->except(['validateCode']); // Allow public access to validateCode
+        $this->middleware('role:client,adiutor')->except(['validateCode']); // Allow both clients and adiutors
     }
 
     /**

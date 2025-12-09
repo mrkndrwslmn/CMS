@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Mail\BudgetChangeRequested;
+use App\Models\BudgetChangeRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -11,10 +12,7 @@ class BudgetChangeRequestNotification extends Notification
     use Queueable;
 
     public function __construct(
-        protected $task,
-        protected $adiutor,
-        protected $currentBudget,
-        protected $requestedBudget
+        protected BudgetChangeRequest $budgetRequest
     ) {
     }
 
@@ -31,7 +29,7 @@ class BudgetChangeRequestNotification extends Notification
      */
     public function toMail($notifiable): BudgetChangeRequested
     {
-        return (new BudgetChangeRequested($this->task, $this->adiutor, $this->currentBudget, $this->requestedBudget, $notifiable))
+        return (new BudgetChangeRequested($this->budgetRequest))
             ->onQueue('emails');
     }
 
@@ -42,12 +40,12 @@ class BudgetChangeRequestNotification extends Notification
     {
         return [
             'title' => 'Budget Change Request',
-            'message' => $this->adiutor->fullName . ' has requested a budget change for task: ' . $this->task->taskTitle,
+            'message' => $this->budgetRequest->adiutor->fullName . ' has requested a budget change for task: ' . $this->budgetRequest->task->taskTitle,
             'action_url' => route('admin.budget-requests.index'),
-            'task_id' => $this->task->taskID,
-            'task_title' => $this->task->taskTitle,
-            'current_budget' => $this->currentBudget,
-            'requested_budget' => $this->requestedBudget,
+            'task_id' => $this->budgetRequest->task_id,
+            'task_title' => $this->budgetRequest->task->taskTitle,
+            'current_budget' => $this->budgetRequest->current_budget,
+            'requested_budget' => $this->budgetRequest->requested_budget,
         ];
     }
 }

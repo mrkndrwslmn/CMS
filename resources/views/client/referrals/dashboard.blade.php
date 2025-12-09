@@ -54,7 +54,7 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <!-- Total Referrals -->
         <div class="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 hover:shadow-md transition-shadow">
             <div class="flex items-center">
@@ -100,7 +100,22 @@
             </div>
         </div>
 
-        <!-- Lifetime Earnings -->
+        <!-- Credits Earned -->
+        <div class="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-success-50 rounded-xl flex items-center justify-center">
+                        <x-lucide-banknote class="w-6 h-6 text-success-600" />
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-neutral-500">Credits Earned</p>
+                    <p class="text-2xl font-semibold text-success-600">₱{{ number_format($stats['referral_credits'] ?? 0, 0) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lifetime Points -->
         <div class="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 hover:shadow-md transition-shadow">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
@@ -109,7 +124,7 @@
                     </div>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-neutral-500">Lifetime Earnings</p>
+                    <p class="text-sm font-medium text-neutral-500">Lifetime Points</p>
                     <p class="text-2xl font-semibold text-neutral-800">{{ number_format($stats['lifetime_earnings']) }} pts</p>
                 </div>
             </div>

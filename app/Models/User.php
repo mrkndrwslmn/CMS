@@ -32,6 +32,14 @@ class User extends Authenticatable
         'auth_provider',
         'firebase_profile',
         'last_firebase_sync',
+        // Referral fields
+        'referred_by_user_id',
+        'referred_by_code',
+        'referral_registered_at',
+        'is_referral_eligible',
+        'referral_credits',
+        'referral_credits_pending',
+        'referral_credits_withdrawn',
     ];
 
     /**
@@ -374,6 +382,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get projects owned by this user (for clients)
+     */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class, 'client_id');
+    }
+
+    /**
      * Get documents uploaded by this user
      */
     public function uploadedDocuments()
@@ -662,10 +678,18 @@ class User extends Authenticatable
 
     /**
      * Check if user was referred by someone
+     * Checks both the user's referred_by_user_id field AND the referrals table
      */
     public function isReferred(): bool
     {
-        return !is_null($this->referred_by_user_id);
+        // First check the user's referred_by_user_id field
+        if (!is_null($this->referred_by_user_id)) {
+            return true;
+        }
+        
+        // Fallback: check if there's a referral record for this user
+        // This handles cases where the user update failed but referral record exists
+        return $this->referralReceived()->exists();
     }
 
     /**

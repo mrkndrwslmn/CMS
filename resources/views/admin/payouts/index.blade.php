@@ -67,8 +67,8 @@
         <x-ui.card class="p-6">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm text-neutral-500">Completed (Month)</p>
-                    <p class="text-2xl font-semibold text-success-600 mt-1">{{ $stats['completed'] }}</p>
+                    <p class="text-sm text-neutral-500">Paid (Month)</p>
+                    <p class="text-2xl font-semibold text-success-600 mt-1">{{ $stats['paid'] }}</p>
                 </div>
                 <div class="p-3 bg-success-50 rounded-xl">
                     <x-lucide-check-circle class="w-5 h-5 text-success-500" />

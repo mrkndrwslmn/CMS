@@ -29,7 +29,7 @@ class BudgetChangeReviewedNotification extends Notification
      */
     public function toMail($notifiable): BudgetChangeReviewed
     {
-        return (new BudgetChangeReviewed($this->budgetRequest))
+        return (new BudgetChangeReviewed($this->budgetRequest, $notifiable))
             ->onQueue('emails');
     }
 

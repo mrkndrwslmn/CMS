@@ -11,7 +11,7 @@
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
                 <nav class="flex items-center space-x-2 text-sm text-gray-500 mt-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-accent-500 transition-colors">Dashboard</a>
+                    <a href="{{ route('admin.dashboard') }}" class="hover:text-primary-500 transition-colors">Dashboard</a>
                     <x-lucide-chevron-right class="w-3 h-3" />
                     <span class="text-gray-900">Profile</span>
                 </nav>
@@ -24,7 +24,7 @@
         <div class="lg:col-span-1">
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-8 text-center">
+                <div class="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-8 text-center">
                     <div class="flex justify-center mb-4">
                         @if($user->profilePic)
                             <img src="{{ $user->getProfilePictureUrl() }}" 
@@ -37,7 +37,7 @@
                         @endif
                     </div>
                     <h2 class="text-2xl font-bold text-white mb-1">{{ $user->fullName }}</h2>
-                    <p class="text-accent-100 text-sm font-medium">{{ ucfirst($user->role) }}</p>
+                    <p class="text-primary-100 text-sm font-medium">{{ ucfirst($user->role) }}</p>
                 </div>
 
                 <!-- Body -->
@@ -90,7 +90,7 @@
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-600">Role</span>
-                        <span class="px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">{{ ucfirst($user->role) }}</span>
+                        <span class="px-2.5 py-1 bg-primary-100 text-primary-800 text-xs font-medium rounded-full">{{ ucfirst($user->role) }}</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-600">User ID</span>
@@ -107,7 +107,7 @@
                 <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                         <x-lucide-user-pen class="w-5 h-5 text-gray-600 mr-2" />
-                        Edit Profile Information
+                        Edit Profile primaryrmation
                     </h3>
                 </div>
 
@@ -130,7 +130,7 @@
                                              class="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
                                              id="adminProfilePreview">
                                     @else
-                                        <div class="w-16 h-16 rounded-full bg-accent-500 flex items-center justify-center border-2 border-gray-200" 
+                                        <div class="w-16 h-16 rounded-full bg-primary-500 flex items-center justify-center border-2 border-gray-200" 
                                              id="adminProfilePreview">
                                             <span class="text-xl font-bold text-white">{{ substr($user->fullName, 0, 1) }}</span>
                                         </div>
@@ -167,7 +167,7 @@
                                 name="fullName" 
                                 value="{{ old('fullName', $user->fullName) }}" 
                                 required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all @error('fullName') border-red-500 @enderror">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all @error('fullName') border-red-500 @enderror">
                             @error('fullName')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -184,7 +184,7 @@
                                 name="email" 
                                 value="{{ old('email', $user->email) }}" 
                                 required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all @error('email') border-red-500 @enderror">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all @error('email') border-red-500 @enderror">
                             @error('email')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -200,7 +200,7 @@
                                 id="phoneNumber" 
                                 name="phoneNumber" 
                                 value="{{ old('phoneNumber', $user->phoneNumber) }}"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all @error('phoneNumber') border-red-500 @enderror">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all @error('phoneNumber') border-red-500 @enderror">
                             @error('phoneNumber')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -226,7 +226,7 @@
                                     type="password" 
                                     id="current_password" 
                                     name="current_password"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all @error('current_password') border-red-500 @enderror">
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all @error('current_password') border-red-500 @enderror">
                                 <button type="button" onclick="togglePassword('current_password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                     <span id="current_password_icon" data-state="hidden">
                                         <x-lucide-eye class="w-5 h-5 eye-icon" />
@@ -249,7 +249,7 @@
                                     type="password" 
                                     id="password" 
                                     name="password"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all @error('password') border-red-500 @enderror">
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all @error('password') border-red-500 @enderror">
                                 <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                     <span id="password_icon" data-state="hidden">
                                         <x-lucide-eye class="w-5 h-5 eye-icon" />
@@ -272,7 +272,7 @@
                                     type="password" 
                                     id="password_confirmation" 
                                     name="password_confirmation"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all">
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
                                 <button type="button" onclick="togglePassword('password_confirmation')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                     <span id="password_confirmation_icon" data-state="hidden">
                                         <x-lucide-eye class="w-5 h-5 eye-icon" />
@@ -290,8 +290,7 @@
                             </a>
                             <button 
                                 type="submit" 
-                                class="px-8 py-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white font-semibold rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all duration-200 shadow-lg shadow-accent-500/30 hover:shadow-xl hover:shadow-accent-500/40">
-                                <x-lucide-save class="w-4 h-4 mr-2" />
+                                class="px-8 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40">
                                 Save Changes
                             </button>
                         </div>

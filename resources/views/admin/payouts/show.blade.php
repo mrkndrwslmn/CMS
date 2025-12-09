@@ -109,41 +109,83 @@
             <!-- Payout Items -->
             <x-ui.card class="overflow-hidden">
                 <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50">
-                    <h3 class="text-base font-medium text-neutral-700">Time Entries Included</h3>
-                    <p class="text-sm text-neutral-400 mt-1">{{ $payout->items->count() }} entries</p>
+                    <h3 class="text-base font-medium text-neutral-700">Earnings Included</h3>
+                    <p class="text-sm text-neutral-400 mt-1">{{ $payout->items->count() }} items</p>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-neutral-50 border-b border-neutral-100">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Task / Project</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Hours</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Rate</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Details</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Amount</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-neutral-100">
                             @foreach($payout->items as $item)
                             <tr class="hover:bg-neutral-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
-                                    @if($item->timeEntry)
-                                        {{ $item->timeEntry->start_time->format('M d, Y') }}
-                                    @else
-                                        N/A
-                                    @endif
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @switch($item->item_type)
+                                        @case('time_entry')
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-primary-50 text-primary-700">
+                                                <x-lucide-clock class="w-3 h-3" />
+                                                Hourly
+                                            </span>
+                                            @break
+                                        @case('fixed_task')
+                                        @case('fixed_rate')
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-success-50 text-success-700">
+                                                <x-lucide-briefcase class="w-3 h-3" />
+                                                Fixed Rate
+                                            </span>
+                                            @break
+                                        @case('milestone')
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-warning-50 text-warning-700">
+                                                <x-lucide-flag class="w-3 h-3" />
+                                                Milestone
+                                            </span>
+                                            @break
+                                        @case('referral')
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-accent-50 text-accent-700">
+                                                <x-lucide-users class="w-3 h-3" />
+                                                Referral Credits
+                                            </span>
+                                            @break
+                                        @case('bonus')
+                                            @if(str_contains($item->description, 'Referral'))
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-accent-50 text-accent-700">
+                                                <x-lucide-users class="w-3 h-3" />
+                                                Referral Credits
+                                            </span>
+                                            @else
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-accent-50 text-accent-700">
+                                                <x-lucide-gift class="w-3 h-3" />
+                                                Bonus
+                                            </span>
+                                            @endif
+                                            @break
+                                        @default
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-700">
+                                                <x-lucide-circle class="w-3 h-3" />
+                                                Other
+                                            </span>
+                                    @endswitch
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm font-medium text-neutral-800">{{ $item->description }}</div>
-                                    @if($item->task)
-                                        <div class="text-xs text-neutral-400">{{ $item->task->project->title ?? 'N/A' }}</div>
+                                    @if($item->project)
+                                        <div class="text-xs text-neutral-400">{{ $item->project->title ?? '' }}</div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
-                                    {{ number_format($item->hours ?? 0, 2) }}h
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
-                                    ₱{{ number_format($item->rate ?? 0, 2) }}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                                    @if($item->item_type === 'time_entry' && $item->hours)
+                                        {{ number_format($item->hours, 2) }}h @ ₱{{ number_format($item->rate ?? 0, 2) }}/hr
+                                    @elseif($item->timeEntry)
+                                        {{ $item->timeEntry->start_time->format('M d, Y') }}
+                                    @else
+                                        —
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-neutral-800">
                                     ₱{{ number_format($item->amount, 2) }}
@@ -153,11 +195,7 @@
                         </tbody>
                         <tfoot class="bg-neutral-50 border-t-2 border-neutral-200">
                             <tr>
-                                <td colspan="2" class="px-6 py-4 text-sm font-semibold text-neutral-800">Total</td>
-                                <td class="px-6 py-4 text-sm font-semibold text-neutral-800">
-                                    {{ number_format($payout->items->sum('hours'), 2) }}h
-                                </td>
-                                <td class="px-6 py-4"></td>
+                                <td colspan="3" class="px-6 py-4 text-sm font-semibold text-neutral-800">Total</td>
                                 <td class="px-6 py-4 text-lg font-bold text-primary-600">
                                     ₱{{ number_format($payout->amount, 2) }}
                                 </td>
@@ -286,7 +324,7 @@
                 </div>
                 <div class="p-6">
                     <div class="space-y-2 text-sm">
-                        @foreach(json_decode($payout->payout_details, true) ?? [] as $key => $value)
+                        @foreach($payout->payout_details ?? [] as $key => $value)
                             <div>
                                 <span class="text-neutral-500">{{ ucwords(str_replace('_', ' ', $key)) }}:</span>
                                 <span class="text-neutral-700 font-medium ml-2">{{ $value }}</span>

@@ -15,6 +15,7 @@ class PayoutItem extends Model
         'time_entry_id',
         'task_id',
         'project_id',
+        'milestone_id',
         'item_type',
         'description',
         'amount',
@@ -58,6 +59,14 @@ class PayoutItem extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /**
+     * Get the milestone for this item
+     */
+    public function milestone(): BelongsTo
+    {
+        return $this->belongsTo(ProjectMilestone::class, 'milestone_id');
     }
 
     /**

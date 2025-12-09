@@ -247,7 +247,15 @@
         // Form confirmation helpers
         confirmForm(event, title, message, options = {}) {
             event.preventDefault();
-            const form = event.target;
+            // Get the form - handle both form submission and button click events
+            const form = event.target.tagName === 'FORM' 
+                ? event.target 
+                : event.target.closest('form');
+            
+            if (!form) {
+                console.error('confirmForm: Could not find form element');
+                return false;
+            }
             
             this.confirm({
                 title: title || 'Confirm Action',
@@ -261,7 +269,8 @@
                     input.name = '_confirmed';
                     input.value = '1';
                     form.appendChild(input);
-                    form.submit();
+                    // Use HTMLFormElement.prototype.submit to avoid conflicts with form elements named 'submit'
+                    HTMLFormElement.prototype.submit.call(form);
                 }
             });
             
@@ -270,7 +279,15 @@
         
         confirmDeleteForm(event, title, message) {
             event.preventDefault();
-            const form = event.target;
+            // Get the form - handle both form submission and button click events
+            const form = event.target.tagName === 'FORM' 
+                ? event.target 
+                : event.target.closest('form');
+            
+            if (!form) {
+                console.error('confirmDeleteForm: Could not find form element');
+                return false;
+            }
             
             this.confirmDelete({
                 title: title || 'Confirm Delete',
@@ -281,7 +298,8 @@
                     input.name = '_confirmed';
                     input.value = '1';
                     form.appendChild(input);
-                    form.submit();
+                    // Use HTMLFormElement.prototype.submit to avoid conflicts with form elements named 'submit'
+                    HTMLFormElement.prototype.submit.call(form);
                 }
             });
             

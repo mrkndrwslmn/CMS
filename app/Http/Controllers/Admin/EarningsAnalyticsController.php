@@ -332,16 +332,16 @@ class EarningsAnalyticsController extends Controller
         // Summary stats
         $stats = [
             'total_payouts' => Payout::whereBetween('created_at', [$startDate, $endDate])->count(),
-            'completed_payouts' => Payout::where('status', 'completed')->whereBetween('created_at', [$startDate, $endDate])->count(),
+            'completed_payouts' => Payout::where('status', 'paid')->whereBetween('created_at', [$startDate, $endDate])->count(),
             'pending_payouts' => Payout::where('status', 'pending')->whereBetween('created_at', [$startDate, $endDate])->count(),
-            'total_paid' => Payout::where('status', 'completed')->whereBetween('created_at', [$startDate, $endDate])->sum('amount'),
+            'total_paid' => Payout::where('status', 'paid')->whereBetween('created_at', [$startDate, $endDate])->sum('amount'),
             'pending_amount' => Payout::where('status', 'pending')->whereBetween('created_at', [$startDate, $endDate])->sum('amount'),
-            'average_payout' => Payout::where('status', 'completed')->whereBetween('created_at', [$startDate, $endDate])->avg('amount'),
+            'average_payout' => Payout::where('status', 'paid')->whereBetween('created_at', [$startDate, $endDate])->avg('amount'),
         ];
 
         // Monthly trend
         $monthFormat = $this->getDateFormatExpression('created_at', '%Y-%m');
-        $monthlyTrend = Payout::where('status', 'completed')
+        $monthlyTrend = Payout::where('status', 'paid')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->selectRaw("{$monthFormat} as month, SUM(amount) as total, COUNT(*) as count")
             ->groupBy('month')

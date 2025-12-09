@@ -10,7 +10,7 @@
         <div class="grid md:grid-cols-2 gap-16 items-center">
             <div>
                 <div class="flex items-center mb-4">
-                    <span class="px-3 py-1 rounded-full bg-accent-100 text-accent-700 text-sm font-semibold inline-flex items-center">
+                    <span class="px-3 py-1 rounded-full bg-info-100 text-info-700 text-sm font-semibold inline-flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
@@ -24,7 +24,7 @@
                 </h1>
                 
                 <p class="text-lg md:text-xl text-neutral-600 mb-6 leading-relaxed">
-                    Refer friends to Treis Adiutor and earn <strong class="text-accent-600">{{ config('referral.rewards.referrer.completion_points', 1000) }} points</strong> 
+                    Refer friends to Treis Adiutor and earn <strong class="text-info-600">{{ config('referral.rewards.referrer.completion_points', 1000) }} points</strong> 
                     plus exclusive discounts for every successful referral!
                 </p>
                 
@@ -67,10 +67,10 @@
             </div>
             
             <div class="relative hidden md:block">
-                <div class="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-accent-500/20 to-primary-500/20 rounded-3xl opacity-60 blur-3xl transform -rotate-6"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-info-500/20 to-primary-500/20 rounded-3xl opacity-60 blur-3xl transform -rotate-6"></div>
                 
                 <div class="absolute top-12 -left-10 w-20 h-20 bg-primary-200/30 rounded-full blur-xl"></div>
-                <div class="absolute bottom-12 -right-10 w-24 h-24 bg-accent-200/30 rounded-full blur-xl"></div>
+                <div class="absolute bottom-12 -right-10 w-24 h-24 bg-info-200/30 rounded-full blur-xl"></div>
                 
                 <div class="relative z-10 p-8 rounded-3xl glass-dark border border-neutral-100">
                     <div class="grid grid-cols-2 gap-6">
@@ -78,8 +78,8 @@
                             <div class="text-4xl font-bold text-primary-600 mb-2">{{ number_format(config('referral.rewards.referrer.completion_points', 1000)) }}</div>
                             <div class="text-sm text-neutral-600 font-medium">Points per Referral</div>
                         </div>
-                        <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-accent-50 to-accent-100 border border-accent-200">
-                            <div class="text-4xl font-bold text-accent-600 mb-2">{{ config('referral.rewards.referrer.coupon_discount', 15) }}%</div>
+                        <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-info-50 to-info-100 border border-info-200">
+                            <div class="text-4xl font-bold text-info-600 mb-2">{{ config('referral.rewards.referrer.coupon_discount', 15) }}%</div>
                             <div class="text-sm text-neutral-600 font-medium">Discount Coupon</div>
                         </div>
                         <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
@@ -113,12 +113,12 @@
             </div>
             
             <div class="text-center" data-aos="fade-up" data-aos-delay="100">
-                <div class="w-20 h-20 bg-gradient-to-br from-accent-500 to-accent-600 rounded-2xl shadow-lg flex items-center justify-center mx-auto mb-4 transform transition-transform duration-500 hover:scale-110 hover:rotate-3">
+                <div class="w-20 h-20 bg-gradient-to-br from-info-500 to-info-600 rounded-2xl shadow-lg flex items-center justify-center mx-auto mb-4 transform transition-transform duration-500 hover:scale-110 hover:rotate-3">
                     <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
                     </svg>
                 </div>
-                <div class="text-4xl font-bold text-accent-600 mb-2 heading-serif">{{ config('referral.rewards.referrer.coupon_discount', 15) }}%</div>
+                <div class="text-4xl font-bold text-info-600 mb-2 heading-serif">{{ config('referral.rewards.referrer.coupon_discount', 15) }}%</div>
                 <div class="text-neutral-600 font-medium">Discount Coupon</div>
             </div>
             
@@ -154,7 +154,7 @@
             <p class="text-neutral-600 max-w-2xl mx-auto mt-6">
                 Getting started is easy. Follow these three steps and start earning rewards today.
             </p>
-            <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-accent-500 mx-auto mt-6 rounded-full"></div>
+            <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-info-500 mx-auto mt-6 rounded-full"></div>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -208,11 +208,11 @@
             <!-- Step 2 -->
             <div class="group relative" data-aos="fade-up" data-aos-delay="200">
                 <div class="relative glass-dark rounded-3xl h-full border border-neutral-100 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 overflow-hidden">
-                    <div class="h-2 w-full bg-gradient-to-r from-accent-500 to-orange-500"></div>
+                    <div class="h-2 w-full bg-gradient-to-r from-info-500 to-orange-500"></div>
                     
                     <div class="p-8">
                         <div class="mb-6">
-                            <div class="w-16 h-16 bg-gradient-to-br from-accent-500 to-orange-500 rounded-2xl shadow-lg flex items-center justify-center transform transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                            <div class="w-16 h-16 bg-gradient-to-br from-info-500 to-orange-500 rounded-2xl shadow-lg flex items-center justify-center transform transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
                                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
                                 </svg>
@@ -220,9 +220,9 @@
                         </div>
                         
                         <div class="flex items-center mb-4">
-                            <h3 class="text-xl font-semibold heading-serif text-neutral-800 group-hover:text-accent-600 transition-colors duration-300">Step 2: Share</h3>
+                            <h3 class="text-xl font-semibold heading-serif text-neutral-800 group-hover:text-info-600 transition-colors duration-300">Step 2: Share</h3>
                             <div class="ml-auto">
-                                <span class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold bg-gradient-to-r from-accent-500 to-orange-500 text-white shadow-sm">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold bg-gradient-to-r from-info-500 to-orange-500 text-white shadow-sm">
                                     2
                                 </span>
                             </div>
@@ -231,17 +231,17 @@
                         <p class="text-neutral-600 mb-4">Share your code with friends via email, social media, or direct link. Make it easy for them!</p>
                         
                         <div class="space-y-3">
-                            <div class="flex items-center p-2 rounded-lg hover:bg-accent-50 transition-colors duration-200">
-                                <div class="w-8 h-8 rounded-lg bg-accent-100 flex items-center justify-center mr-3 shadow-sm">
-                                    <svg class="w-4 h-4 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-center p-2 rounded-lg hover:bg-info-50 transition-colors duration-200">
+                                <div class="w-8 h-8 rounded-lg bg-info-100 flex items-center justify-center mr-3 shadow-sm">
+                                    <svg class="w-4 h-4 text-info-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                 </div>
                                 <span class="text-sm font-medium text-neutral-700">Multiple sharing options</span>
                             </div>
-                            <div class="flex items-center p-2 rounded-lg hover:bg-accent-50 transition-colors duration-200">
-                                <div class="w-8 h-8 rounded-lg bg-accent-100 flex items-center justify-center mr-3 shadow-sm">
-                                    <svg class="w-4 h-4 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-center p-2 rounded-lg hover:bg-info-50 transition-colors duration-200">
+                                <div class="w-8 h-8 rounded-lg bg-info-100 flex items-center justify-center mr-3 shadow-sm">
+                                    <svg class="w-4 h-4 text-info-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                 </div>
@@ -312,7 +312,7 @@
             <p class="text-neutral-600 max-w-2xl mx-auto mt-6">
                 Both you and your friends get amazing rewards when they join
             </p>
-            <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-accent-500 mx-auto mt-6 rounded-full"></div>
+            <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-info-500 mx-auto mt-6 rounded-full"></div>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -440,7 +440,7 @@
             <p class="text-neutral-600 max-w-2xl mx-auto mt-6">
                 Find answers to common questions about our referral program
             </p>
-            <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-accent-500 mx-auto mt-6 rounded-full"></div>
+            <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-info-500 mx-auto mt-6 rounded-full"></div>
         </div>
         
         <div class="max-w-3xl mx-auto space-y-4">
@@ -456,10 +456,10 @@
                 </div>
             </div>
             
-            <div class="glass-dark rounded-2xl transition-all duration-300 hover:shadow-md border-l-4 border-accent-400 overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+            <div class="glass-dark rounded-2xl transition-all duration-300 hover:shadow-md border-l-4 border-info-400 overflow-hidden" data-aos="fade-up" data-aos-delay="100">
                 <button class="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-neutral-50 transition-colors" onclick="toggleFAQ(this)">
                     <span class="font-semibold text-neutral-800 text-lg">When do I receive my rewards?</span>
-                    <svg class="w-5 h-5 text-accent-600 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-info-600 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
@@ -517,7 +517,7 @@
                 <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-neutral-200 mb-8">
                     <div class="flex -space-x-2">
                         <div class="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 border-2 border-white"></div>
-                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-accent-400 to-accent-600 border-2 border-white"></div>
+                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-info-400 to-info-600 border-2 border-white"></div>
                         <div class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 border-2 border-white"></div>
                     </div>
                     <span class="text-sm font-medium text-neutral-700">Join our growing community</span>
@@ -591,8 +591,8 @@
                 </div>
 
                 <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
-                    <div class="w-12 h-12 rounded-xl bg-accent-100 flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 rounded-xl bg-info-100 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-info-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
                         </svg>
                     </div>

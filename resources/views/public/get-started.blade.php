@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Our Services - Academic and Programming Solutions')
+@section('title', 'Get Started - Academic and Programming Solutions')
 @section('site_name', 'Treis Adiutor')
 
 @push('analytics')
@@ -27,9 +27,6 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Main Form Column -->
             <div class="lg:col-span-2">
-                <!-- Service Pre-selected Notice -->
-                <x-service-request.preselected-notice />
-
                 <!-- Success Message for New Accounts -->
                 <x-service-request.credentials-success 
                     :credentials="session('credentials')" 
@@ -60,9 +57,23 @@
                 <form action="{{ route('get-started.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
 
+                    <!-- Service Pre-selected Notice (MUST be inside form for hidden inputs) -->
+                    <x-service-request.preselected-notice />
+
                     @if(!$isLoggedIn)
                         <!-- Contact Information (for new users) -->
                         <x-service-request.contact-info />
+                    @else
+                        <!-- Contact Preferences (for logged-in users) -->
+                        <x-ui.card>
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="p-2 bg-neutral-50 rounded-lg">
+                                    <x-lucide-user class="w-5 h-5 text-neutral-500" />
+                                </div>
+                                <h2 class="text-lg font-medium text-neutral-800">Contact Preferences for This Request</h2>
+                            </div>
+                            <x-service-request.contact-preferences :userEmail="$user->email ?? null" />
+                        </x-ui.card>
                     @endif
 
                     <!-- Service Request Details -->
@@ -91,5 +102,5 @@
 @endsection
 
 @push('scripts')
-    <x-service-request.form-scripts :isLoggedIn="$isLoggedIn" />
+    <x-service-request.form-scripts :isLoggedIn="$isLoggedIn" :userEmail="$user->email ?? null" />
 @endpush

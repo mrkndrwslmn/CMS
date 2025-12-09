@@ -796,6 +796,9 @@ Route::middleware('guest')->group(function () {
     });
 });
 
+// Public referral code validation (accessible without authentication)
+Route::post('/referral/validate', [\App\Http\Controllers\Client\ReferralController::class, 'validateCode'])->name('referral.validate.public');
+
 // Firebase account linking (requires authentication)
 Route::middleware('auth')->prefix('auth/firebase')->name('firebase.')->group(function () {
     Route::post('/link/initiate', [\App\Http\Controllers\Auth\FirebaseAuthController::class, 'initiateLink'])->name('link.initiate');
@@ -888,6 +891,18 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::post('/{template}/duplicate', [AdminTemplateController::class, 'duplicate'])->name('duplicate');
     });
     
+    // Service Catalog Management
+    Route::prefix('services')->name('services.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminServiceController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\AdminServiceController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\AdminServiceController::class, 'store'])->name('store');
+        Route::get('/{service}', [\App\Http\Controllers\Admin\AdminServiceController::class, 'show'])->name('show');
+        Route::get('/{service}/edit', [\App\Http\Controllers\Admin\AdminServiceController::class, 'edit'])->name('edit');
+        Route::put('/{service}', [\App\Http\Controllers\Admin\AdminServiceController::class, 'update'])->name('update');
+        Route::delete('/{service}', [\App\Http\Controllers\Admin\AdminServiceController::class, 'destroy'])->name('destroy');
+        Route::post('/{service}/toggle-status', [\App\Http\Controllers\Admin\AdminServiceController::class, 'toggleStatus'])->name('toggle-status');
+    });
+    
     // Audit Log Management
     Route::prefix('audit')->name('audit.')->group(function () {
         Route::get('/', [AdminAuditController::class, 'index'])->name('index');
@@ -912,6 +927,14 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::put('/clients/{client}/notes/{note}', [\App\Http\Controllers\Admin\ClientManagementController::class, 'updateNote'])->name('clients.notes.update');
     Route::delete('/clients/{client}/notes/{note}', [\App\Http\Controllers\Admin\ClientManagementController::class, 'deleteNote'])->name('clients.notes.destroy');
     Route::post('/clients/{client}/restore', [\App\Http\Controllers\Admin\ClientManagementController::class, 'restore'])->name('clients.restore');
+    
+    // Adiutor Management
+    Route::get('/adiutors/archived', [\App\Http\Controllers\Admin\AdiutorManagementController::class, 'archived'])->name('adiutors.archived');
+    Route::get('/adiutors/export', [\App\Http\Controllers\Admin\AdiutorManagementController::class, 'export'])->name('adiutors.export');
+    Route::post('/adiutors/bulk-action', [\App\Http\Controllers\Admin\AdiutorManagementController::class, 'bulkAction'])->name('adiutors.bulk-action');
+    Route::resource('adiutors', \App\Http\Controllers\Admin\AdiutorManagementController::class);
+    Route::post('/adiutors/{adiutor}/adjust-balance', [\App\Http\Controllers\Admin\AdiutorManagementController::class, 'adjustBalance'])->name('adiutors.adjust-balance');
+    Route::post('/adiutors/{adiutor}/restore', [\App\Http\Controllers\Admin\AdiutorManagementController::class, 'restore'])->name('adiutors.restore');
     
     // Task Management
     Route::resource('tasks', \App\Http\Controllers\Admin\TaskManagementController::class);
@@ -1086,6 +1109,7 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::post('/projects/{project}/notes', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'addNote'])->name('projects.notes.store');
     Route::patch('/projects/{project}/status', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'updateStatus'])->name('projects.update-status');
     Route::patch('/projects/{project}/complete', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'complete'])->name('projects.complete');
+    Route::patch('/projects/{project}/reopen', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'reopen'])->name('projects.reopen');
     Route::post('/projects/bulk-action', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'bulkAction'])->name('projects.bulk-action');
     
     // Team Management routes
@@ -1377,6 +1401,23 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
         Route::get('/{revision}', [\App\Http\Controllers\Adiutor\RevisionController::class, 'show'])->name('show');
         Route::get('/{revision}/upload', [\App\Http\Controllers\Adiutor\RevisionController::class, 'uploadForm'])->name('upload');
         Route::post('/{revision}/complete', [\App\Http\Controllers\Adiutor\RevisionController::class, 'complete'])->name('complete');
+    });
+    
+    // Referral Program routes for Adiutors
+    // Note: Adiutors withdraw referral credits through their unified wallet/payout system
+    // (adiutor.earnings.wallet), NOT through separate referral withdrawal routes.
+    Route::prefix('referrals')->name('referrals.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Adiutor\ReferralController::class, 'dashboard'])->name('dashboard');
+        Route::get('/share', [\App\Http\Controllers\Adiutor\ReferralController::class, 'share'])->name('share');
+        Route::get('/history', [\App\Http\Controllers\Adiutor\ReferralController::class, 'history'])->name('history');
+        Route::get('/code', [\App\Http\Controllers\Adiutor\ReferralController::class, 'getCode'])->name('code');
+        Route::get('/stats', [\App\Http\Controllers\Adiutor\ReferralController::class, 'getStats'])->name('stats');
+        Route::post('/validate', [\App\Http\Controllers\Adiutor\ReferralController::class, 'validateCode'])->name('validate');
+        Route::post('/invite', [\App\Http\Controllers\Adiutor\ReferralController::class, 'sendInvitation'])->name('invite');
+        Route::post('/generate-link', [\App\Http\Controllers\Adiutor\ReferralController::class, 'generateLink'])->name('generate-link');
+        
+        // Referral Credits (read-only view - withdrawals via adiutor.earnings.wallet)
+        Route::get('/credits', [\App\Http\Controllers\Adiutor\ReferralController::class, 'credits'])->name('credits');
     });
 });
 

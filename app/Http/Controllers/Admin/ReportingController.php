@@ -16,9 +16,197 @@ use Carbon\Carbon;
 
 class ReportingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.reports.index');
+        // Handle period filter
+        $period = $request->get('period', '30');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        
+        // Calculate date range
+        if ($period === 'custom' && $startDate && $endDate) {
+            $filterStartDate = Carbon::parse($startDate)->startOfDay();
+            $filterEndDate = Carbon::parse($endDate)->endOfDay();
+        } else {
+            $filterStartDate = Carbon::now()->subDays((int)$period)->startOfDay();
+            $filterEndDate = Carbon::now()->endOfDay();
+        }
+        
+        // Calculate previous period for comparison
+        $periodDays = $filterStartDate->diffInDays($filterEndDate);
+        $previousStartDate = $filterStartDate->copy()->subDays($periodDays);
+        $previousEndDate = $filterStartDate->copy()->subDay();
+
+        // Key Performance Indicators - Current Period
+        $kpis = [
+            'total_users' => User::count(),
+            'new_users' => User::whereBetween('created_at', [$filterStartDate, $filterEndDate])->count(),
+            'previous_new_users' => User::whereBetween('created_at', [$previousStartDate, $previousEndDate])->count(),
+            'total_clients' => User::where('role', 'client')->count(),
+            'new_clients' => User::where('role', 'client')->whereBetween('created_at', [$filterStartDate, $filterEndDate])->count(),
+            'previous_new_clients' => User::where('role', 'client')->whereBetween('created_at', [$previousStartDate, $previousEndDate])->count(),
+            'total_tasks' => Task::count(),
+            'active_tasks' => Task::whereIn('status', ['pending', 'in_progress'])->count(),
+            'completed_tasks' => Task::where('status', 'completed')->count(),
+            'tasks_this_period' => Task::whereBetween('created_at', [$filterStartDate, $filterEndDate])->count(),
+            'total_documents' => Document::count(),
+            'documents_this_period' => Document::whereBetween('created_at', [$filterStartDate, $filterEndDate])->count(),
+            'total_document_size' => Document::sum('fileSize') ?? 0,
+            'total_projects' => Project::count(),
+            'active_projects' => Project::whereIn('status', ['in_progress', 'pending'])->count(),
+            'total_requests' => ServiceRequest::count(),
+            'pending_requests' => ServiceRequest::where('status', 'pending')->count(),
+        ];
+
+        // Calculate completion rate
+        $kpis['completion_rate'] = $kpis['total_tasks'] > 0 
+            ? round(($kpis['completed_tasks'] / $kpis['total_tasks']) * 100, 1) 
+            : 0;
+
+        // User Activity Trend (daily registrations for the period)
+        $userActivityTrend = User::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->whereBetween('created_at', [$filterStartDate, $filterEndDate])
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->keyBy('date');
+
+        // Fill in missing dates with zero counts
+        $userActivity = [];
+        $currentDate = $filterStartDate->copy();
+        while ($currentDate <= $filterEndDate) {
+            $dateKey = $currentDate->format('Y-m-d');
+            $userActivity[] = [
+                'date' => $currentDate->format('M d'),
+                'count' => $userActivityTrend->get($dateKey)?->count ?? 0
+            ];
+            $currentDate->addDay();
+        }
+
+        // Task Status Distribution
+        $taskStatusDistribution = Task::selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
+
+        // Recent Activities (mix of recent actions)
+        $recentActivities = collect();
+        
+        // Recent users
+        $recentUsers = User::orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(fn($u) => [
+                'type' => 'user_registered',
+                'icon' => 'user-plus',
+                'color' => 'primary',
+                'message' => "New {$u->role} registered: {$u->fullName}",
+                'time' => $u->created_at,
+            ]);
+        $recentActivities = $recentActivities->merge($recentUsers);
+        
+        // Recent tasks
+        $recentTasks = Task::with('project')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(fn($t) => [
+                'type' => 'task_created',
+                'icon' => 'list-todo',
+                'color' => 'warning',
+                'message' => "Task created: {$t->taskTitle}",
+                'time' => $t->created_at,
+            ]);
+        $recentActivities = $recentActivities->merge($recentTasks);
+        
+        // Recent completed tasks
+        $completedTasks = Task::where('status', 'completed')
+            ->whereNotNull('completedAt')
+            ->orderBy('completedAt', 'desc')
+            ->take(5)
+            ->get()
+            ->map(fn($t) => [
+                'type' => 'task_completed',
+                'icon' => 'check-circle',
+                'color' => 'success',
+                'message' => "Task completed: {$t->taskTitle}",
+                'time' => $t->completedAt,
+            ]);
+        $recentActivities = $recentActivities->merge($completedTasks);
+        
+        // Sort by time and take latest 10
+        $recentActivities = $recentActivities->sortByDesc('time')->take(10)->values();
+
+        // Top Performers (Adiutors with most completed tasks)
+        $topPerformers = User::where('role', 'adiutor')
+            ->where('status', 'active')
+            ->withCount([
+                'assignedTasks as completed_tasks_count' => function($query) {
+                    $query->where('status', 'completed');
+                },
+                'assignedTasks as total_tasks_count'
+            ])
+            ->having('completed_tasks_count', '>', 0)
+            ->orderBy('completed_tasks_count', 'desc')
+            ->take(5)
+            ->get();
+
+        // Detailed Report Metrics (current vs previous period comparison)
+        $reportMetrics = [
+            [
+                'name' => 'New Users',
+                'current' => $kpis['new_users'],
+                'previous' => $kpis['previous_new_users'],
+            ],
+            [
+                'name' => 'New Clients',
+                'current' => $kpis['new_clients'],
+                'previous' => $kpis['previous_new_clients'],
+            ],
+            [
+                'name' => 'Tasks Created',
+                'current' => Task::whereBetween('created_at', [$filterStartDate, $filterEndDate])->count(),
+                'previous' => Task::whereBetween('created_at', [$previousStartDate, $previousEndDate])->count(),
+            ],
+            [
+                'name' => 'Tasks Completed',
+                'current' => Task::where('status', 'completed')
+                    ->whereBetween('completedAt', [$filterStartDate, $filterEndDate])->count(),
+                'previous' => Task::where('status', 'completed')
+                    ->whereBetween('completedAt', [$previousStartDate, $previousEndDate])->count(),
+            ],
+            [
+                'name' => 'Service Requests',
+                'current' => ServiceRequest::whereBetween('created_at', [$filterStartDate, $filterEndDate])->count(),
+                'previous' => ServiceRequest::whereBetween('created_at', [$previousStartDate, $previousEndDate])->count(),
+            ],
+            [
+                'name' => 'Documents Uploaded',
+                'current' => $kpis['documents_this_period'],
+                'previous' => Document::whereBetween('created_at', [$previousStartDate, $previousEndDate])->count(),
+            ],
+        ];
+
+        // Calculate change percentages
+        foreach ($reportMetrics as &$metric) {
+            if ($metric['previous'] > 0) {
+                $metric['change'] = round((($metric['current'] - $metric['previous']) / $metric['previous']) * 100, 1);
+            } else {
+                $metric['change'] = $metric['current'] > 0 ? 100 : 0;
+            }
+        }
+
+        return view('admin.reports.index', compact(
+            'kpis', 
+            'userActivity', 
+            'taskStatusDistribution', 
+            'recentActivities', 
+            'topPerformers', 
+            'reportMetrics',
+            'period',
+            'filterStartDate',
+            'filterEndDate'
+        ));
     }
     
     public function dashboard(Request $request)
@@ -255,12 +443,12 @@ class ReportingController extends Controller
             ->get();
             
         // Type Distribution
-        $typeDistribution = Document::selectRaw('fileType, COUNT(*) as count, SUM(fileSize) as total_size')
+        $typeDistribution = Document::selectRaw('fileType as type, COUNT(*) as count, SUM(fileSize) as total_size')
             ->groupBy('fileType')
             ->get();
             
         // Category Distribution
-        $categoryDistribution = Document::selectRaw('document_type, COUNT(*) as count')
+        $categoryDistribution = Document::selectRaw('document_type as category, COUNT(*) as count')
             ->groupBy('document_type')
             ->get();
             
@@ -313,11 +501,11 @@ class ReportingController extends Controller
         // Budget Distribution
         $budgetRanges = Project::selectRaw('
             CASE 
-                WHEN budget < 1000 THEN "Under $1K"
-                WHEN budget < 5000 THEN "$1K - $5K"
-                WHEN budget < 10000 THEN "$5K - $10K"
-                WHEN budget < 25000 THEN "$10K - $25K"
-                ELSE "Over $25K"
+                WHEN budget < 1000 THEN "Under ₱1K"
+                WHEN budget < 5000 THEN "₱1K - ₱5K"
+                WHEN budget < 10000 THEN "₱5K - ₱10K"
+                WHEN budget < 25000 THEN "₱10K - ₱25K"
+                ELSE "Over ₱25K"
             END as budget_range,
             COUNT(*) as count,
             SUM(budget) as total_value

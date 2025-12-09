@@ -43,7 +43,7 @@
         <x-ui.card class="p-6">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm font-medium text-neutral-500">Active</p>
+                    <p class="text-sm font-medium text-neutral-500">Active Projects</p>
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $projects->where('assignment_status', 'active')->count() }}</p>
                 </div>
                 <div class="p-3 bg-success-50 rounded-xl">
@@ -52,12 +52,12 @@
             </div>
         </x-ui.card>
 
-        <!-- Pending Projects -->
+        <!-- Assigned Projects -->
         <x-ui.card class="p-6">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm font-medium text-neutral-500">Pending</p>
-                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $projects->where('assignment_status', 'pending')->count() }}</p>
+                    <p class="text-sm font-medium text-neutral-500">Assigned</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $projects->where('assignment_status', 'assigned')->count() }}</p>
                 </div>
                 <div class="p-3 bg-warning-50 rounded-xl">
                     <x-lucide-clock class="w-5 h-5 text-warning-500" />
@@ -72,8 +72,8 @@
                     <p class="text-sm font-medium text-neutral-500">Completed</p>
                     <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $projects->where('assignment_status', 'completed')->count() }}</p>
                 </div>
-                <div class="p-3 bg-primary-50 rounded-xl">
-                    <x-lucide-check class="w-5 h-5 text-primary-500" />
+                <div class="p-3 bg-success-50 rounded-xl">
+                    <x-lucide-check-square class="w-5 h-5 text-success-500" />
                 </div>
             </div>
         </x-ui.card>
@@ -88,12 +88,12 @@
                     All Projects
                 </button>
                 <button class="filter-tab border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-                        data-filter="active">
-                    Active
+                        data-filter="assigned">
+                    Assigned
                 </button>
                 <button class="filter-tab border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-                        data-filter="pending">
-                    Pending
+                        data-filter="active">
+                    Active
                 </button>
                 <button class="filter-tab border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
                         data-filter="completed">
@@ -121,25 +121,31 @@
                                 </p>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                                    {{ $project->assignment_status === 'active' ? 'bg-success-100 text-success-700' : '' }}
-                                    {{ $project->assignment_status === 'pending' ? 'bg-warning-100 text-warning-700' : '' }}
-                                    {{ $project->assignment_status === 'completed' ? 'bg-primary-100 text-primary-700' : '' }}
-                                    {{ !in_array($project->assignment_status, ['active', 'pending', 'completed']) ? 'bg-neutral-100 text-neutral-600' : '' }}">
-                                    <span class="w-2 h-2 rounded-full mr-2
-                                        {{ $project->assignment_status === 'active' ? 'bg-success-500' : '' }}
-                                        {{ $project->assignment_status === 'pending' ? 'bg-warning-500' : '' }}
-                                        {{ $project->assignment_status === 'completed' ? 'bg-primary-500' : '' }}
-                                        {{ !in_array($project->assignment_status, ['active', 'pending', 'completed']) ? 'bg-neutral-500' : '' }}">
-                                    </span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {{ $project->assignment_status === 'active' ? 'bg-success-50 text-info-700' : '' }}
+                                    {{ $project->assignment_status === 'assigned' ? 'bg-warning-50 text-warning-700' : '' }}
+                                    {{ $project->assignment_status === 'completed' ? 'bg-success-50 text-success-700' : '' }}
+                                    {{ $project->assignment_status === 'removed' ? 'bg-neutral-50 text-neutral-600' : '' }}">
+                                    @if($project->assignment_status === 'active')
+                                        <x-lucide-check-circle class="w-3 h-3" />
+                                    @elseif($project->assignment_status === 'assigned')
+                                        <x-lucide-clock class="w-3 h-3" />
+                                    @elseif($project->assignment_status === 'completed')
+                                        <x-lucide-check-square class="w-3 h-3" />
+                                    @else
+                                        <x-lucide-circle-dashed class="w-3 h-3" />
+                                    @endif
                                     {{ ucfirst($project->assignment_status) }}
                                 </span>
                                 @if($project->priority)
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-                                        {{ $project->priority === 'urgent' ? 'bg-error-100 text-error-700' : '' }}
-                                        {{ $project->priority === 'high' ? 'bg-warning-100 text-warning-700' : '' }}
-                                        {{ !in_array($project->priority, ['urgent', 'high']) ? 'bg-neutral-100 text-neutral-600' : '' }}">
-                                        <x-lucide-alert-triangle class="w-3 h-3 mr-1" />
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {{ $project->priority === 'urgent' ? 'bg-error-50 text-error-700' : '' }}
+                                        {{ $project->priority === 'high' ? 'bg-warning-50 text-warning-700' : '' }}
+                                        {{ $project->priority === 'medium' ? 'bg-primary-50 text-primary-700' : '' }}
+                                        {{ $project->priority === 'low' ? 'bg-neutral-50 text-neutral-600' : '' }}">
+                                        @if(in_array($project->priority, ['urgent', 'high']))
+                                            <x-lucide-alert-triangle class="w-3 h-3" />
+                                        @endif
                                         {{ ucfirst($project->priority) }}
                                     </span>
                                 @endif
@@ -165,7 +171,7 @@
                                         ₱{{ number_format($project->budget, 2) }}
                                     @endif
                                 </p>
-                                <p class="text-xs text-neutral-500">{{ ucfirst($project->budget_type) }}</p>
+                                <p class="text-xs text-neutral-500">{{ $project->budget_type === 'fixed' ? 'Fixed Rate' : 'Hourly Rate' }}</p>
                             </div>
                             <div>
                                 <p class="text-xs font-medium text-neutral-500 mb-1 flex items-center">
@@ -188,13 +194,13 @@
                             <div>
                                 <p class="text-xs font-medium text-neutral-500 mb-1 flex items-center">
                                     <x-lucide-play-circle class="w-4 h-4 text-primary-500 mr-1" />
-                                    Status
+                                    Start Date
                                 </p>
                                 <p class="text-lg font-semibold text-neutral-800">
                                     @if($project->start_date)
-                                        Started
+                                        {{ \Carbon\Carbon::parse($project->start_date)->format('M d, Y') }}
                                     @else
-                                        <span class="text-neutral-400">Not started</span>
+                                        <span class="text-neutral-400">Not set</span>
                                     @endif
                                 </p>
                                 @if($project->start_date)
@@ -251,15 +257,15 @@
         </div>
     @else
         <!-- Empty State -->
-        <x-ui.card class="p-12">
-            <div class="text-center">
-                <div class="mx-auto w-24 h-24 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+        <x-ui.card class="p-16">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-24 h-24 bg-neutral-50 rounded-full flex items-center justify-center mb-4">
                     <x-lucide-folder-kanban class="w-12 h-12 text-neutral-400" />
                 </div>
-                <h3 class="text-lg font-medium text-neutral-800 mb-2">No projects assigned</h3>
-                <p class="text-neutral-500 mb-6">You'll see your assigned projects here once they're available.</p>
-                <a href="{{ route('adiutor.profile.edit') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
-                    <x-lucide-user class="w-5 h-5" />
+                <h3 class="text-lg font-medium text-neutral-800 mb-2">No Projects Assigned Yet</h3>
+                <p class="text-sm text-neutral-500 max-w-sm mb-6">You'll see your assigned projects here once they're available. Make sure your profile is complete to get assignments.</p>
+                <a href="{{ route('adiutor.profile.edit') }}" class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
+                    <x-lucide-user class="w-4 h-4" />
                     Complete Your Profile
                 </a>
             </div>

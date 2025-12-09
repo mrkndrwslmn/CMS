@@ -8,7 +8,10 @@
     
     <!-- Favicon -->
     <link rel="icon" href="@yield('favicon', '/favicon.svg')" type="image/x-icon">
-
+    
+    <!-- Preload Critical Fonts (Branding) -->
+    <link rel="preload" href="{{ Vite::asset('resources/fonts/Stereofunk.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous" fetchpriority="high">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,6 +33,9 @@
     <!-- Tailwind CSS (Local Build) -->
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/messaging.js'])
     
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    
     <!-- Alpine.js with Collapse plugin -->
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -48,7 +54,7 @@
             <!-- Brand Header -->
             <div class="h-16 flex items-center justify-center border-b border-neutral-100 px-6">
                 <a href="/" class="flex items-center gap-2 group">
-                    <span class="text-xl heading-serif text-primary-500 tracking-wide group-hover:text-primary-600 transition-colors">
+                    <span class="text-xl font-branding text-primary-500 tracking-wide group-hover:text-primary-600 transition-colors">
                         TREIS ADIUTOR
                     </span>
                 </a>
@@ -68,7 +74,7 @@
                 
                 <!-- User Management -->
                 <div class="mb-0.5">
-                    <button @click="toggle('users')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.users*', 'admin.clients*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                    <button @click="toggle('users')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('admin.users*', 'admin.clients*', 'admin.adiutors*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
                         <div class="flex items-center gap-3">
                             <x-lucide-users class="w-5 h-5" />
                             <span>Users</span>
@@ -79,6 +85,10 @@
                         <a href="{{ route('admin.users.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.users*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-user class="w-4 h-4" />
                             <span>All Users</span>
+                        </a>
+                        <a href="{{ route('admin.adiutors.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.adiutors*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-hard-hat class="w-4 h-4" />
+                            <span>Adiutors</span>
                         </a>
                         <a href="{{ route('admin.clients.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.clients*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-briefcase class="w-4 h-4" />
@@ -281,10 +291,13 @@
                             <x-lucide-file class="w-4 h-4" />
                             <span>Documents</span>
                         </a>
+
+                        <!-- This will be enabled in future releases 
                         <a href="{{ route('admin.documents.bulk-create') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.documents.bulk-create') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-upload class="w-4 h-4" />
                             <span>Bulk Upload</span>
-                        </a>
+                        </a> -->
+
                         <a href="{{ route('admin.deliverables.pending') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.deliverables*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-check-circle class="w-4 h-4" />
                             <span>Pending Approvals</span>
@@ -302,6 +315,10 @@
                         <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.templates*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-layers class="w-4 h-4" />
                             <span>Templates</span>
+                        </a>
+                        <a href="{{ route('admin.services.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.services*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-briefcase class="w-4 h-4" />
+                            <span>Services</span>
                         </a>
                     </div>
                 </div>
@@ -370,10 +387,12 @@
                             <x-lucide-file-text class="w-4 h-4" />
                             <span>Documents</span>
                         </a>
+                        <!-- This will be enabled in future releases
                         <a href="{{ route('admin.reports.custom') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.reports.custom') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-sliders class="w-4 h-4" />
                             <span>Custom</span>
-                        </a>
+                        </a> -->
+
                     </div>
                 </div>
                 
@@ -470,7 +489,7 @@
         function sidebarNav() {
             return {
                 openSections: {
-                    users: {{ request()->routeIs('admin.users*', 'admin.clients*') ? 'true' : 'false' }},
+                    users: {{ request()->routeIs('admin.users*', 'admin.clients*', 'admin.adiutors*') ? 'true' : 'false' }},
                     projects: {{ request()->routeIs('admin.requests*', 'admin.projects*', 'admin.tasks*', 'admin.revisions*') ? 'true' : 'false' }},
                     finance: {{ request()->routeIs('admin.payments*', 'admin.payouts*', 'admin.earnings-analytics*', 'admin.hour-requests*') ? 'true' : 'false' }},
                     communication: {{ request()->routeIs('admin.messages*', 'admin.feedback*', 'admin.announcements*') ? 'true' : 'false' }},

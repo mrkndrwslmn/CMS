@@ -15,9 +15,6 @@ class AnnouncementController extends Controller
      */
     public function index()
     {
-        // Update scheduled and expired announcements first
-        $this->updateAnnouncementStatuses();
-
         // Get all announcements with creator and updater info, ordered by priority then date
         $announcements = Announcement::with(['creator', 'updater'])
             ->orderByRaw("CASE 
@@ -28,11 +25,15 @@ class AnnouncementController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Calculate statistics
+        // Calculate statistics based on actual status and expiry
         $stats = [
             'total' => $announcements->count(),
-            'active' => $announcements->where('status', 'active')->count(),
-            'expired' => $announcements->where('status', 'expired')->count(),
+            'active' => $announcements->filter(function($a) {
+                return $a->status === 'active' && (!$a->expires_at || $a->expires_at->isFuture());
+            })->count(),
+            'expired' => $announcements->filter(function($a) {
+                return $a->status === 'expired' || ($a->expires_at && $a->expires_at->isPast() && $a->status === 'active');
+            })->count(),
             'scheduled' => $announcements->where('status', 'scheduled')->count(),
         ];
 
@@ -44,6 +45,8 @@ class AnnouncementController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::info('Store announcement request', $request->all());
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -58,7 +61,11 @@ class AnnouncementController extends Controller
         $validated['created_by'] = Auth::id();
         $validated['target_audience'] = implode(',', $validated['target_audience']);
 
-        Announcement::create($validated);
+        \Log::info('Creating announcement with data', $validated);
+        
+        $announcement = Announcement::create($validated);
+        
+        \Log::info('Announcement created', ['id' => $announcement->id, 'title' => $announcement->title]);
 
         return redirect()->route('admin.announcements.index')
             ->with('success', 'Announcement created successfully!');
@@ -69,11 +76,17 @@ class AnnouncementController extends Controller
      */
     public function update(Request $request, Announcement $announcement)
     {
+        \Log::info('Update announcement request', ['id' => $announcement->id, 'data' => $request->all()]);
+        
+        // Check if announcement is expired and user is trying to keep expired status
+        $isCurrentlyExpired = $announcement->status === 'expired' || 
+                             ($announcement->expires_at && $announcement->expires_at->isPast());
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'priority' => ['required', Rule::in(['low', 'medium', 'high'])],
-            'status' => ['required', Rule::in(['active', 'scheduled', 'draft'])],
+            'status' => ['required', Rule::in(['active', 'scheduled', 'draft', 'expired'])],
             'target_audience' => 'required|array|min:1',
             'target_audience.*' => Rule::in(['client', 'adiutor', 'public', 'all']),
             'starts_at' => 'nullable|date|required_if:status,scheduled',
@@ -83,7 +96,32 @@ class AnnouncementController extends Controller
         $validated['updated_by'] = Auth::id();
         $validated['target_audience'] = implode(',', $validated['target_audience']);
 
+        // If currently expired and trying to set to active/scheduled with past expiry, warn user
+        if ($isCurrentlyExpired && in_array($validated['status'], ['active', 'scheduled'])) {
+            if (!empty($validated['expires_at']) && \Carbon\Carbon::parse($validated['expires_at'])->isPast()) {
+                return redirect()->route('admin.announcements.index')
+                    ->with('error', 'Cannot activate an expired announcement. Please set a future expiry date or remove the expiry date to reactivate.');
+            }
+            
+            // If no expiry date set, allow reactivation
+            if (empty($validated['expires_at'])) {
+                \Log::info('Reactivating expired announcement without expiry date');
+            }
+        }
+
+        // If changing status to active/scheduled and expires_at is in the past, clear it
+        if (in_array($validated['status'], ['active', 'scheduled'])) {
+            if (!empty($validated['expires_at']) && \Carbon\Carbon::parse($validated['expires_at'])->isPast()) {
+                $validated['expires_at'] = null;
+                \Log::info('Cleared past expiry date when reactivating announcement');
+            }
+        }
+
+        \Log::info('Updating announcement with data', $validated);
+        
         $announcement->update($validated);
+        
+        \Log::info('Announcement updated', ['id' => $announcement->id, 'title' => $announcement->title]);
 
         return redirect()->route('admin.announcements.index')
             ->with('success', 'Announcement updated successfully!');

@@ -6,8 +6,8 @@
 <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <x-ui.breadcrumb :items="[
-        ['label' => 'Dashboard', 'url' => route('adiutor.dashboard')],
-        ['label' => 'Budget Requests'],
+        ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
+        ['label' => 'Budget Requests', 'icon' => 'wallet'],
     ]" class="mb-6" />
 
     <!-- Header -->
@@ -17,7 +17,7 @@
             <p class="text-sm text-neutral-500 mt-1">Request budget adjustments for your assigned tasks</p>
         </div>
         <a href="{{ route('adiutor.budget-requests.create') }}" 
-           class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition-colors">
+           class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
             <x-lucide-plus class="w-4 h-4" />
             New Request
         </a>
@@ -57,37 +57,37 @@
     @endif
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div class="bg-warning-50 border border-warning-100 rounded-2xl p-5">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-warning-100 rounded-xl">
-                    <x-lucide-clock class="w-5 h-5 text-warning-600" />
-                </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-2xl font-semibold text-warning-800">{{ $stats['pending'] }}</p>
-                    <p class="text-sm text-warning-600">Pending</p>
+                    <p class="text-sm font-medium text-neutral-500">Pending Requests</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['pending'] }}</p>
+                </div>
+                <div class="p-3 bg-warning-50 rounded-xl">
+                    <x-lucide-clock class="w-5 h-5 text-warning-500" />
                 </div>
             </div>
         </div>
-        <div class="bg-success-50 border border-success-100 rounded-2xl p-5">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-success-100 rounded-xl">
-                    <x-lucide-check-circle class="w-5 h-5 text-success-600" />
-                </div>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-2xl font-semibold text-success-800">{{ $stats['approved'] }}</p>
-                    <p class="text-sm text-success-600">Approved</p>
+                    <p class="text-sm font-medium text-neutral-500">Approved Requests</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['approved'] }}</p>
+                </div>
+                <div class="p-3 bg-success-50 rounded-xl">
+                    <x-lucide-check-circle class="w-5 h-5 text-success-500" />
                 </div>
             </div>
         </div>
-        <div class="bg-error-50 border border-error-100 rounded-2xl p-5">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-error-100 rounded-xl">
-                    <x-lucide-x-circle class="w-5 h-5 text-error-600" />
-                </div>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-2xl font-semibold text-error-800">{{ $stats['rejected'] }}</p>
-                    <p class="text-sm text-error-600">Rejected</p>
+                    <p class="text-sm font-medium text-neutral-500">Rejected Requests</p>
+                    <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ $stats['rejected'] }}</p>
+                </div>
+                <div class="p-3 bg-error-50 rounded-xl">
+                    <x-lucide-x-circle class="w-5 h-5 text-error-500" />
                 </div>
             </div>
         </div>
@@ -120,7 +120,7 @@
             <h3 class="text-lg font-semibold text-neutral-800 mb-1">No budget requests yet</h3>
             <p class="text-sm text-neutral-500 mb-4">When you need a budget adjustment for a task, you can submit a request here.</p>
             <a href="{{ route('adiutor.budget-requests.create') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition-colors">
+               class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
                 <x-lucide-plus class="w-4 h-4" />
                 Create Request
             </a>
@@ -134,14 +134,15 @@
                         <div class="flex items-center gap-3 mb-2">
                             <h3 class="font-semibold text-neutral-800">{{ $request->task->taskTitle ?? 'Task' }}</h3>
                             @php
-                                $statusClass = match($request->status) {
-                                    'pending' => 'bg-warning-100 text-warning-800',
-                                    'approved' => 'bg-success-100 text-success-800',
-                                    'rejected' => 'bg-error-100 text-error-800',
-                                    default => 'bg-neutral-100 text-neutral-800'
+                                $statusConfig = match($request->status) {
+                                    'pending' => ['bg' => 'bg-warning-50', 'text' => 'text-warning-700', 'icon' => 'clock'],
+                                    'approved' => ['bg' => 'bg-success-50', 'text' => 'text-success-700', 'icon' => 'check-circle'],
+                                    'rejected' => ['bg' => 'bg-error-50', 'text' => 'text-error-700', 'icon' => 'x-circle'],
+                                    default => ['bg' => 'bg-neutral-50', 'text' => 'text-neutral-600', 'icon' => 'circle-dashed']
                                 };
                             @endphp
-                            <span class="px-2.5 py-1 text-xs font-medium rounded-full {{ $statusClass }}">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                <x-dynamic-component :component="'lucide-' . $statusConfig['icon']" class="w-3 h-3" />
                                 {{ ucfirst($request->status) }}
                             </span>
                         </div>

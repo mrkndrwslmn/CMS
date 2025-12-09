@@ -140,7 +140,7 @@ class ClientProfile extends Model
         return match($this->client_type) {
             'individual' => 'primary',
             'small_business' => 'success',
-            'enterprise' => 'accent',
+            'enterprise' => 'info',
             default => 'neutral'
         };
     }

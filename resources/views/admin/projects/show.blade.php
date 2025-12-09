@@ -67,10 +67,17 @@
                 Back to Projects
             </x-ui.button>
             
-            @if($project->status !== 'completed')
+            @if($project->status !== 'completed' && $project->status !== 'cancelled')
                 <x-ui.button variant="success" onclick="showCompleteModal()">
                     <x-lucide-check-circle class="w-4 h-4" />
                     Mark as Completed
+                </x-ui.button>
+            @endif
+            
+            @if($project->status === 'completed' || $project->status === 'cancelled')
+                <x-ui.button variant="warning" onclick="showReopenModal()">
+                    <x-lucide-rotate-ccw class="w-4 h-4" />
+                    Reopen Project
                 </x-ui.button>
             @endif
             
@@ -1067,6 +1074,115 @@
         </div>
     </div>
 
+    <!-- Reopen Project Modal -->
+    <div id="reopenModal" class="modal-overlay fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div onclick="hideReopenModal()" class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity z-40"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+            <div class="modal-content inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-50">
+                
+                <form action="{{ route('admin.projects.reopen', $project->id) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    
+                    <div class="bg-warning-50 border-b border-warning-100 px-6 py-4 flex justify-between items-center">
+                        <h5 class="text-lg font-semibold text-warning-800 flex items-center gap-2">
+                            <x-lucide-rotate-ccw class="w-5 h-5" />
+                            Reopen Project
+                        </h5>
+                        <button type="button" onclick="hideReopenModal()" class="text-warning-600 hover:text-warning-800 focus:outline-none">
+                            <x-lucide-x class="w-5 h-5" />
+                        </button>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Info Box -->
+                        <div class="mb-5 p-4 bg-info-50 border border-info-200 rounded-xl">
+                            <div class="flex items-start">
+                                <x-lucide-info class="w-5 h-5 text-info-600 mt-0.5 mr-3 flex-shrink-0" />
+                                <div>
+                                    <h4 class="text-sm font-semibold text-info-800 mb-1">Reopening a {{ ucfirst($project->status) }} Project</h4>
+                                    <p class="text-xs text-info-700">
+                                        This will allow you to add new tasks, deliverables, and make changes to the project. 
+                                        The client and assigned team members will be notified of this change.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- New Status Selection -->
+                        <div class="mb-5">
+                            <label class="block text-sm font-medium text-neutral-700 mb-2">New Project Status</label>
+                            <select name="new_status" required
+                                    class="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-colors">
+                                <option value="in_progress" selected>In Progress</option>
+                                <option value="active">Active</option>
+                                <option value="review">In Review</option>
+                            </select>
+                            <p class="mt-1 text-xs text-neutral-500">Select the status to set after reopening.</p>
+                        </div>
+
+                        <!-- Reopen Reason -->
+                        <div class="mb-5">
+                            <label class="block text-sm font-medium text-neutral-700 mb-2">Reason for Reopening</label>
+                            <textarea name="reopen_reason" 
+                                      rows="3" 
+                                      required
+                                      class="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-colors"
+                                      placeholder="e.g., Client requested additional changes, Need to add new deliverables..."></textarea>
+                            <p class="mt-1 text-xs text-neutral-500">This will be recorded in the project history.</p>
+                        </div>
+
+                        @php
+                            $completedTasks = $project->tasks->where('status', 'completed');
+                            $cancelledTasks = $project->tasks->where('status', 'cancelled');
+                        @endphp
+
+                        @if($completedTasks->count() > 0 || $cancelledTasks->count() > 0)
+                        <!-- Reopen Tasks Option -->
+                        <div class="mb-4 p-3 bg-neutral-50 border border-neutral-100 rounded-lg">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" name="reopen_tasks" value="1" 
+                                       class="mt-0.5 w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500">
+                                <div>
+                                    <span class="text-sm font-medium text-neutral-800">Also reopen completed tasks</span>
+                                    <p class="text-xs text-neutral-600 mt-0.5">
+                                        Change {{ $completedTasks->count() }} completed task(s) back to "In Progress".
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+                        @endif
+
+                        <!-- Warning -->
+                        <div class="p-3 bg-warning-50 border border-warning-100 rounded-lg">
+                            <div class="flex items-start gap-2">
+                                <x-lucide-alert-triangle class="w-4 h-4 text-warning-600 mt-0.5 flex-shrink-0" />
+                                <p class="text-xs text-warning-700">
+                                    <strong>Note:</strong> If the client earned loyalty points for this project's completion, 
+                                    those points will remain. Consider this before reopening.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-neutral-50 border-t border-neutral-100 px-6 py-4 flex justify-end gap-3">
+                        <x-ui.button type="button" variant="secondary" onclick="hideReopenModal()">
+                            Cancel
+                        </x-ui.button>
+                        <x-ui.button type="submit" variant="warning">
+                            <x-lucide-rotate-ccw class="w-4 h-4" />
+                            Reopen Project
+                        </x-ui.button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Assign Adiutor Modal -->
     <div id="assignModal" class="modal-overlay fixed inset-0 z-50 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
@@ -1572,6 +1688,65 @@
     </div>
 </div>
 
+<!-- Time Entry Adjust Modal -->
+<div id="timeEntryAdjustModal" class="modal-overlay fixed inset-0 z-[60] overflow-y-auto hidden" onclick="hideTimeEntryAdjustModal()">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity z-40"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+        <div class="modal-content inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full relative z-50" onclick="event.stopPropagation()">
+            <div class="bg-primary-50 border-b border-primary-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+                <div>
+                    <h5 class="text-lg font-semibold text-primary-800">Adjust & Approve</h5>
+                    <p class="text-sm text-primary-600" id="adjustModalTaskTitle">Adjust hours before approval</p>
+                </div>
+                <button type="button" onclick="hideTimeEntryAdjustModal()" class="text-primary-500 hover:text-primary-700">
+                    <x-lucide-x class="w-5 h-5" />
+                </button>
+            </div>
+            
+            <form id="timeEntryAdjustForm" onsubmit="return submitTimeEntryAdjustment(event)">
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="adjust_time_entry_id" name="time_entry_id">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 mb-2">Original Hours</label>
+                        <input type="text" id="adjust_original_hours" readonly
+                               class="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-neutral-500 bg-neutral-50">
+                    </div>
+                    
+                    <div>
+                        <label for="adjust_new_hours" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Adjusted Hours <span class="text-error-500">*</span>
+                        </label>
+                        <input type="number" id="adjust_new_hours" name="adjusted_hours" step="0.01" min="0" required
+                               class="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-colors"
+                               placeholder="Enter adjusted hours">
+                        <p class="text-xs text-neutral-500 mt-1">Set the billable hours for this entry</p>
+                    </div>
+                    
+                    <div>
+                        <label for="adjust_reason" class="block text-sm font-medium text-neutral-700 mb-2">
+                            Reason for Adjustment <span class="text-error-500">*</span>
+                        </label>
+                        <textarea id="adjust_reason" name="adjustment_reason" rows="3" required
+                                  class="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-neutral-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-colors"
+                                  placeholder="Explain why the hours are being adjusted..."></textarea>
+                    </div>
+                </div>
+                <div class="bg-neutral-50 border-t border-neutral-100 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
+                    <x-ui.button type="button" variant="secondary" onclick="hideTimeEntryAdjustModal()">
+                        Cancel
+                    </x-ui.button>
+                    <x-ui.button type="submit" variant="primary" id="adjustTimeEntryBtn">
+                        <x-lucide-check class="w-4 h-4" />
+                        Adjust & Approve
+                    </x-ui.button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
 /* Modal CSS */
 .modal-overlay {
@@ -1739,6 +1914,20 @@ function hideCompleteModal() {
     modal.classList.add('hidden');
 }
 
+function showReopenModal() {
+    const modal = document.getElementById('reopenModal');
+    modal.classList.remove('hidden');
+    // Add smooth animation
+    setTimeout(() => {
+        modal.style.opacity = '1';
+    }, 10);
+}
+
+function hideReopenModal() {
+    const modal = document.getElementById('reopenModal');
+    modal.classList.add('hidden');
+}
+
 function showAssignModal() {
     const modal = document.getElementById('assignModal');
     modal.classList.remove('hidden');
@@ -1879,6 +2068,11 @@ function renderTimeEntries(entries) {
                         class="inline-flex items-center px-3 py-1.5 bg-success-500 hover:bg-success-600 text-white rounded-lg text-xs font-medium transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 mr-1"><path d="M20 6 9 17l-5-5"/></svg>
                     Approve
+                </button>
+                <button type="button" onclick="showTimeEntryAdjustModal(${entry.id}, ${entry.hours}, '${entry.task_title.replace(/'/g, "\\'")}')" 
+                        class="inline-flex items-center px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg text-xs font-medium transition-colors border border-primary-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 mr-1"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
+                    Adjust
                 </button>
                 <button type="button" onclick="showTimeEntryRejectModal(${entry.id})" 
                         class="inline-flex items-center px-3 py-1.5 bg-error-50 hover:bg-error-100 text-error-700 rounded-lg text-xs font-medium transition-colors border border-error-200">
@@ -2033,6 +2227,83 @@ function submitTimeEntryRejection(event) {
         console.error('Error:', error);
         btn.disabled = false;
         btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Reject Entry';
+        if (window.Alerts) {
+            window.Alerts.error('An error occurred. Please try again.');
+        }
+    });
+    
+    return false;
+}
+
+// ====== TIME ENTRY ADJUST MODAL FUNCTIONS ======
+function showTimeEntryAdjustModal(entryId, originalHours, taskTitle) {
+    document.getElementById('adjust_time_entry_id').value = entryId;
+    document.getElementById('adjust_original_hours').value = originalHours + ' hours';
+    document.getElementById('adjust_new_hours').value = originalHours;
+    document.getElementById('adjustModalTaskTitle').textContent = taskTitle;
+    document.getElementById('adjust_reason').value = '';
+    document.getElementById('timeEntryAdjustModal').classList.remove('hidden');
+}
+
+function hideTimeEntryAdjustModal() {
+    document.getElementById('timeEntryAdjustModal').classList.add('hidden');
+    document.getElementById('adjust_time_entry_id').value = '';
+    document.getElementById('adjust_new_hours').value = '';
+    document.getElementById('adjust_reason').value = '';
+}
+
+function submitTimeEntryAdjustment(event) {
+    event.preventDefault();
+    
+    const entryId = document.getElementById('adjust_time_entry_id').value;
+    const adjustedHours = document.getElementById('adjust_new_hours').value;
+    const reason = document.getElementById('adjust_reason').value;
+    const btn = document.getElementById('adjustTimeEntryBtn');
+    
+    if (!adjustedHours || !reason.trim()) {
+        if (window.Alerts) {
+            window.Alerts.error('Please fill in all required fields');
+        }
+        return false;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Saving...';
+    
+    fetch(`/admin/payouts/time-entries/${entryId}/approve`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({
+            adjust: true,
+            adjusted_hours: parseFloat(adjustedHours),
+            adjustment_reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data.message?.includes('approved')) {
+            hideTimeEntryAdjustModal();
+            fetchTimeEntries(currentTimeEntriesAdiutorId);
+            if (window.Alerts) {
+                window.Alerts.success(data.message || 'Time entry adjusted and approved successfully!');
+            }
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-1"><path d="M20 6 9 17l-5-5"/></svg> Adjust & Approve';
+            if (window.Alerts) {
+                window.Alerts.error(data.message || 'Failed to adjust time entry');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        btn.disabled = false;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-1"><path d="M20 6 9 17l-5-5"/></svg> Adjust & Approve';
         if (window.Alerts) {
             window.Alerts.error('An error occurred. Please try again.');
         }

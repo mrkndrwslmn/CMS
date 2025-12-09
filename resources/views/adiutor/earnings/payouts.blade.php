@@ -28,10 +28,10 @@
                     </div>
                     <h3 class="text-lg font-semibold text-neutral-800 mb-2">No Payout Requests Yet</h3>
                     <p class="text-neutral-500 mb-6">You haven't submitted any payout requests.</p>
-                    <x-ui.button variant="primary" href="{{ route('adiutor.earnings.request-form') }}">
+                    <a href="{{ route('adiutor.earnings.request-form') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
                         <x-lucide-plus class="w-4 h-4" />
                         Request Payout
-                    </x-ui.button>
+                    </a>
                 </div>
             </div>
         @else
@@ -67,7 +67,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-neutral-700">
-                                    {{ ucwords(str_replace('_', ' ', $payout->payout_method ?? 'Not specified')) }}
+                                    {{ $payout->payout_method ? ucwords(str_replace('_', ' ', $payout->payout_method)) : 'Not Specified' }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -76,15 +76,25 @@
                                         <x-lucide-check-circle class="w-3 h-3" />
                                         Paid
                                     </x-ui.badge>
-                                @elseif($payout->status === 'approved')
+                                @elseif($payout->status === 'processing')
                                     <x-ui.badge variant="info" size="sm">
-                                        <x-lucide-check-circle class="w-3 h-3" />
-                                        Approved
+                                        <x-lucide-loader class="w-3 h-3" />
+                                        Processing
                                     </x-ui.badge>
                                 @elseif($payout->status === 'rejected')
                                     <x-ui.badge variant="error" size="sm">
                                         <x-lucide-x-circle class="w-3 h-3" />
                                         Rejected
+                                    </x-ui.badge>
+                                @elseif($payout->status === 'cancelled')
+                                    <x-ui.badge variant="neutral" size="sm">
+                                        <x-lucide-circle-dashed class="w-3 h-3" />
+                                        Cancelled
+                                    </x-ui.badge>
+                                @elseif($payout->status === 'failed')
+                                    <x-ui.badge variant="error" size="sm">
+                                        <x-lucide-x-circle class="w-3 h-3" />
+                                        Failed
                                     </x-ui.badge>
                                 @else
                                     <x-ui.badge variant="warning" size="sm">

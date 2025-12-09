@@ -36,9 +36,13 @@ class AiSearchController extends Controller
         // Build the prompt
         $serviceNames = collect($services)->pluck('service_name')->map(fn($name) => "\"{$name}\"")->join(', ');
         
-        $prompt = "I'm a user looking for a service related to \"{$query}\". Please provide suggestions for services in the following structure, considering these existing service names: {$serviceNames}. Ensure that the new service prices are in the range of 100 to 1000. Service type should be just the name itself and one of these 3: 1. Writing 2. Editing & Arts 3. Programming Structure should be:
+        $prompt = "I'm a user looking for a service related to \"{$query}\". Please provide suggestions for services in the following structure, considering these existing service names: {$serviceNames}. Pricing should be estimated according to Philippine market value, considering task complexity, and typically range from ₱100–₱1,000 unless the query logically requires a higher estimate. 
+        
+        Service type should be just the name itself and one of these 4: 1. Programming 2. Design 3. Consultation 4. Support 
+        
+        Structure should be:
 
-                Service Type: [There are 3 service type: Writing / Editing & Arts / Programming.]
+                Service Type: [There are 4 service type: Programming / Design / Consultation / Support.]
                 Service Name: [service name]
                 Service Description: [service description]
                 Price: [estimated price]

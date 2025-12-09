@@ -450,16 +450,25 @@ class MayaPaymentController extends Controller
             // 🎁 Process referral completion (if this is user's first payment)
             try {
                 $referralService = app(\App\Services\ReferralService::class);
-                $referralService->processReferralCompletion($paymentModel);
                 
-                Log::info('Referral completion processed for payment', [
+                Log::info('Attempting to process referral completion', [
                     'payment_id' => $payment->id,
                     'client_id' => $clientUser->id,
+                    'payment_amount' => $paymentModel->amount,
+                ]);
+                
+                $result = $referralService->processReferralCompletion($paymentModel);
+                
+                Log::info('Referral completion processing result', [
+                    'payment_id' => $payment->id,
+                    'client_id' => $clientUser->id,
+                    'success' => $result,
                 ]);
             } catch (\Exception $e) {
                 Log::error('Failed to process referral completion', [
                     'payment_id' => $payment->id,
                     'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
             }
         }

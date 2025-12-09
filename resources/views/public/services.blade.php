@@ -11,8 +11,8 @@
     
     <!-- Background Shapes -->
     <div class="absolute top-20 right-10 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl animate-float-slow"></div>
-    <div class="absolute bottom-20 left-10 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl animate-float-delay"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-secondary-500/5 rounded-full blur-3xl animate-float"></div>
+    <div class="absolute bottom-20 left-10 w-96 h-96 bg-info-500/10 rounded-full blur-3xl animate-float-delay"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-3xl animate-float"></div>
     
     <div class="relative z-10 max-w-5xl mx-auto px-6 text-center" data-aos="fade-up">
       <span class="text-sm uppercase tracking-wider font-medium text-primary-600 mb-4 inline-block py-1.5 px-4 rounded-full bg-primary-100/80 backdrop-blur-sm">Explore our Services</span>
@@ -22,7 +22,7 @@
       <p class="text-lg text-neutral-600 mb-10 max-w-3xl mx-auto leading-relaxed">
         Explore our full range of academic and technical services — with clear starting prices so you know exactly what to expect. No hidden fees. No surprises. Just premium work that fits your goals and your budget.
       </p>
-      <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-accent-500 mx-auto rounded-full"></div>
+      <div class="w-20 h-1 bg-gradient-to-r from-primary-500 to-info-500 mx-auto rounded-full"></div>
     </div>
   </section>
 
@@ -32,7 +32,7 @@
       
       <!-- Controls: Search Bar & Filters -->
       <div class="mb-12 sticky top-24 z-30" data-aos="fade-up" data-aos-delay="100">
-        <div class="glass-dark rounded-2xl shadow-lg p-6 border border-neutral-200">
+        <div class="bg-white/75 rounded-2xl shadow-lg p-6 border border-neutral-200">
           <div class="flex flex-col gap-6">
             <!-- Search Bar with Button -->
             <div class="relative w-full flex">
@@ -70,7 +70,7 @@
 
               <!-- Price Range Filter -->
               <div class="relative w-full md:w-auto">
-                <select id="priceFilter" class="w-full md:w-48 px-4 py-3 rounded-xl bg-white border border-neutral-200 focus:ring-2 focus:ring-secondary-500 focus:border-transparent outline-none transition-all duration-300 text-neutral-700 appearance-none cursor-pointer">
+                <select id="priceFilter" class="w-full md:w-48 px-4 py-3 rounded-xl bg-white border border-neutral-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all duration-300 text-neutral-700 appearance-none cursor-pointer">
                   <option value="all">All Prices</option>
                   <option value="0-2000">₱0 - ₱2,000</option>
                   <option value="2000-5000">₱2,000 - ₱5,000</option>
@@ -86,7 +86,7 @@
 
               <!-- Sort By -->
               <div class="relative w-full md:w-auto">
-                <select id="sortFilter" class="w-full md:w-48 px-4 py-3 rounded-xl bg-white border border-neutral-200 focus:ring-2 focus:ring-accent-500 focus:border-transparent outline-none transition-all duration-300 text-neutral-700 appearance-none cursor-pointer">
+                <select id="sortFilter" class="w-full md:w-48 px-4 py-3 rounded-xl bg-white border border-neutral-200 focus:ring-2 focus:ring-info-500 focus:border-transparent outline-none transition-all duration-300 text-neutral-700 appearance-none cursor-pointer">
                   <option value="name">Sort by Name</option>
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
@@ -148,7 +148,7 @@
           <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-neutral-200 mb-8">
             <div class="flex -space-x-2">
               <div class="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 border-2 border-white"></div>
-              <div class="w-7 h-7 rounded-full bg-gradient-to-br from-accent-400 to-accent-600 border-2 border-white"></div>
+              <div class="w-7 h-7 rounded-full bg-gradient-to-br from-info-400 to-info-600 border-2 border-white"></div>
               <div class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 border-2 border-white"></div>
             </div>
             <span class="text-sm font-medium text-neutral-700">Trusted by 500+ companies</span>
@@ -209,8 +209,8 @@
           </div>
 
           <div class="bg-white rounded-2xl p-6 border border-neutral-200 hover:border-neutral-300 hover:shadow-lg transition-all duration-300">
-            <div class="w-12 h-12 rounded-xl bg-accent-100 flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-12 h-12 rounded-xl bg-info-100 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-info-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
             </div>
@@ -325,7 +325,7 @@
                 </div>
                 <h3 class="text-2xl font-semibold heading-serif text-neutral-800 mb-3">No Services Found</h3>
                 <p class="text-neutral-600 leading-relaxed">We couldn't find any services matching your search. Try a different term or contact us for a custom request.</p>
-                <a href="/contact" class="inline-flex items-center mt-6 px-6 py-3 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-colors shadow-md">
+                <a href="{{ url('/contact') }}" class="inline-flex items-center mt-6 px-6 py-3 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-colors shadow-md">
                   <span>Request Custom Service</span>
                   <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
@@ -366,13 +366,13 @@
             <p class="text-neutral-600 leading-relaxed mb-6">${service.description}</p>
           </div>
           <div class="mt-auto pt-6 border-t border-neutral-200 flex items-center justify-between">
-            <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold ${colors.badge} shadow-sm">
+            <span class="inline-flex items-center px-4 py-2 rounded-xl text-xs font-semibold ${colors.badge} shadow-xs">
               <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
               </svg>
               ${service.service_type}
             </span>
-            <a href="${buildInquireUrl(service)}" class="inline-flex items-center text-sm font-bold px-5 py-2.5 rounded-xl transition-all duration-300 ${colors.buttonBg} ${colors.buttonText} ${colors.buttonHover} shadow-md hover:shadow-lg group/btn">
+            <a href="${buildInquireUrl(service)}" class="inline-flex items-center text-xs font-bold px-5 py-2.5 rounded-xl transition-all duration-300 ${colors.buttonBg} ${colors.buttonText} ${colors.buttonHover} shadow-md hover:shadow-lg group/btn">
               <span>Inquire Now</span>
               <svg class="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
@@ -387,7 +387,7 @@
       
       function getServiceColor(serviceType) {
         const colorMap = {
-            'Web Development': {
+            'Programming': {
                 badge: 'bg-primary-100 text-primary-700', 
                 iconBg: 'bg-primary-100',
                 buttonBg: 'bg-primary-600',
@@ -395,20 +395,20 @@
                 buttonHover: 'hover:bg-primary-700'
             },
             'Mobile Development': {
-                badge: 'bg-secondary-100 text-secondary-700', 
-                iconBg: 'bg-secondary-100',
-                buttonBg: 'bg-secondary-600',
+                badge: 'bg-amber-100 text-amber-700', 
+                iconBg: 'bg-amber-100',
+                buttonBg: 'bg-amber-600',
                 buttonText: 'text-white',
-                buttonHover: 'hover:bg-secondary-700'
+                buttonHover: 'hover:bg-amber-700'
             },
             'Design': {
-                badge: 'bg-accent-100 text-accent-700', 
-                iconBg: 'bg-accent-100',
-                buttonBg: 'bg-accent-600',
+                badge: 'bg-info-100 text-info-700', 
+                iconBg: 'bg-info-100',
+                buttonBg: 'bg-info-600',
                 buttonText: 'text-white',
-                buttonHover: 'hover:bg-accent-700'
+                buttonHover: 'hover:bg-info-700'
             },
-            'Backend Development': {
+            'Support': {
                 badge: 'bg-success-100 text-success-700', 
                 iconBg: 'bg-success-100',
                 buttonBg: 'bg-success-600',
@@ -461,8 +461,8 @@
           
           const iconMap = {
               'Web Development': `<svg class="${iconClasses} text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>`,
-              'Mobile Development': `<svg class="${iconClasses} text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"></path></svg>`,
-              'Design': `<svg class="${iconClasses} text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`,
+              'Mobile Development': `<svg class="${iconClasses} text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"></path></svg>`,
+              'Design': `<svg class="${iconClasses} text-info-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`,
               'Backend Development': `<svg class="${iconClasses} text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>`,
               'Integration': `<svg class="${iconClasses} text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>`,
               'Consulting': `<svg class="${iconClasses} text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>`,
@@ -819,7 +819,6 @@
         });
     </script>
 
-    <script src="redirector.js"></script>
     <script>
 (function() {
   var path = window.location.pathname;

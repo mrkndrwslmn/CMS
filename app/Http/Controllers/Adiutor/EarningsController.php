@@ -332,11 +332,26 @@ class EarningsController extends Controller
         // CALCULATE WORK EARNINGS USING SAME LOGIC AS INDEX
         // ===========================================
         
+        // Get pending payout IDs (requested but not yet paid/rejected)
+        $pendingPayoutIds = Payout::where('adiutor_id', $adiutorId)
+            ->whereIn('status', ['pending', 'processing'])
+            ->pluck('id');
+        
         // --- HOURLY EARNINGS ---
+        // Available: approved, not paid, AND not in any pending payout
         $hourlyApprovedEarnings = TimeEntry::where('adiutor_id', $adiutorId)
             ->whereNotNull('end_time')
             ->where('is_approved', true)
             ->where('is_paid', false)
+            ->whereNull('payout_id')
+            ->sum('calculated_amount');
+
+        // In payout request: approved, not paid, but in a pending payout
+        $hourlyInPayoutRequest = TimeEntry::where('adiutor_id', $adiutorId)
+            ->whereNotNull('end_time')
+            ->where('is_approved', true)
+            ->where('is_paid', false)
+            ->whereIn('payout_id', $pendingPayoutIds)
             ->sum('calculated_amount');
 
         $hourlyPaidEarnings = TimeEntry::where('adiutor_id', $adiutorId)
@@ -358,6 +373,7 @@ class EarningsController extends Controller
         $fixedRateWithdrawableEarnings = 0;
         $fixedRatePaidEarnings = 0;
         $fixedRatePendingEarnings = 0;
+        $fixedRateInPayoutRequest = 0;
 
         foreach ($fixedRateAssignments as $assignment) {
             $amount = (float) $assignment->agreed_rate;
@@ -365,6 +381,9 @@ class EarningsController extends Controller
             
             if ($assignment->fixed_rate_paid) {
                 $fixedRatePaidEarnings += $amount;
+            } elseif ($assignment->fixed_rate_payout_id && $pendingPayoutIds->contains($assignment->fixed_rate_payout_id)) {
+                // In a pending payout request
+                $fixedRateInPayoutRequest += $amount;
             } elseif ($assignment->fixed_rate_approved && $projectCompleted) {
                 // Approved AND project completed - can withdraw
                 $fixedRateWithdrawableEarnings += $amount;
@@ -379,6 +398,20 @@ class EarningsController extends Controller
         $assignedProjectIds = ProjectAssignment::where('adiutor_id', $adiutorId)
             ->pluck('project_id');
 
+        // Get milestone IDs that are already in pending payouts
+        $milestonesInPendingPayouts = PayoutItem::whereIn('payout_id', $pendingPayoutIds)
+            ->where('item_type', 'milestone')
+            ->whereNotNull('milestone_id')
+            ->pluck('milestone_id');
+
+        // Get milestone IDs that have already been paid
+        $milestonesPaid = PayoutItem::where('item_type', 'milestone')
+            ->whereNotNull('milestone_id')
+            ->whereHas('payout', function($query) {
+                $query->where('status', 'paid');
+            })
+            ->pluck('milestone_id');
+
         $milestonesWithAssignments = ProjectMilestone::whereIn('project_id', $assignedProjectIds)
             ->with(['project', 'tasks' => function($query) use ($adiutorId) {
                 $query->where('assignedTo', $adiutorId);
@@ -388,6 +421,7 @@ class EarningsController extends Controller
         $milestoneWithdrawableEarnings = 0;
         $milestonePaidEarnings = 0;
         $milestonePendingEarnings = 0;
+        $milestoneInPayoutRequest = 0;
 
         foreach ($milestonesWithAssignments as $milestone) {
             if ($milestone->tasks->isEmpty()) {
@@ -404,7 +438,13 @@ class EarningsController extends Controller
             }
 
             if ($adiutorShare > 0) {
-                if ($milestone->is_paid) {
+                if ($milestonesPaid->contains($milestone->id)) {
+                    // Already paid to adiutor
+                    $milestonePaidEarnings += $adiutorShare;
+                } elseif ($milestonesInPendingPayouts->contains($milestone->id)) {
+                    // Already in a pending payout request
+                    $milestoneInPayoutRequest += $adiutorShare;
+                } elseif ($milestone->is_paid) {
                     // Milestone is paid by client - adiutor can withdraw
                     $milestoneWithdrawableEarnings += $adiutorShare;
                 } else {
@@ -420,17 +460,26 @@ class EarningsController extends Controller
         // Work earnings pending (not yet withdrawable)
         $workEarningsPending = $hourlyPendingApproval + $fixedRatePendingEarnings + $milestonePendingEarnings;
         
+        // Work earnings in payout request (requested but not yet paid)
+        $workEarningsInRequest = $hourlyInPayoutRequest + $fixedRateInPayoutRequest + $milestoneInPayoutRequest;
+        
         // Work earnings already withdrawn/paid
         $workEarningsWithdrawn = $hourlyPaidEarnings + $fixedRatePaidEarnings + $milestonePaidEarnings;
 
-        // Referral credits (keep from user model as these are separate)
-        $referralCreditsBalance = $adiutor->referral_credits ?? 0;
+        // Referral credits - need to exclude those in pending payouts
+        $referralCreditsInPendingPayouts = PayoutItem::whereIn('payout_id', $pendingPayoutIds)
+            ->where('item_type', 'referral')
+            ->sum('amount');
+
+        $referralCreditsBalance = max(0, ($adiutor->referral_credits ?? 0) - $referralCreditsInPendingPayouts);
+        $referralCreditsInRequest = $referralCreditsInPendingPayouts;
         $referralCreditsPending = $adiutor->referral_credits_pending ?? 0;
         $referralCreditsWithdrawn = $adiutor->referral_credits_withdrawn ?? 0;
 
         // Totals
         $totalAvailable = $workEarningsBalance + $referralCreditsBalance;
         $totalPending = $workEarningsPending + $referralCreditsPending;
+        $totalInRequest = $workEarningsInRequest + $referralCreditsInRequest;
         $totalWithdrawn = $workEarningsWithdrawn + $referralCreditsWithdrawn;
 
         // Get wallet transactions with filters
@@ -478,6 +527,8 @@ class EarningsController extends Controller
             'workEarningsPending',
             'referralCreditsPending',
             'totalPending',
+            'workEarningsInRequest',
+            'totalInRequest',
             'workEarningsWithdrawn',
             'referralCreditsWithdrawn',
             'totalWithdrawn',
@@ -514,25 +565,129 @@ class EarningsController extends Controller
             'period_end' => 'required|date|after_or_equal:period_start',
             'payout_method' => 'nullable|in:bank_transfer,paypal,gcash,paymaya,cash,check,other',
             'notes' => 'nullable|string|max:1000',
+            'include_time_entries' => 'nullable|boolean',
+            'include_fixed_rate' => 'nullable|boolean',
+            'include_milestones' => 'nullable|boolean',
+            'include_referral_credits' => 'nullable|boolean',
         ]);
 
         $adiutorId = Auth::id();
         $adiutor = Auth::user();
+        
+        $totalAmount = 0;
+        $hasEarnings = false;
 
-        // Get approved and unpaid time entries within the period
-        $timeEntries = TimeEntry::where('adiutor_id', $adiutorId)
-            ->whereNotNull('end_time')
-            ->where('is_approved', true)
-            ->where('is_paid', false)
-            ->whereBetween('start_time', [$request->period_start, $request->period_end])
-            ->whereNotNull('calculated_amount')
-            ->get();
+        // Get pending payout IDs to exclude earnings already in request
+        $pendingPayoutIds = Payout::where('adiutor_id', $adiutorId)
+            ->whereIn('status', ['pending', 'processing'])
+            ->pluck('id');
 
-        if ($timeEntries->isEmpty()) {
-            return redirect()->back()->withErrors(['error' => 'No approved earnings found for the selected period.']);
+        // ===========================================
+        // TIME ENTRY EARNINGS
+        // ===========================================
+        $timeEntries = collect();
+        if ($request->input('include_time_entries', true)) {
+            $timeEntries = TimeEntry::where('adiutor_id', $adiutorId)
+                ->whereNotNull('end_time')
+                ->where('is_approved', true)
+                ->where('is_paid', false)
+                ->whereNull('payout_id') // Exclude those already in a payout
+                ->whereBetween('start_time', [$request->period_start, $request->period_end])
+                ->whereNotNull('calculated_amount')
+                ->with(['task.project'])
+                ->get();
+            
+            $totalAmount += $timeEntries->sum('calculated_amount');
+            if ($timeEntries->isNotEmpty()) $hasEarnings = true;
         }
 
-        $totalAmount = $timeEntries->sum('calculated_amount');
+        // ===========================================
+        // FIXED RATE PROJECT EARNINGS
+        // ===========================================
+        $fixedRateAssignments = collect();
+        if ($request->input('include_fixed_rate', true)) {
+            $fixedRateAssignments = ProjectAssignment::where('adiutor_id', $adiutorId)
+                ->where('payment_type', ProjectAssignment::PAYMENT_TYPE_FIXED)
+                ->where('fixed_rate_approved', true)
+                ->where('fixed_rate_paid', false)
+                ->whereNull('fixed_rate_payout_id') // Exclude those already in a payout
+                ->whereHas('project', function($query) {
+                    $query->where('status', 'completed');
+                })
+                ->with(['project'])
+                ->get();
+            
+            $totalAmount += $fixedRateAssignments->sum('agreed_rate');
+            if ($fixedRateAssignments->isNotEmpty()) $hasEarnings = true;
+        }
+
+        // ===========================================
+        // MILESTONE EARNINGS
+        // ===========================================
+        // Get milestone IDs already in pending payouts
+        $milestonesInPendingPayouts = PayoutItem::whereIn('payout_id', $pendingPayoutIds)
+            ->where('item_type', 'milestone')
+            ->whereNotNull('milestone_id')
+            ->pluck('milestone_id');
+
+        $milestoneEarningsData = collect();
+        if ($request->input('include_milestones', true)) {
+            $assignedProjectIds = ProjectAssignment::where('adiutor_id', $adiutorId)
+                ->pluck('project_id');
+
+            $milestonesWithAssignments = ProjectMilestone::whereIn('project_id', $assignedProjectIds)
+                ->where('is_paid', true)
+                ->whereNotIn('id', $milestonesInPendingPayouts) // Exclude those already in a payout
+                ->with(['project', 'tasks' => function($query) use ($adiutorId) {
+                    $query->where('assignedTo', $adiutorId);
+                }])
+                ->get();
+
+            foreach ($milestonesWithAssignments as $milestone) {
+                if ($milestone->tasks->isEmpty()) continue;
+
+                $totalTasksInMilestone = Task::where('phase_id', $milestone->id)->count();
+                $adiutorTasksInMilestone = $milestone->tasks->count();
+                
+                if ($totalTasksInMilestone > 0) {
+                    $adiutorShare = ($adiutorTasksInMilestone / $totalTasksInMilestone) * (float) $milestone->amount;
+                    
+                    // Check if already paid (in a completed payout)
+                    $alreadyPaid = PayoutItem::where('milestone_id', $milestone->id)
+                        ->whereHas('payout', function($query) {
+                            $query->where('status', 'paid');
+                        })
+                        ->exists();
+
+                    if (!$alreadyPaid && $adiutorShare > 0) {
+                        $totalAmount += $adiutorShare;
+                        $milestoneEarningsData->push([
+                            'milestone' => $milestone,
+                            'amount' => $adiutorShare,
+                            'tasks_count' => $adiutorTasksInMilestone,
+                            'total_tasks' => $totalTasksInMilestone,
+                        ]);
+                        $hasEarnings = true;
+                    }
+                }
+            }
+        }
+
+        // ===========================================
+        // REFERRAL CREDITS
+        // ===========================================
+        $referralCreditsToInclude = 0;
+        if ($request->input('include_referral_credits', true)) {
+            $referralCreditsToInclude = (float) $adiutor->referral_credits;
+            if ($referralCreditsToInclude > 0) {
+                $totalAmount += $referralCreditsToInclude;
+                $hasEarnings = true;
+            }
+        }
+
+        if (!$hasEarnings) {
+            return redirect()->back()->withErrors(['error' => 'No approved earnings found for the selected period.']);
+        }
 
         // Check minimum payout amount
         $minimumAmount = $adiutor->adiutorProfile->minimum_payout_amount ?? 500;
@@ -559,7 +714,7 @@ class EarningsController extends Controller
                 'requested_at' => now(),
             ]);
 
-            // Create payout items and link time entries
+            // Create payout items for TIME ENTRIES
             foreach ($timeEntries as $entry) {
                 PayoutItem::create([
                     'payout_id' => $payout->id,
@@ -567,7 +722,7 @@ class EarningsController extends Controller
                     'task_id' => $entry->task_id,
                     'project_id' => $entry->project_id,
                     'item_type' => 'time_entry',
-                    'description' => $entry->task->taskTitle . ' - ' . $entry->task->project->title,
+                    'description' => ($entry->task->taskTitle ?? 'Task') . ' - ' . ($entry->task->project->title ?? 'Project'),
                     'amount' => $entry->calculated_amount,
                     'hours' => $entry->duration_minutes / 60,
                     'rate' => $entry->hourly_rate,
@@ -577,10 +732,53 @@ class EarningsController extends Controller
                 $entry->update(['payout_id' => $payout->id]);
             }
 
+            // Create payout items for FIXED RATE PROJECTS
+            foreach ($fixedRateAssignments as $assignment) {
+                PayoutItem::create([
+                    'payout_id' => $payout->id,
+                    'project_id' => $assignment->project_id,
+                    'item_type' => 'fixed_task',
+                    'description' => 'Fixed Rate: ' . $assignment->project->title,
+                    'amount' => $assignment->agreed_rate,
+                ]);
+
+                // Mark assignment as paid
+                $assignment->update([
+                    'fixed_rate_paid' => true,
+                    'fixed_rate_payout_id' => $payout->id,
+                ]);
+            }
+
+            // Create payout items for MILESTONES
+            foreach ($milestoneEarningsData as $milestoneData) {
+                $milestone = $milestoneData['milestone'];
+                PayoutItem::create([
+                    'payout_id' => $payout->id,
+                    'project_id' => $milestone->project_id,
+                    'milestone_id' => $milestone->id,
+                    'item_type' => 'milestone',
+                    'description' => 'Milestone: ' . $milestone->phase_name . ' - ' . $milestone->project->title . ' (' . $milestoneData['tasks_count'] . '/' . $milestoneData['total_tasks'] . ' tasks)',
+                    'amount' => $milestoneData['amount'],
+                ]);
+            }
+
+            // Create payout item for REFERRAL CREDITS
+            if ($referralCreditsToInclude > 0) {
+                PayoutItem::create([
+                    'payout_id' => $payout->id,
+                    'item_type' => 'referral',
+                    'description' => 'Referral Credits',
+                    'amount' => $referralCreditsToInclude,
+                ]);
+
+                // DON'T move credits yet - only when payout is paid
+                // Credits are "locked" by being in the PayoutItem, but still in referral_credits balance
+            }
+
             DB::commit();
 
             // Send notifications to admins
-            $admins = User::where('role', 'admin')->where('isActive', true)->get();
+            $admins = User::where('role', 'admin')->where('status', 'active')->get();
             $firebaseService = app(FirebaseService::class);
             
             foreach ($admins as $admin) {
@@ -618,23 +816,127 @@ class EarningsController extends Controller
         $adiutorId = Auth::id();
         $adiutor = Auth::user();
 
-        // Get unpaid approved earnings
-        $unpaidEarnings = TimeEntry::where('adiutor_id', $adiutorId)
+        // Get pending payout IDs (requested but not yet paid/rejected)
+        $pendingPayoutIds = Payout::where('adiutor_id', $adiutorId)
+            ->whereIn('status', ['pending', 'processing'])
+            ->pluck('id');
+
+        // ===========================================
+        // TIME ENTRY EARNINGS (Hourly)
+        // ===========================================
+        // Exclude time entries already in pending payouts
+        $unpaidTimeEntries = TimeEntry::where('adiutor_id', $adiutorId)
             ->whereNotNull('end_time')
             ->where('is_approved', true)
             ->where('is_paid', false)
+            ->whereNull('payout_id')
             ->whereNotNull('calculated_amount')
+            ->with(['task.project'])
             ->get();
 
-        $totalUnpaid = $unpaidEarnings->sum('calculated_amount');
-        $totalHours = $unpaidEarnings->sum('duration_minutes') / 60;
+        $timeEntryTotal = $unpaidTimeEntries->sum('calculated_amount');
+        $totalHours = $unpaidTimeEntries->sum('duration_minutes') / 60;
 
-        // Suggest period (last month if enough earnings)
-        $suggestedStart = Carbon::now()->subMonth()->startOfMonth();
-        $suggestedEnd = Carbon::now()->subMonth()->endOfMonth();
+        // ===========================================
+        // FIXED RATE PROJECT EARNINGS
+        // ===========================================
+        // Exclude fixed rate assignments already in pending payouts
+        $fixedRateAssignments = ProjectAssignment::where('adiutor_id', $adiutorId)
+            ->where('payment_type', ProjectAssignment::PAYMENT_TYPE_FIXED)
+            ->where('fixed_rate_approved', true)
+            ->where('fixed_rate_paid', false)
+            ->whereNull('fixed_rate_payout_id')
+            ->whereHas('project', function($query) {
+                $query->where('status', 'completed');
+            })
+            ->with(['project'])
+            ->get();
+
+        $fixedRateTotal = $fixedRateAssignments->sum('agreed_rate');
+
+        // ===========================================
+        // MILESTONE EARNINGS
+        // ===========================================
+        // Get projects where adiutor is assigned
+        $assignedProjectIds = ProjectAssignment::where('adiutor_id', $adiutorId)
+            ->pluck('project_id');
+
+        // Get milestone IDs already in pending payouts
+        $milestonesInPendingPayouts = PayoutItem::whereIn('payout_id', $pendingPayoutIds)
+            ->where('item_type', 'milestone')
+            ->whereNotNull('milestone_id')
+            ->pluck('milestone_id');
+
+        // Get paid milestones that haven't been paid out to adiutor
+        $milestoneEarnings = collect();
+        $milestoneTotal = 0;
+
+        $milestonesWithAssignments = ProjectMilestone::whereIn('project_id', $assignedProjectIds)
+            ->where('is_paid', true)
+            ->with(['project', 'tasks' => function($query) use ($adiutorId) {
+                $query->where('assignedTo', $adiutorId);
+            }])
+            ->get();
+
+        foreach ($milestonesWithAssignments as $milestone) {
+            if ($milestone->tasks->isEmpty()) {
+                continue;
+            }
+
+            // Skip if milestone is already in a pending payout
+            if ($milestonesInPendingPayouts->contains($milestone->id)) {
+                continue;
+            }
+
+            $totalTasksInMilestone = Task::where('phase_id', $milestone->id)->count();
+            $adiutorTasksInMilestone = $milestone->tasks->count();
+            
+            if ($totalTasksInMilestone > 0) {
+                $adiutorShare = ($adiutorTasksInMilestone / $totalTasksInMilestone) * (float) $milestone->amount;
+                
+                // Check if this milestone payout was already paid (in completed payout)
+                $alreadyPaid = PayoutItem::where('milestone_id', $milestone->id)
+                    ->whereHas('payout', function($query) {
+                        $query->where('status', 'paid');
+                    })
+                    ->exists();
+
+                if (!$alreadyPaid && $adiutorShare > 0) {
+                    $milestoneTotal += $adiutorShare;
+                    $milestoneEarnings->push([
+                        'milestone' => $milestone,
+                        'project' => $milestone->project,
+                        'tasks_count' => $adiutorTasksInMilestone,
+                        'total_tasks' => $totalTasksInMilestone,
+                        'amount' => $adiutorShare,
+                    ]);
+                }
+            }
+        }
+
+        // ===========================================
+        // REFERRAL CREDITS
+        // ===========================================
+        $referralCreditsAvailable = (float) $adiutor->referral_credits;
+
+        // ===========================================
+        // COMBINED TOTAL
+        // ===========================================
+        $totalUnpaid = $timeEntryTotal + $fixedRateTotal + $milestoneTotal + $referralCreditsAvailable;
+
+        // Suggest period (from earliest unpaid earning to today)
+        $earliestDate = $unpaidTimeEntries->min('start_time');
+        $suggestedStart = $earliestDate ? Carbon::parse($earliestDate)->startOfMonth() : Carbon::now()->subMonth()->startOfMonth();
+        $suggestedEnd = Carbon::now();
 
         return view('adiutor.earnings.request-payout', compact(
-            'unpaidEarnings',
+            'unpaidTimeEntries',
+            'timeEntryTotal',
+            'fixedRateAssignments',
+            'fixedRateTotal',
+            'milestoneEarnings',
+            'milestoneTotal',
+            'referralCreditsAvailable',
             'totalUnpaid',
             'totalHours',
             'suggestedStart',

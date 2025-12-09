@@ -6,6 +6,7 @@ use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\ServiceRequest;
 use App\Models\User;
+use App\Services\MilestoneService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
@@ -211,6 +212,10 @@ class CouponService
 
             DB::commit();
 
+            // Recalculate payment amounts after discount is applied (outside transaction)
+            // This ensures milestones/downpayment reflect the discounted budget
+            MilestoneService::recalculatePaymentAmountsForRequest($request);
+
             Log::info('Coupon applied to service request', [
                 'coupon_id' => $coupon->id,
                 'coupon_code' => $coupon->code,
@@ -272,6 +277,10 @@ class CouponService
 
             DB::commit();
 
+            // Recalculate payment amounts after discount is removed (outside transaction)
+            // This restores milestones/downpayment to the new budget (without the removed coupon discount)
+            MilestoneService::recalculatePaymentAmountsForRequest($request);
+
             Log::info('Coupon removed from service request', [
                 'coupon_id' => $coupon->id ?? null,
                 'service_request_id' => $request->id,
@@ -313,6 +322,37 @@ class CouponService
         }
 
         return $this->applyCouponToRequest($request, $coupon, true);
+    }
+
+    /**
+     * Create a user-specific coupon (for referral rewards, etc.)
+     * 
+     * @param array $data
+     * @param User $user The user who can use this coupon
+     * @param User $createdBy The user who created/triggered this coupon
+     * @return Coupon
+     */
+    public function createUserSpecificCoupon(array $data, User $user, User $createdBy): Coupon
+    {
+        return Coupon::create([
+            'code' => strtoupper($data['code']),
+            'name' => $data['name'],
+            'description' => $data['description'] ?? "Special discount for {$user->fullName}",
+            'discount_type' => $data['discount_type'],
+            'discount_value' => $data['discount_value'],
+            'max_discount_amount' => $data['max_discount_amount'] ?? null,
+            'min_purchase_amount' => $data['min_purchase_amount'] ?? 0,
+            'coupon_type' => 'user_specific',
+            'specific_user_id' => $user->id,
+            'max_total_uses' => 1,
+            'max_uses_per_user' => 1,
+            'valid_from' => now(),
+            'valid_until' => $data['valid_until'] ?? now()->addDays(30),
+            'status' => 'active',
+            'created_by' => $createdBy->id,
+            'stackable_with_loyalty_tier' => $data['stackable_with_loyalty_tier'] ?? true,
+            'stackable_with_points' => $data['stackable_with_points'] ?? false,
+        ]);
     }
 
     /**

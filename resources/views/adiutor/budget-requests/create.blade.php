@@ -3,12 +3,12 @@
 @section('title', 'New Budget Change Request')
 
 @section('content')
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <x-ui.breadcrumb :items="[
-        ['label' => 'Dashboard', 'url' => route('adiutor.dashboard')],
-        ['label' => 'Budget Requests', 'url' => route('adiutor.budget-requests.index')],
-        ['label' => 'New Request'],
+        ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
+        ['label' => 'Budget Requests', 'route' => 'adiutor.budget-requests.index', 'icon' => 'wallet'],
+        ['label' => 'New Request', 'icon' => 'plus'],
     ]" class="mb-6" />
 
     <!-- Header -->
@@ -140,11 +140,11 @@
             <!-- Submit Buttons -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-neutral-100">
                 <a href="{{ route('adiutor.budget-requests.index') }}" 
-                   class="px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 rounded-xl transition-colors">
+                   class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-neutral-600 rounded-lg hover:bg-neutral-100 transition-all">
                     Cancel
                 </a>
                 <button type="submit" 
-                        class="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition-colors">
+                        class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
                     <x-lucide-send class="w-4 h-4" />
                     Submit Request
                 </button>

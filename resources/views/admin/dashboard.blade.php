@@ -223,7 +223,7 @@
                             <a href="{{ route('admin.hour-requests.index') }}" class="flex items-center gap-2 group">
                                 <div class="flex items-center gap-1.5">
                                     @if($earningsStats['pending_hour_requests'] > 0)
-                                        <span class="w-1.5 h-1.5 rounded-full bg-accent-500 animate-pulse"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-info-500 animate-pulse"></span>
                                     @endif
                                     <span class="text-sm text-neutral-600 group-hover:text-primary-500 transition-colors">{{ $earningsStats['pending_hour_requests'] }} hour requests</span>
                                 </div>
@@ -470,8 +470,8 @@
                             <p class="text-xs text-neutral-500">Files</p>
                         </a>
                         <a href="{{ route('admin.profile') }}" class="group text-center">
-                            <div class="w-12 h-12 mx-auto rounded-xl bg-accent-50 group-hover:bg-accent-100 flex items-center justify-center transition-colors mb-2">
-                                <x-lucide-user class="w-5 h-5 text-accent-500" />
+                            <div class="w-12 h-12 mx-auto rounded-xl bg-info-50 group-hover:bg-info-100 flex items-center justify-center transition-colors mb-2">
+                                <x-lucide-user class="w-5 h-5 text-info-500" />
                             </div>
                             <p class="text-xs font-medium text-neutral-700">Profile</p>
                             <p class="text-xs text-neutral-500">Settings</p>
@@ -624,7 +624,7 @@
         // TREIS ADIUTOR Brand Color System
         const brandColors = {
             primary: '#1E293B',    // Deep Tech Navy
-            accent: '#00D4FF',     // Electric Cyan
+            info: '#00D4FF',     // Electric Cyan
             secondary: '#A855F7',  // Modern Purple
             tertiary: '#FF6B35',   // Vibrant Orange
             success: '#10B981',    // Emerald Green
@@ -632,7 +632,7 @@
             
             // Color variations with opacity
             primaryTransparent: 'rgba(30, 41, 59, 0.1)',
-            accentTransparent: 'rgba(0, 212, 255, 0.1)',
+            infoTransparent: 'rgba(0, 212, 255, 0.1)',
             secondaryTransparent: 'rgba(168, 85, 247, 0.1)',
             tertiaryTransparent: 'rgba(255, 107, 53, 0.1)',
             successTransparent: 'rgba(16, 185, 129, 0.1)'
@@ -680,9 +680,9 @@
             
             // Create gradient for the line itself
             const lineGradient = userGrowthCtx.createLinearGradient(0, 0, 700, 0);
-            lineGradient.addColorStop(0, brandColors.accent);
+            lineGradient.addColorStop(0, brandColors.info);
             lineGradient.addColorStop(0.5, brandColors.secondary);
-            lineGradient.addColorStop(1, brandColors.accent);
+            lineGradient.addColorStop(1, brandColors.info);
             
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             
@@ -698,11 +698,11 @@
                         backgroundColor: areaGradient,
                         borderWidth: 3,
                         pointBackgroundColor: '#FFFFFF',
-                        pointBorderColor: brandColors.accent,
+                        pointBorderColor: brandColors.info,
                         pointBorderWidth: 2,
                         pointRadius: 5,
                         pointHoverRadius: 8,
-                        pointHoverBackgroundColor: brandColors.accent,
+                        pointHoverBackgroundColor: brandColors.info,
                         pointHoverBorderColor: '#FFFFFF',
                         pointHoverBorderWidth: 2,
                         tension: 0.4,
@@ -827,7 +827,7 @@
             const taskStatusCtx = document.getElementById('taskStatusChart').getContext('2d');
             
             const statusColors = [
-                brandColors.accent,     // Active tasks
+                brandColors.info,     // Active tasks
                 brandColors.tertiary,   // Pending tasks
                 brandColors.success,    // Completed tasks
                 brandColors.secondary   // Additional status if needed

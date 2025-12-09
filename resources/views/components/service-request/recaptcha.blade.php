@@ -1,4 +1,4 @@
-@if(app(\App\Services\RecaptchaService::class)->isEnabled())
+@if(app(\App\Services\RecaptchaService::class)->isEnabled() && !auth()->check())
 <x-ui.card>
     <div class="flex items-center gap-3 mb-6">
         <div class="p-2 bg-neutral-50 rounded-lg">

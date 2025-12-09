@@ -6,6 +6,17 @@ export default {
     './resources/views/**/*.blade.php',
     './resources/js/**/*.js',
   ],
+  safelist: [
+    // Badge component variants
+    'bg-neutral-50', 'bg-neutral-100', 'text-neutral-600', 'text-neutral-700',
+    'bg-primary-50', 'text-primary-700',
+    'bg-success-50', 'text-success-700',
+    'bg-warning-50', 'text-warning-700',
+    'bg-error-50', 'text-error-700',
+    'bg-info-50', 'text-info-700',
+    // Dot colors
+    'bg-neutral-400', 'bg-primary-400', 'bg-success-400', 'bg-warning-400', 'bg-error-400',
+  ],
   theme: {
     extend: {
       colors: {

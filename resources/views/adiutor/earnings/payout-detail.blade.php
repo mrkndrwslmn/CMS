@@ -25,20 +25,30 @@
                         <x-lucide-check-circle class="w-4 h-4" />
                         Paid
                     </x-ui.badge>
-                @elseif($payout->status === 'approved')
+                @elseif($payout->status === 'processing')
                     <x-ui.badge variant="info">
-                        <x-lucide-check-circle class="w-4 h-4" />
-                        Approved
+                        <x-lucide-loader class="w-4 h-4" />
+                        Processing
                     </x-ui.badge>
                 @elseif($payout->status === 'rejected')
                     <x-ui.badge variant="error">
                         <x-lucide-x-circle class="w-4 h-4" />
                         Rejected
                     </x-ui.badge>
+                @elseif($payout->status === 'cancelled')
+                    <x-ui.badge variant="neutral">
+                        <x-lucide-circle-dashed class="w-4 h-4" />
+                        Cancelled
+                    </x-ui.badge>
+                @elseif($payout->status === 'failed')
+                    <x-ui.badge variant="error">
+                        <x-lucide-x-circle class="w-4 h-4" />
+                        Failed
+                    </x-ui.badge>
                 @else
                     <x-ui.badge variant="warning">
                         <x-lucide-clock class="w-4 h-4" />
-                        Pending Review
+                        Pending
                     </x-ui.badge>
                 @endif
             </div>
@@ -51,41 +61,83 @@
             <!-- Payout Items -->
             <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-neutral-100">
-                    <h2 class="text-lg font-semibold text-neutral-800">Time Entries Included</h2>
-                    <p class="text-sm text-neutral-500 mt-1">{{ $payout->items->count() }} entries</p>
+                    <h2 class="text-lg font-semibold text-neutral-800">Earnings Included</h2>
+                    <p class="text-sm text-neutral-500 mt-1">{{ $payout->items->count() }} items</p>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-neutral-50 border-b border-neutral-100">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Task / Project</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Hours</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Rate</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Details</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Amount</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-neutral-100">
                             @foreach($payout->items as $item)
                             <tr class="hover:bg-neutral-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
-                                    @if($item->timeEntry)
-                                        {{ $item->timeEntry->start_time->format('M d, Y') }}
-                                    @else
-                                        N/A
-                                    @endif
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @switch($item->item_type)
+                                        @case('time_entry')
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-primary-50 text-primary-700">
+                                                <x-lucide-clock class="w-3 h-3" />
+                                                Hourly
+                                            </span>
+                                            @break
+                                        @case('fixed_task')
+                                        @case('fixed_rate')
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-success-50 text-success-700">
+                                                <x-lucide-briefcase class="w-3 h-3" />
+                                                Fixed Rate
+                                            </span>
+                                            @break
+                                        @case('milestone')
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-warning-50 text-warning-700">
+                                                <x-lucide-flag class="w-3 h-3" />
+                                                Milestone
+                                            </span>
+                                            @break
+                                        @case('referral')
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-accent-50 text-accent-700">
+                                                <x-lucide-users class="w-3 h-3" />
+                                                Referral Credits
+                                            </span>
+                                            @break
+                                        @case('bonus')
+                                            @if(str_contains($item->description, 'Referral'))
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-accent-50 text-accent-700">
+                                                <x-lucide-users class="w-3 h-3" />
+                                                Referral Credits
+                                            </span>
+                                            @else
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-accent-50 text-accent-700">
+                                                <x-lucide-gift class="w-3 h-3" />
+                                                Bonus
+                                            </span>
+                                            @endif
+                                            @break
+                                        @default
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-700">
+                                                <x-lucide-circle class="w-3 h-3" />
+                                                Other
+                                            </span>
+                                    @endswitch
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm font-medium text-neutral-800">{{ $item->description }}</div>
-                                    @if($item->task)
-                                        <div class="text-xs text-neutral-500">{{ $item->task->project->title ?? 'N/A' }}</div>
+                                    @if($item->project)
+                                        <div class="text-xs text-neutral-500">{{ $item->project->title ?? '' }}</div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
-                                    {{ number_format($item->hours ?? 0, 2) }}h
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
-                                    ₱{{ number_format($item->rate ?? 0, 2) }}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                                    @if($item->item_type === 'time_entry' && $item->hours)
+                                        {{ number_format($item->hours, 2) }}h @ ₱{{ number_format($item->rate ?? 0, 2) }}/hr
+                                    @elseif($item->timeEntry)
+                                        {{ $item->timeEntry->start_time->format('M d, Y') }}
+                                    @else
+                                        —
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-neutral-800">
                                     ₱{{ number_format($item->amount, 2) }}
@@ -95,11 +147,7 @@
                         </tbody>
                         <tfoot class="bg-neutral-50 border-t-2 border-neutral-200">
                             <tr>
-                                <td colspan="2" class="px-6 py-4 text-sm font-semibold text-neutral-800">Total</td>
-                                <td class="px-6 py-4 text-sm font-semibold text-neutral-800">
-                                    {{ number_format($payout->items->sum('hours'), 2) }}h
-                                </td>
-                                <td class="px-6 py-4"></td>
+                                <td colspan="3" class="px-6 py-4 text-sm font-semibold text-neutral-800">Total</td>
                                 <td class="px-6 py-4 text-lg font-bold text-primary-600">
                                     ₱{{ number_format($payout->amount, 2) }}
                                 </td>
@@ -129,16 +177,16 @@
             </div>
             @endif
 
-            <!-- Rejection Reason -->
-            @if($payout->status === 'rejected' && $payout->rejection_reason)
+            <!-- Notes for Failed/Cancelled/Rejected Status -->
+            @if(in_array($payout->status, ['failed', 'cancelled', 'rejected']) && $payout->notes)
             <div class="bg-error-50 border border-error-100 rounded-2xl p-6">
                 <div class="flex items-start gap-3">
                     <div class="p-2 bg-error-100 rounded-lg">
                         <x-lucide-x-circle class="w-5 h-5 text-error-600" />
                     </div>
                     <div>
-                        <h3 class="text-sm font-semibold text-error-800 mb-2">Rejection Reason</h3>
-                        <p class="text-sm text-error-700">{{ $payout->rejection_reason }}</p>
+                        <h3 class="text-sm font-semibold text-error-800 mb-2">{{ ucfirst($payout->status) }} Reason</h3>
+                        <p class="text-sm text-error-700">{{ $payout->notes }}</p>
                     </div>
                 </div>
             </div>
@@ -167,8 +215,18 @@
                     </div>
                     
                     <div class="pt-4 border-t border-neutral-100">
-                        <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">Total Hours</p>
-                        <p class="text-sm text-neutral-800">{{ number_format($payout->items->sum('hours'), 2) }} hours</p>
+                        <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">Items Breakdown</p>
+                        <div class="space-y-1 text-sm">
+                            @php
+                                $itemsByType = $payout->items->groupBy('item_type');
+                            @endphp
+                            @foreach($itemsByType as $type => $items)
+                                <div class="flex justify-between text-neutral-700">
+                                    <span>{{ ucwords(str_replace('_', ' ', $type)) }}</span>
+                                    <span class="font-medium">₱{{ number_format($items->sum('amount'), 2) }}</span>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                     
                     <div class="pt-4 border-t border-neutral-100">
@@ -201,19 +259,19 @@
                             </div>
                         </div>
 
-                        @if($payout->reviewed_at)
-                        <!-- Reviewed -->
+                        @if($payout->processed_at && in_array($payout->status, ['processing', 'paid', 'failed', 'cancelled', 'rejected']))
+                        <!-- Processed -->
                         <div class="flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-full {{ $payout->status === 'rejected' ? 'bg-error-100' : 'bg-success-100' }} flex items-center justify-center">
-                                @if($payout->status === 'rejected')
+                            <div class="w-8 h-8 rounded-full {{ in_array($payout->status, ['failed', 'cancelled', 'rejected']) ? 'bg-error-100' : 'bg-success-100' }} flex items-center justify-center">
+                                @if(in_array($payout->status, ['failed', 'cancelled', 'rejected']))
                                     <x-lucide-x-circle class="w-4 h-4 text-error-600" />
                                 @else
-                                    <x-lucide-check-circle-2 class="w-4 h-4 text-success-600" />
+                                    <x-lucide-check-circle class="w-4 h-4 text-success-600" />
                                 @endif
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-neutral-800">{{ $payout->status === 'rejected' ? 'Rejected' : 'Approved' }}</p>
-                                <p class="text-xs text-neutral-500">{{ \Carbon\Carbon::parse($payout->reviewed_at)->format('M d, Y g:i A') }}</p>
+                                <p class="text-sm font-medium text-neutral-800">{{ ucfirst($payout->status) }}</p>
+                                <p class="text-xs text-neutral-500">{{ \Carbon\Carbon::parse($payout->processed_at)->format('M d, Y g:i A') }}</p>
                                 @if($payout->processedBy)
                                     <p class="text-xs text-neutral-500">by {{ $payout->processedBy->fullName }}</p>
                                 @endif
@@ -221,15 +279,15 @@
                         </div>
                         @endif
 
-                        @if($payout->paid_at)
-                        <!-- Paid -->
+                        @if($payout->completed_at)
+                        <!-- Paid/Completed -->
                         <div class="flex items-start gap-3">
                             <div class="w-8 h-8 rounded-full bg-success-100 flex items-center justify-center">
                                 <x-lucide-banknote class="w-4 h-4 text-success-600" />
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-neutral-800">Paid</p>
-                                <p class="text-xs text-neutral-500">{{ \Carbon\Carbon::parse($payout->paid_at)->format('M d, Y g:i A') }}</p>
+                                <p class="text-xs text-neutral-500">{{ \Carbon\Carbon::parse($payout->completed_at)->format('M d, Y g:i A') }}</p>
                             </div>
                         </div>
                         @endif
@@ -245,7 +303,7 @@
                 </div>
                 <div class="p-6">
                     <div class="space-y-2 text-sm">
-                        @foreach(json_decode($payout->payout_details, true) ?? [] as $key => $value)
+                        @foreach($payout->payout_details ?? [] as $key => $value)
                             <div>
                                 <span class="text-neutral-500">{{ ucwords(str_replace('_', ' ', $key)) }}:</span>
                                 <span class="text-neutral-800 font-medium ml-2">{{ $value }}</span>

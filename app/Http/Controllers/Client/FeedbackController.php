@@ -7,6 +7,7 @@ use App\Http\Requests\Client\StoreFeedbackRequest;
 use App\Models\Feedback;
 use App\Models\Project;
 use App\Models\ProjectFeedback;
+use App\Services\LoyaltyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
@@ -101,6 +102,12 @@ class FeedbackController extends Controller
 
         // Clear feedback cache so admin stats are updated
         Cache::forget('feedback_stats');
+
+        // Award loyalty points for feedback submission
+        if ($project->serviceRequest) {
+            $loyaltyService = app(LoyaltyService::class);
+            $loyaltyService->awardFeedbackBonus(auth()->user(), $project->serviceRequest);
+        }
 
         return redirect()->route('client.feedback')
             ->with('success', 'Thank you for your feedback! It has been submitted successfully.');

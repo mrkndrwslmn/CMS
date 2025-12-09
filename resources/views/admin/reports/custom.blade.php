@@ -226,7 +226,7 @@
                 <div class="p-4 border border-neutral-200 rounded-lg hover:border-primary-300 cursor-pointer transition-colors" data-template="client-activity">
                     <div class="flex items-center mb-3">
                         <div class="h-10 w-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
-                            <x-lucide-user-clock class="w-4 h-4" />
+                            <x-lucide-clock class="w-4 h-4" />
                         </div>
                         <h4 class="font-medium text-neutral-800">Client Activity</h4>
                     </div>

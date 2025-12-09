@@ -3,12 +3,12 @@
 @section('title', 'Budget Change Request Details')
 
 @section('content')
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <x-ui.breadcrumb :items="[
-        ['label' => 'Dashboard', 'url' => route('adiutor.dashboard')],
-        ['label' => 'Budget Requests', 'url' => route('adiutor.budget-requests.index')],
-        ['label' => 'Request #' . $budgetRequest->id],
+        ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
+        ['label' => 'Budget Requests', 'route' => 'adiutor.budget-requests.index', 'icon' => 'wallet'],
+        ['label' => 'Request #' . $budgetRequest->id, 'icon' => 'file-text'],
     ]" class="mb-6" />
 
     <!-- Header -->
@@ -18,14 +18,15 @@
             <p class="text-sm text-neutral-500 mt-1">Request ID: #{{ $budgetRequest->id }}</p>
         </div>
         @php
-            $statusClass = match($budgetRequest->status) {
-                'pending' => 'bg-warning-100 text-warning-800',
-                'approved' => 'bg-success-100 text-success-800',
-                'rejected' => 'bg-error-100 text-error-800',
-                default => 'bg-neutral-100 text-neutral-800'
+            $statusConfig = match($budgetRequest->status) {
+                'pending' => ['bg' => 'bg-warning-50', 'text' => 'text-warning-700', 'icon' => 'clock'],
+                'approved' => ['bg' => 'bg-success-50', 'text' => 'text-success-700', 'icon' => 'check-circle'],
+                'rejected' => ['bg' => 'bg-error-50', 'text' => 'text-error-700', 'icon' => 'x-circle'],
+                default => ['bg' => 'bg-neutral-50', 'text' => 'text-neutral-600', 'icon' => 'circle-dashed']
             };
         @endphp
-        <span class="px-4 py-2 text-sm font-medium rounded-full {{ $statusClass }}">
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-sm font-medium rounded-full {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+            <x-dynamic-component :component="'lucide-' . $statusConfig['icon']" class="w-3 h-3" />
             {{ ucfirst($budgetRequest->status) }}
         </span>
     </div>
@@ -182,8 +183,8 @@
               onsubmit="return window.Alerts.confirmDeleteForm(event, 'Cancel Request', 'Are you sure you want to cancel this request?')">
             @csrf
             <button type="submit" 
-                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-error-600 bg-error-50 rounded-xl hover:bg-error-100 transition-colors">
-                <x-lucide-x class="w-4 h-4" />
+                    class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-error-600 rounded-lg shadow-sm hover:bg-error-700 hover:shadow-md transition-all">
+                <x-lucide-trash-2 class="w-4 h-4" />
                 Cancel Request
             </button>
         </form>

@@ -354,4 +354,191 @@ class ServiceRequestController extends Controller
         // Use the model's method to get the proper download URL
         return redirect($attachmentModel->getDownloadUrl());
     }
+
+    /**
+     * Show edit form for a service request
+     * Only allowed for pending requests
+     */
+    public function edit($id)
+    {
+        $user = Auth::user();
+        
+        $request = \App\Models\ServiceRequest::where('id', $id)
+            ->where('client_id', $user->id)
+            ->first();
+
+        if (!$request) {
+            return redirect()->route('client.requests')->with('error', 'Service request not found.');
+        }
+
+        // Only allow editing pending requests
+        if (!$request->isPending()) {
+            return redirect()->route('client.requests.show', $id)
+                ->with('error', 'This request can no longer be edited. Only pending requests can be modified.');
+        }
+
+        // Get attachments
+        $attachments = DB::table('request_attachments')
+            ->where('service_request_id', $id)
+            ->get();
+
+        return view('client.requests.edit', compact('user', 'request', 'attachments'));
+    }
+
+    /**
+     * Update a service request
+     * Only allowed for pending requests
+     */
+    public function update(Request $httpRequest, $id)
+    {
+        $user = Auth::user();
+        
+        $serviceRequest = \App\Models\ServiceRequest::where('id', $id)
+            ->where('client_id', $user->id)
+            ->first();
+
+        if (!$serviceRequest) {
+            return redirect()->route('client.requests')->with('error', 'Service request not found.');
+        }
+
+        // Only allow updating pending requests
+        if (!$serviceRequest->isPending()) {
+            return redirect()->route('client.requests.show', $id)
+                ->with('error', 'This request can no longer be edited. Only pending requests can be modified.');
+        }
+
+        // Get allowed file extensions from config
+        $extensions = $this->getAllowedExtensions();
+        $maxSize = $this->getMaxFileSize();
+
+        // Validate the request
+        $validator = Validator::make($httpRequest->all(), [
+            'contact_method' => 'required|in:email,messenger,phone',
+            'contact_details' => 'required|string|max:255',
+            'service_type' => 'required|string|max:255',
+            'project_name' => 'required|string|max:255',
+            'request_description' => 'required|string|max:2000',
+            'deadline' => 'nullable|date|after:today',
+            'expectations' => 'nullable|string|max:1000',
+            'additional_notes' => 'nullable|string|max:1000',
+            'estimated_budget' => 'nullable|numeric|min:0|max:999999.99',
+            'attachments.*' => "nullable|file|max:{$maxSize}|mimes:{$extensions}",
+            'requested_features' => 'nullable|string',
+            'requested_skills' => 'nullable|string',
+        ], [
+            'attachments.*.mimes' => 'Unsupported file type. ' . $this->getHumanReadableFileTypes() . ' are allowed.',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Update the service request
+            $serviceRequest->update([
+                'contact_method' => $httpRequest->contact_method,
+                'contact_details' => $httpRequest->contact_details,
+                'service_type' => $httpRequest->service_type,
+                'project_name' => $httpRequest->project_name,
+                'request_description' => $httpRequest->request_description,
+                'deadline' => $httpRequest->deadline,
+                'expectations' => $httpRequest->expectations,
+                'additional_notes' => $httpRequest->additional_notes,
+                'estimated_budget' => $httpRequest->estimated_budget,
+                'requested_features' => $httpRequest->requested_features,
+                'requested_skills' => $httpRequest->requested_skills,
+            ]);
+
+            // Handle new attachments if any
+            if ($httpRequest->hasFile('attachments')) {
+                $r2Service = app(CloudflareR2Service::class);
+                
+                foreach ($httpRequest->file('attachments') as $file) {
+                    $path = $r2Service->uploadFile($file, 'attachments');
+                    
+                    DB::table('request_attachments')->insert([
+                        'service_request_id' => $serviceRequest->id,
+                        'file_path' => $path,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_size' => $file->getSize(),
+                        'file_type' => $file->getClientMimeType(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('client.requests.show', $id)
+                ->with('success', 'Service request updated successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update service request: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to update service request. Please try again.')
+                ->withInput();
+        }
+    }
+
+    /**
+     * Delete a service request
+     * Only allowed for pending requests
+     */
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        
+        $serviceRequest = \App\Models\ServiceRequest::where('id', $id)
+            ->where('client_id', $user->id)
+            ->first();
+
+        if (!$serviceRequest) {
+            return redirect()->route('client.requests')->with('error', 'Service request not found.');
+        }
+
+        // Only allow deleting pending requests
+        if (!$serviceRequest->isPending()) {
+            return redirect()->route('client.requests.show', $id)
+                ->with('error', 'This request can no longer be deleted. Only pending requests can be removed.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Delete attachments from R2
+            $attachments = DB::table('request_attachments')
+                ->where('service_request_id', $id)
+                ->get();
+
+            $r2Service = app(CloudflareR2Service::class);
+            foreach ($attachments as $attachment) {
+                try {
+                    $r2Service->deleteFile($attachment->file_path);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to delete attachment from R2: ' . $e->getMessage());
+                }
+            }
+
+            // Delete attachment records
+            DB::table('request_attachments')->where('service_request_id', $id)->delete();
+
+            // Delete the service request
+            $serviceRequest->delete();
+
+            DB::commit();
+
+            return redirect()->route('client.requests')
+                ->with('success', 'Service request deleted successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to delete service request: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to delete service request. Please try again.');
+        }
+    }
 }

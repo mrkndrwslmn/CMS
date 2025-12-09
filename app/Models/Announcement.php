@@ -146,25 +146,14 @@ class Announcement extends Model
     }
 
     /**
-     * Boot method to automatically update expired and scheduled announcements
+     * Boot method - removed automatic status updates on retrieval
+     * Status updates are handled manually via updateAnnouncementStatuses() in the controller
      */
     protected static function boot()
     {
         parent::boot();
-
-        static::retrieved(function ($announcement) {
-            $updated = false;
-            
-            // Check if expired
-            if ($announcement->is_expired && $announcement->status !== 'expired') {
-                $announcement->update(['status' => 'expired']);
-                $updated = true;
-            }
-            
-            // Check if scheduled announcement should be active
-            if (!$updated && $announcement->should_be_active) {
-                $announcement->update(['status' => 'active']);
-            }
-        });
+        
+        // Removed automatic status updates that were causing issues
+        // when manually editing expired announcements
     }
 }

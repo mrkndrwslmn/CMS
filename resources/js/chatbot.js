@@ -409,11 +409,11 @@ class ChatbotWidget {
 }
 
 // Initialize chatbot when DOM is ready
-let chatbot;
+window.chatbot = null;
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        chatbot = new ChatbotWidget();
+        window.chatbot = new ChatbotWidget();
     });
 } else {
-    chatbot = new ChatbotWidget();
+    window.chatbot = new ChatbotWidget();
 }

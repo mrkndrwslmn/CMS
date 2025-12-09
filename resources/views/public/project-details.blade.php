@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
             content = `<div class="text-center">
                 <h1 class="text-3xl heading-serif text-neutral-700 mb-4">Error</h1>
                 <p class="text-neutral-500">${message}</p>
-                <a href="/featured-projects" class="mt-6 inline-block px-6 py-3 bg-primary-500 text-white font-semibold rounded-full hover:bg-primary-600 transition-colors">Back to Projects</a>
+                <a href="{{ url('/featured-projects') }}" class="mt-6 inline-block px-6 py-3 bg-primary-500 text-white font-semibold rounded-full hover:bg-primary-600 transition-colors">Back to Projects</a>
             </div>`;
         }
         if (stateContainer) stateContainer.innerHTML = content;

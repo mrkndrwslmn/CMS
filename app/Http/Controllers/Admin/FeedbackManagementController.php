@@ -301,11 +301,12 @@ class FeedbackManagementController extends Controller
                 'users.id',
                 'users.fullName',
                 'users.email',
+                'users.profilePic',
                 DB::raw('COUNT(DISTINCT feedbacks.id) as received_feedback_count'),
                 DB::raw('COUNT(DISTINCT CASE WHEN feedbacks.rating >= 4 THEN feedbacks.id END) as positive_feedback_count'),
                 DB::raw('AVG(feedbacks.rating) as received_feedback_avg_rating')
             )
-            ->groupBy('users.id', 'users.fullName', 'users.email')
+            ->groupBy('users.id', 'users.fullName', 'users.email', 'users.profilePic')
             ->having('received_feedback_count', '>', 0)
             ->orderBy('received_feedback_avg_rating', 'desc')
             ->get();

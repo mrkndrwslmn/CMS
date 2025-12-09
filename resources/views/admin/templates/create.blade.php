@@ -4,32 +4,33 @@
 @section('page-title', 'Create Project Template')
 
 @section('content')
-<div class="px-6 py-8" x-data="templateForm()">
+<div class="p-6 lg:p-8" x-data="templateForm()">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Templates', 'route' => 'admin.templates.index', 'icon' => 'file-text'],
+        ['label' => 'Create Template', 'icon' => 'plus'],
+    ]" />
+
     <!-- Page Header -->
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-semibold text-primary-500 mb-1">Create Project Template</h1>
-            <p class="text-neutral-500 text-sm">Create a reusable template for faster project setup</p>
-        </div>
-        <a href="{{ route('admin.templates.index') }}" 
-           class="flex items-center px-4 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg transition-colors">
-            <x-lucide-arrow-left class="w-4 h-4 mr-2" />Back to Templates
-        </a>
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-neutral-800">Create Project Template</h1>
+        <p class="text-sm text-neutral-500 mt-1">Create a reusable template for faster project setup</p>
     </div>
 
     <form action="{{ route('admin.templates.store') }}" method="POST" class="space-y-6">
         @csrf
         
         <!-- Basic Information -->
-        <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-            <h3 class="text-lg font-medium text-neutral-900 mb-4">Basic Information</h3>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <h3 class="text-lg font-medium text-neutral-700 mb-4">Basic Information</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Template Name -->
                 <div>
                     <label for="name" class="block text-sm font-medium text-neutral-700 mb-1">Template Name <span class="text-red-500">*</span></label>
                     <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                           class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('name') border-red-500 @enderror">
+                           class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all @error('name') border-error-500 @enderror">
                     @error('name')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -39,7 +40,7 @@
                 <div>
                     <label for="category" class="block text-sm font-medium text-neutral-700 mb-1">Category <span class="text-red-500">*</span></label>
                     <select id="category" name="category" required
-                            class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('category') border-red-500 @enderror">
+                            class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all @error('category') border-error-500 @enderror">
                         <option value="">Select Category</option>
                         @foreach($categories as $key => $label)
                             <option value="{{ $key }}" {{ old('category') === $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -55,7 +56,7 @@
             <div class="mt-6">
                 <label for="description" class="block text-sm font-medium text-neutral-700 mb-1">Description <span class="text-red-500">*</span></label>
                 <textarea id="description" name="description" rows="3" required
-                          class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+                          class="w-full px-4 py-2.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all @error('description') border-error-500 @enderror">{{ old('description') }}</textarea>
                 @error('description')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -63,8 +64,8 @@
         </div>
 
         <!-- Budget & Timeline -->
-        <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-            <h3 class="text-lg font-medium text-neutral-900 mb-4">Budget & Timeline</h3>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <h3 class="text-lg font-medium text-neutral-700 mb-4">Budget & Timeline</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Budget Type -->
@@ -113,27 +114,30 @@
         </div>
 
         <!-- Default Tasks -->
-        <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-neutral-900">Default Tasks</h3>
+                <h3 class="text-lg font-medium text-neutral-700">Default Tasks</h3>
                 <button type="button" @click="addTask()" 
-                        class="flex items-center px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors">
-                    <x-lucide-plus class="w-4 h-4 mr-1" />Add Task
+                        class="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
+                    <x-lucide-plus class="w-4 h-4" />
+                    Add Task
                 </button>
             </div>
             
-            <div x-show="tasks.length === 0" class="text-center py-8 text-neutral-500">
-                <x-lucide-list-todo class="w-8 h-8 mx-auto mb-2" />
-                <p>No tasks added yet. Click "Add Task" to get started.</p>
+            <div x-show="tasks.length === 0" class="text-center py-8">
+                <div class="w-16 h-16 mx-auto mb-3 bg-neutral-50 rounded-full flex items-center justify-center">
+                    <x-lucide-list-todo class="w-8 h-8 text-neutral-300" />
+                </div>
+                <p class="text-sm text-neutral-500">No tasks added yet. Click "Add Task" to get started.</p>
             </div>
             
             <div class="space-y-4">
                 <template x-for="(task, index) in tasks" :key="index">
                     <div class="border border-neutral-200 rounded-lg p-4">
                         <div class="flex items-center justify-between mb-3">
-                            <h4 class="font-medium text-neutral-900" x-text="`Task ${index + 1}`"></h4>
+                            <h4 class="font-medium text-neutral-700" x-text="`Task ${index + 1}`"></h4>
                             <button type="button" @click="removeTask(index)" 
-                                    class="text-red-600 hover:text-red-700 transition-colors">
+                                    class="text-error-600 hover:text-error-700 transition-colors">
                                 <x-lucide-trash-2 class="w-4 h-4" />
                             </button>
                         </div>
@@ -173,18 +177,21 @@
         </div>
 
         <!-- Skills Required -->
-        <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-neutral-900">Required Skills</h3>
+                <h3 class="text-lg font-medium text-neutral-700">Required Skills</h3>
                 <button type="button" @click="addSkill()" 
-                        class="flex items-center px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors">
-                    <x-lucide-plus class="w-4 h-4 mr-1" />Add Skill
+                        class="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
+                    <x-lucide-plus class="w-4 h-4" />
+                    Add Skill
                 </button>
             </div>
             
-            <div x-show="skills.length === 0" class="text-center py-8 text-neutral-500">
-                <x-lucide-settings class="w-8 h-8 mx-auto mb-2" />
-                <p>No skills added yet. Click "Add Skill" to get started.</p>
+            <div x-show="skills.length === 0" class="text-center py-8">
+                <div class="w-16 h-16 mx-auto mb-3 bg-neutral-50 rounded-full flex items-center justify-center">
+                    <x-lucide-settings class="w-8 h-8 text-neutral-300" />
+                </div>
+                <p class="text-sm text-neutral-500">No skills added yet. Click "Add Skill" to get started.</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -202,18 +209,21 @@
         </div>
 
         <!-- Milestones Template -->
-        <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-neutral-900">Milestone Template</h3>
+                <h3 class="text-lg font-medium text-neutral-700">Milestone Template</h3>
                 <button type="button" @click="addMilestone()" 
-                        class="flex items-center px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors">
-                    <x-lucide-plus class="w-4 h-4 mr-1" />Add Milestone
+                        class="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
+                    <x-lucide-plus class="w-4 h-4" />
+                    Add Milestone
                 </button>
             </div>
             
-            <div x-show="milestones.length === 0" class="text-center py-8 text-neutral-500">
-                <x-lucide-flag class="w-8 h-8 mx-auto mb-2" />
-                <p>No milestones added yet. Click "Add Milestone" to get started.</p>
+            <div x-show="milestones.length === 0" class="text-center py-8">
+                <div class="w-16 h-16 mx-auto mb-3 bg-neutral-50 rounded-full flex items-center justify-center">
+                    <x-lucide-flag class="w-8 h-8 text-neutral-300" />
+                </div>
+                <p class="text-sm text-neutral-500">No milestones added yet. Click "Add Milestone" to get started.</p>
             </div>
             
             <div class="space-y-4">
@@ -250,17 +260,17 @@
                 </template>
             </div>
             
-            <div x-show="milestones.length > 0" class="mt-4 p-3 bg-blue-50 rounded-lg">
-                <div class="flex items-center text-sm text-blue-600">
-                    <x-lucide-info class="w-4 h-4 mr-2" />
+            <div x-show="milestones.length > 0" class="mt-4 p-3 bg-primary-50 rounded-lg">
+                <div class="flex items-center gap-2 text-sm text-primary-700">
+                    <x-lucide-info class="w-4 h-4" />
                     <span>Total percentage: <span x-text="milestones.reduce((sum, milestone) => sum + parseInt(milestone.percentage || 0), 0)"></span>% (should equal 100%)</span>
                 </div>
             </div>
         </div>
 
         <!-- Requirements Template -->
-        <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-            <h3 class="text-lg font-medium text-neutral-900 mb-4">Requirements Template</h3>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <h3 class="text-lg font-medium text-neutral-700 mb-4">Requirements Template</h3>
             <div>
                 <label for="requirements_template" class="block text-sm font-medium text-neutral-700 mb-1">Default Requirements Text</label>
                 <textarea id="requirements_template" name="requirements_template" rows="4" 
@@ -271,8 +281,8 @@
         </div>
 
         <!-- Settings -->
-        <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-            <h3 class="text-lg font-medium text-neutral-900 mb-4">Settings</h3>
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+            <h3 class="text-lg font-medium text-neutral-700 mb-4">Settings</h3>
             <div class="flex items-center">
                 <input type="checkbox" id="is_active" name="is_active" value="1" {{ old('is_active') ? 'checked' : '' }}
                        class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded">
@@ -283,13 +293,14 @@
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center justify-end space-x-4">
+        <div class="flex items-center justify-end gap-3">
             <a href="{{ route('admin.templates.index') }}" 
-               class="px-6 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg transition-colors">
+               class="inline-flex items-center gap-2 px-4 py-2.5 text-neutral-600 text-sm font-medium rounded-lg hover:bg-neutral-100 transition-all">
                 Cancel
             </a>
             <button type="submit" 
-                    class="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
+                <x-lucide-check class="w-4 h-4" />
                 Create Template
             </button>
         </div>

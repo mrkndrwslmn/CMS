@@ -25,6 +25,9 @@ class ProjectMilestone extends Model
         'status',
         'is_paid',
         'paid_at',
+        'adiutor_payout_id',
+        'adiutor_paid',
+        'adiutor_paid_at',
         'notes',
         'deliverables',
     ];
@@ -37,6 +40,8 @@ class ProjectMilestone extends Model
         'completed_date' => 'date',
         'is_paid' => 'boolean',
         'paid_at' => 'datetime',
+        'adiutor_paid' => 'boolean',
+        'adiutor_paid_at' => 'datetime',
         'deliverables' => 'array',
     ];
 
@@ -46,6 +51,14 @@ class ProjectMilestone extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /**
+     * Get the payout this milestone was included in for adiutor payment
+     */
+    public function adiutorPayout(): BelongsTo
+    {
+        return $this->belongsTo(Payout::class, 'adiutor_payout_id');
     }
 
     /**

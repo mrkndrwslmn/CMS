@@ -8,13 +8,13 @@
                 @php
                     $extension = strtolower(pathinfo($document->fileName ?? '', PATHINFO_EXTENSION));
                     $iconConfig = match($extension) {
-                        'pdf' => ['icon' => 'file-text', 'color' => 'text-error-500'],
-                        'doc', 'docx' => ['icon' => 'file-text', 'color' => 'text-info-500'],
-                        'xls', 'xlsx' => ['icon' => 'file-spreadsheet', 'color' => 'text-success-500'],
+                        'pdf' => ['icon' => 'file-text', 'color' => 'text-red-500'],
+                        'doc', 'docx' => ['icon' => 'file-text', 'color' => 'text-blue-500'],
+                        'xls', 'xlsx' => ['icon' => 'file-spreadsheet', 'color' => 'text-green-500'],
                         'jpg', 'jpeg', 'png', 'gif', 'webp' => ['icon' => 'image', 'color' => 'text-purple-500'],
-                        'zip', 'rar', '7z' => ['icon' => 'archive', 'color' => 'text-warning-500'],
-                        'mp4', 'mov', 'avi' => ['icon' => 'video', 'color' => 'text-pink-500'],
-                        'mp3', 'wav', 'ogg' => ['icon' => 'music', 'color' => 'text-indigo-500'],
+                        'zip', 'rar', '7z' => ['icon' => 'archive', 'color' => 'text-yellow-600'],
+                        'mp4', 'mov', 'avi' => ['icon' => 'file-video', 'color' => 'text-indigo-500'],
+                        'mp3', 'wav', 'ogg' => ['icon' => 'file-audio', 'color' => 'text-pink-500'],
                         default => ['icon' => 'file', 'color' => 'text-neutral-500']
                     };
                 @endphp
@@ -27,17 +27,17 @@
                     {{ $document->fileName ?: ($document->description ?: 'Untitled') }}
                 </p>
                 @if($document->is_deliverable)
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {{ $document->deliverable_type === 'link' ? 'bg-blue-100 text-blue-700' : 'bg-primary-100 text-primary-700' }}">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $document->deliverable_type === 'link' ? 'bg-primary-50 text-primary-700' : 'bg-neutral-50 text-neutral-700' }}">
                         {{ ucfirst($document->deliverable_type ?? 'file') }}
                     </span>
                     @if($document->is_approved)
-                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
-                            <x-lucide-check class="w-3 h-3 mr-0.5" />
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-700">
+                            <x-lucide-check-circle class="w-3 h-3" />
                             Approved
                         </span>
                     @else
-                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-700">
-                            <x-lucide-clock class="w-3 h-3 mr-0.5" />
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-50 text-warning-700">
+                            <x-lucide-clock class="w-3 h-3" />
                             Pending
                         </span>
                     @endif

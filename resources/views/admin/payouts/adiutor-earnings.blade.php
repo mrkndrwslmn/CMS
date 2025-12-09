@@ -166,6 +166,12 @@
                                                     <x-lucide-check class="w-3 h-3" />
                                                     Approve
                                                 </button>
+                                                <button type="button" 
+                                                        onclick="openAdjustModal({{ $entry->id }}, {{ number_format($entry->duration_minutes / 60, 2, '.', '') }}, '{{ addslashes($entry->task?->taskTitle ?? 'N/A') }}')"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors border border-primary-200">
+                                                    <x-lucide-pencil class="w-3 h-3" />
+                                                    Adjust
+                                                </button>
                                                 <button type="button"
                                                         onclick="openRejectModal({{ $entry->id }})"
                                                         class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-error-500 hover:bg-error-600 rounded-lg transition-colors">
@@ -218,7 +224,7 @@
                            class="block px-6 py-4 hover:bg-neutral-50 transition-colors">
                             <div class="flex items-center justify-between mb-1">
                                 <span class="text-sm font-medium text-neutral-800">{{ $payout->payout_number }}</span>
-                                @if($payout->status === 'completed')
+                                @if($payout->status === 'paid')
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium bg-success-50 text-success-700">Paid</span>
                                 @elseif($payout->status === 'processing')
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium bg-primary-50 text-primary-700">Processing</span>
@@ -363,6 +369,65 @@
         </div>
     </div>
 </div>
+
+<!-- Adjust & Approve Time Entry Modal -->
+<div id="adjustModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+        <div class="fixed inset-0 bg-black/50 transition-opacity" onclick="closeAdjustModal()"></div>
+        
+        <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
+            <form id="adjustForm" onsubmit="submitAdjustForm(event)">
+                <div class="bg-white px-6 pt-6 pb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                            <x-lucide-pencil class="w-6 h-6 text-primary-600" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-neutral-800">Adjust & Approve</h3>
+                            <p class="text-sm text-neutral-500" id="adjustModalTask">Adjust hours before approval</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 space-y-4">
+                        <input type="hidden" id="adjustEntryId" name="entry_id" value="">
+                        
+                        <div>
+                            <label for="original_hours" class="block text-sm font-medium text-neutral-700 mb-1.5">Original Hours</label>
+                            <input type="text" id="original_hours" readonly
+                                   class="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-neutral-50 text-neutral-500">
+                        </div>
+                        
+                        <div>
+                            <label for="adjusted_hours" class="block text-sm font-medium text-neutral-700 mb-1.5">Adjusted Hours <span class="text-error-500">*</span></label>
+                            <input type="number" id="adjusted_hours" name="adjusted_hours" step="0.01" min="0" required
+                                   class="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors"
+                                   placeholder="Enter adjusted hours">
+                            <p class="text-xs text-neutral-500 mt-1">Set the billable hours for this entry</p>
+                        </div>
+                        
+                        <div>
+                            <label for="adjustment_reason" class="block text-sm font-medium text-neutral-700 mb-1.5">Reason for Adjustment <span class="text-error-500">*</span></label>
+                            <textarea name="adjustment_reason" id="adjustment_reason" rows="3" required
+                                      class="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors"
+                                      placeholder="Explain why the hours are being adjusted..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-neutral-50 px-6 py-4 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeAdjustModal()" 
+                            class="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" id="adjustSubmitBtn"
+                            class="px-4 py-2 text-sm font-medium text-white bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors">
+                        Adjust & Approve
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -435,6 +500,110 @@
         document.getElementById('rejectModal').classList.add('hidden');
         document.getElementById('rejection_reason').value = '';
         currentRejectEntryId = null;
+    }
+
+    // Adjust Modal Functions
+    let currentAdjustEntryId = null;
+
+    function openAdjustModal(entryId, originalHours, taskTitle) {
+        currentAdjustEntryId = entryId;
+        document.getElementById('adjustEntryId').value = entryId;
+        document.getElementById('original_hours').value = originalHours + ' hours';
+        document.getElementById('adjusted_hours').value = originalHours;
+        document.getElementById('adjustModalTask').textContent = taskTitle;
+        document.getElementById('adjustment_reason').value = '';
+        document.getElementById('adjustModal').classList.remove('hidden');
+    }
+
+    function closeAdjustModal() {
+        document.getElementById('adjustModal').classList.add('hidden');
+        document.getElementById('adjusted_hours').value = '';
+        document.getElementById('adjustment_reason').value = '';
+        currentAdjustEntryId = null;
+    }
+
+    function submitAdjustForm(event) {
+        event.preventDefault();
+        
+        const entryId = currentAdjustEntryId;
+        const adjustedHours = document.getElementById('adjusted_hours').value;
+        const adjustmentReason = document.getElementById('adjustment_reason').value;
+        
+        if (!adjustedHours || !adjustmentReason) {
+            if (window.Alerts) {
+                window.Alerts.error('Please fill in all required fields');
+            } else {
+                alert('Please fill in all required fields');
+            }
+            return;
+        }
+
+        const submitBtn = document.getElementById('adjustSubmitBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Saving...';
+
+        fetch(`{{ url('admin/payouts/time-entries') }}/${entryId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                adjust: true,
+                adjusted_hours: parseFloat(adjustedHours),
+                adjustment_reason: adjustmentReason
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeAdjustModal();
+                
+                // Update the status cell
+                const statusCell = document.getElementById(`status-cell-${entryId}`);
+                if (statusCell) {
+                    statusCell.innerHTML = `
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary-50 text-primary-700">
+                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            Approved
+                        </span>
+                    `;
+                }
+                
+                // Update the actions cell
+                const actionsCell = document.getElementById(`actions-cell-${entryId}`);
+                if (actionsCell) {
+                    actionsCell.innerHTML = '<span class="text-xs text-neutral-400">—</span>';
+                }
+
+                if (window.Alerts) {
+                    window.Alerts.success(data.message || 'Time entry adjusted and approved successfully');
+                } else if (window.toast) {
+                    window.toast.success(data.message || 'Time entry adjusted and approved successfully');
+                } else {
+                    alert(data.message || 'Time entry adjusted and approved successfully');
+                }
+                
+                // Reload page to show updated amounts
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                throw new Error(data.message || 'Failed to approve');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            if (window.Alerts) {
+                window.Alerts.error(error.message || 'Failed to adjust and approve time entry');
+            } else if (window.toast) {
+                window.toast.error(error.message || 'Failed to adjust and approve time entry');
+            } else {
+                alert(error.message || 'Failed to adjust and approve time entry');
+            }
+        });
     }
 </script>
 @endpush

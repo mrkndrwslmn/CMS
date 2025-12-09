@@ -19,15 +19,15 @@
                 <p class="text-sm text-neutral-500 mt-1">Track your earnings and balances</p>
             </div>
             <div class="flex items-center gap-3">
-                <x-ui.button variant="secondary" href="{{ route('adiutor.earnings.index') }}">
+                <a href="{{ route('adiutor.earnings.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-neutral-700 text-sm font-medium rounded-lg border border-neutral-200 shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all">
                     <x-lucide-clock class="w-4 h-4" />
                     Time Entries
-                </x-ui.button>
+                </a>
                 @if($totalAvailable >= 500)
-                <x-ui.button variant="primary" href="{{ route('adiutor.earnings.request-form') }}">
+                <a href="{{ route('adiutor.earnings.request-form') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
                     <x-lucide-banknote class="w-4 h-4" />
                     Request Payout
-                </x-ui.button>
+                </a>
                 @endif
             </div>
         </div>
@@ -52,10 +52,14 @@
                 <p class="text-3xl font-semibold text-neutral-800">₱{{ number_format($workEarningsBalance, 2) }}</p>
                 <p class="text-sm text-neutral-500 mt-1">Available Balance</p>
                 
-                <div class="mt-4 pt-4 border-t border-neutral-100 grid grid-cols-2 gap-4 text-sm">
+                <div class="mt-4 pt-4 border-t border-neutral-100 grid grid-cols-3 gap-4 text-sm">
                     <div>
                         <p class="text-neutral-500">Pending</p>
                         <p class="font-semibold text-neutral-800">₱{{ number_format($workEarningsPending, 2) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-neutral-500">In Request</p>
+                        <p class="font-semibold text-warning-600">₱{{ number_format($workEarningsInRequest ?? 0, 2) }}</p>
                     </div>
                     <div>
                         <p class="text-neutral-500">Withdrawn</p>
@@ -109,6 +113,12 @@
                         <span class="w-3 h-3 rounded-full bg-warning-400"></span>
                         <span class="text-neutral-600">Pending: ₱{{ number_format($totalPending, 2) }}</span>
                     </div>
+                    @if(($totalInRequest ?? 0) > 0)
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-primary-400"></span>
+                        <span class="text-neutral-600">In Payout Request: ₱{{ number_format($totalInRequest, 2) }}</span>
+                    </div>
+                    @endif
                     <div class="flex items-center gap-2">
                         <span class="w-3 h-3 rounded-full bg-success-400"></span>
                         <span class="text-neutral-600">Withdrawn: ₱{{ number_format($totalWithdrawn, 2) }}</span>
@@ -190,14 +200,14 @@
                 <!-- Filters -->
                 <form method="GET" class="flex flex-wrap items-center gap-3">
                     <select name="wallet_type" onchange="this.form.submit()"
-                            class="text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                            class="text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                         <option value="all" {{ $walletType === 'all' ? 'selected' : '' }}>All Wallets</option>
                         <option value="work_earnings" {{ $walletType === 'work_earnings' ? 'selected' : '' }}>Work Earnings</option>
                         <option value="referral_credits" {{ $walletType === 'referral_credits' ? 'selected' : '' }}>Referral Credits</option>
                     </select>
                     
                     <select name="transaction_type" onchange="this.form.submit()"
-                            class="text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                            class="text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                         <option value="all" {{ $transactionType === 'all' ? 'selected' : '' }}>All Types</option>
                         <option value="work_earned" {{ $transactionType === 'work_earned' ? 'selected' : '' }}>Work Earned</option>
                         <option value="referral_earned" {{ $transactionType === 'referral_earned' ? 'selected' : '' }}>Referral Earned</option>

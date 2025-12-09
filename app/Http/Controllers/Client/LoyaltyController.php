@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\RedeemLoyaltyPointsRequest;
 use App\Models\ServiceRequest;
 use App\Services\LoyaltyService;
+use App\Services\MilestoneService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -132,9 +133,26 @@ class LoyaltyController extends Controller
             $this->loyaltyService->applyLoyaltyDiscount($serviceRequest, $validated['points']);
 
             $discount = $this->loyaltyService->convertPointsToDiscount($validated['points']);
+            $message = "{$validated['points']} points redeemed! You save ₱" . number_format($discount, 2);
 
-            return back()->with('success', "{$validated['points']} points redeemed! You save ₱" . number_format($discount, 2));
+            // Return JSON for AJAX requests
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'points_used' => $validated['points'],
+                    'discount' => $discount,
+                ]);
+            }
+
+            return back()->with('success', $message);
         } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
@@ -155,7 +173,7 @@ class LoyaltyController extends Controller
         }
 
         // Check if payment is already in progress
-        if ($serviceRequest->status === 'paid' || $serviceRequest->payments()->completed()->exists()) {
+        if ($serviceRequest->status === 'paid' || $serviceRequest->payments()->where('status', 'confirmed')->exists()) {
             return back()->withErrors(['error' => 'Cannot remove points after payment is completed.']);
         }
 
@@ -163,14 +181,21 @@ class LoyaltyController extends Controller
             // Refund the points
             $this->loyaltyService->refundLoyaltyPoints($serviceRequest);
 
+            // Store loyalty discount amount before clearing
+            $loyaltyDiscountAmount = $serviceRequest->loyalty_discount_amount;
+
             // Restore the original budget
             $serviceRequest->update([
-                'approved_budget' => $serviceRequest->approved_budget + $serviceRequest->loyalty_discount_amount,
+                'approved_budget' => $serviceRequest->approved_budget + $loyaltyDiscountAmount,
                 'loyalty_points_used' => 0,
                 'loyalty_discount_amount' => 0,
-                'total_discount_amount' => max(0, ($serviceRequest->total_discount_amount ?? 0) - $serviceRequest->loyalty_discount_amount),
+                'total_discount_amount' => max(0, ($serviceRequest->total_discount_amount ?? 0) - $loyaltyDiscountAmount),
                 'loyalty_discount_applied_at' => null,
             ]);
+
+            // Recalculate payment amounts after discount is removed
+            // This restores milestones/downpayment to the new budget (without the removed loyalty discount)
+            MilestoneService::recalculatePaymentAmountsForRequest($serviceRequest);
 
             return back()->with('success', 'Loyalty points redemption removed and points refunded.');
         } catch (\Exception $e) {

@@ -12,6 +12,7 @@ use App\Mail\NewUserCredentials;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
+use App\Models\ServiceRequest;
 use App\Notifications\NewServiceRequestNotification;
 use App\Rules\RecaptchaValidation;
 use App\Services\CloudflareR2Service;
@@ -42,8 +43,13 @@ class PublicServiceRequestController extends Controller
         $extensions = $this->getAllowedExtensions();
         $maxSize = $this->getMaxFileSize();
         
-        // Validate the request
-        $validator = Validator::make($request->all(), [
+        // If user is logged in, add user_id to request data
+        if (Auth::check()) {
+            $request->merge(['user_id' => Auth::id()]);
+        }
+        
+        // Build validation rules dynamically
+        $rules = [
             // User fields (only required if not logged in)
             'full_name' => 'required_without:user_id|string|max:255',
             'email' => 'required_without:user_id|email|max:255',
@@ -60,9 +66,25 @@ class PublicServiceRequestController extends Controller
             'additional_notes' => 'nullable|string|max:1000',
             'file_upload.*' => "nullable|file|max:{$maxSize}|mimes:{$extensions}",
             
-            // reCAPTCHA validation
-            'g-recaptcha-response' => ['required', new RecaptchaValidation()],
-        ], [
+            // Template data
+            'template_service_id' => 'nullable|integer',
+            'template_features' => 'nullable|string',
+            'template_skills' => 'nullable|string',
+            'template_duration' => 'nullable|integer',
+            'template_price' => 'nullable|numeric',
+            
+            // Requested/customized features and skills
+            'requested_features' => 'nullable|string',
+            'requested_skills' => 'nullable|string',
+        ];
+        
+        // Only require reCAPTCHA for non-authenticated users
+        if (!Auth::check()) {
+            $rules['g-recaptcha-response'] = ['required', new RecaptchaValidation()];
+        }
+        
+        // Validate the request
+        $validator = Validator::make($request->all(), $rules, [
             'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
             'file_upload.*.mimes' => 'Unsupported file type. ' . $this->getHumanReadableFileTypes() . ' are allowed.',
         ]);
@@ -117,8 +139,16 @@ class PublicServiceRequestController extends Controller
             $userId = Auth::id();
         }
 
-        // Insert service request data into the service_requests table
-        $serviceRequestId = DB::table('service_requests')->insertGetId([
+        // Debug: Log what we're receiving
+        Log::info('Service Request Form Data', [
+            'requested_features' => $request->requested_features,
+            'requested_skills' => $request->requested_skills,
+            'template_features' => $request->template_features,
+            'template_skills' => $request->template_skills,
+        ]);
+
+        // Create service request using Eloquent model (handles JSON casting automatically)
+        $serviceRequest = ServiceRequest::create([
             'client_id' => $userId,
             'contact_method' => $request->contact_method,
             'contact_details' => $request->contact_details,
@@ -128,10 +158,23 @@ class PublicServiceRequestController extends Controller
             'deadline' => $request->deadline,
             'expectations' => $request->expectations,
             'additional_notes' => $request->additional_notes,
+            
+            // Template data (original values from service template)
+            'template_service_id' => $request->template_service_id,
+            'template_features' => $request->template_features ? json_decode($request->template_features, true) : null,
+            'template_skills' => $request->template_skills ? json_decode($request->template_skills, true) : null,
+            'estimated_duration_days' => $request->template_duration,
+            'template_base_price' => $request->template_price,
+            
+            // Requested/customized features and skills (decode JSON from form)
+            'requested_features' => $request->requested_features ? json_decode($request->requested_features, true) : null,
+            'requested_skills' => $request->requested_skills ? json_decode($request->requested_skills, true) : null,
+            
+            // Check if user customized the template
+            'has_customizations' => $this->hasCustomizations($request),
+            
             'status' => 'pending',
             'priority' => 'medium',
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         // Handle file uploads using Cloudflare R2
@@ -144,7 +187,7 @@ class PublicServiceRequestController extends Controller
                 if ($uploadResult['success']) {
                     // Insert into documents table
                     DB::table('documents')->insert([
-                        'service_request_id' => $serviceRequestId,
+                        'service_request_id' => $serviceRequest->id,
                         'client_id' => $userId,
                         'uploaded_by' => $userId,
                         'fileName' => $uploadResult['original_name'],
@@ -161,7 +204,7 @@ class PublicServiceRequestController extends Controller
                 } else {
                     Log::error('Failed to upload file to R2: ' . $uploadResult['error'], [
                         'file' => $file->getClientOriginalName(),
-                        'service_request_id' => $serviceRequestId,
+                        'service_request_id' => $serviceRequest->id,
                         'user_id' => $userId,
                     ]);
                     // Continue with other files, don't fail the entire request
@@ -170,7 +213,6 @@ class PublicServiceRequestController extends Controller
         }
 
         // Create notifications for admins
-        $serviceRequest = \App\Models\ServiceRequest::find($serviceRequestId);
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new NewServiceRequestNotification(
@@ -224,5 +266,27 @@ class PublicServiceRequestController extends Controller
         } else {
             return redirect()->route('get-started')->with('success', 'Your service request has been submitted successfully! We will review it and get back to you soon.');
         }
+    }
+
+    /**
+     * Check if user customized the template features or skills
+     */
+    private function hasCustomizations(Request $request): bool
+    {
+        // If no template data exists, no customizations
+        if (!$request->template_service_id) {
+            return false;
+        }
+        
+        // Compare template features with requested features
+        $templateFeatures = $request->template_features;
+        $requestedFeatures = $request->requested_features;
+        
+        // Compare template skills with requested skills
+        $templateSkills = $request->template_skills;
+        $requestedSkills = $request->requested_skills;
+        
+        // If either features or skills are different, it's customized
+        return ($templateFeatures !== $requestedFeatures) || ($templateSkills !== $requestedSkills);
     }
 }

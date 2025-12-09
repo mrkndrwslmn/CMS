@@ -10,6 +10,9 @@
     <!-- Favicon -->
     <link rel="icon" href="@yield('favicon', '/favicon.svg')" type="image/x-icon">
     
+    <!-- Preload Critical Fonts (Branding) -->
+    <link rel="preload" href="{{ Vite::asset('resources/fonts/Stereofunk.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous" fetchpriority="high">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -203,6 +206,39 @@
                     <span>Feedback</span>
                 </a>
                 
+                <!-- Referral Program Section -->
+                <div class="mt-5 mb-2 px-3">
+                    <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Referrals</span>
+                </div>
+                
+                <div class="mb-0.5">
+                    <button @click="toggle('referrals')" class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('adiutor.referrals.*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
+                        <div class="flex items-center gap-3">
+                            <x-lucide-gift class="w-5 h-5" />
+                            <span>Referral Program</span>
+                        </div>
+                        <x-lucide-chevron-down class="w-4 h-4 transition-transform duration-200" x-bind:class="{ 'rotate-180': openSections.referrals }" />
+                    </button>
+                    <div x-show="openSections.referrals" x-collapse class="mt-1 ml-8 space-y-0.5">
+                        <a href="{{ route('adiutor.referrals.dashboard') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('adiutor.referrals.dashboard') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-layout-dashboard class="w-4 h-4" />
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="{{ route('adiutor.referrals.share') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('adiutor.referrals.share') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-share-2 class="w-4 h-4" />
+                            <span>Share & Invite</span>
+                        </a>
+                        <a href="{{ route('adiutor.referrals.credits') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('adiutor.referrals.credits') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-circle-dollar-sign class="w-4 h-4" />
+                            <span>Credits</span>
+                        </a>
+                        <a href="{{ route('adiutor.referrals.history') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('adiutor.referrals.history') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-clock class="w-4 h-4" />
+                            <span>History</span>
+                        </a>
+                    </div>
+                </div>
+                
                 <!-- Divider -->
                 <div class="my-4 border-t border-neutral-100"></div>
                 
@@ -356,6 +392,7 @@
                     work: {{ request()->routeIs('adiutor.projects.*', 'adiutor.tasks.*', 'adiutor.time-tracking.*', 'adiutor.revisions.*') ? 'true' : 'false' }},
                     earnings: {{ request()->routeIs('adiutor.earnings.*') ? 'true' : 'false' }},
                     communication: {{ request()->routeIs('adiutor.clients', 'adiutor.group-chats.*') ? 'true' : 'false' }},
+                    referrals: {{ request()->routeIs('adiutor.referrals.*') ? 'true' : 'false' }},
                     account: {{ request()->routeIs('adiutor.profile.*', 'adiutor.notifications.*') ? 'true' : 'false' }}
                 },
                 toggle(section) {

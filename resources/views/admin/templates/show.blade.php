@@ -4,21 +4,25 @@
 @section('page-title', 'View Project Template')
 
 @section('content')
-<div class="px-6 py-8">
+<div class="p-6 lg:p-8">
+    <!-- Breadcrumb -->
+    <x-ui.breadcrumb :items="[
+        ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
+        ['label' => 'Templates', 'route' => 'admin.templates.index', 'icon' => 'file-text'],
+        ['label' => $template->name, 'icon' => 'eye'],
+    ]" />
+
     <!-- Page Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-            <h1 class="text-2xl font-semibold text-primary-500 mb-1">{{ $template->name }}</h1>
-            <p class="text-neutral-500 text-sm">{{ $template->description }}</p>
+            <h1 class="text-2xl font-semibold text-neutral-800">{{ $template->name }}</h1>
+            <p class="text-sm text-neutral-500 mt-1">{{ $template->description }}</p>
         </div>
-        <div class="flex items-center space-x-3">
+        <div class="flex items-center gap-3">
             <a href="{{ route('admin.templates.edit', $template) }}" 
-               class="flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
-                <x-lucide-pencil class="w-4 h-4 mr-2" />Edit Template
-            </a>
-            <a href="{{ route('admin.templates.index') }}" 
-               class="flex items-center px-4 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg transition-colors">
-                <x-lucide-arrow-left class="w-4 h-4 mr-2" />Back to Templates
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
+                <x-lucide-pencil class="w-4 h-4" />
+                Edit Template
             </a>
         </div>
     </div>
@@ -27,8 +31,8 @@
         <!-- Template Details -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Basic Information -->
-            <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-                <h3 class="text-lg font-medium text-neutral-900 mb-4">Template Information</h3>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Template Information</h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -46,13 +50,13 @@
                     <div>
                         <label class="block text-sm font-medium text-neutral-700 mb-1">Status</label>
                         @if($template->is_active)
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <span class="w-1.5 h-1.5 mr-1.5 bg-green-400 rounded-full"></span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
+                                <x-lucide-check-circle class="w-3 h-3" />
                                 Active
                             </span>
                         @else
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <span class="w-1.5 h-1.5 mr-1.5 bg-red-400 rounded-full"></span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600">
+                                <x-lucide-circle-dashed class="w-3 h-3" />
                                 Inactive
                             </span>
                         @endif
@@ -100,8 +104,8 @@
 
             <!-- Default Tasks -->
             @if($template->default_tasks && count($template->default_tasks) > 0)
-                <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-                    <h3 class="text-lg font-medium text-neutral-900 mb-4">Default Tasks ({{ count($template->default_tasks) }})</h3>
+                <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-neutral-700 mb-4">Default Tasks ({{ count($template->default_tasks) }})</h3>
                     
                     <div class="space-y-4">
                         @foreach($template->default_tasks as $index => $task)
@@ -110,9 +114,9 @@
                                     <h4 class="font-medium text-neutral-900">{{ $task['title'] }}</h4>
                                     <div class="flex items-center space-x-2">
                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                            {{ $task['priority'] === 'high' ? 'bg-red-100 text-red-800' : '' }}
-                                            {{ $task['priority'] === 'medium' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                            {{ $task['priority'] === 'low' ? 'bg-green-100 text-green-800' : '' }}">
+                                            {{ $task['priority'] === 'high' ? 'bg-error-100 text-error-700' : '' }}
+                                            {{ $task['priority'] === 'medium' ? 'bg-warning-100 text-warning-700' : '' }}
+                                            {{ $task['priority'] === 'low' ? 'bg-success-100 text-success-700' : '' }}">
                                             {{ ucfirst($task['priority']) }} Priority
                                         </span>
                                         <span class="text-xs text-neutral-500">{{ $task['estimated_hours'] }}h</span>
@@ -123,9 +127,9 @@
                         @endforeach
                     </div>
                     
-                    <div class="mt-4 p-3 bg-blue-50 rounded-lg">
-                        <div class="flex items-center text-sm text-blue-600">
-                            <x-lucide-clock class="w-4 h-4 mr-2" />
+                    <div class="mt-4 p-3 bg-primary-50 rounded-lg">
+                        <div class="flex items-center gap-2 text-sm text-primary-700">
+                            <x-lucide-clock class="w-4 h-4" />
                             <span>Total estimated hours: {{ collect($template->default_tasks)->sum('estimated_hours') }} hours</span>
                         </div>
                     </div>
@@ -134,8 +138,8 @@
 
             <!-- Milestones Template -->
             @if($template->milestones_template && count($template->milestones_template) > 0)
-                <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-                    <h3 class="text-lg font-medium text-neutral-900 mb-4">Milestone Template ({{ count($template->milestones_template) }})</h3>
+                <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-neutral-700 mb-4">Milestone Template ({{ count($template->milestones_template) }})</h3>
                     
                     <div class="space-y-4">
                         @foreach($template->milestones_template as $milestone)
@@ -157,8 +161,8 @@
 
             <!-- Requirements Template -->
             @if($template->requirements_template)
-                <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-                    <h3 class="text-lg font-medium text-neutral-900 mb-4">Requirements Template</h3>
+                <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-neutral-700 mb-4">Requirements Template</h3>
                     <div class="prose max-w-none">
                         <p class="text-sm text-neutral-700 whitespace-pre-line">{{ $template->requirements_template }}</p>
                     </div>
@@ -169,8 +173,8 @@
         <!-- Sidebar -->
         <div class="space-y-6">
             <!-- Quick Stats -->
-            <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-                <h3 class="text-lg font-medium text-neutral-900 mb-4">Quick Stats</h3>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Quick Stats</h3>
                 
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
@@ -194,8 +198,8 @@
 
             <!-- Required Skills -->
             @if($template->skills_required && count($template->skills_required) > 0)
-                <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-                    <h3 class="text-lg font-medium text-neutral-900 mb-4">Required Skills</h3>
+                <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-neutral-700 mb-4">Required Skills</h3>
                     
                     <div class="flex flex-wrap gap-2">
                         @foreach($template->skills_required as $skill)
@@ -208,18 +212,18 @@
             @endif
 
             <!-- Actions -->
-            <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-                <h3 class="text-lg font-medium text-neutral-900 mb-4">Actions</h3>
+            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
+                <h3 class="text-lg font-medium text-neutral-700 mb-4">Actions</h3>
                 
                 <div class="space-y-3">
                     <form action="{{ route('admin.templates.toggle', $template) }}" method="POST">
                         @csrf
                         <button type="submit" 
-                                class="w-full flex items-center justify-center px-4 py-2 {{ $template->is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600' }} text-white rounded-lg transition-colors">
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 {{ $template->is_active ? 'bg-warning-600 hover:bg-warning-700' : 'bg-success-600 hover:bg-success-700' }} text-white text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-all">
                             @if($template->is_active)
-                                <x-lucide-pause class="w-4 h-4 mr-2" />
+                                <x-lucide-pause class="w-4 h-4" />
                             @else
-                                <x-lucide-play class="w-4 h-4 mr-2" />
+                                <x-lucide-play class="w-4 h-4" />
                             @endif
                             {{ $template->is_active ? 'Deactivate' : 'Activate' }} Template
                         </button>
@@ -228,8 +232,9 @@
                     <form action="{{ route('admin.templates.duplicate', $template) }}" method="POST">
                         @csrf
                         <button type="submit" 
-                                class="w-full flex items-center justify-center px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors">
-                            <x-lucide-copy class="w-4 h-4 mr-2" />Duplicate Template
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-neutral-600 hover:bg-neutral-700 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-all">
+                            <x-lucide-copy class="w-4 h-4" />
+                            Duplicate Template
                         </button>
                     </form>
                     
@@ -238,8 +243,9 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" 
-                                class="w-full flex items-center justify-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
-                            <x-lucide-trash-2 class="w-4 h-4 mr-2" />Delete Template
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-error-600 hover:bg-error-700 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-all">
+                            <x-lucide-trash-2 class="w-4 h-4" />
+                            Delete Template
                         </button>
                     </form>
                 </div>

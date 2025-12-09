@@ -14,8 +14,8 @@
     <div class="mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-neutral-900">Referral History</h1>
-                <p class="mt-2 text-neutral-600">Track all your referrals and their status</p>
+                <h1 class="text-2xl font-semibold text-neutral-800">Referral History</h1>
+                <p class="mt-2 text-neutral-500">Track all your referrals and their status</p>
             </div>
         </div>
     </div>
@@ -25,23 +25,23 @@
         <div class="border-b border-neutral-200">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                 <a href="{{ route('client.referrals.dashboard') }}" 
-                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors inline-flex items-center">
-                    <x-lucide-home class="w-5 h-5 mr-2" />
+                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors inline-flex items-center gap-2">
+                    <x-lucide-layout-dashboard class="w-4 h-4" />
                     Dashboard
                 </a>
                 <a href="{{ route('client.referrals.credits') }}" 
-                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors inline-flex items-center">
-                    <x-lucide-circle-dollar-sign class="w-5 h-5 mr-2" />
+                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors inline-flex items-center gap-2">
+                    <x-lucide-circle-dollar-sign class="w-4 h-4" />
                     Credits & Withdrawals
                 </a>
                 <a href="{{ route('client.referrals.history') }}" 
-                   class="border-primary-500 text-primary-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm inline-flex items-center">
-                    <x-lucide-clock class="w-5 h-5 mr-2" />
+                   class="border-primary-500 text-primary-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm inline-flex items-center gap-2">
+                    <x-lucide-clock class="w-4 h-4" />
                     History
                 </a>
                 <a href="{{ route('client.referrals.share') }}" 
-                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors inline-flex items-center">
-                    <x-lucide-share-2 class="w-5 h-5 mr-2" />
+                   class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors inline-flex items-center gap-2">
+                    <x-lucide-share-2 class="w-4 h-4" />
                     Share
                 </a>
             </nav>
@@ -132,18 +132,18 @@
                                         {{ $referral->referred->fullName ?? 'User' }}
                                     </h3>
                                     @if($referral->status === 'rewarded')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
-                                            <x-lucide-check-circle class="w-3 h-3 mr-1" />
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
+                                            <x-lucide-check-circle class="w-3 h-3" />
                                             Rewarded
                                         </span>
                                     @elseif($referral->status === 'completed')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700">
-                                            <x-lucide-check-circle class="w-3 h-3 mr-1" />
-                                            Completed
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-700">
+                                            <x-lucide-loader-2 class="w-3 h-3 animate-spin" />
+                                            Processing
                                         </span>
                                     @elseif($referral->status === 'pending')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-700">
-                                            <x-lucide-loader-2 class="w-3 h-3 mr-1 animate-spin" />
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-700">
+                                            <x-lucide-clock class="w-3 h-3" />
                                             Pending
                                         </span>
                                     @else
@@ -220,8 +220,8 @@
                             @endif
 
                             @if($referral->referrerCoupon)
-                                <div class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-accent-100 text-accent-700">
-                                    <x-lucide-ticket class="w-3 h-3 mr-1" />
+                                <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700">
+                                    <x-lucide-ticket class="w-3 h-3" />
                                     {{ $referral->referrerCoupon->discount_percentage }}% Coupon
                                 </div>
                             @endif

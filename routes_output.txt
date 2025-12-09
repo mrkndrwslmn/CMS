@@ -1,0 +1,22 @@
+﻿
+   Exception 
+
+  Firebase service account not configured
+
+  at app\Services\FirebaseAuthService.php:24
+     20Γûò             $serviceAccountPath = config('firebase.service_account_path');
+     21Γûò             
+     22Γûò             if (!file_exists($serviceAccountPath)) {
+     23Γûò                 Log::error('Firebase service account file not found: ' . $serviceAccountPath);
+  Γ₧£  24Γûò                 throw new \Exception('Firebase service account not configured');
+     25Γûò             }
+     26Γûò             
+     27Γûò             $factory = (new Factory)->withServiceAccount($serviceAccountPath);
+     28Γûò             $this->auth = $factory->createAuth();
+
+  1   [internal]:0
+      App\Services\FirebaseAuthService::__construct()
+
+  2   vendor\laravel\framework\src\Illuminate\Container\Container.php:1211
+      ReflectionClass::newInstanceArgs([])
+

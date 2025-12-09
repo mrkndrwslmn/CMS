@@ -8,7 +8,7 @@
     <x-ui.breadcrumb :items="[
         ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
         ['label' => 'Tasks', 'route' => 'adiutor.tasks.index', 'icon' => 'clipboard-list'],
-        ['label' => Str::limit($task->taskTitle, 40)],
+        ['label' => Str::limit($task->taskTitle, 40), 'icon' => 'clipboard-check'],
     ]" />
 
     <!-- Page Header -->
@@ -23,29 +23,31 @@
                         <h1 class="text-2xl font-semibold text-neutral-800 mb-3">{{ $task->taskTitle }}</h1>
                         <div class="flex flex-wrap items-center gap-3">
                             @php
-                                $statusVariant = match($task->status) {
-                                    'completed' => 'success',
-                                    'in_progress' => 'primary',
-                                    'pending' => 'warning',
-                                    'pending_approval' => 'info',
-                                    default => 'neutral'
+                                $statusConfig = match($task->status) {
+                                    'completed' => ['variant' => 'success', 'icon' => 'check-circle'],
+                                    'in_progress' => ['variant' => 'primary', 'icon' => 'loader'],
+                                    'pending' => ['variant' => 'warning', 'icon' => 'clock'],
+                                    'pending_approval' => ['variant' => 'info', 'icon' => 'clock'],
+                                    'cancelled' => ['variant' => 'neutral', 'icon' => 'x-circle'],
+                                    default => ['variant' => 'neutral', 'icon' => 'circle-dashed']
                                 };
                             @endphp
-                            <x-ui.badge variant="{{ $statusVariant }}">
+                            <x-ui.badge variant="{{ $statusConfig['variant'] }}">
+                                <x-dynamic-component :component="'lucide-' . $statusConfig['icon']" class="w-3 h-3 mr-1" />
                                 {{ ucfirst(str_replace('_', ' ', $task->status)) }}
                             </x-ui.badge>
                             
                             @php
-                                $priorityVariant = match($task->priority) {
-                                    'urgent' => 'error',
-                                    'high' => 'warning',
-                                    'medium' => 'primary',
-                                    'low' => 'neutral',
-                                    default => 'neutral'
+                                $priorityConfig = match($task->priority) {
+                                    'urgent' => ['variant' => 'error', 'icon' => 'alert-triangle'],
+                                    'high' => ['variant' => 'warning', 'icon' => 'alert-triangle'],
+                                    'medium' => ['variant' => 'primary', 'icon' => 'flag'],
+                                    'low' => ['variant' => 'neutral', 'icon' => 'flag'],
+                                    default => ['variant' => 'neutral', 'icon' => 'flag']
                                 };
                             @endphp
-                            <x-ui.badge variant="{{ $priorityVariant }}">
-                                <x-lucide-flag class="w-3 h-3 mr-1" />
+                            <x-ui.badge variant="{{ $priorityConfig['variant'] }}">
+                                <x-dynamic-component :component="'lucide-' . $priorityConfig['icon']" class="w-3 h-3 mr-1" />
                                 {{ ucfirst($task->priority ?? 'Normal') }} Priority
                             </x-ui.badge>
                         </div>
@@ -187,7 +189,7 @@
                 </div>
                 <a href="{{ route('adiutor.time-tracking.index', ['task' => $task->taskID]) }}" 
                    target="_blank"
-                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-info-600 text-white text-sm font-medium rounded-xl hover:bg-info-700 transition-colors shadow-sm">
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
                     <x-lucide-play class="w-4 h-4" />
                     Track Time
                     <x-lucide-external-link class="w-3.5 h-3.5 ml-1 opacity-75" />

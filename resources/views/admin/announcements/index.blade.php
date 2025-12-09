@@ -241,6 +241,7 @@
                             <option value="" disabled>Select Status</option>
                             <option value="active">Active</option>
                             <option value="scheduled">Scheduled</option>
+                            <option value="draft">Draft</option>
                         </x-ui.select>
                     </div>
 

@@ -108,7 +108,7 @@
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex items-center gap-3">
                                 @if($client->profilePic)
-                                    <img src="{{ $client->getProfilePictureUrl() }}" 
+                                    <img src="{{ asset('storage/' . $client->profilePic) }}" 
                                          alt="{{ $client->fullName }}" 
                                          class="w-12 h-12 rounded-full object-cover">
                                 @else

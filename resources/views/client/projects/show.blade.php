@@ -638,12 +638,12 @@
 </div>
 
 <!-- Revision Request Modal -->
-<div id="revisionModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50" style="display: none;">
-    <div class="flex items-center justify-center min-h-screen p-4">
-    <div class="bg-white rounded-2xl border border-neutral-100 shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <!-- Modal Header -->
-        <div class="bg-warning-50 border-b border-warning-100 p-6 rounded-t-2xl">
-            <div class="flex items-center justify-between">
+<div id="revisionModal" class="modal-overlay hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center" style="display: none;">
+    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-lg">
+            <!-- Modal Header -->
+            <div class="bg-warning-50 border-b border-warning-100 p-6 rounded-t-2xl">
+                <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <div class="bg-white rounded-full p-2 shadow-sm">
                         <x-lucide-refresh-cw class="w-6 h-6 text-warning-600" />
@@ -790,16 +790,16 @@
                 </button>
             </div>
         </form>
-    </div>
+        </div>
     </div>
 </div>
 
 <!-- Task Revision Modal -->
-<div id="taskRevisionModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50" style="display: none;">
-    <div class="flex items-center justify-center min-h-screen p-4" onclick="if(event.target.parentElement.id === 'taskRevisionModal') closeTaskRevisionModal()">
-        <div class="bg-white rounded-2xl border border-neutral-100 shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-        <!-- Modal Header -->
-        <div class="bg-warning-50 border-b border-warning-100 p-6 rounded-t-2xl">
+<div id="taskRevisionModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center" style="display: none;">
+    <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+        <div class="bg-white rounded-2xl border border-neutral-100 shadow-lg" onclick="event.stopPropagation()">
+            <!-- Modal Header -->
+            <div class="bg-warning-50 border-b border-warning-100 p-6 rounded-t-2xl">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <div class="bg-white p-2 rounded-lg shadow-sm">
@@ -895,12 +895,14 @@ function openRevisionModal() {
     const modal = document.getElementById('revisionModal');
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 }
 
 function closeRevisionModal() {
     const modal = document.getElementById('revisionModal');
     modal.classList.add('hidden');
     modal.style.display = 'none';
+    document.body.style.overflow = '';
 }
 
 function toggleTaskSelection(show) {
@@ -956,9 +958,10 @@ function openTaskRevisionModal(taskId, taskTitle) {
     // Show modal
     console.log('Before show - display:', modal.style.display, 'class:', modal.className);
     modal.classList.remove('hidden');
-    modal.style.display = 'block';
+    modal.style.display = 'flex';
     modal.style.visibility = 'visible';
     modal.style.opacity = '1';
+    document.body.style.overflow = 'hidden';
     console.log('After show - display:', modal.style.display, 'class:', modal.className);
     
     // Force reflow
@@ -975,6 +978,7 @@ function closeTaskRevisionModal() {
     if (modal) {
         modal.classList.add('hidden');
         modal.style.display = 'none';
+        document.body.style.overflow = '';
     }
     
     // Reset form

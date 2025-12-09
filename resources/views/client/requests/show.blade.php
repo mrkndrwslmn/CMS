@@ -175,12 +175,7 @@
                         @if($request->coupon_discount_amount > 0)
                             <p class="text-sm text-success-600 mt-1">-₱{{ number_format($request->coupon_discount_amount, 2) }}</p>
                         @endif
-                        @if(!$request->appliedCoupon->isValid())
-                            <p class="text-sm text-error-600 mt-1 flex items-center gap-1">
-                                <x-lucide-alert-circle class="w-3 h-3" />
-                                Expired
-                            </p>
-                        @endif
+                        {{-- Don't show expired warning for applied coupons - discount already locked in --}}
                     </div>
                     <div class="p-3 bg-success-50 rounded-xl">
                         <x-lucide-ticket class="w-5 h-5 text-success-500" />
@@ -519,9 +514,7 @@
                                 <div class="bg-neutral-50 rounded-xl p-4 mb-4 border border-neutral-100">
                                     <div class="flex items-center justify-between mb-2">
                                         <p class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Coupon Applied</p>
-                                        @if(!$request->appliedCoupon->isValid())
-                                            <span class="text-xs text-error-600 font-medium">Expired</span>
-                                        @endif
+                                        {{-- Don't show expired warning - discount already locked in --}}
                                     </div>
                                     <div class="flex items-center justify-between mb-3">
                                         <div>
@@ -549,6 +542,9 @@
                                 <x-coupon-apply-form :serviceRequest="$request" />
                             @endif
                         @endif
+
+                        <!-- Loyalty Points Redemption -->
+                        <x-loyalty-points-apply-form :serviceRequest="$request" />
 
                         <!-- Pay Now Button (only if there's a balance due) -->
                         @if($currentPaymentDue > 0 && ($request->status === 'pending_payment' || $request->status === 'approved' || $request->status === 'in_progress'))
@@ -597,9 +593,7 @@
                                 <div class="bg-neutral-50 rounded-xl p-4 mb-4 border border-neutral-100">
                                     <div class="flex items-center justify-between mb-2">
                                         <p class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Coupon Applied</p>
-                                        @if(!$request->appliedCoupon->isValid())
-                                            <span class="text-xs text-error-600 font-medium">Expired</span>
-                                        @endif
+                                        {{-- Don't show expired warning - discount already locked in --}}
                                     </div>
                                     <div class="flex items-center justify-between mb-3">
                                         <div>
@@ -631,6 +625,9 @@
                                 <x-coupon-apply-form :serviceRequest="$request" />
                             @endif
                         @endif
+                        
+                        <!-- Loyalty Points Redemption -->
+                        <x-loyalty-points-apply-form :serviceRequest="$request" />
                         
                         <a href="{{ route('client.maya.checkout', $request->id) }}" 
                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-colors w-full">

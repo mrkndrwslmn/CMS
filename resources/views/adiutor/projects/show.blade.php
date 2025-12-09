@@ -17,17 +17,21 @@
             <div class="flex-1">
                 <div class="flex items-center space-x-3 mb-2">
                     <h1 class="text-2xl font-semibold text-neutral-800">{{ $project->title }}</h1>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                        @if($project->assignment_status === 'active') bg-success-100 text-success-700
-                        @elseif($project->assignment_status === 'pending') bg-warning-100 text-warning-700
-                        @elseif($project->assignment_status === 'completed') bg-primary-100 text-primary-700
-                        @else bg-neutral-100 text-neutral-600 @endif">
-                        <span class="w-2 h-2 rounded-full mr-2
-                            @if($project->assignment_status === 'active') bg-success-500
-                            @elseif($project->assignment_status === 'pending') bg-warning-500
-                            @elseif($project->assignment_status === 'completed') bg-primary-500
-                            @else bg-neutral-500 @endif">
-                        </span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+                        @if($project->assignment_status === 'active') bg-success-50 text-success-700
+                        @elseif($project->assignment_status === 'assigned') bg-warning-50 text-warning-700
+                        @elseif($project->assignment_status === 'completed') bg-success-50 text-success-700
+                        @elseif($project->assignment_status === 'removed') bg-neutral-50 text-neutral-600
+                        @else bg-neutral-50 text-neutral-600 @endif">
+                        @if($project->assignment_status === 'active')
+                            <x-lucide-check-circle class="w-3 h-3" />
+                        @elseif($project->assignment_status === 'assigned')
+                            <x-lucide-clock class="w-3 h-3" />
+                        @elseif($project->assignment_status === 'completed')
+                            <x-lucide-check-square class="w-3 h-3" />
+                        @else
+                            <x-lucide-circle-dashed class="w-3 h-3" />
+                        @endif
                         {{ ucfirst($project->assignment_status) }}
                     </span>
                 </div>
@@ -55,7 +59,7 @@
                 <p class="text-2xl font-semibold text-neutral-800">
                     ₱{{ number_format($project->agreed_rate ?? $project->budget, 2) }}
                 </p>
-                <p class="text-xs text-neutral-500 mt-1">{{ ucfirst($project->budget_type) }}</p>
+                <p class="text-xs text-neutral-500 mt-1">{{ $project->budget_type === 'fixed' ? 'Fixed Rate' : 'Hourly Rate' }}</p>
             </div>
 
             <div class="p-4 bg-neutral-50 rounded-xl">
@@ -207,10 +211,17 @@
                                             <x-lucide-calendar class="w-4 h-4 mr-1" />
                                             {{ \Carbon\Carbon::parse($milestone->due_date)->format('M d, Y') }}
                                         </span>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            @if($milestone->status === 'completed') bg-success-100 text-success-700
-                                            @elseif($milestone->status === 'in_progress') bg-primary-100 text-primary-700
-                                            @else bg-neutral-100 text-neutral-600 @endif">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            @if($milestone->status === 'completed') bg-success-50 text-success-700
+                                            @elseif($milestone->status === 'in_progress') bg-primary-50 text-primary-700
+                                            @else bg-neutral-50 text-neutral-600 @endif">
+                                            @if($milestone->status === 'completed')
+                                                <x-lucide-check-circle class="w-3 h-3" />
+                                            @elseif($milestone->status === 'in_progress')
+                                                <x-lucide-loader class="w-3 h-3" />
+                                            @else
+                                                <x-lucide-circle-dashed class="w-3 h-3" />
+                                            @endif
                                             {{ ucfirst(str_replace('_', ' ', $milestone->status)) }}
                                         </span>
                                     </div>
@@ -262,19 +273,30 @@
                                                 </span>
                                             @endif
                                             @if($task->priority ?? null)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                                    @if($task->priority === 'urgent') bg-error-100 text-error-700
-                                                    @elseif($task->priority === 'high') bg-warning-100 text-warning-700
-                                                    @else bg-neutral-100 text-neutral-600 @endif">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                    @if($task->priority === 'urgent') bg-error-50 text-error-700
+                                                    @elseif($task->priority === 'high') bg-warning-50 text-warning-700
+                                                    @elseif($task->priority === 'medium') bg-primary-50 text-primary-700
+                                                    @else bg-neutral-50 text-neutral-600 @endif">
+                                                    @if(in_array($task->priority, ['urgent', 'high']))
+                                                        <x-lucide-alert-triangle class="w-3 h-3" />
+                                                    @endif
                                                     {{ ucfirst($task->priority) }}
                                                 </span>
                                             @endif
                                         </div>
                                     </div>
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-                                        @if(($task->status ?? 'pending') === 'completed') bg-success-100 text-success-700
-                                        @elseif(($task->status ?? 'pending') === 'in_progress') bg-primary-100 text-primary-700
-                                        @else bg-neutral-100 text-neutral-600 @endif">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        @if(($task->status ?? 'pending') === 'completed') bg-success-50 text-success-700
+                                        @elseif(($task->status ?? 'pending') === 'in_progress') bg-primary-50 text-primary-700
+                                        @else bg-neutral-50 text-neutral-600 @endif">
+                                        @if(($task->status ?? 'pending') === 'completed')
+                                            <x-lucide-check-circle class="w-3 h-3" />
+                                        @elseif(($task->status ?? 'pending') === 'in_progress')
+                                            <x-lucide-loader class="w-3 h-3" />
+                                        @else
+                                            <x-lucide-clock class="w-3 h-3" />
+                                        @endif
                                         {{ ucfirst(str_replace('_', ' ', $task->status ?? 'pending')) }}
                                     </span>
                                 </div>
@@ -367,13 +389,14 @@
                                         <div class="flex items-center gap-2">
                                             @php
                                                 $statusConfig = match($task->status) {
-                                                    'completed' => ['bg' => 'bg-success-100', 'text' => 'text-success-700'],
-                                                    'in_progress' => ['bg' => 'bg-primary-100', 'text' => 'text-primary-700'],
-                                                    'pending' => ['bg' => 'bg-warning-100', 'text' => 'text-warning-700'],
-                                                    default => ['bg' => 'bg-neutral-100', 'text' => 'text-neutral-600']
+                                                    'completed' => ['bg' => 'bg-success-50', 'text' => 'text-success-700', 'icon' => 'check-circle'],
+                                                    'in_progress' => ['bg' => 'bg-primary-50', 'text' => 'text-primary-700', 'icon' => 'loader'],
+                                                    'pending' => ['bg' => 'bg-warning-50', 'text' => 'text-warning-700', 'icon' => 'clock'],
+                                                    default => ['bg' => 'bg-neutral-50', 'text' => 'text-neutral-600', 'icon' => 'circle-dashed']
                                                 };
                                             @endphp
-                                            <span class="px-2 py-1 text-xs font-medium rounded-full {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                                <x-dynamic-component :component="'lucide-' . $statusConfig['icon']" class="w-3 h-3" />
                                                 {{ ucfirst(str_replace('_', ' ', $task->status)) }}
                                             </span>
                                             <x-lucide-chevron-down class="w-5 h-5 text-neutral-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''" />
@@ -461,8 +484,13 @@
                     </h2>
                     <div class="space-y-3">
                         @foreach($teamMembers as $member)
+                            @php
+                                $memberProfileUrl = $member->profilePic 
+                                    ? (str_starts_with($member->profilePic, 'http') ? $member->profilePic : asset('storage/' . $member->profilePic))
+                                    : 'https://ui-avatars.com/api/?name=' . urlencode($member->fullName);
+                            @endphp
                             <div class="flex items-center space-x-3">
-                                <img src="{{ $member->getProfilePictureUrl() }}" 
+                                <img src="{{ $memberProfileUrl }}" 
                                      alt="{{ $member->fullName }}" 
                                      class="w-10 h-10 rounded-full object-cover">
                                 <div class="flex-1">

@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Events\TierUpgraded;
 use App\Mail\LoyaltyPointsEarnedMail;
 use App\Mail\TierUpgradedMail;
+use App\Services\MilestoneService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -195,6 +196,40 @@ class LoyaltyService
                 'service_request_id' => $request->id,
                 'points' => $bonusPoints,
             ]);
+
+            // Clear caches after earning points
+            $this->clearUserCache($user);
+            $this->clearGlobalCache();
+
+            // Send points earned email notification
+            try {
+                $user->refresh();
+                $user->load('loyaltyPoints');
+                
+                // Get the transaction that was just created
+                $transaction = LoyaltyTransaction::where('user_id', $user->id)
+                    ->where('service_request_id', $request->id)
+                    ->where('transaction_type', 'earned')
+                    ->where('action_type', 'project_completed')
+                    ->latest()
+                    ->first();
+                
+                if ($transaction) {
+                    Mail::to($user->email)
+                        ->queue(new LoyaltyPointsEarnedMail($user, $transaction));
+                    
+                    Log::info('Project completion bonus email queued', [
+                        'user_id' => $user->id,
+                        'points' => $bonusPoints,
+                        'transaction_id' => $transaction->id
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send project completion bonus email', [
+                    'error' => $e->getMessage(),
+                    'user_id' => $user->id
+                ]);
+            }
         } catch (\Exception $e) {
             Log::error('Failed to award project completion bonus', [
                 'error' => $e->getMessage(),
@@ -260,6 +295,40 @@ class LoyaltyService
                 'service_request_id' => $request->id,
                 'points' => $bonusPoints,
             ]);
+
+            // Clear caches after earning points
+            $this->clearUserCache($user);
+            $this->clearGlobalCache();
+
+            // Send points earned email notification
+            try {
+                $user->refresh();
+                $user->load('loyaltyPoints');
+                
+                // Get the transaction that was just created
+                $transaction = LoyaltyTransaction::where('user_id', $user->id)
+                    ->where('service_request_id', $request->id)
+                    ->where('transaction_type', 'earned')
+                    ->where('source', 'feedback_bonus')
+                    ->latest()
+                    ->first();
+                
+                if ($transaction) {
+                    Mail::to($user->email)
+                        ->queue(new LoyaltyPointsEarnedMail($user, $transaction));
+                    
+                    Log::info('Feedback bonus email queued', [
+                        'user_id' => $user->id,
+                        'points' => $bonusPoints,
+                        'transaction_id' => $transaction->id
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send feedback bonus email', [
+                    'error' => $e->getMessage(),
+                    'user_id' => $user->id
+                ]);
+            }
         } catch (\Exception $e) {
             Log::error('Failed to award feedback bonus points', [
                 'error' => $e->getMessage(),
@@ -341,6 +410,10 @@ class LoyaltyService
             );
 
             DB::commit();
+
+            // Recalculate payment amounts after discount is applied (outside transaction)
+            // This ensures milestones/downpayment reflect the discounted budget
+            MilestoneService::recalculatePaymentAmountsForRequest($request);
 
             Log::info('Loyalty discount applied to service request', [
                 'user_id' => $user->id,

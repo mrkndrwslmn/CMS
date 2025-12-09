@@ -325,7 +325,7 @@ class RevisionRequestController extends Controller
 
                 foreach ($validated['task_ids'] as $taskId) {
                     $task = Task::where('taskID', $taskId)
-                        ->where('projectID', $projectId)
+                        ->where('project_id', $projectId)
                         ->first();
                     
                     if (!$task) continue;

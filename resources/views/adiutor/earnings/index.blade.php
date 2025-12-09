@@ -18,23 +18,23 @@
                 <p class="text-sm text-neutral-500 mt-1">Track your earnings and work history</p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-                <x-ui.button variant="secondary" href="{{ route('adiutor.earnings.wallet') }}">
+                <a href="{{ route('adiutor.earnings.wallet') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-neutral-700 text-sm font-medium rounded-lg border border-neutral-200 shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all">
                     <x-lucide-wallet class="w-4 h-4" />
                     My Wallet
-                </x-ui.button>
-                <x-ui.button variant="secondary" href="{{ route('adiutor.earnings.payouts') }}">
+                </a>
+                <a href="{{ route('adiutor.earnings.payouts') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-neutral-700 text-sm font-medium rounded-lg border border-neutral-200 shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all">
                     <x-lucide-receipt class="w-4 h-4" />
                     Payout History
-                </x-ui.button>
-                <x-ui.button variant="secondary" href="{{ route('adiutor.profile.earnings') }}">
+                </a>
+                <a href="{{ route('adiutor.profile.earnings') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-neutral-700 text-sm font-medium rounded-lg border border-neutral-200 shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all">
                     <x-lucide-settings class="w-4 h-4" />
                     Settings
-                </x-ui.button>
+                </a>
                 @if($approvedEarnings >= ($adiutor->adiutorProfile->minimum_payout_amount ?? 500))
-                <x-ui.button variant="primary" href="{{ route('adiutor.earnings.request-form') }}">
+                <a href="{{ route('adiutor.earnings.request-form') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
                     <x-lucide-banknote class="w-4 h-4" />
                     Request Payout
-                </x-ui.button>
+                </a>
                 @endif
             </div>
         </div>
@@ -296,14 +296,14 @@
                 <!-- Filters -->
                 <form method="GET" action="{{ route('adiutor.earnings.index') }}" class="flex flex-wrap items-center gap-3">
                     <select name="period" onchange="this.form.submit()" 
-                            class="text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                            class="text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                         <option value="all" {{ $periodFilter == 'all' ? 'selected' : '' }}>All Time</option>
                         <option value="month" {{ $periodFilter == 'month' ? 'selected' : '' }}>This Month</option>
                         <option value="week" {{ $periodFilter == 'week' ? 'selected' : '' }}>This Week</option>
                     </select>
                     
                     <select name="status" onchange="this.form.submit()"
-                            class="text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                            class="text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                         <option value="all" {{ $statusFilter == 'all' ? 'selected' : '' }}>All Status</option>
                         <option value="approved" {{ $statusFilter == 'approved' ? 'selected' : '' }}>Approved</option>
                         <option value="pending" {{ $statusFilter == 'pending' ? 'selected' : '' }}>Pending</option>

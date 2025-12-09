@@ -28,20 +28,20 @@ function filterProjects(status, clickedTab) {
     
     // Update tab styles
     tabs.forEach(tab => {
-        tab.classList.remove('active', 'border-accent-500', 'text-accent-600');
+        tab.classList.remove('active', 'border-info-500', 'text-info-600');
         tab.classList.add('border-transparent', 'text-gray-500');
     });
     
     // Highlight the clicked tab or find the active tab by filter
     if (clickedTab) {
         clickedTab.classList.remove('border-transparent', 'text-gray-500');
-        clickedTab.classList.add('active', 'border-accent-500', 'text-accent-600');
+        clickedTab.classList.add('active', 'border-info-500', 'text-info-600');
     } else {
         // Find and activate the tab that matches the status
         const activeTab = document.querySelector(`.filter-tab[data-filter="${status}"]`);
         if (activeTab) {
             activeTab.classList.remove('border-transparent', 'text-gray-500');
-            activeTab.classList.add('active', 'border-accent-500', 'text-accent-600');
+            activeTab.classList.add('active', 'border-info-500', 'text-info-600');
         }
     }
     

@@ -27,19 +27,19 @@
                     </div>
                 </div>
                 <div class="flex mb-4">
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
                 </div>
                 <p class="text-neutral-600 italic">"Exceptional work! The team delivered our web application ahead of schedule and exceeded all our expectations."</p>
             </div>
 
             <div class="glass-dark rounded-2xl p-6">
                 <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 rounded-full bg-accent-200 flex items-center justify-center mr-4">
-                        <span class="text-lg font-bold text-accent-700">SM</span>
+                    <div class="w-12 h-12 rounded-full bg-info-200 flex items-center justify-center mr-4">
+                        <span class="text-lg font-bold text-info-700">SM</span>
                     </div>
                     <div>
                         <h3 class="font-semibold">Sarah Martinez</h3>
@@ -47,11 +47,11 @@
                     </div>
                 </div>
                 <div class="flex mb-4">
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
                 </div>
                 <p class="text-neutral-600 italic">"Professional, responsive, and incredibly skilled. They transformed our vision into a beautiful, functional product."</p>
             </div>
@@ -67,11 +67,11 @@
                     </div>
                 </div>
                 <div class="flex mb-4">
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
-                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
+                    <i class="fas fa-star text-warning-400"></i>
                 </div>
                 <p class="text-neutral-600 italic">"Their technical expertise and attention to detail made all the difference. Highly recommend!"</p>
             </div>

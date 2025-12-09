@@ -341,7 +341,7 @@ referralCodeInput.addEventListener('input', function() {
     referralCodeMessage.classList.add('hidden');
     
     referralCodeTimeout = setTimeout(() => {
-        fetch('{{ route("client.referrals.validate") }}', {
+        fetch('{{ url("/referral/validate") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -349,7 +349,13 @@ referralCodeInput.addEventListener('input', function() {
             },
             body: JSON.stringify({ code: code })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                console.error('Response not OK:', response.status, response.statusText);
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             referralCodeLoading.classList.add('hidden');
             
@@ -363,7 +369,8 @@ referralCodeInput.addEventListener('input', function() {
                 referralCodeMessage.className = 'mt-1.5 text-xs text-error-600 block';
             }
         })
-        .catch(() => {
+        .catch((error) => {
+            console.error('Fetch error:', error);
             referralCodeLoading.classList.add('hidden');
             referralCodeInvalid.classList.remove('hidden');
             referralCodeMessage.textContent = 'Unable to validate code';

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.layouts.app')
 
 @section('title', 'Projects Report')
 
@@ -132,13 +132,17 @@
         <!-- Project Status Trend -->
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Project Status Trend</h3>
-            <canvas id="projectTrendChart" height="300"></canvas>
+            <div class="h-64">
+                <canvas id="projectTrendChart"></canvas>
+            </div>
         </div>
 
         <!-- Budget Distribution -->
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Budget Distribution</h3>
-            <canvas id="budgetChart" height="300"></canvas>
+            <div class="h-64">
+                <canvas id="budgetChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -147,13 +151,17 @@
         <!-- Priority Distribution -->
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Projects by Priority</h3>
-            <canvas id="priorityChart" height="300"></canvas>
+            <div class="h-64">
+                <canvas id="priorityChart"></canvas>
+            </div>
         </div>
 
         <!-- Duration Analysis -->
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Average Project Duration by Priority</h3>
-            <canvas id="durationChart" height="300"></canvas>
+            <div class="h-64">
+                <canvas id="durationChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -210,6 +218,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Project Status Trend Chart
+const projectTrendCtx = document.getElementById('projectTrendChart').getContext('2d');
 const projectTrendData = @json($projectTrend);
 const projectDates = [...new Set(projectTrendData.map(item => item.date))].sort();
 const projectStatuses = [...new Set(projectTrendData.map(item => item.status))];
@@ -234,7 +243,7 @@ const projectTrendDatasets = projectStatuses.map(status => {
     };
 });
 
-new Chart(document.getElementById('projectTrendChart'), {
+new Chart(projectTrendCtx, {
     type: 'line',
     data: {
         labels: projectDates,
@@ -252,8 +261,9 @@ new Chart(document.getElementById('projectTrendChart'), {
 });
 
 // Budget Distribution Chart
+const budgetCtx = document.getElementById('budgetChart').getContext('2d');
 const budgetData = @json($budgetRanges);
-new Chart(document.getElementById('budgetChart'), {
+new Chart(budgetCtx, {
     type: 'doughnut',
     data: {
         labels: budgetData.map(item => item.budget_range),
@@ -270,13 +280,19 @@ new Chart(document.getElementById('budgetChart'), {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
     }
 });
 
 // Priority Distribution Chart
+const priorityCtx = document.getElementById('priorityChart').getContext('2d');
 const priorityData = @json($priorityDistribution);
-new Chart(document.getElementById('priorityChart'), {
+new Chart(priorityCtx, {
     type: 'bar',
     data: {
         labels: priorityData.map(item => item.priority.toUpperCase()),
@@ -300,8 +316,9 @@ new Chart(document.getElementById('priorityChart'), {
 });
 
 // Duration Analysis Chart
+const durationCtx = document.getElementById('durationChart').getContext('2d');
 const durationData = @json($durationAnalysis);
-new Chart(document.getElementById('durationChart'), {
+new Chart(durationCtx, {
     type: 'bar',
     data: {
         labels: durationData.map(item => item.priority.toUpperCase()),

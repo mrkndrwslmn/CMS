@@ -3,23 +3,16 @@
 @section('title', 'Request Payout')
 
 @section('content')
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <x-ui.breadcrumb :items="[
-        ['label' => 'Dashboard', 'url' => route('adiutor.dashboard')],
-        ['label' => 'Earnings', 'url' => route('adiutor.earnings.index')],
-        ['label' => 'Request Payout'],
-    ]" class="mb-6" />
+        ['label' => 'Dashboard', 'route' => 'adiutor.dashboard', 'icon' => 'home'],
+        ['label' => 'Earnings', 'route' => 'adiutor.earnings.index', 'icon' => 'wallet'],
+        ['label' => 'Request Payout', 'icon' => 'banknote'],
+    ]" />
 
     <!-- Header -->
-    <div class="mb-8">
-        <div class="flex items-center gap-4 mb-4">
-            <a href="{{ route('adiutor.earnings.index') }}" 
-               class="inline-flex items-center text-neutral-600 hover:text-neutral-800 transition-colors">
-                <x-lucide-chevron-left class="w-5 h-5 mr-1" />
-                Back to Earnings
-            </a>
-        </div>
+    <div class="mb-6">
         <h1 class="text-2xl font-semibold text-neutral-800">Request Payout</h1>
         <p class="text-sm text-neutral-500 mt-1">Submit a request to receive your approved earnings</p>
     </div>
@@ -45,23 +38,52 @@
 
     <!-- Available Earnings Summary -->
     <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-8 mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div class="mb-6 md:mb-0">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+            <div>
                 <div class="flex items-center gap-3 mb-3">
                     <div class="p-3 bg-primary-50 rounded-xl">
                         <x-lucide-wallet class="w-6 h-6 text-primary-600" />
                     </div>
-                    <h2 class="text-lg font-medium text-neutral-600">Available for Payout</h2>
+                    <h2 class="text-lg font-medium text-neutral-600">Total Available for Payout</h2>
                 </div>
                 <p class="text-4xl font-bold text-neutral-800">₱{{ number_format($totalUnpaid, 2) }}</p>
-                <p class="text-sm text-neutral-500 mt-2">{{ number_format($totalHours, 1) }} hours tracked</p>
             </div>
+            
+            <!-- Earnings Breakdown -->
             <div class="flex flex-col gap-3 text-sm">
+                @if($timeEntryTotal > 0)
                 <div class="flex items-center gap-2 text-neutral-600">
-                    <x-lucide-check-circle-2 class="w-5 h-5 text-success-500" />
-                    <span>{{ $unpaidEarnings->count() }} approved time entries</span>
+                    <div class="p-1.5 bg-primary-50 rounded-lg">
+                        <x-lucide-clock class="w-4 h-4 text-primary-500" />
+                    </div>
+                    <span>Hourly: ₱{{ number_format($timeEntryTotal, 2) }} ({{ number_format($totalHours, 1) }}h)</span>
                 </div>
+                @endif
+                @if($fixedRateTotal > 0)
                 <div class="flex items-center gap-2 text-neutral-600">
+                    <div class="p-1.5 bg-success-50 rounded-lg">
+                        <x-lucide-briefcase class="w-4 h-4 text-success-500" />
+                    </div>
+                    <span>Fixed Rate Projects: ₱{{ number_format($fixedRateTotal, 2) }}</span>
+                </div>
+                @endif
+                @if($milestoneTotal > 0)
+                <div class="flex items-center gap-2 text-neutral-600">
+                    <div class="p-1.5 bg-warning-50 rounded-lg">
+                        <x-lucide-flag class="w-4 h-4 text-warning-500" />
+                    </div>
+                    <span>Milestones: ₱{{ number_format($milestoneTotal, 2) }}</span>
+                </div>
+                @endif
+                @if($referralCreditsAvailable > 0)
+                <div class="flex items-center gap-2 text-neutral-600">
+                    <div class="p-1.5 bg-accent-50 rounded-lg">
+                        <x-lucide-users class="w-4 h-4 text-accent-500" />
+                    </div>
+                    <span>Referral Credits: ₱{{ number_format($referralCreditsAvailable, 2) }}</span>
+                </div>
+                @endif
+                <div class="flex items-center gap-2 text-neutral-600 pt-2 border-t border-neutral-100">
                     <x-lucide-banknote class="w-5 h-5 text-primary-500" />
                     <span>Minimum: ₱{{ number_format($adiutor->adiutorProfile->minimum_payout_amount ?? 500, 2) }}</span>
                 </div>
@@ -90,6 +112,12 @@
         <!-- Payout Request Form -->
         <form action="{{ route('adiutor.earnings.request') }}" method="POST" class="space-y-8">
             @csrf
+            
+            <!-- Hidden fields to include all earnings types -->
+            <input type="hidden" name="include_time_entries" value="1">
+            <input type="hidden" name="include_fixed_rate" value="1">
+            <input type="hidden" name="include_milestones" value="1">
+            <input type="hidden" name="include_referral_credits" value="1">
 
             <!-- Period Selection -->
             <x-ui.card>
@@ -108,7 +136,7 @@
                                    name="period_start" 
                                    value="{{ old('period_start', $suggestedStart->format('Y-m-d')) }}"
                                    required
-                                   class="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
+                                   class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                         </div>
                         <div>
                             <label for="period_end" class="block text-sm font-medium text-neutral-700 mb-2">
@@ -119,12 +147,12 @@
                                    name="period_end" 
                                    value="{{ old('period_end', $suggestedEnd->format('Y-m-d')) }}"
                                    required
-                                   class="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
+                                   class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                         </div>
                     </div>
                     <p class="text-xs text-neutral-500 mt-3 flex items-center gap-1">
                         <x-lucide-info class="w-4 h-4" />
-                        Only approved and unpaid time entries within this period will be included
+                        Earnings will be filtered based on this period where applicable
                     </p>
                 </div>
             </x-ui.card>
@@ -142,7 +170,7 @@
                         </label>
                         <select id="payout_method" 
                                 name="payout_method"
-                                class="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
+                                class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                             <option value="">Use default ({{ ucwords(str_replace('_', ' ', $adiutor->adiutorProfile->preferred_payout_method ?? 'Not set')) }})</option>
                             <option value="bank_transfer" {{ old('payout_method') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
                             <option value="gcash" {{ old('payout_method') == 'gcash' ? 'selected' : '' }}>GCash</option>
@@ -158,7 +186,7 @@
                         <div class="bg-neutral-50 rounded-xl p-4">
                             <p class="text-sm font-medium text-neutral-700 mb-2">Saved Payment Details:</p>
                             <div class="text-sm text-neutral-600 space-y-1">
-                                @foreach(json_decode($adiutor->adiutorProfile->payout_details, true) ?? [] as $key => $value)
+                                @foreach($adiutor->adiutorProfile->payout_details ?? [] as $key => $value)
                                     <p><span class="font-medium">{{ ucwords(str_replace('_', ' ', $key)) }}:</span> {{ $value }}</p>
                                 @endforeach
                             </div>
@@ -195,31 +223,34 @@
                               name="notes" 
                               rows="4"
                               placeholder="Add any special instructions or notes for this payout request..."
-                              class="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">{{ old('notes') }}</textarea>
+                              class="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">{{ old('notes') }}</textarea>
                     <p class="text-xs text-neutral-500 mt-2">Maximum 1000 characters</p>
                 </div>
             </x-ui.card>
 
-            <!-- Action Buttons -->
-            <div class="flex items-center justify-between gap-4">
-                <x-ui.button href="{{ route('adiutor.earnings.index') }}" variant="secondary">
-                    Cancel
-                </x-ui.button>
-                <x-ui.button type="submit" variant="primary">
-                    <x-lucide-check class="w-5 h-5" />
-                    Submit Payout Request
-                </x-ui.button>
-            </div>
-        </form>
-    @endif
-
-    <!-- Time Entries Preview -->
-    @if($unpaidEarnings->isNotEmpty())
-    <div class="mt-8">
+            <!-- Earnings Preview -->
+    @if($unpaidTimeEntries->isNotEmpty() || $fixedRateAssignments->isNotEmpty() || $milestoneEarnings->isNotEmpty())
+    <div class="mt-8 space-y-6">
+        
+        <!-- Time Entries Section -->
+        @if($unpaidTimeEntries->isNotEmpty())
         <x-ui.card>
             <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50 rounded-t-2xl">
-                <h3 class="text-lg font-semibold text-neutral-800">Time Entries to be Included</h3>
-                <p class="text-sm text-neutral-500 mt-1">Preview of approved unpaid entries</p>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-primary-50 rounded-lg">
+                            <x-lucide-clock class="w-5 h-5 text-primary-600" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-neutral-800">Time Entries</h3>
+                            <p class="text-sm text-neutral-500">{{ $unpaidTimeEntries->count() }} approved entries</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-bold text-primary-600">₱{{ number_format($timeEntryTotal, 2) }}</p>
+                        <p class="text-xs text-neutral-500">{{ number_format($totalHours, 1) }} hours</p>
+                    </div>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -233,7 +264,7 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-neutral-100">
-                        @foreach($unpaidEarnings as $entry)
+                        @foreach($unpaidTimeEntries as $entry)
                         <tr class="hover:bg-neutral-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-800">
                                 {{ $entry->start_time->format('M d, Y') }}
@@ -254,18 +285,173 @@
                         </tr>
                         @endforeach
                     </tbody>
-                    <tfoot class="bg-neutral-50 border-t-2 border-neutral-200">
-                        <tr>
-                            <td colspan="2" class="px-6 py-4 text-sm font-semibold text-neutral-800">Total</td>
-                            <td class="px-6 py-4 text-sm font-semibold text-neutral-800">{{ number_format($totalHours, 2) }}h</td>
-                            <td class="px-6 py-4"></td>
-                            <td class="px-6 py-4 text-lg font-bold text-primary-600">₱{{ number_format($totalUnpaid, 2) }}</td>
-                        </tr>
-                    </tfoot>
                 </table>
+            </div>
+        </x-ui.card>
+        @endif
+
+        <!-- Fixed Rate Projects Section -->
+        @if($fixedRateAssignments->isNotEmpty())
+        <x-ui.card>
+            <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-success-50 rounded-lg">
+                            <x-lucide-briefcase class="w-5 h-5 text-success-600" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-neutral-800">Fixed Rate Projects</h3>
+                            <p class="text-sm text-neutral-500">{{ $fixedRateAssignments->count() }} completed projects</p>
+                        </div>
+                    </div>
+                    <p class="text-lg font-bold text-success-600">₱{{ number_format($fixedRateTotal, 2) }}</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-neutral-50 border-b border-neutral-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Project</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Approved On</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-neutral-100">
+                        @foreach($fixedRateAssignments as $assignment)
+                        <tr class="hover:bg-neutral-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-neutral-800">{{ $assignment->project->title }}</div>
+                                <div class="text-xs text-neutral-500">{{ $assignment->project->client->name ?? 'N/A' }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-success-50 text-success-700">
+                                    <x-lucide-check-circle class="w-3 h-3" />
+                                    Project Completed
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
+                                {{ $assignment->fixed_rate_approved_at ? \Carbon\Carbon::parse($assignment->fixed_rate_approved_at)->format('M d, Y') : 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-neutral-800">
+                                ₱{{ number_format($assignment->agreed_rate, 2) }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </x-ui.card>
+        @endif
+
+        <!-- Milestones Section -->
+        @if($milestoneEarnings->isNotEmpty())
+        <x-ui.card>
+            <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-warning-50 rounded-lg">
+                            <x-lucide-flag class="w-5 h-5 text-warning-600" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-neutral-800">Milestone Payments</h3>
+                            <p class="text-sm text-neutral-500">{{ $milestoneEarnings->count() }} paid milestones</p>
+                        </div>
+                    </div>
+                    <p class="text-lg font-bold text-warning-600">₱{{ number_format($milestoneTotal, 2) }}</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-neutral-50 border-b border-neutral-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Milestone</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Project</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Your Tasks</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase">Your Share</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-neutral-100">
+                        @foreach($milestoneEarnings as $data)
+                        <tr class="hover:bg-neutral-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-neutral-800">{{ $data['milestone']->phase_name }}</div>
+                                <div class="text-xs text-neutral-500">Total: ₱{{ number_format($data['milestone']->amount, 2) }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-neutral-700">
+                                {{ $data['project']->title }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">
+                                {{ $data['tasks_count'] }} / {{ $data['total_tasks'] }} tasks
+                                <span class="text-xs text-neutral-500">({{ number_format(($data['tasks_count'] / $data['total_tasks']) * 100, 0) }}%)</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-neutral-800">
+                                ₱{{ number_format($data['amount'], 2) }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </x-ui.card>
+        @endif
+
+        <!-- Referral Credits Section -->
+        @if($referralCreditsAvailable > 0)
+        <x-ui.card>
+            <div class="px-6 py-4 border-b border-neutral-100 bg-neutral-50 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-accent-50 rounded-lg">
+                            <x-lucide-users class="w-5 h-5 text-accent-600" />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-neutral-800">Referral Credits</h3>
+                            <p class="text-sm text-neutral-500">Earnings from successful referrals</p>
+                        </div>
+                    </div>
+                    <p class="text-lg font-bold text-accent-600">₱{{ number_format($referralCreditsAvailable, 2) }}</p>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center gap-3 text-sm text-neutral-600">
+                    <x-lucide-info class="w-4 h-4 text-neutral-400" />
+                    <span>Your referral credits will be included in this payout and reset to zero after withdrawal.</span>
+                </div>
+            </div>
+        </x-ui.card>
+        @endif
+
+        <!-- Grand Total -->
+        <x-ui.card class="bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200">
+            <div class="p-6 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-white rounded-xl shadow-sm">
+                        <x-lucide-calculator class="w-6 h-6 text-primary-600" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-primary-700">Grand Total</p>
+                        <p class="text-xs text-primary-600">All earnings combined</p>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-primary-700">₱{{ number_format($totalUnpaid, 2) }}</p>
             </div>
         </x-ui.card>
     </div>
     @endif
-</div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-between gap-4">
+                <a href="{{ route('adiutor.earnings.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-neutral-700 text-sm font-medium rounded-lg border border-neutral-200 shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary-700 hover:shadow-md transition-all">
+                    <x-lucide-check class="w-4 h-4" />
+                    Submit Payout Request
+                </button>
+            </div>
+        </form>
+    @endif
+
+    </div>
 @endsection

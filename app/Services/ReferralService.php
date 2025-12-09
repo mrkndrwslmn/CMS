@@ -98,12 +98,27 @@ class ReferralService
                 'metadata' => $metadata,
             ]);
 
-            // Update new user record
-            $newUser->update([
+            // Update new user record with referral info
+            $updated = $newUser->update([
                 'referred_by_user_id' => $referrer->id,
                 'referred_by_code' => $referralCode,
                 'referral_registered_at' => now(),
             ]);
+            
+            if (!$updated) {
+                Log::error('Failed to update user with referral info', [
+                    'user_id' => $newUser->id,
+                    'referrer_id' => $referrer->id,
+                    'referral_code' => $referralCode,
+                ]);
+            } else {
+                // Refresh the model to ensure changes are reflected
+                $newUser->refresh();
+                Log::info('User updated with referral info', [
+                    'user_id' => $newUser->id,
+                    'referred_by_user_id' => $newUser->referred_by_user_id,
+                ]);
+            }
 
             // Update referral code stats
             $referrerCode->incrementReferral('pending');
@@ -150,11 +165,24 @@ class ReferralService
     {
         try {
             $user = $payment->client;
+            
+            Log::info('Starting referral completion process', [
+                'payment_id' => $payment->id,
+                'user_id' => $user->id,
+                'payment_amount' => $payment->amount,
+            ]);
 
             // Check if user was referred
             if (!$user->isReferred()) {
+                Log::info('User was not referred, skipping referral processing', [
+                    'user_id' => $user->id,
+                ]);
                 return false;
             }
+            
+            Log::info('User was referred, checking for referral record', [
+                'user_id' => $user->id,
+            ]);
 
             // Find the referral record
             $referral = Referral::where('referred_id', $user->id)
@@ -162,8 +190,17 @@ class ReferralService
                 ->first();
 
             if (!$referral) {
+                Log::warning('No pending referral found for user', [
+                    'user_id' => $user->id,
+                    'all_referrals' => Referral::where('referred_id', $user->id)->get()->toArray(),
+                ]);
                 return false;
             }
+            
+            Log::info('Found pending referral', [
+                'referral_id' => $referral->id,
+                'referrer_id' => $referral->referrer_id,
+            ]);
 
             DB::beginTransaction();
 
@@ -177,6 +214,11 @@ class ReferralService
                 DB::rollBack();
                 return false;
             }
+            
+            Log::info('Payment qualifies for referral rewards', [
+                'payment_amount' => $payment->amount,
+                'min_amount' => $minQualifyingAmount,
+            ]);
 
             // Mark referral as completed
             $referral->markCompleted($payment);

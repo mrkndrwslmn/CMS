@@ -12,7 +12,10 @@
     <meta name="robots" content="@yield('robots', 'index, follow')">
     
     <!-- Favicon -->
-    <link rel="icon" href="@yield('favicon', 'https://qzdtlrbpjudrvffrnory.supabase.co/storage/v1/object/public/Treis%20Adiutor//favico.ico')" type="image/x-icon">
+    <link rel="icon" href="@yield('favicon', '/favicon.svg')" type="image/x-icon">
+    
+    <!-- Preload Critical Fonts (Branding) -->
+    <link rel="preload" href="{{ Vite::asset('resources/fonts/Stereofunk.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous" fetchpriority="high">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,11 +26,14 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
     
     <!-- Tailwind CSS (Local Build) -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/messaging.js'])
     
     <!-- External Libraries -->
     <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
     <script src="https://unpkg.com/gsap@3.12.0/dist/gsap.min.js"></script>
+    
+    <!-- Alpine.js for dropdown functionality -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <!-- Analytics -->
     @stack('analytics')
@@ -111,14 +117,373 @@
             <nav class="hidden md:block">
                 <ul class="flex space-x-8">
                     @auth
-                        <li><a href="{{ route('client.dashboard') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Dashboard</a></li>
-                        <li><a href="{{ route('client.profile') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Profile</a></li>
-                        <li>
-                            <form method="POST" action="{{ route('logout') }}" class="inline">
-                                @csrf
-                                <button type="submit" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Logout</button>
-                            </form>
-                        </li>
+                        <!-- Navigation -->
+                        <nav class="bg-white border-b border-neutral-100 fixed left-0 right-0 z-40" style="top: 0;" id="main-nav">
+                            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                                <div class="flex justify-between items-center h-16">
+                                    <!-- Logo -->
+                                    <div class="flex items-center">
+                                        <a href="{{ route('client.dashboard') }}" class="flex items-center gap-2">
+                                            <span class="text-xl font-branding text-primary-600">
+                                                {{ config('app.name', 'CMS') }}
+                                            </span>
+                                        </a>
+                                    </div>
+
+                                    <!-- Right Side - Desktop: Only New Request Button + Notifications + Profile Menu -->
+                                    <div class="hidden md:flex items-center gap-3">
+                                        <!-- New Request Button -->
+                                        <a href="{{ route('client.requests.create') }}" 
+                                        class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm font-medium">
+                                            <x-lucide-plus class="w-4 h-4" />
+                                            New Request
+                                        </a>
+                                        
+                                        <!-- Notifications Bell Component -->
+                                        @include('components.notification-bell')
+                                        
+                                        <!-- Profile Menu Dropdown -->
+                                        <div class="relative" x-data="{ open: false }">
+                                            <button @click="open = !open" 
+                                                    class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-neutral-50 transition-colors">
+                                                <img src="{{ auth()->user()->getProfilePictureUrl() }}" 
+                                                    alt="{{ auth()->user()->fullName }}" 
+                                                    class="w-8 h-8 rounded-full ring-2 ring-neutral-100 object-cover">
+                                                <x-lucide-chevron-down class="w-4 h-4 text-neutral-400" />
+                                            </button>
+                                            
+                                            <!-- Dropdown Menu -->
+                                            <div x-show="open" 
+                                                @click.away="open = false"
+                                                x-transition:enter="transition ease-out duration-100"
+                                                x-transition:enter-start="opacity-0 scale-95"
+                                                x-transition:enter-end="opacity-100 scale-100"
+                                                x-transition:leave="transition ease-in duration-75"
+                                                x-transition:leave-start="opacity-100 scale-100"
+                                                x-transition:leave-end="opacity-0 scale-95"
+                                                class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-neutral-100 py-2 z-50"
+                                                style="display: none;">
+                                                
+                                                <!-- User Info -->
+                                                <div class="px-4 py-3 border-b border-neutral-100">
+                                                    <p class="text-sm font-medium text-neutral-900">{{ auth()->user()->fullName }}</p>
+                                                    <p class="text-xs text-neutral-500 mt-0.5">{{ auth()->user()->email }}</p>
+                                                </div>
+                                                
+                                                <!-- Navigation Links -->
+                                                <div class="py-2">
+                                                    <a href="{{ route('client.dashboard') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-layout-dashboard class="w-5 h-5" />
+                                                        Dashboard
+                                                    </a>
+                                                                                    
+                                                    <a href="{{ url('/services') }}" 
+                                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.requests.create') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-search class="w-5 h-5" />
+                                                        Browse Services
+                                                    </a>
+
+                                                    <a href="{{ route('client.tasks') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.tasks') || request()->routeIs('client.projects.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-folder class="w-5 h-5" />
+                                                        My Projects
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.documents') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.documents') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-files class="w-5 h-5" />
+                                                        Documents
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.requests') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.requests*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-clipboard-list class="w-5 h-5" />
+                                                        Service Requests
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.messages.index') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.messages.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-message-circle class="w-5 h-5" />
+                                                        Messages
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.payments.history') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.payments.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-credit-card class="w-5 h-5" />
+                                                        Payments
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.feedback') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.feedback') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-star class="w-5 h-5" />
+                                                        Feedback
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.revisions.index') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.revisions.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-rotate-ccw class="w-5 h-5" />
+                                                        Revisions
+                                                        @if(($sidebarStats['pendingRevisionsCount'] ?? 0) > 0)
+                                                            <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['pendingRevisionsCount'] }}</span>
+                                                        @endif
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.notifications.index') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.notifications.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-bell class="w-5 h-5" />
+                                                        All Notifications
+                                                        @if(($sidebarStats['unreadNotificationsCount'] ?? 0) > 0)
+                                                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['unreadNotificationsCount'] }}</span>
+                                                        @endif
+                                                    </a>
+                                                </div>
+                                                
+                                                <!-- Rewards & Benefits Section -->
+                                                <div class="border-t border-neutral-100 py-2">
+                                                    <div class="px-4 py-2">
+                                                        <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Rewards & Benefits</p>
+                                                    </div>
+                                                    
+                                                    <a href="{{ route('client.referrals.dashboard') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.referrals.dashboard') || request()->routeIs('client.referrals.share') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-users class="w-5 h-5" />
+                                                        Referrals
+                                                        @if(($sidebarStats['pendingReferralsCount'] ?? 0) > 0)
+                                                            <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['pendingReferralsCount'] }}</span>
+                                                        @endif
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.referrals.history') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 pl-10 text-sm transition-colors {{ request()->routeIs('client.referrals.history') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                                                        <x-lucide-clock class="w-4 h-4" />
+                                                        Referral History
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.referrals.credits') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 pl-10 text-sm transition-colors {{ request()->routeIs('client.referrals.credits') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                                                        <x-lucide-wallet class="w-4 h-4" />
+                                                        Credits & Withdrawals
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.coupons.index') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.coupons.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-ticket class="w-5 h-5" />
+                                                        Coupons
+                                                        @if(($sidebarStats['activeCouponsCount'] ?? 0) > 0)
+                                                            <span class="ml-auto bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['activeCouponsCount'] }}</span>
+                                                        @endif
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.loyalty.dashboard') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.loyalty.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                        <x-lucide-award class="w-5 h-5" />
+                                                        Loyalty Program
+                                                        @if(($sidebarStats['userPoints'] ?? 0) > 0)
+                                                            <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($sidebarStats['userPoints']) }}</span>
+                                                        @endif
+                                                    </a>
+                                                    
+                                                    <a href="{{ route('client.loyalty.transactions') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 pl-10 text-sm transition-colors {{ request()->routeIs('client.loyalty.transactions') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                                                        <x-lucide-history class="w-4 h-4" />
+                                                        Points History
+                                                    </a>
+                                                </div>
+                                                
+                                                <!-- Account Section -->
+                                                <div class="border-t border-neutral-100 py-2">
+                                                    <a href="{{ route('client.profile') }}" 
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
+                                                        <x-lucide-user class="w-5 h-5" />
+                                                        My Profile
+                                                    </a>
+                                                    
+                                                    <form method="POST" action="{{ route('logout') }}">
+                                                        @csrf
+                                                        <button type="submit" 
+                                                                class="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                            <x-lucide-log-out class="w-5 h-5" />
+                                                            Logout
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Mobile menu button -->
+                                    <div class="md:hidden flex items-center gap-2">
+                                        <!-- Notifications Bell Component (Mobile) -->
+                                        @include('components.notification-bell')
+                                        
+                                        <button type="button" onclick="toggleMobileMenu()" class="p-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors">
+                                            <x-lucide-menu id="menu-icon" class="w-6 h-6" />
+                                            <x-lucide-x id="close-icon" class="w-6 h-6 hidden" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Navigation -->
+                            <div id="mobile-menu" class="md:hidden bg-white border-t border-neutral-100" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out;">
+                                <div class="px-4 py-3 space-y-1">
+                                    <!-- User Info -->
+                                    <div class="flex items-center gap-3 px-3 py-3 bg-neutral-50 rounded-xl mb-3">
+                                        <img src="{{ auth()->user()->getProfilePictureUrl() }}" 
+                                            alt="{{ auth()->user()->fullName }}" 
+                                            class="w-10 h-10 rounded-full ring-2 ring-neutral-200 object-cover">
+                                        <div>
+                                            <p class="text-sm font-medium text-neutral-900">{{ auth()->user()->fullName }}</p>
+                                            <p class="text-xs text-neutral-500">{{ auth()->user()->email }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Navigation Links -->
+                                    <a href="{{ route('client.dashboard') }}" 
+                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                        <x-lucide-layout-dashboard class="w-5 h-5" />
+                                        Dashboard
+                                    </a>
+                                    
+                                    <a href="{{ url('/services') }}" 
+                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.requests.create') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                        <x-lucide-search class="w-5 h-5" />
+                                        Browse Services
+                                    </a>
+
+                                    <a href="{{ route('client.tasks') }}" 
+                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.tasks') || request()->routeIs('client.projects.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                        <x-lucide-folder class="w-5 h-5" />
+                                        My Projects
+                                    </a>
+                                    
+                                    <a href="{{ route('client.documents') }}" 
+                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.documents') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                        <x-lucide-files class="w-5 h-5" />
+                                        Documents
+                                    </a>
+                                    
+                                    <a href="{{ route('client.requests') }}" 
+                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.requests*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                        <x-lucide-clipboard-list class="w-5 h-5" />
+                                        Service Requests
+                                    </a>
+                                    
+                                    <a href="{{ route('client.messages.index') }}" 
+                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.messages.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                        <x-lucide-message-circle class="w-5 h-5" />
+                                        Messages
+                                    </a>
+                                    
+                                    <a href="{{ route('client.payments.history') }}" 
+                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.payments.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                        <x-lucide-credit-card class="w-5 h-5" />
+                                        Payments
+                                    </a>
+                                    
+                                    <a href="{{ route('client.feedback') }}" 
+                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.feedback') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                        <x-lucide-star class="w-5 h-5" />
+                                        Feedback
+                                    </a>
+                                    
+                                    <a href="{{ route('client.revisions.index') }}" 
+                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.revisions.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                        <x-lucide-rotate-ccw class="w-5 h-5" />
+                                        Revisions
+                                        @if(($sidebarStats['pendingRevisionsCount'] ?? 0) > 0)
+                                            <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['pendingRevisionsCount'] }}</span>
+                                        @endif
+                                    </a>
+                                    
+                                    <a href="{{ route('client.notifications.index') }}" 
+                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.notifications.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                        <x-lucide-bell class="w-5 h-5" />
+                                        All Notifications
+                                        @if(($sidebarStats['unreadNotificationsCount'] ?? 0) > 0)
+                                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['unreadNotificationsCount'] }}</span>
+                                        @endif
+                                    </a>
+                                    
+                                    <!-- Rewards & Benefits Section -->
+                                    <div class="border-t border-neutral-100 my-2 pt-2">
+                                        <div class="px-3 py-2">
+                                            <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Rewards & Benefits</p>
+                                        </div>
+                                        
+                                        <a href="{{ route('client.referrals.dashboard') }}" 
+                                        class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.referrals.dashboard') || request()->routeIs('client.referrals.share') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                            <x-lucide-users class="w-5 h-5" />
+                                            Referrals
+                                            @if(($sidebarStats['pendingReferralsCount'] ?? 0) > 0)
+                                                <span class="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['pendingReferralsCount'] }}</span>
+                                            @endif
+                                        </a>
+                                        
+                                        <a href="{{ route('client.referrals.history') }}" 
+                                        class="flex items-center gap-3 px-3 py-2 pl-8 rounded-lg transition-colors {{ request()->routeIs('client.referrals.history') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                                            <x-lucide-clock class="w-4 h-4" />
+                                            Referral History
+                                        </a>
+                                        
+                                        <a href="{{ route('client.referrals.credits') }}" 
+                                        class="flex items-center gap-3 px-3 py-2 pl-8 rounded-lg transition-colors {{ request()->routeIs('client.referrals.credits') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                                            <x-lucide-wallet class="w-4 h-4" />
+                                            Credits & Withdrawals
+                                        </a>
+                                        
+                                        <a href="{{ route('client.coupons.index') }}" 
+                                        class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.coupons.*') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                            <x-lucide-ticket class="w-5 h-5" />
+                                            Coupons
+                                            @if(($sidebarStats['activeCouponsCount'] ?? 0) > 0)
+                                                <span class="ml-auto bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $sidebarStats['activeCouponsCount'] }}</span>
+                                            @endif
+                                        </a>
+                                        
+                                        <a href="{{ route('client.loyalty.dashboard') }}" 
+                                        class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.loyalty.dashboard') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                            <x-lucide-star class="w-5 h-5" />
+                                            Loyalty Program
+                                            @if(($sidebarStats['userPoints'] ?? 0) > 0)
+                                                <span class="ml-auto bg-primary-500 text-white text-xs px-2 py-0.5 rounded-full">{{ number_format($sidebarStats['userPoints']) }}</span>
+                                            @endif
+                                        </a>
+                                        
+                                        <a href="{{ route('client.loyalty.transactions') }}" 
+                                        class="flex items-center gap-3 px-3 py-2 pl-8 rounded-lg transition-colors {{ request()->routeIs('client.loyalty.transactions') ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-50' }}">
+                                            <x-lucide-history class="w-4 h-4" />
+                                            Points History
+                                        </a>
+                                    </div>
+                                    
+                                    <div class="border-t border-neutral-200 my-2 pt-2">
+                                        <a href="{{ route('client.requests.create') }}" 
+                                        class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+                                            <x-lucide-plus class="w-5 h-5" />
+                                            New Request
+                                        </a>
+                                    </div>
+                                    
+                                    <div class="border-t border-neutral-200 my-2 pt-2">
+                                        <a href="{{ route('client.profile') }}" 
+                                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50 transition-colors">
+                                            <x-lucide-user class="w-5 h-5" />
+                                            My Profile
+                                        </a>
+                                        <form method="POST" action="{{ route('logout') }}" class="mt-1">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+                                                <x-lucide-log-out class="w-5 h-5" />
+                                                Logout
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
                     @else
                         <li><a href="{{ route('services') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">Services</a></li>
                         <li><a href="{{ route('about') }}" class="text-gray-700 hover:text-primary transition-colors duration-300 font-medium">About</a></li>
@@ -155,7 +520,7 @@
 
     <!-- Announcements Banner -->
     @if(isset($announcements) && $announcements->count() > 0)
-    <div id="announcements-banner" class="bg-gradient-to-r from-primary-600 to-accent-600 border-b border-primary-700 fixed top-0 left-0 right-0 z-50">
+    <div id="announcements-banner" class="bg-primary-600 border-b border-primary-700 fixed top-0 left-0 right-0 z-50">
         @php $announcement = $announcements->first(); @endphp
         <div class="px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3">
             <svg class="w-4 h-4 text-primary-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,34 +558,34 @@
         <div class="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-4/12 xl:w-2/12 mb-10 lg:mb-0">
           <h4 class="text-neutral-800 font-semibold heading-serif mb-6 text-lg">Our Firm</h4>
           <ul class="space-y-3 text-sm">
-            <li><a href="/services" class="text-neutral-600 hover:text-primary-600 transition-colors">Services</a></li>
-            <li><a href="/about-us" class="text-neutral-600 hover:text-primary-600 transition-colors">About Us</a></li>
-            <li><a href="/contact" class="text-neutral-600 hover:text-primary-600 transition-colors">Contact Us</a></li>
+            <li><a href="{{ url('/services') }}" class="text-neutral-600 hover:text-primary-600 transition-colors">Services</a></li>
+            <li><a href="{{ url('/about-us') }}" class="text-neutral-600 hover:text-primary-600 transition-colors">About Us</a></li>
+            <li><a href="{{ url('/contact') }}" class="text-neutral-600 hover:text-primary-600 transition-colors">Contact Us</a></li>
           </ul>
         </div>
         <div class="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-4/12 xl:w-2/12 mb-10 lg:mb-0">
           <h4 class="text-neutral-800 font-semibold heading-serif mb-6 text-lg">Resources</h4>
           <ul class="space-y-3 text-sm">
-            <li><a href="/featured-projects" class="text-neutral-600 hover:text-primary-600 transition-colors">Projects</a></li>
-            <li><a href="/client-testimonials" class="text-neutral-600 hover:text-primary-600 transition-colors">Testimonials</a></li>
-            <li><a href="/referral-program" class="text-neutral-600 hover:text-primary-600 transition-colors flex items-center">
+            <li><a href="{{ url('/featured-projects') }}" class="text-neutral-600 hover:text-primary-600 transition-colors">Projects</a></li>
+            <li><a href="{{ url('/client-testimonials') }}" class="text-neutral-600 hover:text-primary-600 transition-colors">Testimonials</a></li>
+            <li><a href="{{ url('/referral-program') }}" class="text-neutral-600 hover:text-primary-600 transition-colors flex items-center">
               Referral Program
               <span class="ml-2 px-2 py-0.5 bg-accent text-white text-xs rounded-full font-medium">Earn Rewards</span>
             </a></li>
-            <li><a href="/faq" class="text-neutral-600 hover:text-primary-600 transition-colors">FAQs</a></li>
+            <li><a href="{{ url('/faq') }}" class="text-neutral-600 hover:text-primary-600 transition-colors">FAQs</a></li>
           </ul>
         </div>
         <div class="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-4/12 xl:w-2/12 mb-10 lg:mb-0">
           <h4 class="text-neutral-800 font-semibold heading-serif mb-6 text-lg">Legal</h4>
           <ul class="space-y-3 text-sm">
-            <li><a href="/privacy-policy" class="text-neutral-600 hover:text-primary-600 transition-colors">Privacy Policy</a></li>
-            <li><a href="/terms-and-conditions" class="text-neutral-600 hover:text-primary-600 transition-colors">Terms & Conditions</a></li>
+            <li><a href="{{ url('/privacy-policy') }}" class="text-neutral-600 hover:text-primary-600 transition-colors">Privacy Policy</a></li>
+            <li><a href="{{ url('/terms-and-conditions') }}" class="text-neutral-600 hover:text-primary-600 transition-colors">Terms & Conditions</a></li>
           </ul>
         </div>
         <div class="w-full px-4 sm:w-1/2 md:w-1/2 lg:w-4/12 xl:w-3/12">
           <h4 class="text-neutral-800 font-semibold heading-serif mb-6 text-lg">Get in touch</h4>
           <p class="text-neutral-600 mb-6">Need help with your project? Just drop us a message!</p>
-          <a href="/contact" class="px-5 py-2.5 rounded-full glass-button border border-primary-200 hover:border-primary-300 text-primary-600 hover:bg-primary-50 transition-all duration-300 inline-flex items-center text-sm shadow-sm">
+          <a href="{{ url('/contact') }}" class="px-5 py-2.5 rounded-full glass-button border border-primary-200 hover:border-primary-300 text-primary-600 hover:bg-primary-50 transition-all duration-300 inline-flex items-center text-sm shadow-sm">
             Contact Us
             <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </a>
@@ -265,7 +630,7 @@
     </script>
     
     <!-- Chatbot Widget -->
-    <script src="{{ asset('js/chatbot.js') }}"></script>
+    @vite(['resources/js/chatbot.js'])
     
     @stack('scripts')
 </body>

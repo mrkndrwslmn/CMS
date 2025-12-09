@@ -396,4 +396,183 @@ class MilestoneService
             'milestones' => $milestones,
         ];
     }
+
+    /**
+     * Recalculate milestone amounts based on new budget
+     * Used when coupon or loyalty discounts are applied after milestones were created
+     * 
+     * @param ServiceRequest $serviceRequest
+     * @param float $newBudget The new discounted budget to use for calculations
+     * @return bool
+     */
+    public function recalculateMilestoneAmounts(ServiceRequest $serviceRequest, float $newBudget): bool
+    {
+        // Get the project associated with this service request
+        $project = $serviceRequest->project;
+        
+        if (!$project) {
+            \Log::info('No project found for service request during milestone recalculation', [
+                'service_request_id' => $serviceRequest->id,
+            ]);
+            return false;
+        }
+
+        // Get all unpaid milestones for this project
+        $milestones = $project->milestones()->where('is_paid', false)->get();
+
+        if ($milestones->isEmpty()) {
+            \Log::info('No unpaid milestones to recalculate', [
+                'project_id' => $project->id,
+                'service_request_id' => $serviceRequest->id,
+            ]);
+            return false;
+        }
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($milestones as $milestone) {
+                // Calculate new amount based on percentage and new budget
+                $newAmount = round(($newBudget * $milestone->percentage) / 100, 2);
+
+                // Update milestone amount
+                $milestone->update(['amount' => $newAmount]);
+
+                // Also update the corresponding milestone payment if it exists
+                $milestonePayment = $milestone->milestonePayment;
+                if ($milestonePayment && $milestonePayment->status === 'pending') {
+                    $milestonePayment->update(['amount_due' => $newAmount]);
+                }
+            }
+
+            // Update project budget
+            $project->update(['budget' => $newBudget]);
+
+            DB::commit();
+
+            \Log::info('Milestone amounts recalculated after discount', [
+                'project_id' => $project->id,
+                'service_request_id' => $serviceRequest->id,
+                'new_budget' => $newBudget,
+                'milestones_updated' => $milestones->count(),
+            ]);
+
+            return true;
+        } catch (Exception $e) {
+            DB::rollBack();
+            \Log::error('Failed to recalculate milestone amounts', [
+                'service_request_id' => $serviceRequest->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Recalculate milestone amounts based on service request's approved budget
+     * Static helper for use from other services
+     * 
+     * @param ServiceRequest $serviceRequest
+     * @return bool
+     */
+    public static function recalculateMilestonesForRequest(ServiceRequest $serviceRequest): bool
+    {
+        $service = new self();
+        return $service->recalculateMilestoneAmounts($serviceRequest, $serviceRequest->approved_budget);
+    }
+
+    /**
+     * Recalculate downpayment amounts based on new budget
+     * Used when coupon or loyalty discounts are applied after downpayment was set
+     * 
+     * @param ServiceRequest $serviceRequest
+     * @param float $newBudget The new discounted budget to use for calculations
+     * @return bool
+     */
+    public function recalculateDownpaymentAmounts(ServiceRequest $serviceRequest, float $newBudget): bool
+    {
+        if ($serviceRequest->payment_type !== 'downpayment') {
+            return false;
+        }
+
+        $percentage = $serviceRequest->downpayment_percentage;
+        if (!$percentage || $percentage <= 0) {
+            return false;
+        }
+
+        try {
+            // Calculate new downpayment amount based on percentage and new budget
+            $newDownpaymentAmount = round(($newBudget * $percentage) / 100, 2);
+            $newRemainingBalance = round($newBudget - $newDownpaymentAmount, 2);
+
+            // Only update if downpayment hasn't been paid yet
+            if (!$serviceRequest->downpayment_paid) {
+                $serviceRequest->update([
+                    'downpayment_amount' => $newDownpaymentAmount,
+                    'remaining_balance' => $newRemainingBalance,
+                ]);
+
+                // Update project budget if exists
+                $project = $serviceRequest->project;
+                if ($project) {
+                    $project->update(['budget' => $newBudget]);
+                }
+
+                \Log::info('Downpayment amounts recalculated after discount', [
+                    'service_request_id' => $serviceRequest->id,
+                    'new_budget' => $newBudget,
+                    'new_downpayment_amount' => $newDownpaymentAmount,
+                    'new_remaining_balance' => $newRemainingBalance,
+                ]);
+            }
+
+            return true;
+        } catch (Exception $e) {
+            \Log::error('Failed to recalculate downpayment amounts', [
+                'service_request_id' => $serviceRequest->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Recalculate downpayment amounts based on service request's approved budget
+     * Static helper for use from other services
+     * 
+     * @param ServiceRequest $serviceRequest
+     * @return bool
+     */
+    public static function recalculateDownpaymentForRequest(ServiceRequest $serviceRequest): bool
+    {
+        $service = new self();
+        return $service->recalculateDownpaymentAmounts($serviceRequest, $serviceRequest->approved_budget);
+    }
+
+    /**
+     * Recalculate payment amounts (milestones or downpayment) based on service request's approved budget
+     * Static helper for use from other services - automatically detects payment type
+     * 
+     * @param ServiceRequest $serviceRequest
+     * @return bool
+     */
+    public static function recalculatePaymentAmountsForRequest(ServiceRequest $serviceRequest): bool
+    {
+        $service = new self();
+        
+        if ($serviceRequest->payment_type === 'milestone_payment') {
+            return $service->recalculateMilestoneAmounts($serviceRequest, $serviceRequest->approved_budget);
+        } elseif ($serviceRequest->payment_type === 'downpayment') {
+            return $service->recalculateDownpaymentAmounts($serviceRequest, $serviceRequest->approved_budget);
+        }
+        
+        // For full_payment, just update the project budget if exists
+        $project = $serviceRequest->project;
+        if ($project) {
+            $project->update(['budget' => $serviceRequest->approved_budget]);
+            return true;
+        }
+        
+        return false;
+    }
 }

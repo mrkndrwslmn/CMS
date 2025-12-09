@@ -230,16 +230,13 @@ class BudgetChangeRequestController extends Controller
     protected function notifyAdmins(BudgetChangeRequest $budgetRequest, Task $task): void
     {
         $admins = User::where('role', 'admin')->where('status', 'active')->get();
-        $adiutor = Auth::user();
+
+        // Eager load relationships for the notification
+        $budgetRequest->load(['task', 'adiutor']);
 
         foreach ($admins as $admin) {
             try {
-                $admin->notify(new BudgetChangeRequestNotification(
-                    $task,
-                    $adiutor,
-                    $budgetRequest->current_budget,
-                    $budgetRequest->requested_budget
-                ));
+                $admin->notify(new BudgetChangeRequestNotification($budgetRequest));
 
                 \Log::info('Budget change request notification sent to admin', [
                     'admin_id' => $admin->id,
