@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Adiutor;
 use App\Http\Controllers\Controller;
 use App\Models\HourIncreaseRequest;
 use App\Models\ProjectAssignment;
+use App\Models\Task;
 use App\Models\User;
 use App\Notifications\HourIncreaseRequestNotification;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class HourIncreaseRequestController extends Controller
         $adiutor = Auth::user();
 
         $requests = HourIncreaseRequest::forAdiutor($adiutor->id)
-            ->with(['project', 'projectAssignment', 'reviewer'])
+            ->with(['project', 'projectAssignment', 'task', 'reviewer'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -44,7 +45,15 @@ class HourIncreaseRequestController extends Controller
             ->with('project')
             ->get();
 
-        return view('adiutor.hour-requests.index', compact('requests', 'warningAssignments'));
+        // Get tasks approaching max hours (80%+ utilized)
+        $warningTasks = Task::where('assignedTo', $adiutor->id)
+            ->whereNotNull('max_hours')
+            ->where('max_hours', '>', 0)
+            ->whereRaw('total_billable_hours >= (max_hours * 0.8)')
+            ->with('project')
+            ->get();
+
+        return view('adiutor.hour-requests.index', compact('requests', 'warningAssignments', 'warningTasks'));
     }
 
     /**
@@ -54,7 +63,30 @@ class HourIncreaseRequestController extends Controller
     {
         $adiutor = Auth::user();
         $assignmentId = $request->get('assignment_id');
+        $taskId = $request->get('task_id');
 
+        // Handle task-level request
+        if ($taskId) {
+            $task = Task::where('taskID', $taskId)
+                ->where('assignedTo', $adiutor->id)
+                ->with('project')
+                ->firstOrFail();
+
+            // Check if there's already a pending request for this task
+            $existingRequest = HourIncreaseRequest::where('task_id', $task->taskID)
+                ->where('adiutor_id', $adiutor->id)
+                ->pending()
+                ->first();
+
+            if ($existingRequest) {
+                return redirect()->route('adiutor.hour-requests.index')
+                    ->with('error', 'You already have a pending request for this task.');
+            }
+
+            return view('adiutor.hour-requests.create-task', compact('task'));
+        }
+
+        // Handle assignment-level request
         $assignment = ProjectAssignment::where('id', $assignmentId)
             ->where('adiutor_id', $adiutor->id)
             ->with('project')
@@ -79,13 +111,90 @@ class HourIncreaseRequestController extends Controller
      */
     public function store(Request $request)
     {
+        $adiutor = Auth::user();
+
+        // Handle task-level request
+        if ($request->has('task_id')) {
+            return $this->storeTaskRequest($request, $adiutor);
+        }
+
+        // Handle assignment-level request
+        return $this->storeAssignmentRequest($request, $adiutor);
+    }
+
+    /**
+     * Store a task-level hour increase request
+     */
+    protected function storeTaskRequest(Request $request, $adiutor)
+    {
+        $request->validate([
+            'task_id' => 'required|exists:tasks,taskID',
+            'requested_hours' => 'required|numeric|min:1',
+            'reason' => 'required|string|min:20|max:1000',
+        ]);
+
+        $task = Task::where('taskID', $request->task_id)
+            ->where('assignedTo', $adiutor->id)
+            ->firstOrFail();
+
+        // Validate requested hours is greater than current
+        if ($request->requested_hours <= ($task->max_hours ?? 0)) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['requested_hours' => 'Requested hours must be greater than current max hours.']);
+        }
+
+        // Check for existing pending request
+        $existingRequest = HourIncreaseRequest::where('task_id', $task->taskID)
+            ->where('adiutor_id', $adiutor->id)
+            ->pending()
+            ->first();
+
+        if ($existingRequest) {
+            return redirect()->route('adiutor.hour-requests.index')
+                ->with('error', 'You already have a pending request for this task.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $hourRequest = HourIncreaseRequest::createForTask(
+                $task,
+                $adiutor->id,
+                $request->requested_hours,
+                $request->reason
+            );
+
+            DB::commit();
+
+            // Notify admins
+            $this->notifyAdmins($hourRequest);
+
+            return redirect()->route('adiutor.hour-requests.index')
+                ->with('success', 'Hour increase request for task submitted successfully. You will be notified when it is reviewed.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Failed to create task hour increase request', [
+                'task_id' => $task->taskID,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to submit request. Please try again.']);
+        }
+    }
+
+    /**
+     * Store an assignment-level hour increase request
+     */
+    protected function storeAssignmentRequest(Request $request, $adiutor)
+    {
         $request->validate([
             'assignment_id' => 'required|exists:project_assignments,id',
             'requested_hours' => 'required|numeric|min:1',
             'reason' => 'required|string|min:20|max:1000',
         ]);
-
-        $adiutor = Auth::user();
 
         $assignment = ProjectAssignment::where('id', $request->assignment_id)
             ->where('adiutor_id', $adiutor->id)
@@ -147,7 +256,7 @@ class HourIncreaseRequestController extends Controller
 
         $hourRequest = HourIncreaseRequest::where('id', $id)
             ->where('adiutor_id', $adiutor->id)
-            ->with(['project', 'projectAssignment', 'reviewer'])
+            ->with(['project', 'projectAssignment', 'task', 'reviewer'])
             ->firstOrFail();
 
         return view('adiutor.hour-requests.show', compact('hourRequest'));

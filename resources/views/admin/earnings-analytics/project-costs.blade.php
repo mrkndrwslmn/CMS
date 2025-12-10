@@ -39,23 +39,13 @@
         </div>
 
         <!-- Summary Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-neutral-500">Total Projects</p>
-                        <p class="text-2xl font-semibold text-neutral-800 mt-1">{{ number_format($summary['total_projects']) }}</p>
-                    </div>
-                    <div class="p-3 bg-neutral-50 rounded-xl">
-                        <x-lucide-folder-kanban class="w-5 h-5 text-neutral-400" />
-                    </div>
-                </div>
-            </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-sm font-medium text-neutral-500">Total Budget</p>
                         <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($summary['total_budget'], 2) }}</p>
+                        <p class="text-xs text-neutral-400 mt-1">{{ number_format($summary['total_projects']) }} projects</p>
                     </div>
                     <div class="p-3 bg-primary-50 rounded-xl">
                         <x-lucide-target class="w-5 h-5 text-primary-500" />
@@ -65,22 +55,38 @@
             <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-sm font-medium text-neutral-500">Total Spent</p>
-                        <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($summary['total_spent'], 2) }}</p>
+                        <p class="text-sm font-medium text-neutral-500">Adiutor Costs</p>
+                        <p class="text-2xl font-semibold text-warning-600 mt-1">₱{{ number_format($summary['total_spent'], 2) }}</p>
+                        <p class="text-xs text-neutral-400 mt-1">Hourly + fixed rate</p>
                     </div>
-                    <div class="p-3 bg-success-50 rounded-xl">
-                        <x-lucide-banknote class="w-5 h-5 text-success-500" />
+                    <div class="p-3 bg-warning-50 rounded-xl">
+                        <x-lucide-users class="w-5 h-5 text-warning-500" />
                     </div>
                 </div>
             </div>
             <div class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-sm font-medium text-neutral-500">Avg Cost/Project</p>
-                        <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($summary['average_cost_per_project'], 2) }}</p>
+                        <p class="text-sm font-medium text-neutral-500">Platform Fee ({{ $summary['fee_percentage'] ?? 15 }}%)</p>
+                        <p class="text-2xl font-semibold text-blue-600 mt-1">₱{{ number_format($summary['total_platform_fee'] ?? 0, 2) }}</p>
+                        <p class="text-xs text-neutral-400 mt-1">Guaranteed revenue</p>
                     </div>
-                    <div class="p-3 bg-neutral-50 rounded-xl">
-                        <x-lucide-calculator class="w-5 h-5 text-neutral-400" />
+                    <div class="p-3 bg-blue-50 rounded-xl">
+                        <x-lucide-percent class="w-5 h-5 text-blue-500" />
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-br from-success-50 to-success-100 rounded-2xl border border-success-200 shadow-sm p-6">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-success-700">Platform Revenue</p>
+                        <p class="text-2xl font-semibold text-success-700 mt-1">₱{{ number_format($summary['total_platform_revenue'] ?? 0, 2) }}</p>
+                        <p class="text-xs text-success-600 mt-1">
+                            Fee + ₱{{ number_format($summary['total_margin'] ?? 0, 2) }} margin
+                        </p>
+                    </div>
+                    <div class="p-3 bg-success-200 rounded-xl">
+                        <x-lucide-trending-up class="w-5 h-5 text-success-600" />
                     </div>
                 </div>
             </div>

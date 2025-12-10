@@ -51,15 +51,21 @@
 
         <!-- Project Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div class="p-4 bg-neutral-50 rounded-xl">
-                <p class="text-sm font-medium text-neutral-500 mb-1 flex items-center">
-                    <x-lucide-banknote class="w-4 h-4 text-primary-500 mr-2" />
-                    Budget
+            <div class="p-4 bg-success-50 rounded-xl">
+                <p class="text-sm font-medium text-success-600 mb-1 flex items-center">
+                    <x-lucide-wallet class="w-4 h-4 text-success-500 mr-2" />
+                    My Earnings
                 </p>
-                <p class="text-2xl font-semibold text-neutral-800">
-                    ₱{{ number_format($project->agreed_rate ?? $project->budget, 2) }}
+                <p class="text-2xl font-semibold text-success-700">
+                    ₱{{ number_format($myEarnings['total_earned'] ?? 0, 2) }}
                 </p>
-                <p class="text-xs text-neutral-500 mt-1">{{ $project->budget_type === 'fixed' ? 'Fixed Rate' : 'Hourly Rate' }}</p>
+                <p class="text-xs text-success-600 mt-1">
+                    @if(($myEarnings['total_pending'] ?? 0) > 0)
+                        <span class="text-warning-600">+₱{{ number_format($myEarnings['total_pending'], 2) }} pending</span>
+                    @else
+                        Approved earnings
+                    @endif
+                </p>
             </div>
 
             <div class="p-4 bg-neutral-50 rounded-xl">
@@ -108,6 +114,90 @@
                 </div>
             </div>
         </div>
+    </x-ui.card>
+
+    <!-- My Earnings Breakdown Card -->
+    <x-ui.card class="p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-medium text-neutral-800 flex items-center">
+                <x-lucide-wallet class="w-5 h-5 text-success-500 mr-2" />
+                My Earnings Breakdown
+            </h2>
+            <a href="{{ route('adiutor.earnings.index') }}" class="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1">
+                View All Earnings
+                <x-lucide-arrow-right class="w-4 h-4" />
+            </a>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <!-- Hourly Earnings -->
+            <div class="p-4 bg-blue-50 rounded-xl">
+                <div class="flex items-center gap-2 mb-2">
+                    <x-lucide-clock class="w-4 h-4 text-blue-500" />
+                    <p class="text-xs font-medium text-blue-600">Hourly Rate</p>
+                </div>
+                <p class="text-xl font-bold text-blue-700">₱{{ number_format(($myEarnings['hourly']['approved_amount'] ?? 0) + ($myEarnings['hourly']['paid_amount'] ?? 0), 2) }}</p>
+                <p class="text-xs text-blue-600 mt-1">{{ round(($myEarnings['hourly']['approved_hours'] ?? 0) + ($myEarnings['hourly']['paid_hours'] ?? 0), 1) }} hrs logged</p>
+                @if(($myEarnings['hourly']['pending_amount'] ?? 0) > 0)
+                    <p class="text-xs text-warning-600 mt-1">+₱{{ number_format($myEarnings['hourly']['pending_amount'], 2) }} pending</p>
+                @endif
+            </div>
+            
+            <!-- Fixed Rate Earnings -->
+            <div class="p-4 bg-purple-50 rounded-xl">
+                <div class="flex items-center gap-2 mb-2">
+                    <x-lucide-file-check class="w-4 h-4 text-purple-500" />
+                    <p class="text-xs font-medium text-purple-600">Fixed Rate</p>
+                </div>
+                <p class="text-xl font-bold text-purple-700">₱{{ number_format(($myEarnings['fixed_rate']['approved_amount'] ?? 0) + ($myEarnings['fixed_rate']['paid_amount'] ?? 0), 2) }}</p>
+                <p class="text-xs text-purple-600 mt-1">{{ ($myEarnings['fixed_rate']['approved_count'] ?? 0) + ($myEarnings['fixed_rate']['paid_count'] ?? 0) }} deliverables</p>
+                @if(($myEarnings['fixed_rate']['pending_count'] ?? 0) > 0)
+                    <p class="text-xs text-warning-600 mt-1">+{{ $myEarnings['fixed_rate']['pending_count'] }} pending</p>
+                @endif
+            </div>
+            
+            <!-- Task Allocations -->
+            <div class="p-4 bg-primary-50 rounded-xl">
+                <div class="flex items-center gap-2 mb-2">
+                    <x-lucide-briefcase class="w-4 h-4 text-primary-500" />
+                    <p class="text-xs font-medium text-primary-600">Task Budget</p>
+                </div>
+                <p class="text-xl font-bold text-primary-700">₱{{ number_format($myEarnings['task_allocations'] ?? 0, 2) }}</p>
+                <p class="text-xs text-primary-600 mt-1">Allocated to my tasks</p>
+            </div>
+            
+            <!-- Total Earned -->
+            <div class="p-4 bg-success-100 rounded-xl border-2 border-success-300">
+                <div class="flex items-center gap-2 mb-2">
+                    <x-lucide-trending-up class="w-4 h-4 text-success-600" />
+                    <p class="text-xs font-medium text-success-600">Total Earned</p>
+                </div>
+                <p class="text-xl font-bold text-success-700">₱{{ number_format($myEarnings['total_earned'] ?? 0, 2) }}</p>
+                <p class="text-xs text-success-600 mt-1">
+                    @if(($myEarnings['total_paid'] ?? 0) > 0)
+                        ₱{{ number_format($myEarnings['total_paid'], 2) }} paid out
+                    @else
+                        Ready for payout
+                    @endif
+                </p>
+            </div>
+        </div>
+        
+        <!-- Pending Earnings Warning -->
+        @if(($myEarnings['total_pending'] ?? 0) > 0)
+        <div class="bg-warning-50 border border-warning-200 rounded-xl p-4">
+            <div class="flex items-start gap-3">
+                <x-lucide-hourglass class="w-5 h-5 text-warning-500 flex-shrink-0 mt-0.5" />
+                <div>
+                    <p class="text-sm font-medium text-warning-700">Pending Approval</p>
+                    <p class="text-sm text-warning-600 mt-1">
+                        You have <strong>₱{{ number_format($myEarnings['total_pending'], 2) }}</strong> in earnings awaiting approval.
+                        Once approved, your total will be <strong>₱{{ number_format($myEarnings['projected_total'], 2) }}</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+        @endif
     </x-ui.card>
 
     <!-- Main Content Grid -->

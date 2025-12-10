@@ -373,27 +373,12 @@ class ClientController extends Controller
     {
         $user = Auth::user();
         
-        // Get all service requests for this client
-        $requests = DB::table('service_requests')
-            ->leftJoin('users as approver', 'service_requests.approved_by', '=', 'approver.id')
-            ->where('service_requests.client_id', $user->id)
-            ->select(
-                'service_requests.*',
-                'approver.fullName as approved_by_name'
-            )
-            ->orderBy('service_requests.created_at', 'desc')
-            ->get()
-            ->map(function ($request) {
-                // Convert date strings to Carbon instances
-                $request->created_at = Carbon::parse($request->created_at);
-                if ($request->updated_at) {
-                    $request->updated_at = Carbon::parse($request->updated_at);
-                }
-                if ($request->deadline) {
-                    $request->deadline = Carbon::parse($request->deadline);
-                }
-                return $request;
-            });
+        // Get all service requests for this client using Eloquent model
+        // This ensures we have access to model methods like getOriginalBudget()
+        $requests = \App\Models\ServiceRequest::with(['client', 'appliedCoupon'])
+            ->where('client_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
         
         return view('client.requests.index', compact('user', 'requests'));
     }
@@ -482,7 +467,7 @@ class ClientController extends Controller
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'company_name' => 'nullable|string|max:255',
             'industry' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'max:25', new \App\Rules\PhoneNumber(true)],
             'address' => 'nullable|string|max:500',
             'bio' => 'nullable|string|max:1000',
             'website' => 'nullable|url|max:255',
@@ -731,6 +716,73 @@ class ClientController extends Controller
             return redirect($document->filePath);
         } else {
             // Legacy: File is in local storage
+            $filePath = storage_path('app/public/' . $document->filePath);
+            
+            if (!file_exists($filePath)) {
+                abort(404, 'File not found on server.');
+            }
+            
+            return response()->download($filePath, $document->fileName);
+        }
+    }
+
+    /**
+     * Download document directly (without requiring projectId)
+     */
+    public function downloadDocumentDirect($documentId)
+    {
+        $user = Auth::user();
+        
+        // Get document with project and payment info
+        $document = DB::table('documents')
+            ->leftJoin('tasks', 'documents.taskID', '=', 'tasks.taskID')
+            ->leftJoin('projects', function($join) {
+                $join->on('documents.project_id', '=', 'projects.id')
+                     ->orOn('tasks.project_id', '=', 'projects.id');
+            })
+            ->leftJoin('project_milestones', 'tasks.phase_id', '=', 'project_milestones.id')
+            ->leftJoin('milestone_payments', 'project_milestones.id', '=', 'milestone_payments.milestone_id')
+            ->leftJoin('service_requests', 'projects.service_request_id', '=', 'service_requests.id')
+            ->where('documents.documentID', $documentId)
+            ->where(function($query) use ($user) {
+                // Document must belong to client's project or be directly assigned to client
+                $query->where('projects.client_id', $user->id)
+                      ->orWhere('documents.client_id', $user->id);
+            })
+            ->where('documents.is_archived', false)
+            ->select(
+                'documents.*',
+                'tasks.phase_id',
+                'milestone_payments.status as milestone_status',
+                'milestone_payments.paid_at',
+                'service_requests.payment_type'
+            )
+            ->first();
+            
+        if (!$document) {
+            abort(404, 'Document not found.');
+        }
+        
+        // Check if document is locked
+        $isLocked = false;
+        if ($document->phase_id && $document->payment_type === 'milestone_payment') {
+            $isLocked = $document->milestone_status !== 'paid' || !$document->paid_at;
+        }
+        
+        if ($isLocked) {
+            return redirect()->back()
+                ->withErrors(['error' => 'This document is locked. Please complete the required milestone payment to access it.']);
+        }
+        
+        // Download file
+        $isR2File = $document->filePath && (
+            str_starts_with($document->filePath, 'https://') || 
+            str_starts_with($document->filePath, 'http://')
+        );
+        
+        if ($isR2File) {
+            return redirect($document->filePath);
+        } else {
             $filePath = storage_path('app/public/' . $document->filePath);
             
             if (!file_exists($filePath)) {

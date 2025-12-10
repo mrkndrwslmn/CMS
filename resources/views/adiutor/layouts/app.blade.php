@@ -157,12 +157,11 @@
                 <div class="mt-5 mb-2 px-3">
                     <span class="text-xs font-medium text-neutral-400 uppercase tracking-wider">Requests</span>
                 </div>
-                
-                <!-- Requests Items -->
+                <!-- TO DO: FUTURE IMPLEMENTATION 
                 <a href="{{ route('adiutor.hour-requests.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg mb-0.5 transition-all duration-200 {{ request()->routeIs('adiutor.hour-requests.*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
                     <x-lucide-clock-plus class="w-5 h-5" />
                     <span>Hour Requests</span>
-                </a>
+                </a> -->
                 
                 <a href="{{ route('adiutor.budget-requests.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg mb-0.5 transition-all duration-200 {{ request()->routeIs('adiutor.budget-requests.*') ? 'bg-primary-50 text-primary-600' : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900' }}">
                     <x-lucide-receipt class="w-5 h-5" />
@@ -401,6 +400,9 @@
             }
         }
     </script>
+    
+    <!-- Phone Input Validation -->
+    <script src="{{ asset('js/phone-input.js') }}"></script>
     
     <!-- Page-specific scripts -->
     @yield('scripts')

@@ -147,12 +147,13 @@ class GroupChatController extends Controller
             $extensions = $this->getAllowedExtensions();
             $maxSize = $this->getMaxFileSize();
             $validator = Validator::make($request->all(), [
-                'message' => 'required|string|max:5000',
+                'message' => 'nullable|string|max:5000|required_without:attachments',
                 'attachments' => 'nullable|array|max:5',
                 'attachments.*' => "file|max:{$maxSize}|mimes:{$extensions}",
                 'mentions' => 'nullable|array',
                 'mentions.*' => 'integer|exists:users,id',
             ], [
+                'message.required_without' => 'Please provide a message or attach at least one file.',
                 'attachments.max' => 'You can upload a maximum of 5 files.',
                 'attachments.*.mimes' => 'Unsupported file type. ' . $this->getHumanReadableFileTypes() . ' are allowed.',
                 'attachments.*.max' => 'Each file must be less than 10MB.',

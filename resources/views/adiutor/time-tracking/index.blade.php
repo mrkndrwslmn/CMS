@@ -61,10 +61,22 @@
                     <label for="task_id" class="block text-sm font-medium text-neutral-700 mb-1">Select Task <span class="text-error-500">*</span></label>
                     <select id="task_id" x-model="newTimer.task_id" required
                             class="w-full px-4 py-2.5 border border-neutral-300 rounded-xl bg-white text-sm text-neutral-700 focus:ring-2 focus:ring-primary-100 focus:border-primary-500 transition-colors"
-                            @change="console.log('Task selected:', newTimer.task_id)">
+                            @change="updateSelectedTaskInfo()">
                         <option value="">Choose a task...</option>
                         @foreach($availableTasks as $task)
-                            <option value="{{ $task->taskID }}" {{ isset($preSelectedTaskId) && $preSelectedTaskId == $task->taskID ? 'selected' : '' }}>{{ $task->project->title }} - {{ $task->taskTitle }}</option>
+                            @php $maxHoursStatus = $task->getMaxHoursStatus(); @endphp
+                            <option value="{{ $task->taskID }}" 
+                                    data-max-hours="{{ $maxHoursStatus['max_hours'] ?? '' }}"
+                                    data-used-hours="{{ $maxHoursStatus['used_hours'] ?? 0 }}"
+                                    data-remaining-hours="{{ $maxHoursStatus['remaining_hours'] ?? '' }}"
+                                    data-has-limit="{{ $maxHoursStatus['has_limit'] ? 'true' : 'false' }}"
+                                    data-status="{{ $maxHoursStatus['status'] }}"
+                                    {{ isset($preSelectedTaskId) && $preSelectedTaskId == $task->taskID ? 'selected' : '' }}>
+                                {{ $task->project->title }} - {{ $task->taskTitle }}
+                                @if($maxHoursStatus['has_limit'])
+                                    ({{ $maxHoursStatus['remaining_hours'] }}h remaining)
+                                @endif
+                            </option>
                         @endforeach
                     </select>
                     <p class="text-xs text-neutral-500 mt-1">Available tasks: {{ count($availableTasks) }}</p>
@@ -76,6 +88,82 @@
                            placeholder="What are you working on?"
                            class="w-full px-4 py-2.5 border border-neutral-300 rounded-xl bg-white text-sm text-neutral-700 focus:ring-2 focus:ring-primary-100 focus:border-primary-500 transition-colors">
                 </div>
+            </div>
+
+            <!-- Task Max Hours Info Panel -->
+            <div x-show="selectedTaskInfo.hasLimit" x-cloak
+                 :class="{
+                     'bg-error-50 border-error-200': selectedTaskInfo.status === 'reached',
+                     'bg-warning-50 border-warning-200': selectedTaskInfo.status === 'approaching',
+                     'bg-success-50 border-success-200': selectedTaskInfo.status === 'normal'
+                 }"
+                 class="rounded-xl border p-4">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center gap-3">
+                        <template x-if="selectedTaskInfo.status === 'reached'">
+                            <div class="p-2 bg-error-100 rounded-lg">
+                                <x-lucide-alert-circle class="w-5 h-5 text-error-600" />
+                            </div>
+                        </template>
+                        <template x-if="selectedTaskInfo.status === 'approaching'">
+                            <div class="p-2 bg-warning-100 rounded-lg">
+                                <x-lucide-alert-triangle class="w-5 h-5 text-warning-600" />
+                            </div>
+                        </template>
+                        <template x-if="selectedTaskInfo.status === 'normal'">
+                            <div class="p-2 bg-success-100 rounded-lg">
+                                <x-lucide-clock class="w-5 h-5 text-success-600" />
+                            </div>
+                        </template>
+                        <div>
+                            <p class="text-sm font-semibold" 
+                               :class="{
+                                   'text-error-700': selectedTaskInfo.status === 'reached',
+                                   'text-warning-700': selectedTaskInfo.status === 'approaching',
+                                   'text-success-700': selectedTaskInfo.status === 'normal'
+                               }">
+                                Task Max Hours: <span x-text="selectedTaskInfo.maxHours + 'h'"></span>
+                            </p>
+                            <p class="text-xs text-neutral-600">
+                                <span x-text="selectedTaskInfo.usedHours.toFixed(1) + 'h used'"></span>
+                                <span class="mx-1">•</span>
+                                <span x-text="selectedTaskInfo.remainingHours.toFixed(1) + 'h remaining'"></span>
+                            </p>
+                        </div>
+                    </div>
+                    <template x-if="selectedTaskInfo.status === 'reached' || selectedTaskInfo.status === 'approaching'">
+                        <a :href="'{{ route('adiutor.hour-requests.create') }}?task_id=' + newTimer.task_id"
+                           class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors"
+                           :class="{
+                               'bg-error-100 text-error-700 hover:bg-error-200': selectedTaskInfo.status === 'reached',
+                               'bg-warning-100 text-warning-700 hover:bg-warning-200': selectedTaskInfo.status === 'approaching'
+                           }">
+                            <x-lucide-plus-circle class="w-4 h-4" />
+                            Request More Hours
+                        </a>
+                    </template>
+                </div>
+                <!-- Progress bar -->
+                <div class="mt-3 h-2 rounded-full overflow-hidden"
+                     :class="{
+                         'bg-error-200': selectedTaskInfo.status === 'reached',
+                         'bg-warning-200': selectedTaskInfo.status === 'approaching',
+                         'bg-success-200': selectedTaskInfo.status === 'normal'
+                     }">
+                    <div class="h-full rounded-full transition-all"
+                         :class="{
+                             'bg-error-500': selectedTaskInfo.status === 'reached',
+                             'bg-warning-500': selectedTaskInfo.status === 'approaching',
+                             'bg-success-500': selectedTaskInfo.status === 'normal'
+                         }"
+                         :style="'width: ' + Math.min(100, (selectedTaskInfo.usedHours / selectedTaskInfo.maxHours) * 100) + '%'">
+                    </div>
+                </div>
+                <template x-if="selectedTaskInfo.status === 'reached'">
+                    <p class="mt-2 text-xs text-error-600">
+                        <strong>Warning:</strong> This task has reached its maximum hours. New time tracked will be marked as non-billable.
+                    </p>
+                </template>
             </div>
             
             <x-ui.button type="submit" x-bind:disabled="!newTimer.task_id || loading" variant="success">
@@ -341,6 +429,13 @@ function timeTracker() {
             task_id: '{{ $preSelectedTaskId ?? '' }}',
             description: ''
         },
+        selectedTaskInfo: {
+            hasLimit: false,
+            maxHours: 0,
+            usedHours: 0,
+            remainingHours: 0,
+            status: 'unlimited'
+        },
         message: {
             show: false,
             type: 'success',
@@ -348,11 +443,45 @@ function timeTracker() {
         },
         
         init() {
+            // Update selected task info on init if task is pre-selected
+            if (this.newTimer.task_id) {
+                this.updateSelectedTaskInfo();
+            }
             
             if (this.activeTimer.active) {
                 this.updateElapsedTime();
                 this.startTimerInterval();
             }
+        },
+
+        updateSelectedTaskInfo() {
+            const select = document.getElementById('task_id');
+            const selectedOption = select.options[select.selectedIndex];
+            
+            if (!selectedOption || !selectedOption.value) {
+                this.selectedTaskInfo = {
+                    hasLimit: false,
+                    maxHours: 0,
+                    usedHours: 0,
+                    remainingHours: 0,
+                    status: 'unlimited'
+                };
+                return;
+            }
+            
+            const hasLimit = selectedOption.dataset.hasLimit === 'true';
+            const maxHours = parseFloat(selectedOption.dataset.maxHours) || 0;
+            const usedHours = parseFloat(selectedOption.dataset.usedHours) || 0;
+            const remainingHours = parseFloat(selectedOption.dataset.remainingHours) || 0;
+            const status = selectedOption.dataset.status || 'unlimited';
+            
+            this.selectedTaskInfo = {
+                hasLimit,
+                maxHours,
+                usedHours,
+                remainingHours,
+                status
+            };
         },
         
         startTimerInterval() {

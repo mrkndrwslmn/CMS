@@ -28,7 +28,7 @@ class HourIncreaseRequestController extends Controller
      */
     public function index(Request $request)
     {
-        $query = HourIncreaseRequest::with(['adiutor', 'project', 'projectAssignment', 'reviewer']);
+        $query = HourIncreaseRequest::with(['adiutor', 'project', 'projectAssignment', 'task', 'reviewer']);
 
         // Filter by status
         $status = $request->get('status', 'pending');
@@ -76,6 +76,7 @@ class HourIncreaseRequestController extends Controller
             'adiutor.adiutorProfile',
             'project',
             'projectAssignment',
+            'task',
             'reviewer'
         ])->findOrFail($id);
 

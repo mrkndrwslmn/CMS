@@ -48,17 +48,17 @@ class TaskController extends Controller
             );
         
         // Filter by project if specified
-        if ($request->has('project')) {
+        if ($request->filled('project')) {
             $query->where('tasks.project_id', $request->project);
         }
         
         // Filter by status if specified
-        if ($request->has('status') && $request->status != 'all') {
+        if ($request->filled('status') && $request->status != 'all') {
             $query->where('tasks.status', $request->status);
         }
         
         // Filter by priority if specified
-        if ($request->has('priority') && $request->priority != 'all') {
+        if ($request->filled('priority') && $request->priority != 'all') {
             $query->where('tasks.priority', $request->priority);
         }
         
@@ -83,34 +83,29 @@ class TaskController extends Controller
     {
         $user = Auth::user();
         
-        // Get task with project, client, and phase details
-        $task = DB::table('tasks')
-            ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('users as clients', 'projects.client_id', '=', 'clients.id')
-            ->leftJoin('users as assignee', 'tasks.assignedTo', '=', 'assignee.id')
-            ->leftJoin('project_milestones as phase', 'tasks.phase_id', '=', 'phase.id')
-            ->where('tasks.taskID', $taskId)
-            ->where('tasks.assignedTo', $user->id)
-            ->select(
-                'tasks.*',
-                'projects.title as project_title',
-                'projects.status as project_status',
-                'projects.budget as project_budget',
-                'projects.deadline as project_deadline',
-                'clients.fullName as client_name',
-                'clients.email as client_email',
-                'clients.phoneNumber as client_phone',
-                'clients.profilePic as client_photo',
-                'assignee.fullName as assignee_name',
-                'phase.phase_name as phase_name',
-                'phase.amount as phase_budget',
-                'phase.is_paid as phase_is_paid'
-            )
+        // Get task as Eloquent model to access model methods
+        $task = Task::with(['project.client', 'assignedUser', 'phase'])
+            ->where('taskID', $taskId)
+            ->where('assignedTo', $user->id)
             ->first();
         
         if (!$task) {
             abort(404, 'Task not found or you do not have access to it');
         }
+        
+        // Add additional task properties from relationships for view compatibility
+        $task->project_title = $task->project->title ?? null;
+        $task->project_status = $task->project->status ?? null;
+        $task->project_budget = $task->project->budget ?? null;
+        $task->project_deadline = $task->project->deadline ?? null;
+        $task->client_name = $task->project->client->fullName ?? null;
+        $task->client_email = $task->project->client->email ?? null;
+        $task->client_phone = $task->project->client->phoneNumber ?? null;
+        $task->client_photo = $task->project->client->profilePic ?? null;
+        $task->assignee_name = $task->assignedUser->fullName ?? null;
+        $task->phase_name = $task->milestone->phase_name ?? null;
+        $task->phase_budget = $task->milestone->amount ?? null;
+        $task->phase_is_paid = $task->milestone->is_paid ?? null;
         
         // Get project assignment info
         $assignment = DB::table('project_assignments')
@@ -396,6 +391,10 @@ class TaskController extends Controller
             'notes' => $request->completion_notes ? $task->notes . "\n\nCompletion Notes: " . $request->completion_notes : $task->notes,
         ]);
         
+        // Recalculate earnings when task is completed
+        // This converts allocated_budget to actual_cost for fixed-budget tasks with approved deliverables
+        $task->recalculateEarnings();
+        
         // Auto-complete any approved revision requests for this task
         $completedRevisions = \App\Models\RevisionRequest::where('task_id', $task->taskID)
             ->where('status', 'approved')
@@ -491,12 +490,7 @@ class TaskController extends Controller
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             // Send notification for dashboard and email
-            $admin->notify(new BudgetChangeRequestNotification(
-                $task,
-                Auth::user(),
-                $task->allocated_budget ?? 0,
-                $request->requested_budget
-            ));
+            $admin->notify(new BudgetChangeRequestNotification($budgetRequest));
         }
         
         return redirect()->back()

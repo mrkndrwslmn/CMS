@@ -105,7 +105,7 @@ class NotificationController extends Controller
     /**
      * Mark all notifications as read
      */
-    public function markAllAsRead()
+    public function markAllAsRead(Request $request)
     {
         $user = Auth::user();
         
@@ -115,7 +115,13 @@ class NotificationController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
         
-        return response()->json(['success' => true]);
+        // If it's an AJAX request, return JSON
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+        
+        // Otherwise redirect back to the notifications page
+        return redirect()->back()->with('success', 'All notifications marked as read.');
     }
     
     /**

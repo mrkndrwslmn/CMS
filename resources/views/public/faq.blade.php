@@ -68,7 +68,7 @@
 
         <div class="text-center mt-12">
             <p class="text-neutral-600 mb-6">Still have questions?</p>
-            <a href="{{ route('contact') }}" class="btn-primary inline-flex items-center px-8 py-4">
+            <a href="{{ route('contact') }}" class="bg-primary-500 text-white rounded-2xl inline-flex items-center px-8 py-4">
                 Contact Us
                 <i class="fas fa-arrow-right ml-2"></i>
             </a>

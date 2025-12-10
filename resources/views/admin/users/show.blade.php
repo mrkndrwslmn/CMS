@@ -358,8 +358,8 @@
                                     @foreach($user->tasks->take(5) as $task)
                                     <tr class="hover:bg-neutral-50 transition-colors">
                                         <td class="px-4 py-3">
-                                            <a href="{{ route('admin.tasks.show', $task->id) }}" class="font-medium text-neutral-800 hover:text-primary-600">
-                                                {{ $task->title ?? 'Task #' . $task->id }}
+                                            <a href="{{ route('admin.tasks.show', $task->taskID) }}" class="font-medium text-neutral-800 hover:text-primary-600">
+                                                {{ $task->taskTitle ?? 'Task #' . $task->taskID }}
                                             </a>
                                         </td>
                                         <td class="px-4 py-3">
@@ -374,8 +374,8 @@
                                             @endif
                                         </td>
                                         <td class="px-4 py-3 text-neutral-600 text-sm">
-                                            @if($task->due_date)
-                                                {{ \Carbon\Carbon::parse($task->due_date)->format('M d, Y') }}
+                                            @if($task->deadline)
+                                                {{ \Carbon\Carbon::parse($task->deadline)->format('M d, Y') }}
                                             @else
                                                 <span class="text-neutral-400">Not set</span>
                                             @endif

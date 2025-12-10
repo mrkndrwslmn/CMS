@@ -216,6 +216,11 @@ class EarningsAnalyticsController extends Controller
                 ? (TimeEntry::where('is_approved', true)->sum('calculated_amount') +
                    ProjectAssignment::where('fixed_rate_approved', true)->sum('agreed_rate')) / Project::count()
                 : 0,
+            // Platform earnings summary
+            'total_platform_fee' => \App\Models\PlatformEarning::sum('platform_fee') ?: 0,
+            'total_margin' => \App\Models\PlatformEarning::sum('margin_earnings') ?: 0,
+            'total_platform_revenue' => \App\Models\PlatformEarning::sum('total_platform_revenue') ?: 0,
+            'fee_percentage' => config('financial.platform.fee_percentage', 15),
         ];
 
         return view('admin.earnings-analytics.project-costs', compact(
@@ -243,7 +248,7 @@ class EarningsAnalyticsController extends Controller
         $query = TimeEntry::with([
             'adiutor:id,fullName,email',
             'project:id,title',
-            'task:taskID,taskName',
+            'task:taskID,taskTitle',
             'approver:id,fullName',
             'adjuster:id,fullName',
         ])
@@ -655,7 +660,7 @@ class EarningsAnalyticsController extends Controller
 
     private function exportTimeEntries($startDate, $endDate, $filename)
     {
-        $data = TimeEntry::with(['adiutor:id,fullName', 'project:id,title', 'task:taskID,taskName'])
+        $data = TimeEntry::with(['adiutor:id,fullName', 'project:id,title', 'task:taskID,taskTitle'])
             ->whereNotNull('end_time')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->get();
@@ -670,7 +675,7 @@ class EarningsAnalyticsController extends Controller
                     $entry->id,
                     $entry->adiutor?->fullName ?? 'N/A',
                     $entry->project?->title ?? 'N/A',
-                    $entry->task?->taskName ?? 'N/A',
+                    $entry->task?->taskTitle ?? 'N/A',
                     $entry->start_time?->format('Y-m-d H:i:s'),
                     $entry->end_time?->format('Y-m-d H:i:s'),
                     round($entry->duration_minutes / 60, 2),

@@ -116,7 +116,13 @@
                                     <x-lucide-circle-dollar-sign class="w-4 h-4 text-neutral-400" />
                                 </div>
                                 <p class="text-xs text-neutral-500 font-medium">Budget</p>
-                                @if($request->estimated_budget)
+                                @if($request->approved_budget)
+                                    {{-- Show approved budget with discount info if applicable --}}
+                                    @if($request->total_discount_amount > 0)
+                                        <p class="text-xs text-neutral-400 line-through">₱{{ number_format($request->getOriginalBudget(), 0) }}</p>
+                                    @endif
+                                    <p class="text-sm font-semibold text-success-600">₱{{ number_format($request->approved_budget, 0) }}</p>
+                                @elseif($request->estimated_budget)
                                     <p class="text-sm font-semibold text-neutral-800">₱{{ number_format($request->estimated_budget, 0) }}</p>
                                 @else
                                     <p class="text-sm text-neutral-400 italic">Not set</p>

@@ -160,7 +160,9 @@
                             #{{ $payment->id }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-neutral-800">{{ $payment->serviceRequest->project_name ?? 'N/A' }}</div>
+                            <div class="text-sm font-medium text-neutral-800">
+                                {{ $payment->serviceRequest->project_name ? Str::limit($payment->serviceRequest->project_name, 35, '...') : 'N/A' }}
+                            </div>
                             <div class="text-xs text-neutral-400">Request #{{ $payment->service_request_id }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

@@ -102,7 +102,7 @@
                 <thead class="bg-neutral-50 border-b border-neutral-100">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Adiutor</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Project / Task</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Hours</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Date</th>
@@ -127,6 +127,12 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-neutral-700">{{ $request->project->title ?? 'Unknown' }}</div>
+                            @if($request->task_id)
+                            <div class="text-xs text-primary-600 mt-0.5 flex items-center gap-1">
+                                <x-lucide-file-text class="w-3 h-3" />
+                                Task: {{ $request->task->taskTitle ?? 'Unknown Task' }}
+                            </div>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm">

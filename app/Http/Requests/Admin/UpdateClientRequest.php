@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\PhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -43,8 +44,8 @@ class UpdateClientRequest extends FormRequest
             'phoneNumber' => [
                 'required',
                 'string',
-                'max:20',
-                'regex:/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,9}$/',
+                'max:25',
+                new PhoneNumber(),
             ],
             'status' => ['required', 'in:active,inactive,banned'],
         ];

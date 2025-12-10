@@ -61,6 +61,11 @@ class ServiceRequest extends Model
         'loyalty_points_earned',
         'loyalty_points_awarded',
         'loyalty_points_awarded_at',
+        // Tier discount fields
+        'tier_discount_amount',
+        'tier_discount_percentage',
+        'tier_at_approval',
+        // Total discount tracking
         'total_discount_amount',
         'discount_percentage',
         // Service template customization fields
@@ -101,6 +106,10 @@ class ServiceRequest extends Model
         'loyalty_applied_at' => 'datetime',
         'loyalty_points_awarded' => 'boolean',
         'loyalty_points_awarded_at' => 'datetime',
+        // Tier discount casts
+        'tier_discount_amount' => 'decimal:2',
+        'tier_discount_percentage' => 'decimal:2',
+        // Total discount tracking casts
         'total_discount_amount' => 'decimal:2',
         'discount_percentage' => 'decimal:2',
         // Service template customization casts
@@ -632,11 +641,21 @@ class ServiceRequest extends Model
     }
 
     /**
-     * Get total discount amount from all sources
+     * Check if tier discount was applied
+     */
+    public function hasTierDiscount(): bool
+    {
+        return ($this->tier_discount_amount ?? 0) > 0;
+    }
+
+    /**
+     * Get total discount amount from all sources (coupon + loyalty points + tier)
      */
     public function getTotalDiscount(): float
     {
-        return ($this->coupon_discount_amount ?? 0) + ($this->loyalty_discount_amount ?? 0);
+        return ($this->coupon_discount_amount ?? 0) 
+             + ($this->loyalty_discount_amount ?? 0) 
+             + ($this->tier_discount_amount ?? 0);
     }
 
     /**

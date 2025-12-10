@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Rules\PhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -46,7 +47,7 @@ class RegisterRequest extends FormRequest
                 'confirmed',
                 $passwordRules,
             ],
-            'phoneNumber' => ['nullable', 'string', 'max:20', 'regex:/^[\d\s\+\-\(\)]+$/'],
+            'phoneNumber' => ['nullable', 'string', 'max:25', new PhoneNumber(true)],
             'referralCode' => ['nullable', 'string', 'max:20', 'alpha_num'],
         ];
     }

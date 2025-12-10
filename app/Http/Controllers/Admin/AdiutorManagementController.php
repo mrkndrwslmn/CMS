@@ -34,6 +34,7 @@ class AdiutorManagementController extends Controller
         $query = User::where('role', 'adiutor')
             ->with(['adiutorProfile', 'projectAssignments'])
             ->withCount([
+                'projectAssignments',
                 'projectAssignments as active_projects_count' => function($q) {
                     $q->whereIn('status', ['assigned', 'in_progress']);
                 },
@@ -114,10 +115,11 @@ class AdiutorManagementController extends Controller
             ])
             ->findOrFail($id);
 
-        // Calculate total hours worked
-        $totalHours = TimeEntry::where('adiutor_id', $id)
-            ->where('status', 'approved')
-            ->sum('hours_worked');
+        // Calculate total hours worked (convert minutes to hours)
+        $totalMinutes = TimeEntry::where('adiutor_id', $id)
+            ->where('is_approved', 1)
+            ->sum('duration_minutes');
+        $totalHours = round($totalMinutes / 60, 2);
 
         // Calculate total earnings
         $totalEarnings = WalletTransaction::where('user_id', $id)
@@ -125,7 +127,7 @@ class AdiutorManagementController extends Controller
             ->sum('amount');
 
         // Get average rating from feedback (if available)
-        $averageRating = DB::table('feedback')
+        $averageRating = DB::table('feedbacks')
             ->where('adiutor_id', $id)
             ->avg('rating') ?? 0;
 
@@ -159,7 +161,7 @@ class AdiutorManagementController extends Controller
             ->get();
 
         // Client feedback
-        $feedback = DB::table('feedback')
+        $feedback = DB::table('feedbacks')
             ->where('adiutor_id', $id)
             ->orderByDesc('created_at')
             ->take(5)
@@ -192,7 +194,7 @@ class AdiutorManagementController extends Controller
         $validated = $request->validate([
             'fullName' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'phoneNumber' => 'nullable|string|max:20',
+            'phoneNumber' => ['nullable', 'string', 'max:25', new \App\Rules\PhoneNumber(true)],
             'status' => 'required|in:active,inactive',
             'title' => 'nullable|string|max:255',
             'bio' => 'nullable|string',
@@ -271,7 +273,7 @@ class AdiutorManagementController extends Controller
         $validated = $request->validate([
             'fullName' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
-            'phoneNumber' => 'nullable|string|max:20',
+            'phoneNumber' => ['nullable', 'string', 'max:25', new \App\Rules\PhoneNumber(true)],
             'status' => 'required|in:active,inactive',
             'title' => 'nullable|string|max:255',
             'bio' => 'nullable|string',

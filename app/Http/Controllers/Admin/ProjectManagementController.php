@@ -160,22 +160,31 @@ class ProjectManagementController extends Controller
         // Total Pending Earnings
         $totalPendingEarnings = $pendingHourlyAmount + $pendingFixedRateAmount;
         
-        // Remaining budget after task allocations
-        $remainingBudget = ($project->budget ?? 0) - $totalAllocated;
+        // Calculate platform fee and working budget
+        $feePercentage = config('financial.platform.fee_percentage', 15);
+        $minimumFee = config('financial.platform.minimum_fee', 500);
+        $platformFee = max(($project->budget ?? 0) * ($feePercentage / 100), $minimumFee);
+        $workingBudget = ($project->budget ?? 0) - $platformFee;
         
-        // Remaining budget after both allocations AND earnings
-        $remainingAfterEarnings = ($project->budget ?? 0) - $totalAllocated - $totalAdiutorEarnings;
+        // Remaining working budget after task allocations (what's left to allocate to tasks)
+        $remainingBudget = $workingBudget - $totalAllocated;
+        
+        // Remaining working budget after adiutor earnings (actual spent vs working budget)
+        $remainingAfterEarnings = $workingBudget - $totalAdiutorEarnings;
         
         // Projected remaining after pending approvals
         $projectedRemaining = $remainingAfterEarnings - $totalPendingEarnings;
 
         $budgetOverview = [
             'project_budget' => $project->budget,
+            'platform_fee' => $platformFee,
+            'fee_percentage' => $feePercentage,
+            'working_budget' => $workingBudget,
             'total_allocated' => $totalAllocated,
             'total_spent' => $totalSpent,
             'remaining_budget' => $remainingBudget,
             'is_over_budget' => $remainingBudget < 0,
-            'budget_utilization_percentage' => $project->budget > 0 ? round(($totalAllocated / $project->budget) * 100, 2) : 0,
+            'budget_utilization_percentage' => $workingBudget > 0 ? round(($totalAllocated / $workingBudget) * 100, 2) : 0,
             
             // Phase 2: Adiutor Earnings Enhancement
             'adiutor_earnings' => [
@@ -195,8 +204,11 @@ class ProjectManagementController extends Controller
                 'total_pending' => $totalPendingEarnings,
                 'remaining_after_earnings' => $remainingAfterEarnings,
                 'projected_remaining' => $projectedRemaining,
-                'earnings_percentage' => $project->budget > 0 ? round(($totalAdiutorEarnings / $project->budget) * 100, 2) : 0,
+                'earnings_percentage' => $workingBudget > 0 ? round(($totalAdiutorEarnings / $workingBudget) * 100, 2) : 0,
             ],
+            
+            // Phase 3: Platform Earnings Integration
+            'platform_earnings' => $this->getPlatformEarningsForProject($project),
         ];
 
         // Get available adiutors - OPTIMIZED with caching
@@ -251,10 +263,13 @@ class ProjectManagementController extends Controller
     private function calculateAvailableAdiutors(array $assignedAdiutorIds, ?string $projectServiceType): \Illuminate\Support\Collection
     {
         // Get active project counts in a single query for all adiutors
+        // Only count projects that are active/in_progress (not completed or cancelled)
         $activeProjectCounts = \DB::table('project_assignments')
-            ->select('adiutor_id', \DB::raw('COUNT(*) as count'))
-            ->whereIn('status', ['assigned', 'active', 'in_progress'])
-            ->groupBy('adiutor_id')
+            ->join('projects', 'project_assignments.project_id', '=', 'projects.id')
+            ->select('project_assignments.adiutor_id', \DB::raw('COUNT(*) as count'))
+            ->whereIn('project_assignments.status', ['assigned', 'active', 'in_progress'])
+            ->whereIn('projects.status', ['active', 'in_progress'])
+            ->groupBy('project_assignments.adiutor_id')
             ->pluck('count', 'adiutor_id');
 
         $adiutors = User::where('role', 'adiutor')
@@ -577,8 +592,19 @@ class ProjectManagementController extends Controller
             'notes' => $request->completion_notes ? $project->notes . "\n\nCompletion Notes: " . $request->completion_notes : $project->notes,
         ]);
 
-        // Award loyalty points for project completion
+        // Update all project assignments to completed
+        DB::table('project_assignments')
+            ->where('project_id', $id)
+            ->update(['status' => 'completed']);
+
+        // Update related service request to completed
         if ($project->serviceRequest) {
+            $project->serviceRequest->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+            
+            // Award loyalty points for project completion
             $loyaltyService = app(LoyaltyService::class);
             $loyaltyService->awardProjectCompletionBonus($project->serviceRequest);
         }
@@ -630,8 +656,27 @@ class ProjectManagementController extends Controller
         
         $project->update($updateData);
 
-        // Award loyalty points for project completion
+        // Update all project assignments to match project status
+        if ($request->status === 'completed') {
+            DB::table('project_assignments')
+                ->where('project_id', $id)
+                ->update(['status' => 'completed']);
+        } elseif ($request->status === 'active' || $request->status === 'in_progress') {
+            // Set assignments to active if project becomes active/in_progress
+            DB::table('project_assignments')
+                ->where('project_id', $id)
+                ->whereIn('status', ['assigned'])
+                ->update(['status' => 'active']);
+        }
+
+        // Update related service request status when project is completed
         if ($request->status === 'completed' && $oldStatus !== 'completed' && $project->serviceRequest) {
+            $project->serviceRequest->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+            
+            // Award loyalty points for project completion
             $loyaltyService = app(LoyaltyService::class);
             $loyaltyService->awardProjectCompletionBonus($project->serviceRequest);
         }
@@ -1532,5 +1577,67 @@ class ProjectManagementController extends Controller
                 'message' => 'Failed to load time entries: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Get platform earnings data for a project
+     */
+    private function getPlatformEarningsForProject(Project $project): array
+    {
+        // Try to get existing platform earnings record
+        $platformEarnings = $project->platformEarnings;
+        
+        if (!$platformEarnings) {
+            // Calculate on-the-fly if no record exists
+            $projectBudget = (float) ($project->budget ?? 0);
+            $feePercentage = (float) config('financial.platform.fee_percentage', 15);
+            $minimumFee = (float) config('financial.platform.minimum_fee', 500);
+            
+            $platformFee = $projectBudget * ($feePercentage / 100);
+            $platformFee = max($platformFee, $minimumFee);
+            
+            // Get adiutor costs
+            $hourlyCost = \DB::table('time_entries')
+                ->join('tasks', 'time_entries.task_id', '=', 'tasks.taskID')
+                ->where('tasks.project_id', $project->id)
+                ->where('time_entries.is_approved', true)
+                ->sum('time_entries.calculated_amount') ?? 0;
+            
+            $fixedRateCost = \DB::table('project_assignments')
+                ->where('project_id', $project->id)
+                ->where('payment_type', 'fixed_rate')
+                ->where('fixed_rate_approved', true)
+                ->sum('agreed_rate') ?? 0;
+            
+            $totalAdiutorCost = (float) $hourlyCost + (float) $fixedRateCost;
+            $workingBudget = $projectBudget - $platformFee;
+            $marginEarnings = max(0, $workingBudget - $totalAdiutorCost);
+            $totalPlatformRevenue = $platformFee + $marginEarnings;
+            
+            return [
+                'platform_fee' => $platformFee,
+                'fee_percentage' => $feePercentage,
+                'working_budget' => $workingBudget,
+                'total_adiutor_cost' => $totalAdiutorCost,
+                'margin_earnings' => $marginEarnings,
+                'total_platform_revenue' => $totalPlatformRevenue,
+                'profit_margin_percentage' => $projectBudget > 0 ? round(($totalPlatformRevenue / $projectBudget) * 100, 2) : 0,
+                'status' => 'calculated',
+                'is_finalized' => false,
+            ];
+        }
+        
+        return [
+            'platform_fee' => (float) $platformEarnings->platform_fee,
+            'fee_percentage' => (float) $platformEarnings->fee_percentage,
+            'working_budget' => (float) $platformEarnings->working_budget,
+            'total_adiutor_cost' => (float) $platformEarnings->total_adiutor_cost,
+            'margin_earnings' => (float) $platformEarnings->margin_earnings,
+            'total_platform_revenue' => (float) $platformEarnings->total_platform_revenue,
+            'profit_margin_percentage' => $platformEarnings->profit_margin_percentage ?? 0,
+            'status' => $platformEarnings->status,
+            'is_finalized' => $platformEarnings->isFinalized(),
+            'finalized_at' => $platformEarnings->finalized_at,
+        ];
     }
 }

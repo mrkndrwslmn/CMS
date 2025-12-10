@@ -127,11 +127,65 @@
                                 <p class="text-sm text-neutral-500 mt-1">{{ $request->getCurrentPaymentDescription() }}</p>
                             @else
                                 <p class="text-sm font-medium text-neutral-500">Approved Budget</p>
-                                <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($request->approved_budget, 0) }}</p>
+                                @if($request->tier_discount_amount > 0 || $request->coupon_discount_amount > 0 || $request->loyalty_discount_amount > 0)
+                                    {{-- Show original with strikethrough --}}
+                                    <p class="text-lg text-neutral-400 line-through mt-1">₱{{ number_format($request->getOriginalBudget(), 0) }}</p>
+                                    {{-- Show discounts applied --}}
+                                    <div class="flex flex-wrap gap-2 mt-1 mb-2">
+                                        @if($request->tier_discount_amount > 0)
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-info-50 text-info-700 rounded-full text-xs">
+                                                <x-lucide-award class="w-3 h-3" />
+                                                -₱{{ number_format($request->tier_discount_amount, 0) }}
+                                            </span>
+                                        @endif
+                                        @if($request->coupon_discount_amount > 0)
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-success-50 text-success-700 rounded-full text-xs">
+                                                <x-lucide-ticket class="w-3 h-3" />
+                                                -₱{{ number_format($request->coupon_discount_amount, 0) }}
+                                            </span>
+                                        @endif
+                                        @if($request->loyalty_discount_amount > 0)
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-warning-50 text-warning-700 rounded-full text-xs">
+                                                <x-lucide-star class="w-3 h-3" />
+                                                -₱{{ number_format($request->loyalty_discount_amount, 0) }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    {{-- Show final approved budget --}}
+                                    <p class="text-2xl font-semibold text-success-600">₱{{ number_format($request->approved_budget, 0) }}</p>
+                                @else
+                                    <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($request->approved_budget, 0) }}</p>
+                                @endif
                             @endif
                         @else
                             <p class="text-sm font-medium text-neutral-500">{{ $request->approved_budget ? 'Approved' : 'Estimated' }} Budget</p>
-                            <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($request->approved_budget ?? $request->estimated_budget, 0) }}</p>
+                            @if($request->approved_budget && ($request->tier_discount_amount > 0 || $request->coupon_discount_amount > 0 || $request->loyalty_discount_amount > 0))
+                                {{-- Show discount info for approved budgets with discounts --}}
+                                <p class="text-lg text-neutral-400 line-through mt-1">₱{{ number_format($request->getOriginalBudget(), 0) }}</p>
+                                <div class="flex flex-wrap gap-2 mt-1 mb-2">
+                                    @if($request->tier_discount_amount > 0)
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-info-50 text-info-700 rounded-full text-xs">
+                                            <x-lucide-award class="w-3 h-3" />
+                                            -₱{{ number_format($request->tier_discount_amount, 0) }}
+                                        </span>
+                                    @endif
+                                    @if($request->coupon_discount_amount > 0)
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-success-50 text-success-700 rounded-full text-xs">
+                                            <x-lucide-ticket class="w-3 h-3" />
+                                            -₱{{ number_format($request->coupon_discount_amount, 0) }}
+                                        </span>
+                                    @endif
+                                    @if($request->loyalty_discount_amount > 0)
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-warning-50 text-warning-700 rounded-full text-xs">
+                                            <x-lucide-star class="w-3 h-3" />
+                                            -₱{{ number_format($request->loyalty_discount_amount, 0) }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <p class="text-2xl font-semibold text-success-600">₱{{ number_format($request->approved_budget, 0) }}</p>
+                            @else
+                                <p class="text-2xl font-semibold text-neutral-800 mt-1">₱{{ number_format($request->approved_budget ?? $request->estimated_budget, 0) }}</p>
+                            @endif
                         @endif
                     </div>
                     <div class="p-3 bg-neutral-50 rounded-xl">
@@ -439,36 +493,57 @@
 
                         <!-- Payment Breakdown -->
                         <div class="bg-neutral-50 rounded-xl p-4 mb-4 space-y-3 border border-neutral-100">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-neutral-600">Original Budget:</span>
-                                <span class="text-sm font-medium text-neutral-800">₱{{ number_format($totalBudget, 2) }}</span>
-                            </div>
-                            
-                            @if($request->coupon_discount_amount > 0 || $request->loyalty_discount_amount > 0)
+                            @if($request->tier_discount_amount > 0 || $request->coupon_discount_amount > 0 || $request->loyalty_discount_amount > 0)
+                                {{-- Show original budget before any discounts --}}
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-neutral-600">Original Budget:</span>
+                                    <span class="text-sm font-medium text-neutral-800">₱{{ number_format($request->getOriginalBudget(), 2) }}</span>
+                                </div>
+                                
+                                {{-- Tier Discount --}}
+                                @if($request->tier_discount_amount > 0)
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-neutral-600">
+                                        <x-lucide-award class="w-4 h-4 inline mr-1" />
+                                        {{ ucfirst($request->tier_at_approval ?? 'Tier') }} Discount ({{ $request->tier_discount_percentage }}%):
+                                    </span>
+                                    <span class="text-sm font-medium text-info-600">-₱{{ number_format($request->tier_discount_amount, 2) }}</span>
+                                </div>
+                                @endif
+                                
+                                {{-- Coupon Discount --}}
                                 @if($request->coupon_discount_amount > 0)
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-neutral-600">
                                         <x-lucide-ticket class="w-4 h-4 inline mr-1" />
                                         Coupon Discount:
                                     </span>
-                                    <span class="text-sm font-medium text-primary-600">-₱{{ number_format($request->coupon_discount_amount, 2) }}</span>
+                                    <span class="text-sm font-medium text-success-600">-₱{{ number_format($request->coupon_discount_amount, 2) }}</span>
                                 </div>
                                 @endif
                                 
+                                {{-- Loyalty Points Discount --}}
                                 @if($request->loyalty_discount_amount > 0)
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-neutral-600">
                                         <x-lucide-star class="w-4 h-4 inline mr-1" />
-                                        Loyalty Discount:
+                                        Loyalty Points:
                                     </span>
-                                    <span class="text-sm font-medium text-primary-600">-₱{{ number_format($request->loyalty_discount_amount, 2) }}</span>
+                                    <span class="text-sm font-medium text-warning-600">-₱{{ number_format($request->loyalty_discount_amount, 2) }}</span>
                                 </div>
                                 @endif
                                 
-                                <div class="h-px bg-neutral-100"></div>
+                                <div class="h-px bg-neutral-200"></div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-neutral-800">Final Budget:</span>
-                                    <span class="text-base font-semibold text-neutral-800">₱{{ number_format($totalBudget, 2) }}</span>
+                                    <span class="text-sm font-semibold text-neutral-800">Approved Budget:</span>
+                                    <span class="text-base font-bold text-success-600">₱{{ number_format($totalBudget, 2) }}</span>
+                                </div>
+                                <div class="h-px bg-neutral-100"></div>
+                            @else
+                                {{-- No discounts applied --}}
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-neutral-600">Approved Budget:</span>
+                                    <span class="text-sm font-medium text-neutral-800">₱{{ number_format($totalBudget, 2) }}</span>
                                 </div>
                             @endif
                             
@@ -707,11 +782,18 @@
                         <div class="pb-4 border-b border-neutral-100">
                             <dt class="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Approved Budget</dt>
                             
-                            @if($request->coupon_discount_amount > 0 || $request->loyalty_discount_amount > 0)
+                            @if($request->coupon_discount_amount > 0 || $request->loyalty_discount_amount > 0 || $request->tier_discount_amount > 0)
                                 <!-- Show original budget with strikethrough -->
-                                <dd class="text-sm text-neutral-400 line-through">₱{{ number_format($request->approved_budget + ($request->coupon_discount_amount ?? 0) + ($request->loyalty_discount_amount ?? 0), 2) }}</dd>
+                                <dd class="text-sm text-neutral-400 line-through">₱{{ number_format($request->getOriginalBudget(), 2) }}</dd>
                                 
                                 <!-- Show discounts -->
+                                @if($request->tier_discount_amount > 0)
+                                    <dd class="text-xs text-info-600 flex items-center mt-1">
+                                        <x-lucide-award class="w-3 h-3 mr-1" />
+                                        {{ ucfirst($request->tier_at_approval ?? 'Tier') }} ({{ $request->tier_discount_percentage }}%): -₱{{ number_format($request->tier_discount_amount, 2) }}
+                                    </dd>
+                                @endif
+                                
                                 @if($request->coupon_discount_amount > 0)
                                     <dd class="text-xs text-success-600 flex items-center mt-1">
                                         <x-lucide-ticket class="w-3 h-3 mr-1" />
@@ -722,7 +804,7 @@
                                 @if($request->loyalty_discount_amount > 0)
                                     <dd class="text-xs text-warning-600 flex items-center mt-1">
                                         <x-lucide-star class="w-3 h-3 mr-1" />
-                                        Loyalty: -₱{{ number_format($request->loyalty_discount_amount, 2) }}
+                                        Loyalty Points: -₱{{ number_format($request->loyalty_discount_amount, 2) }}
                                     </dd>
                                 @endif
                                 

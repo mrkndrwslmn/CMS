@@ -28,7 +28,8 @@ class CalendarController extends Controller
                     return [
                         'id' => $assignment->adiutor->id,
                         'name' => $assignment->adiutor->fullName,
-                        'avatar' => $assignment->adiutor->avatar ?? '/images/default-avatar.png',
+                        'profilePic' => $assignment->adiutor->profilePic,
+                        'avatar' => $assignment->adiutor->profilePic ? $assignment->adiutor->getProfilePictureUrl() : null,
                         'calendar_connected' => $assignment->adiutor->calendarIntegration && $assignment->adiutor->calendarIntegration->is_connected,
                     ];
                 });
@@ -42,7 +43,8 @@ class CalendarController extends Controller
                         return [
                             'id' => $task->assignedUser->id,
                             'name' => $task->assignedUser->fullName,
-                            'avatar' => $task->assignedUser->avatar ?? '/images/default-avatar.png',
+                            'profilePic' => $task->assignedUser->profilePic,
+                            'avatar' => $task->assignedUser->profilePic ? $task->assignedUser->getProfilePictureUrl() : null,
                             'calendar_connected' => $task->assignedUser->calendarIntegration && $task->assignedUser->calendarIntegration->is_connected,
                         ];
                     });

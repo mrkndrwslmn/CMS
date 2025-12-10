@@ -189,13 +189,14 @@
                             <p class="text-neutral-500 text-xs mt-0.5">Earn {{ $stats['earning_rate'] }} on every ₱100 spent</p>
                         </div>
                     </div>
+                    <!-- TODO: MILESTONE POINTS IMPLEMENTATION
                     <div class="flex items-start gap-3 p-3 bg-primary-50 rounded-xl border border-primary-100">
                         <x-lucide-list-checks class="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                         <div>
                             <p class="font-medium text-neutral-700 text-sm">Project Milestones</p>
                             <p class="text-neutral-500 text-xs mt-0.5">Earn 200 points per milestone completed</p>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="flex items-start gap-3 p-3 bg-success-50 rounded-xl border border-success-100">
                         <x-lucide-check-circle class="w-4 h-4 text-success-500 mt-0.5 flex-shrink-0" />
                         <div>

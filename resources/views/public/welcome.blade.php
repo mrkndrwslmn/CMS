@@ -50,7 +50,7 @@
                             <div class="mr-3 text-primary-500">
                                 <x-lucide-star class="w-5 h-5" />
                             </div>
-                            <p class="text-sm font-medium text-neutral-700">Trusted by 500+ tech startups and businesses worldwide</p>
+                            <p class="text-sm font-medium text-neutral-700">Trusted by various tech startups and businesses worldwide</p>
                         </div>
                     </div>
                     
@@ -881,7 +881,7 @@
                             <div class="w-7 h-7 rounded-full bg-gradient-to-br from-info-400 to-info-600 border-2 border-white"></div>
                             <div class="w-7 h-7 rounded-full bg-gradient-to-br from-success-400 to-success-600 border-2 border-white"></div>
                         </div>
-                        <span class="text-sm font-medium text-neutral-700">Trusted by 500+ tech companies</span>
+                        <span class="text-sm font-medium text-neutral-700">Trusted by startup companies</span>
                     </div>
 
                     <h2 class="text-4xl md:text-5xl lg:text-6xl font-semibold text-neutral-800 mb-6">

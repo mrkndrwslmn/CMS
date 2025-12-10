@@ -350,6 +350,101 @@ class LoyaltyService
     }
 
     /**
+     * Apply automatic tier discount to service request
+     * This is applied when a request is approved, based on the client's current tier
+     * 
+     * @param ServiceRequest $request
+     * @return bool True if discount was applied
+     */
+    public function applyTierDiscount(ServiceRequest $request): bool
+    {
+        try {
+            $user = $request->client;
+            
+            if (!$user) {
+                Log::warning('Cannot apply tier discount: no client found', [
+                    'service_request_id' => $request->id,
+                ]);
+                return false;
+            }
+
+            $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+            $tierDiscount = $loyaltyPoint->getTierDiscount();
+            
+            // If no tier discount (Bronze = 0%), skip
+            if ($tierDiscount <= 0) {
+                Log::info('No tier discount to apply (Bronze tier)', [
+                    'service_request_id' => $request->id,
+                    'user_id' => $user->id,
+                    'tier' => $loyaltyPoint->tier,
+                ]);
+                return false;
+            }
+
+            // Check if tier discount can be stacked with existing coupon
+            if ($request->applied_coupon_id && $request->appliedCoupon) {
+                $coupon = $request->appliedCoupon;
+                if (!$coupon->stackable_with_loyalty_tier) {
+                    Log::info('Tier discount not applied: coupon is not stackable with tier discount', [
+                        'service_request_id' => $request->id,
+                        'coupon_code' => $coupon->code,
+                        'tier' => $loyaltyPoint->tier,
+                    ]);
+                    return false;
+                }
+            }
+
+            // Store original budget if not already stored
+            if (!$request->original_approved_budget) {
+                $request->original_approved_budget = $request->approved_budget;
+            }
+
+            // Calculate tier discount amount
+            $currentBudget = $request->approved_budget;
+            $discountAmount = round(($currentBudget * $tierDiscount) / 100, 2);
+
+            // Apply tier discount
+            $request->update([
+                'tier_discount_amount' => $discountAmount,
+                'tier_discount_percentage' => $tierDiscount,
+                'tier_at_approval' => $loyaltyPoint->tier,
+                'approved_budget' => $currentBudget - $discountAmount,
+                'total_discount_amount' => ($request->total_discount_amount ?? 0) + $discountAmount,
+            ]);
+
+            Log::info('Tier discount applied to service request', [
+                'service_request_id' => $request->id,
+                'user_id' => $user->id,
+                'tier' => $loyaltyPoint->tier,
+                'discount_percentage' => $tierDiscount,
+                'discount_amount' => $discountAmount,
+                'original_budget' => $request->original_approved_budget,
+                'new_budget' => $currentBudget - $discountAmount,
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to apply tier discount', [
+                'error' => $e->getMessage(),
+                'service_request_id' => $request->id,
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Get tier discount percentage for a user
+     * 
+     * @param User $user
+     * @return int
+     */
+    public function getUserTierDiscount(User $user): int
+    {
+        $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+        return $loyaltyPoint->getTierDiscount();
+    }
+
+    /**
      * Apply loyalty discount to service request
      * 
      * @param ServiceRequest $request

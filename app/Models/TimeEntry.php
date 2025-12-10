@@ -415,20 +415,48 @@ class TimeEntry extends Model
     /**
      * Apply max hours cap to this entry
      * Should be called when stopping a timer
+     * 
+     * Priority: Task max_hours takes precedence over project assignment max_hours
      */
     public function applyMaxHoursCap(): void
     {
+        if (!$this->duration_minutes) {
+            $this->billable_minutes = 0;
+            $this->non_billable_minutes = 0;
+            $this->is_capped = false;
+            return;
+        }
+
+        // First check task-level max hours (takes priority)
+        $task = $this->task;
+        if ($task && $task->hasMaxHoursLimit()) {
+            $result = $task->calculateBillableMinutes($this->duration_minutes);
+            
+            $this->billable_minutes = $result['billable_minutes'];
+            $this->non_billable_minutes = $result['non_billable_minutes'];
+            $this->is_capped = $result['is_capped'];
+            
+            // Recalculate amount based on billable minutes only
+            $this->calculated_amount = $this->calculateBillableAmount();
+            
+            // Save and update task totals
+            $this->save();
+            $task->updateBillableHourTotals();
+            return;
+        }
+
+        // Fall back to project assignment max hours
         $assignment = $this->getProjectAssignment();
         
-        if (!$assignment || !$this->duration_minutes) {
-            // No assignment or no duration, all time is billable
+        if (!$assignment) {
+            // No assignment and no task limit, all time is billable
             $this->billable_minutes = $this->duration_minutes;
             $this->non_billable_minutes = 0;
             $this->is_capped = false;
             return;
         }
 
-        // Calculate billable/non-billable split
+        // Calculate billable/non-billable split from assignment
         $result = $assignment->calculateBillableMinutes($this->duration_minutes);
         
         $this->billable_minutes = $result['billable_minutes'];
@@ -437,6 +465,52 @@ class TimeEntry extends Model
         
         // Recalculate amount based on billable minutes only
         $this->calculated_amount = $this->calculateBillableAmount();
+    }
+
+    /**
+     * Check if this entry was capped due to task max hours
+     */
+    public function wasCappedByTask(): bool
+    {
+        if (!$this->is_capped) {
+            return false;
+        }
+        
+        $task = $this->task;
+        return $task && $task->hasMaxHoursLimit();
+    }
+
+    /**
+     * Check if this entry was capped due to assignment max hours
+     */
+    public function wasCappedByAssignment(): bool
+    {
+        if (!$this->is_capped) {
+            return false;
+        }
+        
+        $assignment = $this->getProjectAssignment();
+        return $assignment && $assignment->hasMaxHoursLimit() && !$this->wasCappedByTask();
+    }
+
+    /**
+     * Get capping source for display
+     */
+    public function getCappingSource(): ?string
+    {
+        if (!$this->is_capped) {
+            return null;
+        }
+        
+        if ($this->wasCappedByTask()) {
+            return 'task';
+        }
+        
+        if ($this->wasCappedByAssignment()) {
+            return 'assignment';
+        }
+        
+        return 'unknown';
     }
 
     /**

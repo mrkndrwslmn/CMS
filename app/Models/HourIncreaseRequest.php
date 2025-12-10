@@ -195,8 +195,10 @@ class HourIncreaseRequest extends Model
             'approved_hours' => $hours,
         ]);
 
-        // Update the actual max_hours on the assignment
-        if ($this->project_assignment_id && $this->projectAssignment) {
+        // Update the actual max_hours on the target (task or assignment)
+        if ($this->task_id && $this->task) {
+            $this->task->update(['max_hours' => $hours]);
+        } elseif ($this->project_assignment_id && $this->projectAssignment) {
             $this->projectAssignment->update(['max_hours' => $hours]);
         }
 
@@ -243,6 +245,41 @@ class HourIncreaseRequest extends Model
     }
 
     /**
+     * Scope to filter by task.
+     */
+    public function scopeForTask($query, int $taskId)
+    {
+        return $query->where('task_id', $taskId);
+    }
+
+    /**
+     * Check if this request is for a task (vs project assignment)
+     */
+    public function isForTask(): bool
+    {
+        return $this->task_id !== null;
+    }
+
+    /**
+     * Check if this request is for a project assignment
+     */
+    public function isForAssignment(): bool
+    {
+        return $this->project_assignment_id !== null && $this->task_id === null;
+    }
+
+    /**
+     * Get the request type for display
+     */
+    public function getRequestTypeAttribute(): string
+    {
+        if ($this->isForTask()) {
+            return 'Task';
+        }
+        return 'Project Assignment';
+    }
+
+    /**
      * Create a new request for a project assignment.
      */
     public static function createForAssignment(
@@ -257,6 +294,27 @@ class HourIncreaseRequest extends Model
             'current_max_hours' => $assignment->max_hours ?? 0,
             'requested_max_hours' => $requestedHours,
             'hours_already_tracked' => $assignment->total_hours_logged ?? 0,
+            'reason' => $reason,
+            'status' => self::STATUS_PENDING,
+        ]);
+    }
+
+    /**
+     * Create a new request for a task.
+     */
+    public static function createForTask(
+        Task $task,
+        int $adiutorId,
+        float $requestedHours,
+        string $reason
+    ): self {
+        return self::create([
+            'task_id' => $task->taskID,
+            'adiutor_id' => $adiutorId,
+            'project_id' => $task->project_id,
+            'current_max_hours' => $task->max_hours ?? 0,
+            'requested_max_hours' => $requestedHours,
+            'hours_already_tracked' => $task->total_billable_hours ?? 0,
             'reason' => $reason,
             'status' => self::STATUS_PENDING,
         ]);

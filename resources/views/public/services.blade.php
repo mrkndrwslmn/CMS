@@ -359,7 +359,7 @@
               </div>
               <div class="text-right">
                 <p class="text-xs uppercase tracking-wider text-neutral-500 font-semibold mb-1">STARTS AT</p>
-                <p class="text-3xl font-bold gradient-text">₱${service.price}</p>
+                <p class="text-3xl font-bold gradient-text">₱${parseFloat(service.price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
             <h3 class="text-xl font-semibold heading-serif text-neutral-800 mb-3 group-hover:text-primary-600 transition-colors">${service.service_name}</h3>
@@ -629,12 +629,14 @@
         // Show AI search if no results and search query exists
         if (filteredServices.length === 0 && searchQuery) {
           loadingIndicator.classList.remove('hidden');
+          servicesGrid.classList.add('hidden'); // Hide services while searching
           clearTimeout(aiSearchTimer);
           aiSearchTimer = setTimeout(() => {
             aiSearch(searchQuery, allServices);
           }, 1000);
         } else {
           loadingIndicator.classList.add('hidden');
+          servicesGrid.classList.remove('hidden'); // Show services
           renderServices(filteredServices);
         }
         
@@ -706,6 +708,7 @@
                     renderServices(generatedServices); 
 
                     loadingIndicator.classList.add('hidden');
+                    servicesGrid.classList.remove('hidden'); // Show services after search
 
                 } else {
                     console.error("No valid services generated. Trying manual fallback.");
@@ -759,11 +762,17 @@
 
         }
 
-       // Function to parse price (e.g., "600 PHP" to numeric value)
+       // Function to parse price (e.g., "₱5,000 - ₱20,000" or "600 PHP" to numeric value)
         function parsePrice(priceText) {
-                // Clean up and extract the numeric value
-                const priceMatch = priceText.match(/(\d+)/);
-                return priceMatch ? parseInt(priceMatch[0], 10) : null;
+                // Remove currency symbols and extra text, keep numbers and commas
+                // First, try to find a price pattern like "₱5,000" or "5,000" or "5000"
+                const priceMatch = priceText.match(/₱?\s*([\d,]+)/);
+                if (priceMatch) {
+                    // Remove commas and parse as integer
+                    const cleanedPrice = priceMatch[1].replace(/,/g, '');
+                    return parseInt(cleanedPrice, 10);
+                }
+                return null;
             }
             
             // Function to generate a dynamic price based on service difficulty
@@ -789,6 +798,7 @@
         // Fallback function to manually generate services based on query if AI fails
         function generateManualServices(query) {
             loadingIndicator.classList.add('hidden');
+            servicesGrid.classList.remove('hidden'); // Show services after fallback
 
             const matchedServices = allServices.filter(service => {
                 return service.service_name.toLowerCase().includes(query.toLowerCase()) ||

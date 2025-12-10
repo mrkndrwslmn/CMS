@@ -59,7 +59,13 @@
                             <div class="flex flex-wrap gap-3">
                                 @foreach($project['adiutors'] as $adiutor)
                                     <div class="flex items-center bg-neutral-50 rounded-xl px-4 py-2.5 border border-neutral-100">
-                                        <img src="{{ $adiutor['avatar'] }}" alt="{{ $adiutor['name'] }}" class="w-8 h-8 rounded-full object-cover mr-3">
+                                        @if($adiutor['profilePic'])
+                                            <img src="{{ $adiutor['avatar'] }}" alt="{{ $adiutor['name'] }}" class="w-8 h-8 rounded-full object-cover mr-3 ring-2 ring-neutral-100">
+                                        @else
+                                            <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center mr-3">
+                                                <span class="text-primary-600 text-sm font-medium">{{ substr($adiutor['name'], 0, 1) }}</span>
+                                            </div>
+                                        @endif
                                         <div>
                                             <p class="text-sm font-medium text-neutral-800">{{ $adiutor['name'] }}</p>
                                             @if($adiutor['calendar_connected'])

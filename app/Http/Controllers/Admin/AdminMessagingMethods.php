@@ -115,6 +115,11 @@ trait AdminMessagingMethods
     {
         $conversation = Conversation::getOrCreateForProject($project->id);
         $groupChat = GroupChat::getOrCreateForProject($project->id);
+        
+        // Eager load members for group chat
+        if ($groupChat) {
+            $groupChat->load('members:id,fullName,profilePic,role');
+        }
 
         return view('admin.messages.show', compact('project', 'conversation', 'groupChat'));
     }

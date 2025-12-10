@@ -11,9 +11,19 @@ class RequestAttachment extends Model
         'file_path',
         'file_url',
         'original_filename',
+        'stored_filename',
         'file_size',
         'mime_type',
+        'file_hash',
     ];
+
+    /**
+     * Get the service request that owns this attachment
+     */
+    public function serviceRequest()
+    {
+        return $this->belongsTo(ServiceRequest::class);
+    }
 
     /**
      * Check if this is an R2 file (has file_url)

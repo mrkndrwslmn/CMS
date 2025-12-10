@@ -40,8 +40,10 @@ class Task extends Model
         'completion_notes',
         // Earnings and time tracking fields
         'hourly_rate',
+        'max_hours',
         'requires_time_tracking',
         'total_hours_tracked',
+        'total_billable_hours',
         'calculated_earnings',
         'use_fixed_budget',
         // Legacy fields (keep for backward compatibility but should not be used)
@@ -59,7 +61,9 @@ class Task extends Model
         'allocated_budget' => 'decimal:2',
         'actual_cost' => 'decimal:2',
         'hourly_rate' => 'decimal:2',
+        'max_hours' => 'decimal:2',
         'total_hours_tracked' => 'decimal:2',
+        'total_billable_hours' => 'decimal:2',
         'calculated_earnings' => 'decimal:2',
         'progress_percentage' => 'integer',
         'sort_order' => 'integer',
@@ -452,6 +456,56 @@ aaaaaaaaaaaaaaaaaaa     * Get the form this task belongs to.
     }
 
     /**
+     * Recalculate and update actual_cost based on task type and approved deliverables/time entries
+     * This is called when deliverables are approved to convert allocated budget into actual earnings
+     */
+    public function recalculateEarnings(): void
+    {
+        if ($this->use_fixed_budget) {
+            // For fixed budget tasks: if has approved deliverables, set actual_cost = allocated_budget
+            $hasApprovedDeliverables = $this->approvedDeliverables()->exists();
+            
+            if ($hasApprovedDeliverables) {
+                $this->update([
+                    'actual_cost' => $this->allocated_budget ?? 0,
+                    'calculated_earnings' => $this->allocated_budget ?? 0,
+                ]);
+            }
+            return;
+        }
+
+        if ($this->requires_time_tracking) {
+            // For hourly tasks: actual_cost = sum of approved time entry amounts
+            $approvedTimeEntries = $this->timeEntries()
+                ->where('is_approved', true)
+                ->whereNotNull('end_time')
+                ->get();
+
+            $totalEarnings = $approvedTimeEntries->sum('calculated_amount');
+            $totalHours = $approvedTimeEntries->sum('duration_minutes') / 60;
+
+            $this->update([
+                'total_hours_tracked' => $totalHours,
+                'calculated_earnings' => $totalEarnings,
+                'actual_cost' => $totalEarnings,
+            ]);
+            return;
+        }
+
+        // For tasks with allocated_budget but no specific earning type:
+        // If it has approved deliverables and is completed, count the allocated budget as earnings
+        $hasApprovedDeliverables = $this->approvedDeliverables()->exists();
+        $isCompleted = $this->status === 'completed';
+        
+        if ($hasApprovedDeliverables && $isCompleted && $this->allocated_budget) {
+            $this->update([
+                'actual_cost' => $this->allocated_budget,
+                'calculated_earnings' => $this->allocated_budget,
+            ]);
+        }
+    }
+
+    /**
      * Get formatted hourly rate
      */
     public function getFormattedHourlyRate(): string
@@ -565,6 +619,178 @@ aaaaaaaaaaaaaaaaaaa     * Get the form this task belongs to.
             'locked' => true,
             'message' => 'Locked: Payment required',
             'icon' => 'lock',
+        ];
+    }
+
+    // ==========================================
+    // MAX HOURS ENFORCEMENT METHODS
+    // ==========================================
+
+    /**
+     * Check if this task has a max hours limit
+     */
+    public function hasMaxHoursLimit(): bool
+    {
+        return $this->max_hours !== null && $this->max_hours > 0;
+    }
+
+    /**
+     * Get remaining billable hours for this task
+     */
+    public function getRemainingBillableHours(): ?float
+    {
+        if (!$this->hasMaxHoursLimit()) {
+            return null; // No limit
+        }
+
+        $remaining = (float) $this->max_hours - (float) $this->total_billable_hours;
+        return max(0, $remaining);
+    }
+
+    /**
+     * Check if max hours limit has been reached
+     */
+    public function isMaxHoursReached(): bool
+    {
+        if (!$this->hasMaxHoursLimit()) {
+            return false;
+        }
+
+        return (float) $this->total_billable_hours >= (float) $this->max_hours;
+    }
+
+    /**
+     * Check if approaching max hours limit (80% threshold)
+     */
+    public function isApproachingMaxHours(): bool
+    {
+        if (!$this->hasMaxHoursLimit()) {
+            return false;
+        }
+
+        $percentage = ((float) $this->total_billable_hours / (float) $this->max_hours) * 100;
+        return $percentage >= 80 && $percentage < 100;
+    }
+
+    /**
+     * Get max hours utilization percentage
+     */
+    public function getMaxHoursUtilizationPercentage(): ?float
+    {
+        if (!$this->hasMaxHoursLimit()) {
+            return null;
+        }
+
+        return min(100, round(((float) $this->total_billable_hours / (float) $this->max_hours) * 100, 2));
+    }
+
+    /**
+     * Calculate billable minutes for a new time entry
+     * Returns array with 'billable_minutes', 'non_billable_minutes', 'is_capped'
+     */
+    public function calculateBillableMinutes(int $durationMinutes): array
+    {
+        // If no max hours limit, all time is billable
+        if (!$this->hasMaxHoursLimit()) {
+            return [
+                'billable_minutes' => $durationMinutes,
+                'non_billable_minutes' => 0,
+                'is_capped' => false,
+            ];
+        }
+
+        $remainingMinutes = (int) ($this->getRemainingBillableHours() * 60);
+
+        // If already maxed out, all new time is non-billable
+        if ($remainingMinutes <= 0) {
+            return [
+                'billable_minutes' => 0,
+                'non_billable_minutes' => $durationMinutes,
+                'is_capped' => true,
+            ];
+        }
+
+        // Calculate split
+        $billableMinutes = min($durationMinutes, $remainingMinutes);
+        $nonBillableMinutes = max(0, $durationMinutes - $remainingMinutes);
+
+        return [
+            'billable_minutes' => $billableMinutes,
+            'non_billable_minutes' => $nonBillableMinutes,
+            'is_capped' => $nonBillableMinutes > 0,
+        ];
+    }
+
+    /**
+     * Update billable hour totals after a time entry is added/modified
+     */
+    public function updateBillableHourTotals(): void
+    {
+        $totalBillableMinutes = $this->timeEntries()
+            ->whereNotNull('end_time')
+            ->sum('billable_minutes');
+
+        $this->update([
+            'total_billable_hours' => round($totalBillableMinutes / 60, 2),
+        ]);
+    }
+
+    /**
+     * Get max hours status for UI display
+     */
+    public function getMaxHoursStatus(): array
+    {
+        if (!$this->hasMaxHoursLimit()) {
+            return [
+                'has_limit' => false,
+                'max_hours' => null,
+                'used_hours' => (float) $this->total_billable_hours,
+                'remaining_hours' => null,
+                'percentage' => null,
+                'status' => 'unlimited',
+                'badge_variant' => 'neutral',
+                'message' => 'No hour limit set',
+            ];
+        }
+
+        $percentage = $this->getMaxHoursUtilizationPercentage();
+        $remaining = $this->getRemainingBillableHours();
+
+        if ($this->isMaxHoursReached()) {
+            return [
+                'has_limit' => true,
+                'max_hours' => (float) $this->max_hours,
+                'used_hours' => (float) $this->total_billable_hours,
+                'remaining_hours' => 0,
+                'percentage' => 100,
+                'status' => 'reached',
+                'badge_variant' => 'error',
+                'message' => 'Maximum hours reached',
+            ];
+        }
+
+        if ($this->isApproachingMaxHours()) {
+            return [
+                'has_limit' => true,
+                'max_hours' => (float) $this->max_hours,
+                'used_hours' => (float) $this->total_billable_hours,
+                'remaining_hours' => $remaining,
+                'percentage' => $percentage,
+                'status' => 'approaching',
+                'badge_variant' => 'warning',
+                'message' => sprintf('%.1f hours remaining (%.0f%% used)', $remaining, $percentage),
+            ];
+        }
+
+        return [
+            'has_limit' => true,
+            'max_hours' => (float) $this->max_hours,
+            'used_hours' => (float) $this->total_billable_hours,
+            'remaining_hours' => $remaining,
+            'percentage' => $percentage,
+            'status' => 'normal',
+            'badge_variant' => 'success',
+            'message' => sprintf('%.1f of %.1f hours used', $this->total_billable_hours, $this->max_hours),
         ];
     }
 }

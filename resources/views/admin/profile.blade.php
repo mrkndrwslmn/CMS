@@ -199,6 +199,7 @@
                                 type="tel" 
                                 id="phoneNumber" 
                                 name="phoneNumber" 
+                                data-format="ph"
                                 value="{{ old('phoneNumber', $user->phoneNumber) }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all @error('phoneNumber') border-red-500 @enderror">
                             @error('phoneNumber')

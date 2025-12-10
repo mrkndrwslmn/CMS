@@ -14,6 +14,7 @@ use App\Mail\RequestApproved;
 use App\Mail\PaymentConfirmed;
 use App\Mail\CouponAssignedMail;
 use App\Services\CouponService;
+use App\Services\LoyaltyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,10 +26,12 @@ use Illuminate\Support\Str;
 class RequestManagementController extends Controller
 {
     protected CouponService $couponService;
+    protected LoyaltyService $loyaltyService;
 
-    public function __construct(CouponService $couponService)
+    public function __construct(CouponService $couponService, LoyaltyService $loyaltyService)
     {
         $this->couponService = $couponService;
+        $this->loyaltyService = $loyaltyService;
     }
 
     public function index(Request $request)
@@ -275,6 +278,21 @@ class RequestManagementController extends Controller
             // Refresh service request to get updated budget after coupon application
             $serviceRequest->refresh();
             
+            // Apply automatic tier discount based on client's loyalty tier
+            // This must be done after coupon application (if any) and before project creation
+            $tierDiscountApplied = $this->loyaltyService->applyTierDiscount($serviceRequest);
+            
+            // Refresh again if tier discount was applied
+            if ($tierDiscountApplied) {
+                $serviceRequest->refresh();
+                Log::info('Tier discount applied during approval', [
+                    'service_request_id' => $serviceRequest->id,
+                    'tier' => $serviceRequest->tier_at_approval,
+                    'tier_discount_percentage' => $serviceRequest->tier_discount_percentage,
+                    'tier_discount_amount' => $serviceRequest->tier_discount_amount,
+                ]);
+            }
+            
             // Create project immediately when approved (needed for milestones)
             $project = Project::firstOrCreate(
                 ['service_request_id' => $serviceRequest->id],
@@ -282,7 +300,7 @@ class RequestManagementController extends Controller
                     'client_id' => $serviceRequest->client_id,
                     'title' => $serviceRequest->project_name,
                     'description' => $serviceRequest->request_description,
-                    'budget' => $serviceRequest->approved_budget, // Use service request's budget (after coupon discount)
+                    'budget' => $serviceRequest->approved_budget, // Use service request's budget (after all discounts)
                     'deadline' => $serviceRequest->deadline,
                     'status' => 'active', // Project is active once approved, will move to in_progress after payment
                     'priority' => $serviceRequest->priority ?? 'medium',

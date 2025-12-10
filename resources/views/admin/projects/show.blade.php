@@ -280,137 +280,177 @@
                 </div>
             </x-ui.card>
 
-                <!-- Budget Overview Card -->
+                <!-- Unified Budget & Platform Earnings Card -->
+                @php $pe = $budgetOverview['platform_earnings'] ?? null; @endphp
                 <x-ui.card class="mb-6">
                     <div class="px-6 py-4 border-b border-neutral-100">
-                        <h2 class="text-lg font-semibold text-neutral-800 flex items-center gap-2">
-                            <x-lucide-wallet class="w-5 h-5 text-primary-500" />
-                            Budget Overview
-                        </h2>
-                        @if($project->serviceRequest && ($project->serviceRequest->coupon_discount_amount > 0 || $project->serviceRequest->loyalty_discount_amount > 0))
-                            <div class="mt-2 text-sm text-neutral-600">
-                                <p class="flex items-center gap-2">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                                <x-lucide-wallet class="w-5 h-5 text-primary-500" />
+                                Budget & Platform Earnings
+                            </h2>
+                            <div class="flex items-center gap-3">
+                                @if($pe)
+                                    @if($pe['is_finalized'] ?? false)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-700">
+                                            <x-lucide-check-circle class="w-3 h-3 mr-1" />
+                                            Finalized
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-50 text-warning-700">
+                                            <x-lucide-clock class="w-3 h-3 mr-1" />
+                                            {{ ucfirst($pe['status'] ?? 'Pending') }}
+                                        </span>
+                                    @endif
+                                    <a href="{{ route('admin.platform-earnings.show', $project->id) }}" 
+                                       class="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1">
+                                        View Details
+                                        <x-lucide-arrow-right class="w-3 h-3" />
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        @if($project->serviceRequest && ($project->serviceRequest->tier_discount_amount > 0 || $project->serviceRequest->coupon_discount_amount > 0 || $project->serviceRequest->loyalty_discount_amount > 0))
+                            <div class="mt-3 p-3 bg-success-50 rounded-lg">
+                                <p class="text-sm flex items-center gap-2">
                                     <span class="text-neutral-500">Original Budget:</span>
                                     <span class="line-through text-neutral-400">₱{{ number_format($project->serviceRequest->getOriginalBudget(), 2) }}</span>
                                 </p>
-                                @if($project->serviceRequest->coupon_discount_amount > 0)
-                                    <p class="flex items-center gap-2 text-success-600">
-                                        <x-lucide-ticket class="w-4 h-4" />
-                                        <span>Coupon Discount:</span>
-                                        <span class="font-semibold">-₱{{ number_format($project->serviceRequest->coupon_discount_amount, 2) }}</span>
-                                    </p>
-                                @endif
-                                @if($project->serviceRequest->loyalty_discount_amount > 0)
-                                    <p class="flex items-center gap-2 text-primary-600">
-                                        <x-lucide-award class="w-4 h-4" />
-                                        <span>Loyalty Discount:</span>
-                                        <span class="font-semibold">-₱{{ number_format($project->serviceRequest->loyalty_discount_amount, 2) }}</span>
-                                    </p>
-                                @endif
-                                <p class="flex items-center gap-2 mt-1">
-                                    <span class="text-neutral-700 font-medium">Final Budget (Client Pays):</span>
-                                    <span class="text-primary-600 font-bold">₱{{ number_format($project->budget, 2) }}</span>
-                                </p>
+                                <div class="flex flex-wrap gap-4 mt-1">
+                                    @if($project->serviceRequest->tier_discount_amount > 0)
+                                        <p class="flex items-center gap-2 text-info-600 text-sm">
+                                            <x-lucide-award class="w-4 h-4" />
+                                            <span>{{ ucfirst($project->serviceRequest->tier_at_approval ?? 'Tier') }} ({{ $project->serviceRequest->tier_discount_percentage }}%): -₱{{ number_format($project->serviceRequest->tier_discount_amount, 2) }}</span>
+                                        </p>
+                                    @endif
+                                    @if($project->serviceRequest->coupon_discount_amount > 0)
+                                        <p class="flex items-center gap-2 text-success-600 text-sm">
+                                            <x-lucide-ticket class="w-4 h-4" />
+                                            <span>Coupon: -₱{{ number_format($project->serviceRequest->coupon_discount_amount, 2) }}</span>
+                                        </p>
+                                    @endif
+                                    @if($project->serviceRequest->loyalty_discount_amount > 0)
+                                        <p class="flex items-center gap-2 text-warning-600 text-sm">
+                                            <x-lucide-star class="w-4 h-4" />
+                                            <span>Loyalty Points: -₱{{ number_format($project->serviceRequest->loyalty_discount_amount, 2) }}</span>
+                                        </p>
+                                    @endif
+                                </div>
                             </div>
                         @endif
                     </div>
-                    <div class="p-6">
-                        <!-- Main Budget Stats -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                            <div class="text-center p-4 bg-primary-50 rounded-xl">
-                                <p class="text-sm text-primary-600 font-medium mb-1">Project Budget</p>
-                                <p class="text-2xl font-bold text-primary-900">₱{{ number_format($budgetOverview['project_budget'], 2) }}</p>
-                                @if($project->serviceRequest && ($project->serviceRequest->coupon_discount_amount > 0 || $project->serviceRequest->loyalty_discount_amount > 0))
-                                    <p class="text-xs text-neutral-500 mt-1">(After discounts)</p>
-                                @endif
-                            </div>
-                            <div class="text-center p-4 bg-warning-50 rounded-xl">
-                                <p class="text-sm text-warning-600 font-medium mb-1">Task Allocated</p>
-                                <p class="text-2xl font-bold text-warning-900">₱{{ number_format($budgetOverview['total_allocated'], 2) }}</p>
-                            </div>
-                            <div class="text-center p-4 bg-purple-50 rounded-xl">
-                                <p class="text-sm text-purple-600 font-medium mb-1">Adiutor Earnings</p>
-                                <p class="text-2xl font-bold text-purple-900">₱{{ number_format($budgetOverview['adiutor_earnings']['total_approved'] ?? 0, 2) }}</p>
-                                <p class="text-xs text-neutral-500 mt-1">Approved payments</p>
-                            </div>
-                            <div class="text-center p-4 bg-success-50 rounded-xl">
-                                <p class="text-sm text-success-600 font-medium mb-1">Remaining</p>
-                                <p class="text-2xl font-bold {{ ($budgetOverview['adiutor_earnings']['remaining_after_earnings'] ?? 0) < 0 ? 'text-error-900' : 'text-success-900' }}">
-                                    ₱{{ number_format($budgetOverview['adiutor_earnings']['remaining_after_earnings'] ?? $budgetOverview['remaining_budget'], 2) }}
-                                </p>
-                                <p class="text-xs text-neutral-500 mt-1">After earnings</p>
+                    
+                    <div class="p-6 space-y-6">
+                        <!-- Section 1: Budget Flow (Client → Platform → Adiutor) -->
+                        <div>
+                            <h4 class="text-sm font-medium text-neutral-700 mb-4 flex items-center gap-2">
+                                <x-lucide-git-branch class="w-4 h-4 text-neutral-500" />
+                                Budget Flow
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                <!-- Client Pays -->
+                                <div class="text-center p-4 bg-neutral-100 rounded-xl border-2 border-neutral-300">
+                                    <p class="text-xs text-neutral-600 mb-1 font-medium">Client Pays</p>
+                                    <p class="text-xl font-bold text-neutral-800">₱{{ number_format($budgetOverview['project_budget'], 2) }}</p>
+                                    @if($project->serviceRequest && ($project->serviceRequest->coupon_discount_amount > 0 || $project->serviceRequest->loyalty_discount_amount > 0))
+                                        <p class="text-xs text-success-600 mt-1">After discounts</p>
+                                    @endif
+                                </div>
+                                
+                                <!-- Arrow -->
+                                <div class="hidden md:flex items-center justify-center">
+                                    <x-lucide-arrow-right class="w-5 h-5 text-neutral-400" />
+                                </div>
+                                
+                                <!-- Platform Fee -->
+                                <div class="text-center p-4 bg-blue-50 rounded-xl">
+                                    <p class="text-xs text-blue-600 mb-1 font-medium">Platform Fee ({{ $pe['fee_percentage'] ?? config('financial.platform.fee_percentage', 15) }}%)</p>
+                                    <p class="text-xl font-bold text-blue-700">₱{{ number_format($pe['platform_fee'] ?? 0, 2) }}</p>
+                                    <p class="text-xs text-blue-500 mt-1">Guaranteed revenue</p>
+                                </div>
+                                
+                                <!-- Arrow -->
+                                <div class="hidden md:flex items-center justify-center">
+                                    <x-lucide-arrow-right class="w-5 h-5 text-neutral-400" />
+                                </div>
+                                
+                                <!-- Working Budget -->
+                                <div class="text-center p-4 bg-primary-50 rounded-xl">
+                                    <p class="text-xs text-primary-600 mb-1 font-medium">Working Budget</p>
+                                    <p class="text-xl font-bold text-primary-700">₱{{ number_format($pe['working_budget'] ?? ($budgetOverview['project_budget'] * 0.85), 2) }}</p>
+                                    <p class="text-xs text-primary-500 mt-1">For Adiutor tasks</p>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- Adiutor Earnings Breakdown -->
+                        
+                        <!-- Section 2: Adiutor Costs Breakdown -->
                         @if(isset($budgetOverview['adiutor_earnings']))
-                        <div class="border border-neutral-200 rounded-xl p-4 mb-6">
-                            <h3 class="text-sm font-semibold text-neutral-700 mb-4 flex items-center">
-                                <x-lucide-wallet class="w-4 h-4 text-purple-500 mr-2" />
-                                Adiutor Earnings Breakdown
-                            </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Hourly Rate Earnings -->
-                                <div class="bg-blue-50 rounded-xl p-4">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <span class="text-sm font-medium text-blue-700 flex items-center">
-                                            <x-lucide-clock class="w-4 h-4 mr-1" />
-                                            Hourly Rate
-                                        </span>
-                                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                            {{ $budgetOverview['adiutor_earnings']['hourly']['entry_count'] }} entries
-                                        </span>
+                        <div class="bg-warning-50/50 rounded-xl p-4 border border-warning-100">
+                            <h4 class="text-sm font-medium text-warning-700 mb-4 flex items-center gap-2">
+                                <x-lucide-users class="w-4 h-4" />
+                                Adiutor Costs (Paid to Freelancers)
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <!-- Hourly Rate -->
+                                <div class="bg-white rounded-lg p-3 border border-warning-200">
+                                    <div class="flex items-center gap-1 mb-1">
+                                        <x-lucide-clock class="w-3 h-3 text-blue-500" />
+                                        <p class="text-xs text-blue-600">Hourly Rate</p>
                                     </div>
-                                    <p class="text-lg font-bold text-blue-900">
-                                        ₱{{ number_format($budgetOverview['adiutor_earnings']['hourly']['approved_amount'], 2) }}
-                                    </p>
-                                    <p class="text-xs text-blue-600 mt-1">
-                                        {{ $budgetOverview['adiutor_earnings']['hourly']['approved_hours'] }} hours approved
-                                    </p>
-                                    @if($budgetOverview['adiutor_earnings']['hourly']['pending_amount'] > 0)
-                                        <p class="text-xs text-warning-600 mt-1 flex items-center">
-                                            <x-lucide-hourglass class="w-3 h-3 mr-1" />
-                                            ₱{{ number_format($budgetOverview['adiutor_earnings']['hourly']['pending_amount'], 2) }} pending
-                                        </p>
+                                    <p class="text-lg font-bold text-blue-900">₱{{ number_format($budgetOverview['adiutor_earnings']['hourly']['approved_amount'] ?? 0, 2) }}</p>
+                                    <p class="text-xs text-neutral-500">{{ $budgetOverview['adiutor_earnings']['hourly']['approved_hours'] ?? 0 }} hrs</p>
+                                    @if(($budgetOverview['adiutor_earnings']['hourly']['pending_amount'] ?? 0) > 0)
+                                        <p class="text-xs text-warning-600 mt-1">+₱{{ number_format($budgetOverview['adiutor_earnings']['hourly']['pending_amount'], 2) }} pending</p>
                                     @endif
                                 </div>
-
-                                <!-- Fixed Rate Earnings -->
-                                <div class="bg-purple-50 rounded-xl p-4">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <span class="text-sm font-medium text-purple-700 flex items-center">
-                                            <x-lucide-file-text class="w-4 h-4 mr-1" />
-                                            Fixed Rate
-                                        </span>
-                                        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
-                                            {{ $budgetOverview['adiutor_earnings']['fixed_rate']['approved_count'] }} approved
-                                        </span>
+                                
+                                <!-- Fixed Rate -->
+                                <div class="bg-white rounded-lg p-3 border border-warning-200">
+                                    <div class="flex items-center gap-1 mb-1">
+                                        <x-lucide-file-text class="w-3 h-3 text-purple-500" />
+                                        <p class="text-xs text-purple-600">Fixed Rate</p>
                                     </div>
-                                    <p class="text-lg font-bold text-purple-900">
-                                        ₱{{ number_format($budgetOverview['adiutor_earnings']['fixed_rate']['approved_amount'], 2) }}
-                                    </p>
-                                    @if($budgetOverview['adiutor_earnings']['fixed_rate']['pending_count'] > 0)
-                                        <p class="text-xs text-warning-600 mt-1 flex items-center">
-                                            <x-lucide-hourglass class="w-3 h-3 mr-1" />
-                                            {{ $budgetOverview['adiutor_earnings']['fixed_rate']['pending_count'] }} pending 
-                                            (₱{{ number_format($budgetOverview['adiutor_earnings']['fixed_rate']['pending_amount'], 2) }})
-                                        </p>
+                                    <p class="text-lg font-bold text-purple-900">₱{{ number_format($budgetOverview['adiutor_earnings']['fixed_rate']['approved_amount'] ?? 0, 2) }}</p>
+                                    <p class="text-xs text-neutral-500">{{ $budgetOverview['adiutor_earnings']['fixed_rate']['approved_count'] ?? 0 }} approved</p>
+                                    @if(($budgetOverview['adiutor_earnings']['fixed_rate']['pending_count'] ?? 0) > 0)
+                                        <p class="text-xs text-warning-600 mt-1">+{{ $budgetOverview['adiutor_earnings']['fixed_rate']['pending_count'] }} pending</p>
                                     @endif
+                                </div>
+                                
+                                <!-- Task Allocated -->
+                                <div class="bg-white rounded-lg p-3 border border-warning-200">
+                                    <div class="flex items-center gap-1 mb-1">
+                                        <x-lucide-briefcase class="w-3 h-3 text-warning-500" />
+                                        <p class="text-xs text-warning-600">Task Allocated</p>
+                                    </div>
+                                    <p class="text-lg font-bold text-warning-900">₱{{ number_format($budgetOverview['total_allocated'] ?? 0, 2) }}</p>
+                                    <p class="text-xs text-neutral-500">Reserved for tasks</p>
+                                </div>
+                                
+                                <!-- Total Paid -->
+                                <div class="bg-warning-100 rounded-lg p-3 border-2 border-warning-300">
+                                    <div class="flex items-center gap-1 mb-1">
+                                        <x-lucide-wallet class="w-3 h-3 text-warning-600" />
+                                        <p class="text-xs text-warning-600 font-medium">Total Paid</p>
+                                    </div>
+                                    <p class="text-lg font-bold text-warning-800">₱{{ number_format($budgetOverview['adiutor_earnings']['total_approved'] ?? 0, 2) }}</p>
+                                    <p class="text-xs text-warning-600">Approved payments</p>
                                 </div>
                             </div>
-
-                            <!-- Projected Budget Warning -->
-                            @if($budgetOverview['adiutor_earnings']['total_pending'] > 0)
-                                <div class="mt-4 bg-warning-50 border border-warning-200 rounded-xl p-3">
-                                    <div class="flex items-start">
-                                        <x-lucide-alert-triangle class="w-4 h-4 text-warning-500 mt-0.5 mr-2 flex-shrink-0" />
+                            
+                            <!-- Pending Warning -->
+                            @if(($budgetOverview['adiutor_earnings']['total_pending'] ?? 0) > 0)
+                                <div class="mt-4 bg-warning-100 border border-warning-300 rounded-lg p-3">
+                                    <div class="flex items-start gap-2">
+                                        <x-lucide-alert-triangle class="w-4 h-4 text-warning-600 mt-0.5 flex-shrink-0" />
                                         <div class="text-sm">
                                             <p class="font-medium text-warning-800">Pending Approvals</p>
                                             <p class="text-warning-700">
-                                                ₱{{ number_format($budgetOverview['adiutor_earnings']['total_pending'], 2) }} in pending payments.
+                                                ₱{{ number_format($budgetOverview['adiutor_earnings']['total_pending'], 2) }} pending. 
                                                 Projected remaining: 
-                                                <span class="font-semibold {{ $budgetOverview['adiutor_earnings']['projected_remaining'] < 0 ? 'text-error-600' : '' }}">
-                                                    ₱{{ number_format($budgetOverview['adiutor_earnings']['projected_remaining'], 2) }}
+                                                <span class="font-semibold {{ ($budgetOverview['adiutor_earnings']['projected_remaining'] ?? 0) < 0 ? 'text-error-600' : '' }}">
+                                                    ₱{{ number_format($budgetOverview['adiutor_earnings']['projected_remaining'] ?? 0, 2) }}
                                                 </span>
                                             </p>
                                         </div>
@@ -419,22 +459,119 @@
                             @endif
                         </div>
                         @endif
-
-                        <!-- Budget Utilization Bar -->
+                        
+                        <!-- Section 3: Platform Revenue Summary -->
+                        @if($pe)
+                        <div class="bg-success-50/50 rounded-xl p-4 border border-success-100">
+                            <h4 class="text-sm font-medium text-success-700 mb-4 flex items-center gap-2">
+                                <x-lucide-trending-up class="w-4 h-4" />
+                                Platform Revenue Summary
+                            </h4>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="bg-white rounded-lg p-3 border border-success-200 text-center">
+                                    <p class="text-xs text-blue-600 mb-1">Platform Fee</p>
+                                    <p class="text-lg font-bold text-blue-700">₱{{ number_format($pe['platform_fee'] ?? 0, 2) }}</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-success-200 text-center">
+                                    <p class="text-xs text-purple-600 mb-1">Margin (Surplus)</p>
+                                    <p class="text-lg font-bold {{ ($pe['margin_earnings'] ?? 0) >= 0 ? 'text-purple-700' : 'text-error-700' }}">₱{{ number_format($pe['margin_earnings'] ?? 0, 2) }}</p>
+                                </div>
+                                <div class="bg-success-100 rounded-lg p-4 border-2 border-success-300 text-center">
+                                    <p class="text-xs text-success-600 mb-1 font-medium">Total Platform Revenue</p>
+                                    <p class="text-xl font-bold text-success-700">₱{{ number_format($pe['total_platform_revenue'] ?? 0, 2) }}</p>
+                                    <p class="text-xs text-success-600 mt-1">{{ $pe['profit_margin_percentage'] ?? 0 }}% of budget</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                        
+                        <!-- Section 4: Visual Budget Breakdown -->
+                        @if($pe)
+                        <div class="bg-neutral-50 rounded-xl p-4">
+                            <h4 class="text-sm font-medium text-neutral-700 mb-3 flex items-center gap-2">
+                                <x-lucide-pie-chart class="w-4 h-4 text-neutral-500" />
+                                Budget Allocation Breakdown
+                            </h4>
+                            <div class="flex h-8 rounded-lg overflow-hidden shadow-inner">
+                                @php
+                                    $budget = $budgetOverview['project_budget'] ?? 1;
+                                    $feePercent = $budget > 0 ? (($pe['platform_fee'] ?? 0) / $budget) * 100 : 0;
+                                    $adiutorPercent = $budget > 0 ? (($pe['total_adiutor_cost'] ?? 0) / $budget) * 100 : 0;
+                                    $marginPercent = $budget > 0 ? (($pe['margin_earnings'] ?? 0) / $budget) * 100 : 0;
+                                    $unallocatedPercent = max(0, 100 - $feePercent - $adiutorPercent - $marginPercent);
+                                @endphp
+                                <div class="bg-blue-500 flex items-center justify-center text-xs text-white font-medium" 
+                                     style="width: {{ $feePercent }}%" title="Platform Fee: ₱{{ number_format($pe['platform_fee'] ?? 0, 2) }}">
+                                    @if($feePercent > 8) {{ round($feePercent) }}% @endif
+                                </div>
+                                <div class="bg-warning-500 flex items-center justify-center text-xs text-white font-medium" 
+                                     style="width: {{ $adiutorPercent }}%" title="Adiutor Costs: ₱{{ number_format($pe['total_adiutor_cost'] ?? 0, 2) }}">
+                                    @if($adiutorPercent > 8) {{ round($adiutorPercent) }}% @endif
+                                </div>
+                                <div class="bg-purple-500 flex items-center justify-center text-xs text-white font-medium" 
+                                     style="width: {{ $marginPercent }}%" title="Margin: ₱{{ number_format($pe['margin_earnings'] ?? 0, 2) }}">
+                                    @if($marginPercent > 8) {{ round($marginPercent) }}% @endif
+                                </div>
+                                @if($unallocatedPercent > 0)
+                                <div class="bg-neutral-300 flex items-center justify-center text-xs text-neutral-600 font-medium" 
+                                     style="width: {{ $unallocatedPercent }}%" title="Unallocated">
+                                    @if($unallocatedPercent > 8) {{ round($unallocatedPercent) }}% @endif
+                                </div>
+                                @endif
+                            </div>
+                            <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-xs">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-3 h-3 rounded bg-blue-500"></span>
+                                    <span class="text-neutral-600">Platform Fee ({{ round($feePercent) }}%)</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-3 h-3 rounded bg-warning-500"></span>
+                                    <span class="text-neutral-600">Adiutor Costs ({{ round($adiutorPercent) }}%)</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-3 h-3 rounded bg-purple-500"></span>
+                                    <span class="text-neutral-600">Margin ({{ round($marginPercent) }}%)</span>
+                                </div>
+                                @if($unallocatedPercent > 0)
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-3 h-3 rounded bg-neutral-300"></span>
+                                    <span class="text-neutral-600">Unallocated ({{ round($unallocatedPercent) }}%)</span>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                        @else
+                        <!-- Fallback: Basic utilization bar when no platform earnings yet -->
                         <div>
                             <div class="flex justify-between text-sm mb-2">
-                                <span class="text-neutral-600">Earnings vs Budget</span>
+                                <span class="text-neutral-600">Budget Utilization</span>
                                 <span class="font-semibold {{ ($budgetOverview['adiutor_earnings']['earnings_percentage'] ?? 0) > 100 ? 'text-error-600' : 'text-neutral-900' }}">
-                                    {{ $budgetOverview['adiutor_earnings']['earnings_percentage'] ?? $budgetOverview['budget_utilization_percentage'] }}%
+                                    {{ $budgetOverview['adiutor_earnings']['earnings_percentage'] ?? $budgetOverview['budget_utilization_percentage'] ?? 0 }}%
                                 </span>
                             </div>
                             <div class="w-full bg-neutral-200 rounded-full h-3">
-                                <div class="h-3 rounded-full {{ ($budgetOverview['adiutor_earnings']['earnings_percentage'] ?? 0) > 100 ? 'bg-error-600' : 'bg-purple-600' }}" 
-                                     style="width: {{ min($budgetOverview['adiutor_earnings']['earnings_percentage'] ?? $budgetOverview['budget_utilization_percentage'], 100) }}%">
+                                <div class="h-3 rounded-full {{ ($budgetOverview['adiutor_earnings']['earnings_percentage'] ?? 0) > 100 ? 'bg-error-600' : 'bg-primary-600' }}" 
+                                     style="width: {{ min($budgetOverview['adiutor_earnings']['earnings_percentage'] ?? $budgetOverview['budget_utilization_percentage'] ?? 0, 100) }}%">
                                 </div>
                             </div>
-                            <p class="text-xs text-neutral-500 mt-1">
-                                Shows approved adiutor earnings as percentage of total project budget
+                        </div>
+                        @endif
+                        
+                        <!-- Remaining Budget Summary -->
+                        <div class="flex items-center justify-between p-4 rounded-xl {{ ($budgetOverview['adiutor_earnings']['remaining_after_earnings'] ?? $budgetOverview['remaining_budget'] ?? 0) >= 0 ? 'bg-success-50 border border-success-200' : 'bg-error-50 border border-error-200' }}">
+                            <div class="flex items-center gap-3">
+                                <x-lucide-piggy-bank class="w-6 h-6 {{ ($budgetOverview['adiutor_earnings']['remaining_after_earnings'] ?? $budgetOverview['remaining_budget'] ?? 0) >= 0 ? 'text-success-500' : 'text-error-500' }}" />
+                                <div>
+                                    <p class="text-sm font-medium {{ ($budgetOverview['adiutor_earnings']['remaining_after_earnings'] ?? $budgetOverview['remaining_budget'] ?? 0) >= 0 ? 'text-success-700' : 'text-error-700' }}">
+                                        Remaining Working Budget
+                                    </p>
+                                    <p class="text-xs {{ ($budgetOverview['adiutor_earnings']['remaining_after_earnings'] ?? $budgetOverview['remaining_budget'] ?? 0) >= 0 ? 'text-success-600' : 'text-error-600' }}">
+                                        Working Budget minus Adiutor Earnings
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold {{ ($budgetOverview['adiutor_earnings']['remaining_after_earnings'] ?? $budgetOverview['remaining_budget'] ?? 0) >= 0 ? 'text-success-700' : 'text-error-700' }}">
+                                ₱{{ number_format($budgetOverview['adiutor_earnings']['remaining_after_earnings'] ?? $budgetOverview['remaining_budget'] ?? 0, 2) }}
                             </p>
                         </div>
                     </div>

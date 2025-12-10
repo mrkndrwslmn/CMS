@@ -724,6 +724,23 @@
                                 <div class="text-neutral-500 flex items-center">
                                     <x-lucide-mail class="w-4 h-4 mr-2" />{{ $request->client->email ?? 'No email' }}
                                 </div>
+                                {{-- Loyalty Tier Badge --}}
+                                @if($request->client->loyaltyPoints)
+                                    @php $tier = $request->client->loyaltyPoints->tier; @endphp
+                                    <div class="mt-1 flex items-center gap-1.5">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+                                            {{ $tier === 'platinum' ? 'bg-info-100 text-info-700' : '' }}
+                                            {{ $tier === 'gold' ? 'bg-warning-100 text-warning-700' : '' }}
+                                            {{ $tier === 'silver' ? 'bg-neutral-200 text-neutral-700' : '' }}
+                                            {{ $tier === 'bronze' ? 'bg-orange-100 text-orange-700' : '' }}">
+                                            <x-lucide-award class="w-3 h-3" />
+                                            {{ ucfirst($tier) }} Member
+                                        </span>
+                                        @if($request->client->loyaltyPoints->getTierDiscount() > 0)
+                                            <span class="text-xs text-success-600 font-medium">({{ $request->client->loyaltyPoints->getTierDiscount() }}% discount)</span>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         

@@ -79,23 +79,75 @@
         </x-ui.card>
     </div>
 
-    <!-- Filter Tabs -->
+    <!-- Search and Filters -->
+    <x-ui.card class="p-6 mb-6">
+        <form method="GET" action="{{ route('adiutor.projects.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Search -->
+            <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-2">Search</label>
+                <div class="relative">
+                    <x-lucide-search class="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                    <input type="text" name="search" value="{{ request('search') }}" 
+                           placeholder="Search projects..."
+                           class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-neutral-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                </div>
+            </div>
+
+            <!-- Status Filter -->
+            <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-2">Status</label>
+                <select name="status" class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                    <option value="all">All Statuses</option>
+                    <option value="assigned" {{ request('status') == 'assigned' ? 'selected' : '' }}>Assigned</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                </select>
+            </div>
+
+            <!-- Priority Filter -->
+            <div>
+                <label class="block text-sm font-medium text-neutral-700 mb-2">Priority</label>
+                <select name="priority" class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                    <option value="all">All Priorities</option>
+                    <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>Urgent</option>
+                    <option value="high" {{ request('priority') == 'high' ? 'selected' : '' }}>High</option>
+                    <option value="medium" {{ request('priority') == 'medium' ? 'selected' : '' }}>Medium</option>
+                    <option value="low" {{ request('priority') == 'low' ? 'selected' : '' }}>Low</option>
+                </select>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex items-end gap-2">
+                <x-ui.button type="submit" variant="primary" class="flex-1">
+                    <x-lucide-filter class="w-4 h-4 mr-2" />
+                    Apply Filters
+                </x-ui.button>
+                @if(request('search') || request('status') || request('priority'))
+                    <x-ui.button href="{{ route('adiutor.projects.index') }}" variant="secondary">
+                        <x-lucide-x class="w-4 h-4" />
+                    </x-ui.button>
+                @endif
+            </div>
+        </form>
+    </x-ui.card>
+
+    <!-- Filter Tabs (Quick filters) -->
     <x-ui.card class="mb-6">
         <div class="border-b border-neutral-100 px-6">
             <nav class="-mb-px flex space-x-8">
-                <button class="filter-tab active border-primary-500 text-primary-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+                <button class="filter-tab {{ !request('status') || request('status') == 'all' ? 'active border-primary-500 text-primary-600' : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
                         data-filter="all">
                     All Projects
                 </button>
-                <button class="filter-tab border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+                <button class="filter-tab {{ request('status') == 'assigned' ? 'active border-primary-500 text-primary-600' : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
                         data-filter="assigned">
                     Assigned
                 </button>
-                <button class="filter-tab border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+                <button class="filter-tab {{ request('status') == 'active' ? 'active border-primary-500 text-primary-600' : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
                         data-filter="active">
                     Active
                 </button>
-                <button class="filter-tab border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+                <button class="filter-tab {{ request('status') == 'completed' ? 'active border-primary-500 text-primary-600' : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
                         data-filter="completed">
                     Completed
                 </button>
@@ -161,17 +213,19 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-neutral-50 rounded-xl">
                             <div>
                                 <p class="text-xs font-medium text-neutral-500 mb-1 flex items-center">
-                                    <x-lucide-banknote class="w-4 h-4 text-primary-500 mr-1" />
-                                    Budget
+                                    <x-lucide-wallet class="w-4 h-4 text-success-500 mr-1" />
+                                    My Earnings
                                 </p>
-                                <p class="text-lg font-semibold text-neutral-800">
-                                    @if($project->agreed_rate)
-                                        ₱{{ number_format($project->agreed_rate, 2) }}
+                                <p class="text-lg font-semibold text-success-700">
+                                    ₱{{ number_format($project->myEarnings['total_earned'] ?? 0, 2) }}
+                                </p>
+                                <p class="text-xs text-neutral-500">
+                                    @if(($project->myEarnings['total_pending'] ?? 0) > 0)
+                                        <span class="text-warning-600">+₱{{ number_format($project->myEarnings['total_pending'], 2) }} pending</span>
                                     @else
-                                        ₱{{ number_format($project->budget, 2) }}
+                                        Approved earnings
                                     @endif
                                 </p>
-                                <p class="text-xs text-neutral-500">{{ $project->budget_type === 'fixed' ? 'Fixed Rate' : 'Hourly Rate' }}</p>
                             </div>
                             <div>
                                 <p class="text-xs font-medium text-neutral-500 mb-1 flex items-center">

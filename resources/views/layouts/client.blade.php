@@ -311,6 +311,9 @@
         </div>
     </footer>
 
+    <!-- Phone Input Validation -->
+    <script src="{{ asset('js/phone-input.js') }}"></script>
+
     @stack('scripts')
 </body>
 </html>

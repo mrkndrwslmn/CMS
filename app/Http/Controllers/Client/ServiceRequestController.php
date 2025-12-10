@@ -279,7 +279,7 @@ class ServiceRequestController extends Controller
         $user = Auth::user();
         
         // Use Eloquent to access relationships and methods
-        $request = \App\Models\ServiceRequest::with(['project.milestones', 'approvedBy', 'appliedCoupon', 'couponUsage'])
+        $request = \App\Models\ServiceRequest::with(['project.milestones', 'approvedBy', 'appliedCoupon', 'couponUsage', 'attachments'])
             ->where('id', $id)
             ->where('client_id', $user->id)
             ->first();
@@ -288,10 +288,8 @@ class ServiceRequestController extends Controller
             return redirect()->route('client.requests')->with('error', 'Service request not found.');
         }
 
-        // Get attachments
-        $attachments = DB::table('request_attachments')
-            ->where('service_request_id', $id)
-            ->get();
+        // Get attachments using Eloquent relationship
+        $attachments = $request->attachments;
 
         // Get associated project (already loaded via relationship)
         $project = $request->project;

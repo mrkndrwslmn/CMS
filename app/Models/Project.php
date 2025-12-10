@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Traits\Auditable;
@@ -280,5 +281,21 @@ class Project extends Model
         $this->assignments()
             ->whereNotIn('status', ['removed', 'declined'])
             ->update(['progress_percentage' => $progress]);
+    }
+
+    /**
+     * Get platform earnings record for this project.
+     */
+    public function platformEarnings(): HasOne
+    {
+        return $this->hasOne(PlatformEarning::class);
+    }
+
+    /**
+     * Calculate and update platform earnings for this project.
+     */
+    public function calculatePlatformEarnings(): ?PlatformEarning
+    {
+        return app(\App\Services\PlatformEarningsService::class)->calculateOrCreate($this);
     }
 }

@@ -183,9 +183,16 @@
                             <x-lucide-history class="w-4 h-4" />
                             <span>Payout History</span>
                         </a>
+
+                        <!-- TO DO: FUTURE IMPLEMENTATION
                         <a href="{{ route('admin.hour-requests.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.hour-requests*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-clock class="w-4 h-4" />
                             <span>Hour Requests</span>
+                        </a>  -->
+                        
+                        <a href="{{ route('admin.platform-earnings.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.platform-earnings*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
+                            <x-lucide-trending-up class="w-4 h-4" />
+                            <span>Platform Earnings</span>
                         </a>
                     </div>
                 </div>
@@ -300,7 +307,7 @@
 
                         <a href="{{ route('admin.deliverables.pending') }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg {{ request()->routeIs('admin.deliverables*') ? 'text-primary-600 bg-primary-50/50' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50' }}">
                             <x-lucide-check-circle class="w-4 h-4" />
-                            <span>Pending Approvals</span>
+                            <span>Pending Deliverables</span>
                             @php
                                 $pendingCount = \App\Models\Document::where('is_deliverable', true)->where('is_approved', false)->where('is_archived', false)->count();
                             @endphp
@@ -511,6 +518,9 @@
             }
         }
     </script>
+    
+    <!-- Phone Input Validation -->
+    <script src="{{ asset('js/phone-input.js') }}"></script>
     
     @stack('scripts')
     

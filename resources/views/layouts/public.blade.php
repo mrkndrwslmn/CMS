@@ -179,7 +179,7 @@
                                                     </a>
                                                                                     
                                                     <a href="{{ url('/services') }}" 
-                                                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.requests.create') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.requests.create') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                                         <x-lucide-search class="w-5 h-5" />
                                                         Browse Services
                                                     </a>
@@ -628,6 +628,9 @@
             window.addEventListener('resize', adjustHeaderPosition);
         }
     </script>
+    
+    <!-- Phone Input Validation -->
+    <script src="{{ asset('js/phone-input.js') }}"></script>
     
     <!-- Chatbot Widget -->
     @vite(['resources/js/chatbot.js'])

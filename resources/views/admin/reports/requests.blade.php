@@ -264,7 +264,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Service Type</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Count</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Most Recent</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status Mix</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status Breakdown</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-neutral-200">
@@ -280,16 +280,44 @@
                             <span class="text-xs text-neutral-500 ml-1">requests</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
-                            Recently active
+                            {{ $type->latest_request ? \Carbon\Carbon::parse($type->latest_request)->diffForHumans() : 'N/A' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex space-x-1">
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success-100 text-success-800">
-                                    Approved
-                                </span>
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
-                                    Pending
-                                </span>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1">
+                                @php $statusBreakdown = $type->status_breakdown ?? []; @endphp
+                                @if(isset($statusBreakdown['approved']) && $statusBreakdown['approved'] > 0)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success-100 text-success-800">
+                                        Approved: {{ $statusBreakdown['approved'] }}
+                                    </span>
+                                @endif
+                                @if(isset($statusBreakdown['pending']) && $statusBreakdown['pending'] > 0)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
+                                        Pending: {{ $statusBreakdown['pending'] }}
+                                    </span>
+                                @endif
+                                @if(isset($statusBreakdown['in_review']) && $statusBreakdown['in_review'] > 0)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-info-100 text-info-800">
+                                        In Review: {{ $statusBreakdown['in_review'] }}
+                                    </span>
+                                @endif
+                                @if(isset($statusBreakdown['rejected']) && $statusBreakdown['rejected'] > 0)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-danger-100 text-danger-800">
+                                        Rejected: {{ $statusBreakdown['rejected'] }}
+                                    </span>
+                                @endif
+                                @if(isset($statusBreakdown['completed']) && $statusBreakdown['completed'] > 0)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                                        Completed: {{ $statusBreakdown['completed'] }}
+                                    </span>
+                                @endif
+                                @if(isset($statusBreakdown['cancelled']) && $statusBreakdown['cancelled'] > 0)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
+                                        Cancelled: {{ $statusBreakdown['cancelled'] }}
+                                    </span>
+                                @endif
+                                @if(empty($statusBreakdown))
+                                    <span class="text-xs text-neutral-400">No data</span>
+                                @endif
                             </div>
                         </td>
                     </tr>

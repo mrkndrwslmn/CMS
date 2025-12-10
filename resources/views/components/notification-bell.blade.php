@@ -243,6 +243,9 @@ function notificationBell() {
                     notification.read_at = new Date().toISOString();
                     this.unreadCount = Math.max(0, this.unreadCount - 1);
                 }
+                
+                // Refetch notifications to ensure accurate count
+                await this.fetchNotifications();
             } catch (error) {
                 console.error('Error marking notification as read:', error);
             }
@@ -277,6 +280,9 @@ function notificationBell() {
                 // Update local state
                 this.notifications.forEach(n => n.read_at = new Date().toISOString());
                 this.unreadCount = 0;
+                
+                // Refetch notifications to ensure accurate count
+                await this.fetchNotifications();
             } catch (error) {
                 console.error('Error marking all as read:', error);
             }

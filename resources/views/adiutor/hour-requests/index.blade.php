@@ -16,10 +16,61 @@
         <p class="text-sm text-neutral-500 mt-1">Request additional hours when approaching your max limit</p>
     </div>
 
+    <!-- Warning Tasks (Approaching Max Hours) -->
+    @if(isset($warningTasks) && $warningTasks->isNotEmpty())
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <x-lucide-list-todo class="w-5 h-5 text-warning-500" />
+            Tasks Approaching Max Hours
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($warningTasks as $task)
+            @php $maxHoursStatus = $task->getMaxHoursStatus(); @endphp
+            <div class="{{ $maxHoursStatus['status'] === 'reached' ? 'bg-error-50 border-error-100' : 'bg-warning-50 border-warning-100' }} border rounded-2xl p-5">
+                <div class="flex items-start justify-between mb-3">
+                    <div>
+                        <h3 class="font-semibold text-neutral-800">{{ $task->taskTitle }}</h3>
+                        <p class="text-xs text-neutral-500">{{ $task->project->title ?? 'Project' }}</p>
+                        <p class="text-sm text-neutral-500 mt-1">Max: {{ $task->max_hours }} hours</p>
+                    </div>
+                    <x-ui.badge :variant="$maxHoursStatus['badge_variant']">
+                        {{ round($maxHoursStatus['percentage']) }}% used
+                    </x-ui.badge>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mb-3">
+                    <div class="h-2 {{ $maxHoursStatus['status'] === 'reached' ? 'bg-error-200' : 'bg-warning-200' }} rounded-full overflow-hidden">
+                        @php
+                            $barColor = $maxHoursStatus['status'] === 'reached' ? 'bg-error-500' : 
+                                       ($maxHoursStatus['percentage'] >= 90 ? 'bg-warning-500' : 'bg-success-500');
+                        @endphp
+                        <div class="{{ $barColor }} h-full rounded-full" style="width: {{ $maxHoursStatus['percentage'] }}%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-neutral-500 mt-1">
+                        <span>{{ number_format($maxHoursStatus['used_hours'], 1) }} hrs tracked</span>
+                        <span>{{ number_format($maxHoursStatus['remaining_hours'], 1) }} hrs remaining</span>
+                    </div>
+                </div>
+                
+                <a href="{{ route('adiutor.hour-requests.create', ['task_id' => $task->taskID]) }}" 
+                   class="inline-flex items-center gap-2 w-full justify-center px-4 py-2 text-sm font-medium {{ $maxHoursStatus['status'] === 'reached' ? 'text-error-800 bg-error-100 hover:bg-error-200' : 'text-warning-800 bg-warning-100 hover:bg-warning-200' }} rounded-xl transition-colors">
+                    <x-lucide-plus class="w-4 h-4" />
+                    Request More Hours
+                </a>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     <!-- Warning Assignments (Approaching Max Hours) -->
     @if($warningAssignments->isNotEmpty())
     <div class="mb-8">
-        <h2 class="text-lg font-semibold text-neutral-800 mb-4">Approaching Max Hours</h2>
+        <h2 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <x-lucide-folder-kanban class="w-5 h-5 text-warning-500" />
+            Project Assignments Approaching Max Hours
+        </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($warningAssignments as $assignment)
             <div class="bg-warning-50 border border-warning-100 rounded-2xl p-5">

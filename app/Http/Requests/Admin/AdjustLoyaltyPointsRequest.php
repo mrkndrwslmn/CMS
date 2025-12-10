@@ -24,7 +24,8 @@ class AdjustLoyaltyPointsRequest extends FormRequest
         $maxAdjustment = config('loyalty.admin.max_adjustment', 100000);
 
         return [
-            'points' => "required|integer|not_in:0|between:-{$maxAdjustment},{$maxAdjustment}",
+            'action' => 'required|in:add,deduct,set',
+            'points' => "required|integer|min:1|max:{$maxAdjustment}",
             'reason' => 'required|string|min:10|max:500',
         ];
     }
@@ -39,14 +40,46 @@ class AdjustLoyaltyPointsRequest extends FormRequest
         $maxAdjustment = config('loyalty.admin.max_adjustment', 100000);
 
         return [
-            'points.required' => 'Please enter the number of points to adjust.',
+            'action.required' => 'Please select an action type.',
+            'action.in' => 'Invalid action type selected.',
+            'points.required' => 'Please enter the number of points.',
             'points.integer' => 'Points must be a whole number.',
-            'points.not_in' => 'Points adjustment cannot be zero.',
-            'points.between' => "Points adjustment must be between -{$maxAdjustment} and {$maxAdjustment}.",
+            'points.min' => 'Points must be at least 1.',
+            'points.max' => "Points cannot exceed {$maxAdjustment}.",
             'reason.required' => 'Please provide a reason for this adjustment.',
             'reason.min' => 'Please provide a detailed reason (at least 10 characters).',
             'reason.max' => 'Reason cannot exceed 500 characters.',
         ];
+    }
+
+    /**
+     * Get the validated data from the request.
+     *
+     * @param  array|int|string|null  $key
+     * @param  mixed  $default
+     * @return mixed
+     */
+    public function validated($key = null, $default = null)
+    {
+        $validated = parent::validated($key, $default);
+
+        if (is_null($key)) {
+            // Convert points based on action after validation
+            $action = $validated['action'];
+            $points = $validated['points'];
+            $user = $this->route('user');
+
+            if ($action === 'deduct') {
+                // Make points negative for deduction
+                $validated['points'] = -abs($points);
+            } elseif ($action === 'set' && $user) {
+                // Calculate the difference for "set to" action
+                $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+                $validated['points'] = $points - $loyaltyPoint->available_points;
+            }
+        }
+
+        return $validated;
     }
 
     /**
@@ -66,17 +99,29 @@ class AdjustLoyaltyPointsRequest extends FormRequest
      */
     protected function validateSufficientBalance($validator): void
     {
+        $action = $this->input('action');
         $points = $this->input('points');
         $user = $this->route('user');
 
-        if ($points < 0 && $user) {
+        if ($action === 'deduct' && $user) {
             $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
             
-            if (abs($points) > $loyaltyPoint->available_points) {
+            if ($points > $loyaltyPoint->available_points) {
                 $validator->errors()->add(
                     'points',
                     'Cannot deduct more than the available balance (' . 
                     number_format($loyaltyPoint->available_points) . ' points).'
+                );
+            }
+        }
+
+        // Additional validation for "set" action
+        if ($action === 'set' && $user) {
+            $loyaltyPoint = $user->getOrCreateLoyaltyPoints();
+            if ($points == $loyaltyPoint->available_points) {
+                $validator->errors()->add(
+                    'points',
+                    'No adjustment needed - the balance is already at this value.'
                 );
             }
         }

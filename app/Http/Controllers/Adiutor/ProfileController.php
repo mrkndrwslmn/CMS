@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Adiutor;
 
 use App\Http\Controllers\Controller;
+use App\Rules\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +81,7 @@ class ProfileController extends Controller
         
         $validator = Validator::make($request->all(), [
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'phone' => ['nullable', 'string', 'max:25', new PhoneNumber(true)],
             'bio' => 'nullable|string|max:1000',
             'title' => 'nullable|string|max:255',
             'standard_hourly_rate' => 'nullable|numeric|min:0|max:999999.99',
@@ -117,6 +119,14 @@ class ProfileController extends Controller
                 \Log::error('Profile picture upload failed: ' . $e->getMessage());
                 return redirect()->back()->with('error', 'Failed to upload profile picture. Please try again.');
             }
+        }
+
+        // Update user's phone number if provided
+        if ($request->has('phone')) {
+            DB::table('users')->where('id', $user->id)->update([
+                'phoneNumber' => $request->phone,
+                'updated_at' => now(),
+            ]);
         }
 
         $profileData = [

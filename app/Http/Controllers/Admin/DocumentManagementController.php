@@ -766,7 +766,8 @@ class DocumentManagementController extends Controller
         $query = Document::with(['task', 'uploader', 'project'])
             ->where('is_deliverable', true)
             ->where('is_approved', false)
-            ->where('is_archived', false);
+            ->where('is_archived', false)
+            ->whereNull('rejected_at'); // Exclude rejected deliverables
         
         // Filter by task
         if ($request->filled('task_id')) {
@@ -813,6 +814,13 @@ class DocumentManagementController extends Controller
         ], 'deliverable_approval', [
             'approval_type' => 'admin_approval',
         ]);
+        
+        // Update task's actual_cost based on earnings type
+        // This converts the allocated budget into actual earnings for the adiutor
+        $task = $document->task;
+        if ($task) {
+            $task->recalculateEarnings();
+        }
         
         // Notify the adiutor that their deliverable was approved
         if ($document->uploader) {

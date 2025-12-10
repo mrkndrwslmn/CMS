@@ -398,10 +398,20 @@ class ReportingController extends Controller
             ->orderBy('date')
             ->get();
             
-        // Service Type Distribution
-        $typeDistribution = ServiceRequest::selectRaw('service_type, COUNT(*) as count')
+        // Service Type Distribution with status breakdown
+        $typeDistribution = ServiceRequest::selectRaw('service_type, COUNT(*) as count, MAX(created_at) as latest_request')
             ->groupBy('service_type')
-            ->get();
+            ->get()
+            ->map(function($type) {
+                // Get status breakdown for this service type
+                $statusCounts = ServiceRequest::where('service_type', $type->service_type)
+                    ->selectRaw('status, COUNT(*) as count')
+                    ->groupBy('status')
+                    ->pluck('count', 'status')
+                    ->toArray();
+                $type->status_breakdown = $statusCounts;
+                return $type;
+            });
             
         // Priority Distribution
         $priorityDistribution = ServiceRequest::selectRaw('priority, COUNT(*) as count')
@@ -552,6 +562,47 @@ class ReportingController extends Controller
         $filename = $type . '_report_' . now()->format('Y-m-d_H-i-s') . '.' . $format;
         
         switch ($type) {
+            case 'dashboard':
+                // Dashboard export - combines summary data from users, tasks, requests, and projects
+                $users = User::where('created_at', '>=', $startDate)->get();
+                $tasks = Task::with(['client', 'assignedUser'])->where('created_at', '>=', $startDate)->get();
+                $requests = ServiceRequest::with(['client'])->where('created_at', '>=', $startDate)->get();
+                $projects = Project::with(['client'])->where('created_at', '>=', $startDate)->get();
+                
+                $headers = ['Category', 'Metric', 'Value'];
+                $callback = function() use ($users, $tasks, $requests, $projects, $headers, $startDate) {
+                    $file = fopen('php://output', 'w');
+                    fputcsv($file, $headers);
+                    
+                    // User metrics
+                    fputcsv($file, ['Users', 'Total Users', User::count()]);
+                    fputcsv($file, ['Users', 'New Users (Period)', $users->count()]);
+                    fputcsv($file, ['Users', 'Total Clients', User::where('role', 'client')->count()]);
+                    fputcsv($file, ['Users', 'New Clients (Period)', $users->where('role', 'client')->count()]);
+                    
+                    // Task metrics
+                    fputcsv($file, ['Tasks', 'Total Tasks', Task::count()]);
+                    fputcsv($file, ['Tasks', 'Tasks Created (Period)', $tasks->count()]);
+                    fputcsv($file, ['Tasks', 'Pending Tasks', Task::where('status', 'pending')->count()]);
+                    fputcsv($file, ['Tasks', 'In Progress Tasks', Task::where('status', 'in_progress')->count()]);
+                    fputcsv($file, ['Tasks', 'Completed Tasks', Task::where('status', 'completed')->count()]);
+                    
+                    // Request metrics
+                    fputcsv($file, ['Requests', 'Total Requests', ServiceRequest::count()]);
+                    fputcsv($file, ['Requests', 'Requests Created (Period)', $requests->count()]);
+                    fputcsv($file, ['Requests', 'Pending Requests', ServiceRequest::where('status', 'pending')->count()]);
+                    fputcsv($file, ['Requests', 'Approved Requests', ServiceRequest::where('status', 'approved')->count()]);
+                    
+                    // Project metrics
+                    fputcsv($file, ['Projects', 'Total Projects', Project::count()]);
+                    fputcsv($file, ['Projects', 'Projects Created (Period)', $projects->count()]);
+                    fputcsv($file, ['Projects', 'Active Projects', Project::whereIn('status', ['in_progress', 'pending'])->count()]);
+                    fputcsv($file, ['Projects', 'Completed Projects', Project::where('status', 'completed')->count()]);
+                    
+                    fclose($file);
+                };
+                break;
+            
             case 'users':
                 $data = User::where('created_at', '>=', $startDate)->get();
                 $headers = ['ID', 'Name', 'Email', 'Role', 'Status', 'Created At'];
@@ -573,7 +624,7 @@ class ReportingController extends Controller
                 break;
                 
             case 'tasks':
-                $data = Task::with(['client', 'assignee'])->where('created_at', '>=', $startDate)->get();
+                $data = Task::with(['client', 'assignedUser'])->where('created_at', '>=', $startDate)->get();
                 $headers = ['ID', 'Title', 'Client', 'Assignee', 'Status', 'Priority', 'Created At', 'Deadline'];
                 $callback = function() use ($data, $headers) {
                     $file = fopen('php://output', 'w');
@@ -581,13 +632,13 @@ class ReportingController extends Controller
                     foreach ($data as $task) {
                         fputcsv($file, [
                             $task->taskID,
-                            $task->taskName,
+                            $task->taskTitle,
                             $task->client->fullName ?? 'N/A',
-                            $task->assignee->fullName ?? 'Unassigned',
+                            $task->assignedUser->fullName ?? 'Unassigned',
                             $task->status,
                             $task->priority,
                             $task->created_at->format('Y-m-d H:i:s'),
-                            $task->deadline ?? 'N/A',
+                            $task->deadline ? $task->deadline->format('Y-m-d H:i:s') : 'N/A',
                         ]);
                     }
                     fclose($file);
@@ -608,7 +659,7 @@ class ReportingController extends Controller
                             $request->service_type,
                             $request->status,
                             $request->priority ?? 'N/A',
-                            $request->approved_budget ? '$' . number_format($request->approved_budget, 2) : 'N/A',
+                            $request->approved_budget ? 'PHP ' . number_format($request->approved_budget, 2) : 'N/A',
                             $request->created_at->format('Y-m-d H:i:s'),
                         ]);
                     }
@@ -629,7 +680,7 @@ class ReportingController extends Controller
                             $project->client->fullName ?? 'N/A',
                             $project->status,
                             $project->priority ?? 'N/A',
-                            $project->budget ? '$' . number_format($project->budget, 2) : 'N/A',
+                            $project->budget ? 'PHP ' . number_format($project->budget, 2) : 'N/A',
                             $project->started_at ? $project->started_at->format('Y-m-d H:i:s') : 'N/A',
                             $project->deadline ? $project->deadline->format('Y-m-d H:i:s') : 'N/A',
                         ]);

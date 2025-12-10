@@ -70,28 +70,31 @@
 
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Budget Card -->
+        <!-- Task Allocation Card -->
         <x-ui.card class="p-6">
             <div class="flex items-start justify-between mb-3">
-                <span class="text-neutral-500 text-sm font-medium">Allocated Budget</span>
+                <span class="text-neutral-500 text-sm font-medium">Task Allocation</span>
                 <div class="p-2.5 bg-success-50 rounded-xl">
-                    <x-lucide-banknote class="w-5 h-5 text-success-600" />
+                    <x-lucide-wallet class="w-5 h-5 text-success-600" />
                 </div>
             </div>
-            <p class="text-2xl font-semibold text-neutral-800">₱{{ number_format($task->allocated_budget ?? 0, 2) }}</p>
+            <p class="text-2xl font-semibold text-success-700">₱{{ number_format($task->allocated_budget ?? 0, 2) }}</p>
             @if($task->actual_cost)
-                <div class="mt-2 flex items-center text-xs">
-                    <span class="text-neutral-500">Spent: ₱{{ number_format($task->actual_cost, 2) }}</span>
-                    @php
-                        $remaining = ($task->allocated_budget ?? 0) - $task->actual_cost;
-                        $isOverBudget = $remaining < 0;
-                    @endphp
-                    <span class="ml-2 px-2 py-0.5 rounded-full {{ $isOverBudget ? 'bg-error-100 text-error-700' : 'bg-success-100 text-success-700' }}">
-                        {{ $isOverBudget ? 'Over' : 'Remaining' }}: ₱{{ number_format(abs($remaining), 2) }}
-                    </span>
+                <div class="mt-2">
+                    <div class="flex items-center text-xs">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-success-100 text-success-700">
+                            <x-lucide-check-circle class="w-3 h-3 mr-1" />
+                            Earned: ₱{{ number_format($task->actual_cost, 2) }}
+                        </span>
+                    </div>
                 </div>
+            @elseif($task->status === 'completed')
+                <p class="text-warning-600 text-xs mt-1 flex items-center gap-1">
+                    <x-lucide-clock class="w-3 h-3" />
+                    Pending approval to release earnings
+                </p>
             @else
-                <p class="text-neutral-500 text-xs mt-1">No expenses yet</p>
+                <p class="text-success-600 text-xs mt-1">Potential earnings</p>
             @endif
         </x-ui.card>
 
@@ -155,6 +158,9 @@
         $effectiveRate = $task->hourly_rate 
             ?? ($assignment->hourly_rate ?? null) 
             ?? ($assignment->agreed_rate ?? null);
+        
+        // Get task max hours status
+        $maxHoursStatus = $task->getMaxHoursStatus();
     @endphp
     @if($isHourlyContract)
         <div class="bg-gradient-to-r from-info-50 to-primary-50 rounded-2xl p-6 border border-info-200 mb-8">
@@ -198,6 +204,86 @@
         </div>
     @endif
 
+    <!-- Task Max Hours Limit Card -->
+    @if($maxHoursStatus['has_limit'])
+        @php
+            $bgClass = $maxHoursStatus['status'] === 'reached' ? 'from-error-50 to-error-100 border-error-200' :
+                      ($maxHoursStatus['status'] === 'approaching' ? 'from-warning-50 to-warning-100 border-warning-200' :
+                      'from-success-50 to-success-100 border-success-200');
+            $iconBg = $maxHoursStatus['status'] === 'reached' ? 'bg-error-100' :
+                     ($maxHoursStatus['status'] === 'approaching' ? 'bg-warning-100' : 'bg-success-100');
+            $iconColor = $maxHoursStatus['status'] === 'reached' ? 'text-error-600' :
+                        ($maxHoursStatus['status'] === 'approaching' ? 'text-warning-600' : 'text-success-600');
+            $textColor = $maxHoursStatus['status'] === 'reached' ? 'text-error-700' :
+                        ($maxHoursStatus['status'] === 'approaching' ? 'text-warning-700' : 'text-success-700');
+            $barColor = $maxHoursStatus['status'] === 'reached' ? 'bg-error-500' :
+                       ($maxHoursStatus['status'] === 'approaching' ? 'bg-warning-500' : 'bg-success-500');
+            $barBg = $maxHoursStatus['status'] === 'reached' ? 'bg-error-200' :
+                    ($maxHoursStatus['status'] === 'approaching' ? 'bg-warning-200' : 'bg-success-200');
+        @endphp
+        <div class="bg-gradient-to-r {{ $bgClass }} rounded-2xl p-6 border mb-8">
+            <div class="flex items-start justify-between flex-wrap gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 {{ $iconBg }} rounded-xl flex items-center justify-center shadow-sm">
+                        @if($maxHoursStatus['status'] === 'reached')
+                            <x-lucide-alert-circle class="w-6 h-6 {{ $iconColor }}" />
+                        @elseif($maxHoursStatus['status'] === 'approaching')
+                            <x-lucide-alert-triangle class="w-6 h-6 {{ $iconColor }}" />
+                        @else
+                            <x-lucide-clock class="w-6 h-6 {{ $iconColor }}" />
+                        @endif
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <p class="text-sm {{ $textColor }} font-semibold">
+                                @if($maxHoursStatus['status'] === 'reached')
+                                    Maximum Hours Reached
+                                @elseif($maxHoursStatus['status'] === 'approaching')
+                                    Approaching Maximum Hours
+                                @else
+                                    Task Hour Limit
+                                @endif
+                            </p>
+                            <x-ui.badge :variant="$maxHoursStatus['badge_variant']">
+                                {{ $maxHoursStatus['percentage'] }}% used
+                            </x-ui.badge>
+                        </div>
+                        <p class="text-neutral-600 text-sm">
+                            This task has a maximum of <span class="font-semibold">{{ $maxHoursStatus['max_hours'] }} hours</span> allocated.
+                        </p>
+                        <p class="text-xs text-neutral-500 mt-1">
+                            <span class="font-medium">{{ $maxHoursStatus['used_hours'] }} hrs</span> used 
+                            • <span class="font-medium">{{ $maxHoursStatus['remaining_hours'] }} hrs</span> remaining
+                        </p>
+                    </div>
+                </div>
+                @if($maxHoursStatus['status'] === 'reached' || $maxHoursStatus['status'] === 'approaching')
+                <a href="{{ route('adiutor.hour-requests.create', ['task_id' => $task->taskID]) }}" 
+                   class="inline-flex items-center gap-2 px-5 py-2.5 {{ $maxHoursStatus['status'] === 'reached' ? 'bg-error-600 hover:bg-error-700' : 'bg-warning-600 hover:bg-warning-700' }} text-white text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-all">
+                    <x-lucide-plus-circle class="w-4 h-4" />
+                    Request More Hours
+                </a>
+                @endif
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="mt-4">
+                <div class="h-2 {{ $barBg }} rounded-full overflow-hidden">
+                    <div class="{{ $barColor }} h-full rounded-full transition-all" style="width: {{ $maxHoursStatus['percentage'] }}%"></div>
+                </div>
+            </div>
+            
+            @if($maxHoursStatus['status'] === 'reached')
+            <div class="mt-4 p-3 bg-white/50 rounded-lg border border-error-200">
+                <p class="text-sm text-error-700">
+                    <strong>Note:</strong> You've reached the maximum hours for this task. Any additional time tracked will be marked as non-billable. 
+                    Please request more hours if you need to continue working on this task.
+                </p>
+            </div>
+            @endif
+        </div>
+    @endif
+
     <!-- Phase Information (if applicable) -->
     @if($task->phase_id && $task->phase_name)
         <div class="bg-primary-50 rounded-2xl p-6 border border-primary-200 mb-8">
@@ -214,8 +300,8 @@
                 <div class="flex items-center space-x-4">
                     @if($task->phase_budget)
                         <div class="bg-white px-4 py-2.5 rounded-xl border border-neutral-200">
-                            <p class="text-xs text-neutral-500 mb-0.5">Phase Budget</p>
-                            <p class="text-lg font-semibold text-neutral-800">₱{{ number_format($task->phase_budget, 2) }}</p>
+                            <p class="text-xs text-neutral-500 mb-0.5">Phase Allocation</p>
+                            <p class="text-lg font-semibold text-success-700">₱{{ number_format($task->phase_budget, 2) }}</p>
                         </div>
                     @endif
                     <div class="bg-white px-4 py-2.5 rounded-xl border border-neutral-200">
@@ -535,8 +621,8 @@
                             <div class="bg-neutral-50 rounded-xl p-5 border border-neutral-200">
                                 <div class="flex items-center justify-between mb-4">
                                     <div>
-                                        <p class="text-sm text-neutral-600">Current Allocated Budget</p>
-                                        <p class="text-2xl font-semibold text-neutral-800">₱{{ number_format($task->allocated_budget ?? 0, 2) }}</p>
+                                        <p class="text-sm text-neutral-600">Current Task Allocation</p>
+                                        <p class="text-2xl font-semibold text-success-700">₱{{ number_format($task->allocated_budget ?? 0, 2) }}</p>
                                     </div>
                                     <div class="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
                                         <x-lucide-wallet class="w-6 h-6 text-success-600" />

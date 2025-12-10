@@ -102,7 +102,9 @@
                     <option value="all">All Statuses</option>
                     <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                     <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                    <option value="pending_approval" {{ request('status') == 'pending_approval' ? 'selected' : '' }}>Pending Approval</option>
                     <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                 </select>
             </div>
 
@@ -208,16 +210,17 @@
                             </div>
                             <div>
                                 <p class="text-xs font-medium text-neutral-500 mb-1 flex items-center">
-                                    <x-lucide-banknote class="w-4 h-4 text-primary-500 mr-1" />
-                                    Budget
+                                    <x-lucide-wallet class="w-4 h-4 text-success-500 mr-1" />
+                                    Task Allocation
                                 </p>
-                                <p class="text-lg font-semibold text-neutral-800">
+                                <p class="text-lg font-semibold text-success-700">
                                     @if($task->allocated_budget)
                                         ₱{{ number_format($task->allocated_budget, 2) }}
                                     @else
                                         <span class="text-neutral-400 text-sm">Not set</span>
                                     @endif
                                 </p>
+                                <p class="text-xs text-success-600">Potential earnings</p>
                             </div>
                             <div>
                                 <p class="text-xs font-medium text-neutral-500 mb-1 flex items-center">

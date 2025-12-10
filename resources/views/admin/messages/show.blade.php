@@ -110,7 +110,6 @@
                             name="message" 
                             rows="3" 
                             placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line, @ to mention)"
-                            required
                             maxlength="5000"
                         />
                         <div class="mt-1 flex items-center justify-between">
@@ -191,7 +190,7 @@
             return [
                 'id' => $m->id,
                 'name' => $m->fullName,
-                'pic' => $m->profilePic,
+                'pic' => $m->getProfilePictureUrl(),
                 'role' => $m->role
             ];
         })->toArray() : [];
@@ -626,13 +625,20 @@
         e.preventDefault();
         
         const message = messageTextarea.value.trim();
-        if (!message) return;
+        const files = attachmentsInput.files;
+        
+        // Require either message or attachments
+        if (!message && files.length === 0) {
+            window.toast.error('Please enter a message or attach files.');
+            return;
+        }
 
         const formData = new FormData();
-        formData.append('message', message);
+        if (message) {
+            formData.append('message', message);
+        }
 
         // Add attachments
-        const files = attachmentsInput.files;
         for (let i = 0; i < files.length; i++) {
             formData.append('attachments[]', files[i]);
         }

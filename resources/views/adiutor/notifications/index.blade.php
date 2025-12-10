@@ -102,15 +102,6 @@
                                 </button>
                             </div>
                         </div>
-                        
-                        <!-- Debug Info (only in dev) -->
-                        @if(config('app.debug'))
-                        <div class="mt-3 p-2 bg-neutral-100 rounded-lg text-xs text-neutral-500">
-                            <strong>Debug:</strong> Type: {{ $notification->type ?? 'Unknown' }} | 
-                            Action URL: {{ $actionUrl ?? 'None' }} |
-                            Read: {{ $notification->read_at ? 'Yes' : 'No' }}
-                        </div>
-                        @endif
                     </div>
                 </div>
             </div>

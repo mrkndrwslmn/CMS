@@ -131,32 +131,32 @@
                 <!-- Header -->
                 <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
                     <div class="flex items-center gap-3">
-                        <div class="p-2.5 rounded-xl bg-primary-50">
-                            <x-lucide-trending-up class="w-5 h-5 text-primary-500" />
+                        <div class="p-2.5 rounded-xl bg-success-50">
+                            <x-lucide-trending-up class="w-5 h-5 text-success-500" />
                         </div>
                         <div>
-                            <h2 class="text-sm font-semibold text-neutral-800">Financial Overview</h2>
-                            <p class="text-xs text-neutral-500">Revenue & earnings analytics</p>
+                            <h2 class="text-sm font-semibold text-neutral-800">Platform Revenue</h2>
+                            <p class="text-xs text-neutral-500">Platform earnings after {{ config('financial.platform.fee_percentage', 15) }}% fee</p>
                         </div>
                     </div>
-                    <a href="{{ route('admin.earnings-analytics.index') }}" class="text-sm text-primary-500 hover:text-primary-600 font-medium flex items-center gap-1.5">
+                    <a href="{{ route('admin.platform-earnings.index') }}" class="text-sm text-primary-500 hover:text-primary-600 font-medium flex items-center gap-1.5">
                         <span>View Details</span>
                         <x-lucide-arrow-right class="w-4 h-4" />
                     </a>
                 </div>
                 
                 <!-- Main Stats Row -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-neutral-100">
-                    <!-- Total Revenue -->
+                <div class="grid grid-cols-1 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-neutral-100">
+                    <!-- Total Platform Revenue -->
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
-                            <p class="text-sm font-medium text-neutral-500">Total Revenue</p>
+                            <p class="text-sm font-medium text-neutral-500">Platform Revenue</p>
                             <span class="text-xs px-2 py-0.5 rounded-full bg-success-50 text-success-600 font-medium">
                                 {{ $earningsStats['completed_projects'] }} projects
                             </span>
                         </div>
-                        <p class="text-3xl font-semibold text-neutral-800 tracking-tight">₱{{ number_format($earningsStats['total_earnings'], 2) }}</p>
-                        <p class="text-xs text-neutral-500 mt-2">Lifetime earnings from completed projects</p>
+                        <p class="text-3xl font-semibold text-success-600 tracking-tight">₱{{ number_format($earningsStats['total_earnings'], 2) }}</p>
+                        <p class="text-xs text-neutral-500 mt-2">Fees + margin from all projects</p>
                     </div>
                     
                     <!-- This Month -->
@@ -176,19 +176,36 @@
                             @endif
                         </div>
                         <p class="text-3xl font-semibold text-neutral-800 tracking-tight">₱{{ number_format($earningsStats['this_month_earnings'], 2) }}</p>
-                        <p class="text-xs text-neutral-500 mt-2">{{ now()->format('F Y') }} revenue</p>
+                        <p class="text-xs text-neutral-500 mt-2">{{ now()->format('F Y') }} platform revenue</p>
                     </div>
                     
-                    <!-- Adiutor Payouts -->
+                    <!-- Adiutor Costs -->
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
-                            <p class="text-sm font-medium text-neutral-500">Adiutor Earnings</p>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-primary-50 text-primary-600 font-medium">
+                            <p class="text-sm font-medium text-neutral-500">Adiutor Costs</p>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-warning-50 text-warning-600 font-medium">
                                 This month
                             </span>
                         </div>
-                        <p class="text-3xl font-semibold text-neutral-800 tracking-tight">₱{{ number_format($earningsStats['adiutor_earnings_this_month'], 2) }}</p>
-                        <p class="text-xs text-neutral-500 mt-2">Approved time entries</p>
+                        <p class="text-3xl font-semibold text-warning-600 tracking-tight">₱{{ number_format($earningsStats['adiutor_earnings_this_month'], 2) }}</p>
+                        <p class="text-xs text-neutral-500 mt-2">Hourly + fixed rate payouts</p>
+                    </div>
+                    
+                    <!-- Net Margin -->
+                    <div class="p-6 bg-gradient-to-br from-success-50 to-transparent">
+                        <div class="flex items-center justify-between mb-4">
+                            <p class="text-sm font-medium text-neutral-500">Net Position</p>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-success-100 text-success-700 font-medium">
+                                This month
+                            </span>
+                        </div>
+                        @php
+                            $netMargin = $earningsStats['this_month_earnings'] - $earningsStats['adiutor_earnings_this_month'];
+                        @endphp
+                        <p class="text-3xl font-semibold {{ $netMargin >= 0 ? 'text-success-600' : 'text-error-600' }} tracking-tight">
+                            ₱{{ number_format(abs($netMargin), 2) }}
+                        </p>
+                        <p class="text-xs text-neutral-500 mt-2">{{ $netMargin >= 0 ? 'Profit' : 'Loss' }} after costs</p>
                     </div>
                 </div>
                 

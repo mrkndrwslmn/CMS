@@ -17,7 +17,7 @@
             title="User Management"
             subtitle="Manage roles and permissions"
         />
-        <x-ui.button href="{{ route('admin.users.create') }}" variant="primary" class="inline-flex items-center gap-2">
+        <x-ui.button href="{{ route('admin.clients.create') }}" variant="primary" class="inline-flex items-center gap-2">
             <x-lucide-plus class="w-4 h-4" />
             Add User
         </x-ui.button>
@@ -242,11 +242,6 @@
                                        title="View">
                                         <x-lucide-eye class="w-4 h-4" />
                                     </a>
-                                    <a href="{{ route('admin.users.edit', $user) }}" 
-                                       class="p-2 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" 
-                                       title="Edit">
-                                        <x-lucide-pencil class="w-4 h-4" />
-                                    </a>
                                     @if($user->id !== auth()->id())
                                         <form method="POST" action="{{ route('admin.users.toggle-status', $user) }}" class="inline-block">
                                             @csrf
@@ -292,7 +287,7 @@
                     </div>
                     <p class="text-base font-medium text-neutral-600 mb-1">No users found</p>
                     <p class="text-sm text-neutral-400 mb-4">Try adjusting your filters</p>
-                    <x-ui.button href="{{ route('admin.users.create') }}" variant="primary" class="inline-flex items-center gap-2">
+                    <x-ui.button href="{{ route('admin.clients.create') }}" variant="primary" class="inline-flex items-center gap-2">
                         <x-lucide-plus class="w-4 h-4" />
                         Add User
                     </x-ui.button>

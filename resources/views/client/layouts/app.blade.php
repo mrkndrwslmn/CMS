@@ -97,6 +97,23 @@
                             <div class="px-4 py-3 border-b border-neutral-100">
                                 <p class="text-sm font-medium text-neutral-900">{{ auth()->user()->fullName }}</p>
                                 <p class="text-xs text-neutral-500 mt-0.5">{{ auth()->user()->email }}</p>
+                                {{-- Loyalty Tier Badge --}}
+                                @if(auth()->user()->loyaltyPoints)
+                                    @php $tier = auth()->user()->loyaltyPoints->tier; @endphp
+                                    <div class="mt-2 flex items-center gap-1.5">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+                                            {{ $tier === 'platinum' ? 'bg-info-100 text-info-700' : '' }}
+                                            {{ $tier === 'gold' ? 'bg-warning-100 text-warning-700' : '' }}
+                                            {{ $tier === 'silver' ? 'bg-neutral-200 text-neutral-700' : '' }}
+                                            {{ $tier === 'bronze' ? 'bg-orange-100 text-orange-700' : '' }}">
+                                            <x-lucide-award class="w-3 h-3" />
+                                            {{ ucfirst($tier) }}
+                                        </span>
+                                        @if(auth()->user()->loyaltyPoints->getTierDiscount() > 0)
+                                            <span class="text-xs text-success-600 font-medium">{{ auth()->user()->loyaltyPoints->getTierDiscount() }}% off</span>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                             
                             <!-- Navigation Links -->
@@ -108,7 +125,7 @@
                                 </a>
                                                                 
                                 <a href="{{ url('/services') }}" 
-                                class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {{ request()->routeIs('client.requests.create') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
+                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors {{ request()->routeIs('client.requests.create') ? 'bg-primary-50 text-primary-700' : 'text-neutral-700 hover:bg-neutral-50' }}">
                                     <x-lucide-search class="w-5 h-5" />
                                     Browse Services
                                 </a>
@@ -590,6 +607,9 @@
             }
         }
     </script>
+
+    <!-- Phone Input Validation -->
+    <script src="{{ asset('js/phone-input.js') }}"></script>
 
     @stack('scripts')
     

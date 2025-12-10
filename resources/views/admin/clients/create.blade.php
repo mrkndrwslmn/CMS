@@ -86,7 +86,8 @@
                             name="phoneNumber" 
                             id="phoneNumber" 
                             icon="phone"
-                            placeholder="Enter phone number" 
+                            placeholder="+63 917 123 4567" 
+                            data-format="ph"
                             :value="old('phoneNumber')"
                             required
                         />

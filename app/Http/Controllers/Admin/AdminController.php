@@ -349,7 +349,7 @@ class AdminController extends Controller
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'fullName' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'phoneNumber' => 'nullable|string|max:20',
+            'phoneNumber' => ['nullable', 'string', 'max:25', new \App\Rules\PhoneNumber(true)],
             'current_password' => 'nullable|required_with:password',
             'password' => 'nullable|min:8|confirmed',
         ]);
@@ -403,23 +403,8 @@ class AdminController extends Controller
             ->with('serviceRequest')
             ->get();
         
-        // Calculate total earnings (approved_budget - discount from service request)
-        $totalProjectEarnings = $completedProjects->sum(function ($project) {
-            if ($project->serviceRequest) {
-                // Use approved_budget minus any discounts applied
-                $approved = $project->serviceRequest->approved_budget ?? $project->budget ?? 0;
-                $discount = $project->serviceRequest->total_discount_amount ?? 0;
-                return max(0, $approved - $discount);
-            }
-            return $project->budget ?? 0;
-        });
-        
-        // Get this month's completed projects
-        $thisMonthProjects = $completedProjects->filter(function ($project) {
-            return $project->completed_at && $project->completed_at->isCurrentMonth();
-        });
-        
-        $thisMonthProjectEarnings = $thisMonthProjects->sum(function ($project) {
+        // Calculate total project budgets (what clients paid)
+        $totalProjectBudgets = $completedProjects->sum(function ($project) {
             if ($project->serviceRequest) {
                 $approved = $project->serviceRequest->approved_budget ?? $project->budget ?? 0;
                 $discount = $project->serviceRequest->total_discount_amount ?? 0;
@@ -428,39 +413,56 @@ class AdminController extends Controller
             return $project->budget ?? 0;
         });
         
-        // Get last month's completed projects for comparison
-        $lastMonthProjects = $completedProjects->filter(function ($project) {
-            return $project->completed_at && $project->completed_at->month === now()->subMonth()->month 
-                && $project->completed_at->year === now()->subMonth()->year;
-        });
+        // Get platform earnings stats
+        $platformEarnings = \App\Models\PlatformEarning::query();
+        $totalPlatformRevenue = (clone $platformEarnings)->sum('total_platform_revenue') ?: 0;
+        $totalPlatformFees = (clone $platformEarnings)->sum('platform_fee') ?: 0;
+        $totalMarginEarnings = (clone $platformEarnings)->sum('margin_earnings') ?: 0;
         
-        $lastMonthProjectEarnings = $lastMonthProjects->sum(function ($project) {
-            if ($project->serviceRequest) {
-                $approved = $project->serviceRequest->approved_budget ?? $project->budget ?? 0;
-                $discount = $project->serviceRequest->total_discount_amount ?? 0;
-                return max(0, $approved - $discount);
-            }
-            return $project->budget ?? 0;
-        });
+        // This month's platform revenue
+        $thisMonthPlatformRevenue = \App\Models\PlatformEarning::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('total_platform_revenue') ?: 0;
         
-        // Calculate month-over-month growth
-        $monthlyGrowth = $lastMonthProjectEarnings > 0 
-            ? round((($thisMonthProjectEarnings - $lastMonthProjectEarnings) / $lastMonthProjectEarnings) * 100, 1)
-            : ($thisMonthProjectEarnings > 0 ? 100 : 0);
+        // Last month's platform revenue for comparison
+        $lastMonthPlatformRevenue = \App\Models\PlatformEarning::whereMonth('created_at', now()->subMonth()->month)
+            ->whereYear('created_at', now()->subMonth()->year)
+            ->sum('total_platform_revenue') ?: 0;
+        
+        // Calculate month-over-month growth using platform revenue
+        $monthlyGrowth = $lastMonthPlatformRevenue > 0 
+            ? round((($thisMonthPlatformRevenue - $lastMonthPlatformRevenue) / $lastMonthPlatformRevenue) * 100, 1)
+            : ($thisMonthPlatformRevenue > 0 ? 100 : 0);
+
+        // Adiutor costs this month
+        $adiutorEarningsThisMonth = \App\Models\TimeEntry::where('is_approved', true)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('calculated_amount') ?? 0;
+        
+        // Add fixed rate approvals this month
+        $fixedRateThisMonth = \App\Models\ProjectAssignment::where('payment_type', 'fixed_rate')
+            ->where('fixed_rate_approved', true)
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year)
+            ->sum('agreed_rate') ?? 0;
+        
+        $totalAdiutorCostsThisMonth = (float) $adiutorEarningsThisMonth + (float) $fixedRateThisMonth;
 
         return [
-            'total_earnings' => $totalProjectEarnings,
-            'this_month_earnings' => $thisMonthProjectEarnings,
+            'total_earnings' => $totalPlatformRevenue > 0 ? $totalPlatformRevenue : $totalProjectBudgets, // Use platform revenue if available
+            'total_project_budgets' => $totalProjectBudgets,
+            'total_platform_revenue' => $totalPlatformRevenue,
+            'total_platform_fees' => $totalPlatformFees,
+            'total_margin_earnings' => $totalMarginEarnings,
+            'this_month_earnings' => $thisMonthPlatformRevenue > 0 ? $thisMonthPlatformRevenue : 0,
             'monthly_growth' => $monthlyGrowth,
             'pending_approvals' => \App\Models\TimeEntry::where('is_approved', false)
                 ->whereNotNull('end_time')
                 ->count(),
             'pending_payouts' => \App\Models\Payout::where('status', 'pending')
                 ->sum('amount'),
-            'adiutor_earnings_this_month' => \App\Models\TimeEntry::where('is_approved', true)
-                ->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
-                ->sum('calculated_amount'),
+            'adiutor_earnings_this_month' => $totalAdiutorCostsThisMonth,
             'pending_hour_requests' => \App\Models\HourIncreaseRequest::where('status', 'pending')
                 ->count(),
             'completed_projects' => $completedProjects->count(),

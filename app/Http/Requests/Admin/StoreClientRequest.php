@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\PhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -33,8 +34,8 @@ class StoreClientRequest extends FormRequest
             'phoneNumber' => [
                 'required',
                 'string',
-                'max:30',
-                'regex:/^[\+]?[0-9\s\-\(\)\.]{7,25}$/',
+                'max:25',
+                new PhoneNumber(),
             ],
             'status' => ['required', 'in:active,inactive'],
         ];

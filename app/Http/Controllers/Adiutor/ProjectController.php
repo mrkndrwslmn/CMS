@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Adiutor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Models\TimeEntry;
+use App\Models\Document;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,12 +17,12 @@ class ProjectController extends Controller
     /**
      * Display a listing of assigned projects
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         
         // Get all assigned projects with details
-        $projects = DB::table('project_assignments')
+        $query = DB::table('project_assignments')
             ->join('projects', 'project_assignments.project_id', '=', 'projects.id')
             ->join('users', 'projects.client_id', '=', 'users.id')
             ->where('project_assignments.adiutor_id', $user->id)
@@ -35,9 +38,34 @@ class ProjectController extends Controller
                 'users.fullName as client_name',
                 'users.email as client_email',
                 'users.profilePic as client_photo'
-            )
-            ->orderBy('project_assignments.created_at', 'desc')
-            ->get();
+            );
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('projects.title', 'like', "%{$search}%")
+                  ->orWhere('projects.description', 'like', "%{$search}%")
+                  ->orWhere('users.fullName', 'like', "%{$search}%");
+            });
+        }
+        
+        // Filter by assignment status
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('project_assignments.status', $request->status);
+        }
+        
+        // Filter by priority
+        if ($request->filled('priority') && $request->priority !== 'all') {
+            $query->where('projects.priority', $request->priority);
+        }
+        
+        $projects = $query->orderBy('project_assignments.created_at', 'desc')->get();
+        
+        // Calculate earnings for each project
+        foreach ($projects as $project) {
+            $project->myEarnings = $this->calculateAdiutorEarningsForProject($project->id, $user->id);
+        }
         
         return view('adiutor.projects.index', compact('user', 'projects'));
     }
@@ -187,6 +215,9 @@ class ProjectController extends Controller
             return $task->documents->where('is_deliverable', true)->where('is_approved', false)->count();
         }) + $projectLevelDocuments->where('is_deliverable', true)->where('is_approved', false)->count();
         
+        // Calculate adiutor's earnings for this project
+        $myEarnings = $this->calculateAdiutorEarningsForProject($id, $user->id);
+        
         return view('adiutor.projects.show', compact(
             'user',
             'project',
@@ -197,7 +228,8 @@ class ProjectController extends Controller
             'tasksWithDeliverables',
             'projectLevelDocuments',
             'totalDeliverables',
-            'pendingDeliverables'
+            'pendingDeliverables',
+            'myEarnings'
         ));
     }
 
@@ -382,5 +414,92 @@ class ProjectController extends Controller
         
         return redirect()->back()
             ->with('success', 'Task created successfully! It will be activated once an admin approves it.');
+    }
+
+    /**
+     * Calculate adiutor's earnings for a specific project
+     */
+    private function calculateAdiutorEarningsForProject($projectId, $adiutorId)
+    {
+        // Calculate hourly earnings from time entries (use duration_minutes and convert to hours)
+        $hourlyEarnings = TimeEntry::where('adiutor_id', $adiutorId)
+            ->whereHas('task', function($query) use ($projectId) {
+                $query->where('project_id', $projectId);
+            })
+            ->whereNotNull('end_time')
+            ->selectRaw('
+                SUM(CASE WHEN is_approved = 1 AND is_paid = 0 THEN calculated_amount ELSE 0 END) as approved_amount,
+                SUM(CASE WHEN is_paid = 1 THEN calculated_amount ELSE 0 END) as paid_amount,
+                SUM(CASE WHEN is_approved = 0 THEN calculated_amount ELSE 0 END) as pending_amount,
+                SUM(CASE WHEN is_approved = 1 AND is_paid = 0 THEN duration_minutes / 60.0 ELSE 0 END) as approved_hours,
+                SUM(CASE WHEN is_paid = 1 THEN duration_minutes / 60.0 ELSE 0 END) as paid_hours,
+                SUM(CASE WHEN is_approved = 0 THEN duration_minutes / 60.0 ELSE 0 END) as pending_hours,
+                COUNT(*) as entry_count
+            ')
+            ->first();
+
+        // Calculate fixed rate earnings from project_assignments (not documents)
+        // Documents don't have is_paid or payout_amount columns
+        $fixedRateAssignment = \DB::table('project_assignments')
+            ->where('project_id', $projectId)
+            ->where('adiutor_id', $adiutorId)
+            ->where('payment_type', 'fixed_rate')
+            ->select(
+                'agreed_rate',
+                'fixed_rate_approved',
+                'fixed_rate_paid'
+            )
+            ->first();
+        
+        // Calculate fixed rate earnings based on approval and payment status
+        $fixedRateEarnings = (object) [
+            'approved_amount' => ($fixedRateAssignment && $fixedRateAssignment->fixed_rate_approved && !$fixedRateAssignment->fixed_rate_paid) 
+                ? ($fixedRateAssignment->agreed_rate ?? 0) : 0,
+            'paid_amount' => ($fixedRateAssignment && $fixedRateAssignment->fixed_rate_paid) 
+                ? ($fixedRateAssignment->agreed_rate ?? 0) : 0,
+            'pending_amount' => ($fixedRateAssignment && !$fixedRateAssignment->fixed_rate_approved) 
+                ? ($fixedRateAssignment->agreed_rate ?? 0) : 0,
+            'approved_count' => ($fixedRateAssignment && $fixedRateAssignment->fixed_rate_approved && !$fixedRateAssignment->fixed_rate_paid) ? 1 : 0,
+            'paid_count' => ($fixedRateAssignment && $fixedRateAssignment->fixed_rate_paid) ? 1 : 0,
+            'pending_count' => ($fixedRateAssignment && !$fixedRateAssignment->fixed_rate_approved && $fixedRateAssignment->agreed_rate) ? 1 : 0,
+        ];
+
+        // Get task allocations for this adiutor
+        $taskAllocations = Task::where('project_id', $projectId)
+            ->where('assignedTo', $adiutorId)
+            ->sum('allocated_budget');
+
+        // Calculate totals
+        $totalApproved = ($hourlyEarnings->approved_amount ?? 0) + ($fixedRateEarnings->approved_amount ?? 0);
+        $totalPaid = ($hourlyEarnings->paid_amount ?? 0) + ($fixedRateEarnings->paid_amount ?? 0);
+        $totalPending = ($hourlyEarnings->pending_amount ?? 0) + ($fixedRateEarnings->pending_amount ?? 0);
+        $totalEarned = $totalApproved + $totalPaid;
+        $projectedTotal = $totalEarned + $totalPending;
+
+        return [
+            'hourly' => [
+                'approved_amount' => $hourlyEarnings->approved_amount ?? 0,
+                'paid_amount' => $hourlyEarnings->paid_amount ?? 0,
+                'pending_amount' => $hourlyEarnings->pending_amount ?? 0,
+                'approved_hours' => round($hourlyEarnings->approved_hours ?? 0, 2),
+                'paid_hours' => round($hourlyEarnings->paid_hours ?? 0, 2),
+                'pending_hours' => round($hourlyEarnings->pending_hours ?? 0, 2),
+                'entry_count' => $hourlyEarnings->entry_count ?? 0,
+            ],
+            'fixed_rate' => [
+                'approved_amount' => $fixedRateEarnings->approved_amount ?? 0,
+                'paid_amount' => $fixedRateEarnings->paid_amount ?? 0,
+                'pending_amount' => $fixedRateEarnings->pending_amount ?? 0,
+                'approved_count' => $fixedRateEarnings->approved_count ?? 0,
+                'paid_count' => $fixedRateEarnings->paid_count ?? 0,
+                'pending_count' => $fixedRateEarnings->pending_count ?? 0,
+            ],
+            'task_allocations' => $taskAllocations,
+            'total_approved' => $totalApproved,
+            'total_paid' => $totalPaid,
+            'total_pending' => $totalPending,
+            'total_earned' => $totalEarned,
+            'projected_total' => $projectedTotal,
+        ];
     }
 }

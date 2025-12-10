@@ -86,6 +86,17 @@
                         <p class="text-sm text-neutral-500">Submitted</p>
                         <p class="font-medium text-neutral-700">{{ $hourRequest->created_at->format('M d, Y g:i A') }}</p>
                     </div>
+                    @if($hourRequest->task_id)
+                    <div class="col-span-2">
+                        <p class="text-sm text-neutral-500">Task</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <x-lucide-file-text class="w-4 h-4 text-primary-500" />
+                            <p class="font-medium text-primary-700">{{ $hourRequest->task->taskTitle ?? 'Unknown Task' }}</p>
+                            <x-ui.badge variant="primary" size="sm">Task-Level Request</x-ui.badge>
+                        </div>
+                        <p class="text-xs text-neutral-400 mt-1">This request is for hours on a specific task, not the project assignment</p>
+                    </div>
+                    @endif
                 </div>
 
                 <!-- Hours Visual Comparison -->

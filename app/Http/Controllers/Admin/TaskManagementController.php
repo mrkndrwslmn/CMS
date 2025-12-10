@@ -126,7 +126,11 @@ class TaskManagementController extends Controller
     public function create(Request $request)
     {
         $clients = User::where('role', 'client')->orderBy('fullName')->get();
-        $projects = Project::with('client')->orderBy('created_at', 'desc')->get();
+        // Only show projects that are not completed or cancelled (can still have tasks added)
+        $projects = Project::with('client')
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->orderBy('created_at', 'desc')
+            ->get();
         
         // Check if project_id is passed in the URL
         $preSelectedProjectId = $request->query('project_id');
@@ -151,6 +155,7 @@ class TaskManagementController extends Controller
             'deadline' => 'nullable|date|after:today',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'allocated_budget' => 'nullable|numeric|min:0',
+            'max_hours' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
             'payment_type' => 'nullable|in:hourly,fixed,none',
             'hourly_rate' => 'nullable|numeric|min:0',
@@ -221,6 +226,7 @@ class TaskManagementController extends Controller
             'deadline' => $request->deadline,
             'status' => $request->status,
             'notes' => $request->notes,
+            'max_hours' => $request->max_hours,
             'createdBy' => Auth::id(),
             'dateAssigned' => now(), 
         ];
@@ -323,6 +329,7 @@ class TaskManagementController extends Controller
             'notes' => 'nullable|string',
             'completion_notes' => 'nullable|string',
             'allocated_budget' => 'nullable|numeric|min:0',
+            'max_hours' => 'nullable|numeric|min:0',
             'actual_cost' => 'nullable|numeric|min:0',
             'progress_percentage' => 'nullable|integer|min:0|max:100',
             'completedAt' => 'nullable|date',
@@ -367,6 +374,7 @@ class TaskManagementController extends Controller
             'notes' => $request->notes,
             'completion_notes' => $request->completion_notes,
             'allocated_budget' => $request->allocated_budget,
+            'max_hours' => $request->max_hours,
             'actual_cost' => $request->actual_cost,
             'progress_percentage' => $request->progress_percentage,
         ];
@@ -391,6 +399,12 @@ class TaskManagementController extends Controller
         }
         
         $task->update($updateData);
+        
+        // Recalculate earnings when task status changes to completed
+        // This converts allocated_budget to actual_cost for fixed-budget tasks
+        if ($request->status === 'completed' && $oldStatus !== 'completed') {
+            $task->recalculateEarnings();
+        }
 
         // 🔔 Notify stakeholders about task updates if there were changes
         if (!empty($changes)) {
@@ -538,6 +552,12 @@ class TaskManagementController extends Controller
             'status' => $request->status,
             'completedAt' => $request->status === 'completed' ? now() : null,
         ]);
+        
+        // Recalculate earnings when task status changes to completed
+        // This converts allocated_budget to actual_cost for fixed-budget tasks
+        if ($request->status === 'completed' && $oldStatus !== 'completed') {
+            $task->recalculateEarnings();
+        }
         
         // Update project progress when task is completed
         if ($request->status === 'completed' && $oldStatus !== 'completed' && $task->project) {

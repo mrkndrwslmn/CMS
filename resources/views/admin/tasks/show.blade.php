@@ -11,7 +11,7 @@
     <x-ui.breadcrumb :items="[
         ['label' => 'Home', 'url' => route('admin.dashboard'), 'icon' => 'home'],
         ['label' => 'Tasks', 'url' => route('admin.tasks.index'), 'icon' => 'list-checks'],
-        ['label' => Str::limit($task['taskTitle'], 30), 'icon' => 'clipboard-list']
+        ['label' => Str::limit(html_entity_decode($task['taskTitle']), 30), 'icon' => 'clipboard-list']
     ]" class="mb-6" />
 
     <!-- Header Section -->
@@ -49,7 +49,7 @@
             </div>
             
             <x-ui.page-header 
-                title="{{ $task['taskTitle'] }}"
+                title="{{ html_entity_decode($task['taskTitle']) }}"
                 subtitle="Created {{ date('F d, Y', strtotime($task['created_at'])) }}"
             />
             
@@ -172,9 +172,12 @@
                                 </div>
                                 
                                 <div class="flex">
-                                    <div class="w-32 text-neutral-500">Actual Cost:</div>
+                                    <div class="w-32 text-neutral-500">Adiutor Earned:</div>
                                     <div class="flex-1 text-neutral-800">
                                         {{ $task->actual_cost ? '₱' . number_format($task->actual_cost, 2) : '₱0.00' }}
+                                        @if(!$task->actual_cost && $task->allocated_budget)
+                                            <span class="text-xs text-neutral-400 ml-1">(Pending - approve deliverables to release)</span>
+                                        @endif
                                     </div>
                                 </div>
                                 
@@ -192,6 +195,62 @@
                                                 <span class="text-xs ml-1">(Over Budget)</span>
                                             @endif
                                         </span>
+                                    </div>
+                                </div>
+                                @endif
+                                
+                                @if($task->max_hours)
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Max Hours:</div>
+                                    <div class="flex-1">
+                                        <span class="text-neutral-800 font-semibold">{{ number_format($task->max_hours, 1) }} hrs</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Hours Tracked:</div>
+                                    <div class="flex-1">
+                                        @php
+                                            $hoursTracked = $task->total_billable_hours ?? 0;
+                                            $maxHoursUtilization = $task->max_hours > 0 ? ($hoursTracked / $task->max_hours) * 100 : 0;
+                                            $hoursRemaining = max(0, $task->max_hours - $hoursTracked);
+                                            $isOverHours = $hoursTracked > $task->max_hours;
+                                        @endphp
+                                        <span class="{{ $isOverHours ? 'text-error-600 font-semibold' : ($maxHoursUtilization >= 80 ? 'text-warning-600' : 'text-neutral-800') }}">
+                                            {{ number_format($hoursTracked, 2) }} hrs
+                                            @if($isOverHours)
+                                                <span class="text-xs ml-1">(Over Limit)</span>
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex">
+                                    <div class="w-32 text-neutral-500">Hours Left:</div>
+                                    <div class="flex-1">
+                                        <span class="{{ $hoursRemaining <= 0 ? 'text-error-600 font-semibold' : ($maxHoursUtilization >= 80 ? 'text-warning-600' : 'text-success-600') }}">
+                                            {{ number_format($hoursRemaining, 2) }} hrs
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    <div class="w-32 text-neutral-500">Utilization:</div>
+                                    <div class="flex-1 flex items-center gap-2">
+                                        <div class="flex-1 bg-neutral-200 rounded-full h-2">
+                                            @php
+                                                $barColor = $maxHoursUtilization >= 100 ? 'bg-error-500' : ($maxHoursUtilization >= 80 ? 'bg-warning-500' : 'bg-success-500');
+                                            @endphp
+                                            <div class="{{ $barColor }} h-2 rounded-full" style="width: {{ min(100, $maxHoursUtilization) }}%"></div>
+                                        </div>
+                                        <span class="text-sm font-medium {{ $maxHoursUtilization >= 100 ? 'text-error-600' : ($maxHoursUtilization >= 80 ? 'text-warning-600' : 'text-neutral-700') }}">
+                                            {{ number_format($maxHoursUtilization, 0) }}%
+                                        </span>
+                                        @if($maxHoursUtilization >= 100)
+                                        <x-ui.badge variant="error" size="sm">Max Reached</x-ui.badge>
+                                        @elseif($maxHoursUtilization >= 80)
+                                        <x-ui.badge variant="warning" size="sm">Approaching Limit</x-ui.badge>
+                                        @endif
                                     </div>
                                 </div>
                                 @endif

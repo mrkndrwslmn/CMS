@@ -300,7 +300,7 @@
 </div>
 
 <!-- Adjust Points Modal -->
-<div id="adjustPointsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+<div id="adjustPointsModal" class="modal-overlay fixed inset-0 z-50 overflow-y-auto hidden bg-black/50 flex items-center justify-center px-4 py-8">
     <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-neutral-800">Adjust Points</h3>

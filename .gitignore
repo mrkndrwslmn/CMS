@@ -23,3 +23,26 @@ Thumbs.db
 /database/migrations/*.php
 /database/seeds/*.php
 /database/factories/*.php
+
+# Exclude all markdown files except README.md
+*.md
+!README.md
+
+# Exclude sensitive configuration files
+/config/*.php
+!/config/app.php
+
+# Exclude other potentially sensitive files
+*.sql
+.env
+.env.*
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+docker-setup.bat
+docker-setup.sh
+/docker/
+routes_list.txt
+routes_output.txt
+check_routes.php
+cms.code-workspace

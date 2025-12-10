@@ -134,6 +134,7 @@
                             <input type="tel" 
                                    id="phone" 
                                    name="phone" 
+                                   data-format="ph"
                                    value="{{ old('phone', $profile->contact_phone ?? '') }}"
                                    placeholder="+1 (555) 123-4567"
                                    class="w-full px-4 py-3 rounded-lg border border-neutral-200 bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all duration-300 @error('phone') border-red-300 ring-2 ring-red-100 @enderror">

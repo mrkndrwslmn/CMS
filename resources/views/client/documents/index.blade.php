@@ -193,7 +193,7 @@
                                         Locked
                                     </button>
                                 @else
-                                    <a href="{{ route('client.projects.documents.download', ['projectId' => $document->project_id, 'documentId' => $document->documentID]) }}" 
+                                    <a href="{{ route('client.documents.download', ['documentId' => $document->documentID]) }}" 
                                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white font-medium text-sm rounded-lg hover:bg-primary-700 transition-colors">
                                         <x-lucide-download class="w-4 h-4" />
                                         Download

@@ -749,7 +749,25 @@ Route::get('/project-details', function () {
 })->name('public.project-details');
 
 Route::get('/client-testimonials', function () {
-    return view('public.client-testimonials');
+    // Fetch public testimonials (positive feedback with ratings 4-5, resolved status, and service/general type)
+    $testimonials = \App\Models\Feedback::with(['client', 'project'])
+        ->whereIn('rating', [4, 5]) // Only positive feedback
+        ->whereIn('type', ['service', 'general']) // Not complaints
+        ->whereIn('status', ['resolved', 'reviewed']) // Reviewed/resolved feedback
+        ->whereNotNull('message')
+        ->orderBy('rating', 'desc')
+        ->orderBy('created_at', 'desc')
+        ->limit(12)
+        ->get();
+    
+    // Get feedback statistics
+    $stats = [
+        'total_reviews' => \App\Models\Feedback::whereIn('status', ['resolved', 'reviewed'])->count(),
+        'average_rating' => round(\App\Models\Feedback::whereNotNull('rating')->avg('rating'), 1),
+        'five_star_count' => \App\Models\Feedback::where('rating', 5)->count(),
+    ];
+    
+    return view('public.client-testimonials', compact('testimonials', 'stats'));
 })->name('client-testimonials');
 
 Route::get('/faq', function () {
@@ -876,6 +894,17 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::get('/export', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'export'])->name('export');
         Route::get('/{id}', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'show'])->name('show');
         Route::patch('/{id}/status', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'updateStatus'])->name('update-status');
+    });
+    
+    // Platform Earnings Management
+    Route::prefix('platform-earnings')->name('platform-earnings.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\PlatformEarningsController::class, 'index'])->name('index');
+        Route::get('/report', [\App\Http\Controllers\Admin\PlatformEarningsController::class, 'report'])->name('report');
+        Route::get('/export', [\App\Http\Controllers\Admin\PlatformEarningsController::class, 'export'])->name('export');
+        Route::post('/recalculate-all', [\App\Http\Controllers\Admin\PlatformEarningsController::class, 'recalculateAll'])->name('recalculate-all');
+        Route::get('/project/{project}', [\App\Http\Controllers\Admin\PlatformEarningsController::class, 'show'])->name('show');
+        Route::post('/project/{project}/calculate', [\App\Http\Controllers\Admin\PlatformEarningsController::class, 'calculate'])->name('calculate');
+        Route::post('/project/{project}/finalize', [\App\Http\Controllers\Admin\PlatformEarningsController::class, 'finalize'])->name('finalize');
     });
     
     // Project Template Management
@@ -1212,6 +1241,7 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
     
     // Documents route
     Route::get('/documents', [ClientController::class, 'documents'])->name('documents');
+    Route::get('/documents/{documentId}/download', [ClientController::class, 'downloadDocumentDirect'])->name('documents.download');
     
     // Feedback routes
     Route::prefix('feedback')->name('feedback.')->group(function () {
@@ -1372,6 +1402,8 @@ Route::middleware(['auth', 'role:adiutor'])->prefix('adiutor')->name('adiutor.')
         Route::get('/', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'store'])->name('store');
+        Route::get('/task/{taskId}/create', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'createTask'])->name('create-task');
+        Route::post('/task/{taskId}', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'storeTask'])->name('store-task');
         Route::get('/{id}', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'show'])->name('show');
         Route::delete('/{id}', [\App\Http\Controllers\Adiutor\HourIncreaseRequestController::class, 'cancel'])->name('cancel');
     });

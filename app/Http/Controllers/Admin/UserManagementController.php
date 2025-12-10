@@ -88,7 +88,7 @@ class UserManagementController extends Controller
         $request->validate([
             'fullName' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'phoneNumber' => 'nullable|string|max:20',
+            'phoneNumber' => ['nullable', 'string', 'max:25', new \App\Rules\PhoneNumber(true)],
             'password' => 'required|min:8|confirmed',
             'role' => 'required|in:admin,client,adiutor',
             'status' => 'required|in:active,inactive',
@@ -179,7 +179,7 @@ class UserManagementController extends Controller
         $request->validate([
             'fullName' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'phoneNumber' => 'nullable|string|max:20',
+            'phoneNumber' => ['nullable', 'string', 'max:25', new \App\Rules\PhoneNumber(true)],
             'password' => 'nullable|min:8|confirmed',
             'role' => 'required|in:admin,client,adiutor',
             'status' => 'required|in:active,inactive',

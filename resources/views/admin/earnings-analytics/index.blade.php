@@ -171,7 +171,17 @@
         @endif
 
         <!-- Quick Navigation -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <a href="{{ route('admin.platform-earnings.index') }}" 
+               class="bg-gradient-to-br from-success-50 to-success-100 rounded-2xl border border-success-200 shadow-sm p-4 hover:shadow-md transition-shadow flex items-center gap-3 group">
+                <div class="bg-success-100 group-hover:bg-success-200 p-3 rounded-xl transition-colors">
+                    <x-lucide-trending-up class="w-5 h-5 text-success-600" />
+                </div>
+                <div>
+                    <div class="font-medium text-success-800">Platform Earnings</div>
+                    <div class="text-xs text-success-600">Fees & margin</div>
+                </div>
+            </a>
             <a href="{{ route('admin.earnings-analytics.leaderboard') }}" 
                class="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4 hover:shadow-md transition-shadow flex items-center gap-3 group">
                 <div class="bg-neutral-50 group-hover:bg-primary-50 p-3 rounded-xl transition-colors">

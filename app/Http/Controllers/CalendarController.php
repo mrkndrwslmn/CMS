@@ -416,7 +416,7 @@ class CalendarController extends Controller
                         'scheduled_start' => $startTime,
                         'scheduled_end' => $endTime,
                         'estimated_duration_minutes' => 480, // 8 hours
-                        'schedule_type' => 'auto_deadline',
+                        'schedule_type' => 'auto',
                         'google_calendar_event_id' => $eventId,
                         'calendar_synced_at' => now(),
                     ]);
@@ -479,8 +479,7 @@ class CalendarController extends Controller
             $syncedCount = 0;
             $errors = [];
 
-            // Only sync tasks that are SCHEDULED on the timeline (in task_schedules table)
-            // Do NOT sync unscheduled tasks
+            // PART 1: Sync tasks that are SCHEDULED on the timeline (in task_schedules table)
             $scheduledTasks = \App\Models\TaskSchedule::where('adiutor_id', $user->id)
                 ->whereNull('google_calendar_event_id')
                 ->with('task')
@@ -524,14 +523,86 @@ class CalendarController extends Controller
                 }
             }
 
+            // PART 2: Sync tasks with DEADLINES that are NOT on the timeline yet
+            $taskIdsAlreadyScheduled = \App\Models\TaskSchedule::where('adiutor_id', $user->id)
+                ->pluck('task_id')
+                ->toArray();
+
+            $tasksWithDeadlines = \App\Models\Task::where('assignedTo', $user->id)
+                ->whereNotNull('deadline')
+                ->whereIn('status', ['pending', 'in_progress'])
+                ->whereNotIn('taskID', $taskIdsAlreadyScheduled)
+                ->with('project')
+                ->get();
+
+            foreach ($tasksWithDeadlines as $task) {
+                try {
+                    $deadline = \Carbon\Carbon::parse($task->deadline);
+                    
+                    // Create event on deadline day (1 hour before deadline time, or 9 AM - 5 PM if no time specified)
+                    if ($deadline->hour === 0 && $deadline->minute === 0) {
+                        // No time specified, use 9 AM - 5 PM
+                        $startTime = $deadline->copy()->setTime(9, 0);
+                        $endTime = $deadline->copy()->setTime(17, 0);
+                    } else {
+                        // Time specified, create 1-hour event ending at deadline
+                        $endTime = $deadline->copy();
+                        $startTime = $deadline->copy()->subHour();
+                    }
+
+                    $eventId = $this->calendarService->createTaskEvent($user, [
+                        'title' => $task->taskTitle,
+                        'description' => $task->taskDescription,
+                        'project' => $task->project->title ?? 'N/A',
+                        'priority' => $task->priority ?? 'medium',
+                        'start' => $startTime,
+                        'end' => $endTime,
+                        'url' => route('adiutor.tasks.show', $task->taskID)
+                    ]);
+
+                    // Create a task schedule record to track this sync
+                    \App\Models\TaskSchedule::create([
+                        'task_id' => $task->taskID,
+                        'adiutor_id' => $user->id,
+                        'scheduled_start' => $startTime,
+                        'scheduled_end' => $endTime,
+                        'estimated_duration_minutes' => $startTime->diffInMinutes($endTime),
+                        'schedule_type' => 'auto',
+                        'google_calendar_event_id' => $eventId,
+                        'calendar_synced_at' => now(),
+                    ]);
+
+                    $syncedCount++;
+                    
+                    \Log::info('Synced deadline task to Google Calendar', [
+                        'task_id' => $task->taskID,
+                        'event_id' => $eventId,
+                    ]);
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'task_id' => $task->taskID,
+                        'task_title' => $task->taskTitle,
+                        'error' => $e->getMessage(),
+                    ];
+                    \Log::error('Failed to sync deadline task', [
+                        'task_id' => $task->taskID,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             // Update last synced timestamp
             $integration->update(['last_synced_at' => now()]);
 
+            $totalTasks = $scheduledTasks->count() + $tasksWithDeadlines->count();
+
             return response()->json([
                 'success' => true,
-                'message' => "Synced {$syncedCount} timeline tasks to Google Calendar",
+                'message' => "Synced {$syncedCount} task(s) to Google Calendar",
                 'synced_count' => $syncedCount,
-                'total_scheduled' => $scheduledTasks->count(),
+                'total_tasks' => $totalTasks,
+                'scheduled_tasks' => $scheduledTasks->count(),
+                'deadline_tasks' => $tasksWithDeadlines->count(),
                 'errors' => $errors,
             ]);
         } catch (\Exception $e) {
