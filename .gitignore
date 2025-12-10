@@ -20,6 +20,8 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+tests/*
+!tests/.gitkeep
 /database/migrations/*.php
 /database/seeds/*.php
 /database/factories/*.php

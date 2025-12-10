@@ -82,93 +82,87 @@ A comprehensive project execution and management platform designed to facilitate
 ## Core Features Overview
 
 ### 🤖 AI-Powered Customer Support
-- **Intelligent Chatbot:** Google Gemini AI-powered customer support with natural language processing
-- **Smart Caching:** 1-hour conversation persistence with context awareness and learning capabilities
-- **Universal Deployment:** Floating widget on all public pages with customizable branding
-- **Instant Responses:** Automated answers about services, pricing, processes, and common questions
-- **API Integration:** Google Gemini AI API with conversation tracking and response optimization
-- **Setup:** [Quick Setup Guide](CHATBOT_QUICK_SETUP.md) | [Full Documentation](CHATBOT_DOCUMENTATION.md)
+- **Gemini Conversational AI:** Human-grade chatbot that understands intent, handles multi-turn conversations, and replies in natural, on-brand language.
+- **Smart Caching:** Short-term memory keeps conversations coherent for up to 60 minutes, learning from interactions to improve replies.
+- **Universal Deployment:** Always-available support: a customizable, brandable chat widget that follows users across every public page.
+- **Instant Responses:** Fast, automated responses for services, pricing, processes and FAQs — reduces friction and speeds resolution.
+- **API Integration:** Gemini API integration with conversation tracking, performance tuning, and automated response optimization.
 
 ### 📋 Service Request Management
-- **Public & Authenticated Submission:** Multiple request channels with reCAPTCHA spam protection
-- **Automatic Account Creation:** New clients auto-registered with credentials sent via email
-- **Rich File Attachments:** Support for all document and media types via Cloudflare R2 API
-- **Intelligent Workflow:** Admin approval/rejection with detailed reasoning and automated notifications
-- **Advanced Priority Management:** Urgent, high, medium, low prioritization with Google Calendar integration
-- **Comprehensive Status Tracking:** 8-stage status progression with Firebase real-time updates
-- **Budget Estimation:** Automated and manual budget approval processes with Maya Business integration
+- **Submit Anywhere, Anytime:** Accept requests from any channel while reCAPTCHA protection keeps spam at bay
+- **Zero Friction Onboarding:** New clients are instantly registered and credentials delivered automatically—no forms, no waiting
+- **Upload Without Limits:** Every file type imaginable, stored securely in the cloud and instantly accessible
+- **Intelligent Workflow:** Automated workflows guide every request to approval with transparent reasoning and instant notifications
+- **Advanced Priority Management:**  Intelligent priority system syncs urgent tasks directly to your calendar
+- **Comprehensive Status Tracking:** Track every request through 8 stages with live updates that everyone sees simultaneously
+- **Budget Estimation:** Generate estimates automatically or manually, with one-click approval flows powered by Maya Business
 - **Payment Integration:** Seamless Maya Business gateway with webhook processing and automated workflows
-- **Bulk Operations:** Bulk status changes, priority updates, and CSV export capabilities
+- **Manage at Scale:** Update hundreds of requests, adjust priorities, or export data—all in seconds
 
 ### 🎯 Project Management
-- **Automated Project Creation:** From approved and paid service requests via Maya Business webhook integration
-- **Project Templates:** Reusable templates with predefined phases, tasks, and settings for faster project setup
-- **Dynamic Team Assembly:** Multi-adiutor assignment with rate type selection (hourly/fixed rate)
+- **Automated Project Creation:** Instantly create projects once payments are confirmed via Maya Business webhooks — zero manual setup.
+- **Plug-and-Play Templates:** Prebuilt phases, tasks, and settings for rapid project launches.
+- **Dynamic Team Assembly:** Add multiple Adiutors to a project with painless onboarding.
 - **Flexible Rate Types:** Support for both hourly-based and fixed-rate compensation with approval workflows
-- **Advanced Budget Tracking:** Real-time budget monitoring with Maya Business payment integration
-- **Milestone Management:** Phase-based project progression with Google Calendar deadline tracking
-- **Status Orchestration:** 6-tier project status management with Firebase real-time notifications
-- **Group Chat:** Automated project group chat creation for team collaboration
-- **Completion Workflows:** Structured handoff and closure processes with Brevo email automation
-- **Timeline Analytics:** Deadline tracking and performance metrics via Google Calendar API integration
-- **CRM Notes:** Client relationship management with note-taking and history tracking
+- **Advanced Budget Tracking:** Real-time spending and payment tracking.
+- **Milestone Management:** Phase-based management with auto deadlines synced to Google Calendar.
+- **Status Orchestration:** Full project lifecycle tracking with instant Firebase alerts.
+- **Group Chat:** Collaboration spaces created instantly for every new project.
+- **Completion Workflows:** Smooth handoffs, finalization, and closure powered by Brevo automation.
+- **Timeline Analytics:** Missed deadlines? Upcoming milestones? Analytics straight from Calendar data.
+- **Built-in CRM Notes:** Store client insights, history, and interactions all in one place.
 
 ### ✅ Task Management System
-- **Dual Creation Modes:** Admin and adiutor task creation with automated Brevo email notifications
-- **Subtask Management:** Break down tasks into manageable subtasks with progress tracking
-- **Deliverable System:** Define required deliverables with approval/rejection workflows
-- **Smart Assignment Validation:** Automatic team membership verification with Google Calendar availability
-- **Dynamic Progress Tracking:** Real-time status and percentage updates via Firebase notifications
-- **Granular Budget Allocation:** Task-level budget management integrated with Maya Business tracking
-- **Budget Change Requests:** Structured approval workflow with Brevo email notifications and Firebase alerts
-- **Bulk Subtask Creation:** Add multiple subtasks at once for efficient task breakdown
-- **Drag-and-Drop Reordering:** Intuitive task and subtask reordering within projects
-- **File Uploads:** Upload deliverables with file/link support via Cloudflare R2
-- **Completion Verification:** Multi-stage task completion process with Zoom meeting integration for reviews
-- **Performance Analytics:** Task efficiency and timeline analysis with Google Calendar integration
+- **Dual Creation Modes:** Whether you're an admin or team member, launch tasks instantly with automatic email alerts to everyone involved.
+- **Break It Down with Subtask Management:** Turn complex projects into bite-sized subtasks and watch progress roll up automatically
+- **Deliverable System:** Set clear deliverables with built-in approval workflows so nothing falls through the cracks
+- **Smart Assignment Validation:** The system checks who's available before assigning work—no more double-booking or capacity nightmares
+- **Dynamic Progress Tracking:** Real-time status updates push to every device the moment something changes
+- **Granular Budget Allocation:** Allocate budgets at the granular task level and track every dollar
+- **Budget Change Requests:** Structured approval process for budget increases with instant notifications
+- **Bulk Subtask Creation:** Batch-create subtasks instead of clicking one-by-one
+- **Drag-and-Drop Reordering:** Rearrange tasks and subtasks with a simple drag—no menus, no hassle
+- **File Uploads:** Drop files or paste links directly into deliverables, stored securely in the cloud
+- **Completion Verification:** Multi-stage completion verification with integrated Zoom reviews for final sign-off
+- **Performance Analytics:** Performance analytics reveal which tasks fly and which ones drag, synced with your calendar
 
 ### ⏱️ Time Tracking & Earnings Management
-- **Real-Time Timer:** Start/stop time tracking with live running timer for accurate billable hours
-- **Automatic Calculations:** Earnings automatically calculated based on hourly rate × tracked time
-- **Time Entry Management:** Edit or delete time entries before admin approval
-- **Max Hours Enforcement:** Prevent budget overruns with maximum hours limits per assignment
-- **Hour Increase Requests:** Adiutors can request additional hours with justification
-- **Approval Workflow:** Admin approval/rejection of time entries with adjustment capability
-- **Earnings Dashboard:** Comprehensive view of total, approved, pending, and paid earnings
-- **Wallet System:** Real-time balance tracking with transaction history
-- **Payout Requests:** Adiutors can request payouts when ready with status tracking
-- **Payout Processing:** Multi-stage payout workflow (pending → processing → completed)
-- **Earnings Analytics:** Admin dashboard with leaderboard, project costs, and audit logs
-- **Rate Types:** Support for both hourly rates (with max hours) and fixed rates (upon completion)
+- **One-Click Time Capture:** Hit start, work, hit stop—the timer runs live so you never forget to log hours
+- **Earnings Calculates Themselves:** Your rate times your hours equals your pay, updated in real-time
+- **Time Entry Management:** Edit or delete time entries while they're still in draft mode
+- **Never Exced Budget with Max Hrs:** Hard caps on maximum hours prevent accidental overruns
+- **Hour Increase Requests:** Built-in request system lets you justify and get approval for additional time
+- **Approval Workflow:** Admins review, adjust, and approve with full visibility for everyone
+- **Earnings Dashboard:** See total earned, approved amounts, pending entries, and paid balances at a glance
+- **Wallet System:** Real-time balance with complete transaction history
+- **Payout Requests:** Request payouts on your schedule with full status tracking
+- **Payout Processing:** From pending to processing to completed, know exactly where your money is
+- **Earnings Analytics:** Admins see top earners, project costs, and complete audit logs
+- **Rate Types:** Hourly with caps or fixed-price—whatever fits your project
 
 ### 📁 Advanced Document Management
-- **Cloud-Native Storage:** Integrated Cloudflare R2 API infrastructure with global CDN distribution
-- **Intelligent Organization:** Automatic categorization by project and type with metadata indexing
-- **Seamless Migration:** Automated transition from local to cloud storage via Cloudflare R2 API
-- **Multi-Level Attachments:** Project, task, and request-level documents with role-based access control
-- **Secure Access Control:** Firebase Authentication-integrated role-based document permissions and sharing controls
-- **Version Management:** Document history and revision tracking with automated backup via Azure Database
-- **Trash & Restore:** Soft delete documents with restore capability and permanent deletion
-- **Bulk Operations:** Bulk upload, archive, restore, and delete operations
-- **Deliverable Approvals:** Approve/reject deliverable documents with feedback
-- **CDN Distribution:** Global content delivery optimization through Cloudflare edge network
+- **Cloud-Native Storage:** Everything lives on Cloudflare's global CDN—fast, secure, and always available
+- **Intelligent Organization:** Files sort themselves by project and type with intelligent metadata tagging
+- **Multi-Level Attachments:** Add documents to projects, tasks, or requests with role-based access that just works
+- **Secure Access Control:** Firebase authentication plus role-based permissions keep sensitive files locked down
+- **Version Management:** Complete document history with automated Azure backups
+- **Trash & Restore:** Soft deletes let you restore accidentally removed files before permanent deletion
+- **Bulk Operations:** Bulk upload, archive, restore, or delete operations in a single action
+- **Deliverable Approvals:** Review submitted documents and provide feedback without leaving the platform
+- **CDN Distribution:** Cloudflare's edge network delivers files instantly, no matter where users are
 
-### ☁️ Cloud Infrastructure (Cloudflare R2 + Azure)
-- **Scalable Storage:** Enterprise-grade file management via Cloudflare R2 API with unlimited scaling
-- **Cost Optimization:** Efficient storage pricing with built-in CDN through Cloudflare edge network
+### ☁️ Cloud Infrastructure (Cloudflare R2)
+- **Scalable Storage:** Cloudflare R2 grows with you—no capacity planning needed
 - **Automatic Organization:** Smart bucket structure and file categorization with metadata tagging
-- **Migration Tools:** Seamless transition utilities from local storage to Cloudflare R2
 - **Global Distribution:** Worldwide content delivery network with edge caching optimization
-- **Database Management:** Microsoft Azure Database for MySQL with automated backups and scaling
-- **Setup:** [R2 Configuration Guide](CLOUDFLARE_R2_SETUP.md) | [Azure Database Setup](AZURE_DATABASE_SETUP.md)
 
 ### 💬 Communication & Collaboration
-- **Project Messaging:** Real-time chat between clients and admins with file attachments
-- **Group Chat:** Team collaboration chat for admins and adiutors on projects
-- **Meeting Scheduling:** Request, approve, and reschedule meetings with calendar integration
-- **Real-Time Notifications:** Instant push notifications via Firebase FCM with badge counts
-- **Multi-Channel Feedback:** Client satisfaction tracking via Brevo email campaigns and Firebase notifications
-- **Advanced Rating System:** 5-star ratings with detailed comments and automated Brevo follow-up emails
+- **Project Messaging:** Real-time chat between clients and admins right where the work happens, with file sharing built-in
+- **Group Chat:** Group conversations for admins and team members working on the same project
+- **Meeting Scheduling:** Request meetings, get approvals, and reschedule with calendar sync
+- **Real-Time Notifications:** Instant push alerts via Firebase with badge counts you can't miss
+- **Multi-Channel Feedback:** Collect client satisfaction through email campaigns and in-app notifications
+- **Advanced Rating System:** Detailed feedback with comments and automatic follow-up emails
 - **Admin Response Framework:** Structured feedback management with Brevo email templates and workflows
 - **Communication History:** Complete interaction audit trails stored in Azure Database with full searchability
 - **Announcements:** System-wide announcements with target audience selection
@@ -176,33 +170,33 @@ A comprehensive project execution and management platform designed to facilitate
 - **Video Meetings:** Zoom API integration for client feedback sessions and project reviews
 
 ### 👥 Advanced User Management
-- **Role-Based Access Control:** Admin, Client, Adiutor with Firebase Authentication SSO integration and granular permissions
-- **Profile Specialization:** Role-specific profile extensions with Google Calendar availability integration
-- **Status Management:** Active/inactive controls with automated Brevo email workflows for status changes
+- **Role-Based Access Control:** Admins, clients, and team members get exactly the rights they need through Firebase SSO with social login support
+- **Profile Specialization:** Role-specific extensions sync with Google Calendar so everyone knows who's available when
+- **Status Management:** Activate or deactivate users with automatic email workflows that handle the communication
 - **Authentication Integration:** Firebase Authentication API for SSO, social logins, and multi-provider support
-- **Security Framework:** Comprehensive permission and policy system with reCAPTCHA spam protection
-- **User Analytics:** Engagement and performance tracking with Azure Database analytics and reporting
+- **Security Framework:** Layered permissions with anti-spam reCAPTCHA keep the platform locked down
+- **User Analytics:** Track engagement and performance with deep analytics 
 
 ### 📊 Business Intelligence & Reporting
-- **Real-Time Dashboards:** Live statistics and performance metrics
-- **Custom Report Builder:** Flexible reporting with multiple export formats
-- **Advanced Analytics:** User growth, task completion, revenue tracking
-- **Interactive Charts:** Chart.js powered visualizations
-- **Data Export:** CSV, Excel, PDF report generation
-- **Performance Metrics:** KPI tracking and business insights
+- **Real-Time Dashboards:** Live dashboards update the moment anything changes
+- **Custom Report Builder:** Flexible report builder exports to any format you need
+- **Advanced Analytics:** Track user growth, task completion rates, and revenue trends in one view
+- **Interactive Charts:** Interactive Chart.js visualizations make data instantly understandable
+- **Data Export:** Generate CSV, Excel, or PDF reports with one click
+- **Performance Metrics:** Performance metrics show what's working and what needs attention
 
 ### 🔔 Notification & Alert System
-- **Real-Time Notifications:** Instant updates via Firebase FCM across all user roles with customizable targeting
-- **Multi-Channel Delivery:** Firebase push notifications, Brevo email delivery, and in-app notifications
+- **Real-Time Notifications:** Firebase push notifications hit every device the moment something happens
+- **Multi-Channel Delivery:** Push, email, and in-app notifications ensure nobody misses critical updates
 - **Smart Prioritization:** Intelligent notification categorization with Firebase Analytics and user behavior tracking
-- **Customizable Preferences:** User-controlled notification settings with Brevo subscription management integration
-- **Activity Tracking:** Comprehensive audit and activity logs stored in Azure Database with real-time Firebase updates
+- **Customizable Preferences:** Users customize exactly what they want to hear about with granular subscription management
+- **Activity Tracking:** Comprehensive audit and activity logs stored with real-time Firebase updates
 - **Firebase Integration:** Complete push notification infrastructure with advanced targeting and analytics
 
 ### 🎁 Loyalty & Rewards Program
-- **Tiered Loyalty System:** Multi-tier loyalty program (Bronze, Silver, Gold, Platinum) with progressive benefits
-- **Points Earning:** Earn points on every payment with tier-based multipliers
-- **Points Redemption:** Redeem points for discounts on service requests
+- **Tiered Loyalty System:** Multi-tier loyalty program (Bronze, Silver, Gold, Platinum) with increasingly awesome benefits
+- **Points Earning:** Tier-based multipliers mean loyal clients accumulate rewards faster
+- **Points Redemption:** Redeem accumulated points for real savings on your next request
 - **Coupon Management:** Create and manage public or user-specific discount coupons
 - **Coupon Validation:** Real-time coupon code validation with usage limits and expiration
 - **Stackable Discounts:** Apply both coupons and loyalty points for maximum savings
@@ -214,7 +208,7 @@ A comprehensive project execution and management platform designed to facilitate
 - **Transaction History:** Complete points earning and redemption history
 
 ### 🤝 Referral Program
-- **Referral Code System:** Unique referral codes for each client with tracking
+- **Referral Code System:** Unique referral codes for each client (and adiutors) with tracking
 - **Tiered Rewards:** Earn credits based on referred client's spending tiers
 - **Credit Management:** Referral credits stored as wallet balance for future use
 - **Credit Withdrawal:** Request withdrawal of earned credits with approval workflow
@@ -437,7 +431,7 @@ A comprehensive project execution and management platform designed to facilitate
 - **PHP:** 8.2+ with required extensions (BCMath, Ctype, Fileinfo, JSON, Mbstring, OpenSSL, PDO, Tokenizer, XML)
 - **Composer:** Latest stable version for PHP dependency management (install via Windows installer)
 - **Node.js:** 18+ with npm for frontend asset compilation (download Windows installer)
-- **Database:** SQLite (development) / MySQL 8.0+ / PostgreSQL 13+ via Microsoft Azure (production)
+- **Database:** MySQL (development) / MySQL 8.0+ / PostgreSQL 13+ via Microsoft Azure (production)
 - **Web Server:** IIS 10+ with URL Rewrite Module or Apache 2.4+ / Nginx 1.18+ via XAMPP/WAMP (Windows)
 - **SSL Certificate:** Required for production deployment with payment processing (Let's Encrypt or commercial)
 
@@ -605,22 +599,22 @@ php artisan view:cache
 #### System Administrators
 ```
 Email: admin@treisadiutor.com
-Password: admin123
+Password: Pa$$w0rd!
 
 Email: manager@treisadiutor.com  
-Password: admin123
+Password: Pa$$w0rd!
 ```
 
 #### Test Client Account
 ```
-Email: john.smith@techstartup.com
-Password: client123
+Email: john.smith@treisadiutor.com
+Password: Pa$$w0rd!
 ```
 
 #### Test Adiutor Account
 ```
-Email: alex@treisadiutor.com
-Password: adiutor123
+Email: sofia@treisadiutor.com
+Password: Pa$$w0rd!
 ```
 
 ### Essential Artisan Commands (Windows PowerShell)
@@ -696,7 +690,7 @@ php artisan config:cache
 
 ### 🔗 Complete API Integration Overview
 
-The Treis Adiutor platform integrates with 10 major external APIs to provide comprehensive functionality. Each API serves specific features and enhances the overall user experience through automation and intelligent processing.
+Treis Adiutor seamlessly connects with ten major external APIs to power everything from authentication and payments to scheduling, storage, analytics, and visual reporting, creating a single, unified experience where data flows intelligently across the platform and routine actions are fully automated for every user role.
 
 #### API Integration Summary Table
 
@@ -1132,34 +1126,6 @@ Monitor API performance through the admin dashboard:
 - **Environment Management:** Windows-specific multi-stage deployment configuration
 - **Monitoring Integration:** Windows Event Viewer and Azure Monitor integration
 
-## Documentation Index
-
-### 📚 Complete Documentation Library
-
-#### System Architecture & Analysis
-- **[Comprehensive System Analysis](storage/documentations/COMPREHENSIVE_SYSTEM_ANALYSIS.md)** - Complete system overview and architecture
-- **[Updated System Analysis](storage/documentations/UPDATED_SYSTEM_ANALYSIS.md)** - Latest system improvements and status
-- **[System Analysis](storage/documentations/SYSTEM_ANALYSIS.md)** - Core system documentation
-
-#### Module-Specific Documentation
-- **[Adiutor Comprehensive Analysis](storage/documentations/ADIUTOR_COMPREHENSIVE_ANALYSIS.md)** - Complete adiutor module documentation
-- **[Adiutor Implementation Summary](storage/documentations/ADIUTOR_IMPLEMENTATION_SUMMARY.md)** - Implementation details and features
-- **[Adiutor Module Analysis](storage/documentations/ADIUTOR_MODULE_ANALYSIS.md)** - Module structure and capabilities
-- **[Adiutor Organization Complete](storage/documentations/ADIUTOR_ORGANIZATION_COMPLETE.md)** - Organization and workflow documentation
-- **[Adiutor Enhancements Summary](storage/documentations/ADIUTOR_ENHANCEMENTS_SUMMARY.md)** - Recent improvements and features
-
-#### Feature Implementation Guides
-- **[Notification Implementation](storage/documentations/NOTIFICATION_IMPLEMENTATION_SUMMARY.md)** - Notification system setup and usage
-- **[Revision System](storage/documentations/REVISION_SYSTEM_DOCUMENTATION.md)** - Document revision and version control
-- **[Milestone System](storage/documentations/MILESTONE_SYSTEM.md)** - Project milestone management
-- **[ReCAPTCHA Implementation](storage/documentations/RECAPTCHA_IMPLEMENTATION.md)** - Security and spam protection
-
-#### Infrastructure & Deployment
-- **[Docker Setup](storage/documentations/DOCKER_SETUP.md)** - Containerized deployment configuration
-- **[Supabase Setup](storage/documentations/SUPABASE_SETUP.md)** - Cloud database configuration
-- **[Cloudflare R2 Setup](CLOUDFLARE_R2_SETUP.md)** - Cloud storage configuration
-- **[Chatbot Documentation](CHATBOT_DOCUMENTATION.md)** - AI chatbot implementation
-
 ## Performance & Scalability
 
 ### 🚀 Performance Optimization
@@ -1328,26 +1294,6 @@ Monitor API performance through the admin dashboard:
 - **Activity Feeds:** Real-time project activity streams and updates
 - **Collaborative Editing:** Real-time document collaboration features
 
-### 🔄 Recent Improvements & Updates
-
-#### Dashboard Enhancements
-- **Real-Time Refresh:** Live data updates without page reload
-- **CSV Export:** Comprehensive report generation and download
-- **Interactive Charts:** Chart.js powered visualizations with data drilling
-- **Performance Metrics:** Advanced KPI tracking and business intelligence
-
-#### User Experience Improvements
-- **Notification Bell:** Real-time notification display with smart categorization
-- **Activity Tracking:** Comprehensive user activity monitoring
-- **Mobile Optimization:** Responsive design improvements across all interfaces
-- **Load Performance:** Optimized asset loading and caching strategies
-
-#### System Reliability
-- **Error Handling:** Comprehensive error tracking and user feedback
-- **Data Validation:** Enhanced input validation and security measures
-- **Backup Systems:** Automated backup and disaster recovery procedures
-- **Monitoring Integration:** Advanced system health monitoring and alerting
-
 ## Support & Maintenance
 
 ### 🛠️ Development Support
@@ -1393,8 +1339,9 @@ This project is proprietary and confidential software owned by Treis Adiutor. Al
 ### 🤝 Contributors & Acknowledgments
 
 #### Core Development Team
-- **Mark Andrew S.** - Lead Developer & System Architect
-
+- **Mark Andrew Soliman** - Lead Developer & System Architect
+- **Ma. Lena Therese Quizon** - Assisstant Developer
+- **Princess Anne Azucena & Sofia Gonzaga** - Documentation Masters
 #### Technology Partners
 - **Google Cloud** - AI and machine learning services
 - **Cloudflare** - CDN and storage infrastructure
@@ -1418,10 +1365,10 @@ This project is proprietary and confidential software owned by Treis Adiutor. Al
 - **Documentation:** Available in `/storage/documentations/`
 - **API Documentation:** Available at `/api/documentation`
 
+<SMALL>IMPORTANT NOTICE: All documentation is restricted and accessible only for authorized use to ensure legal compliance and privacy protection.</SMALL>
 #### Emergency Support
 - **Critical Issues:** emergency@treisadiutor.com
 - **Security Issues:** security@treisadiutor.com
-- **Response Time:** 24 hours for critical issues
 
 ---
 
