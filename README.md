@@ -91,30 +91,55 @@ A comprehensive project execution and management platform designed to facilitate
 
 ### 📋 Service Request Management
 - **Public & Authenticated Submission:** Multiple request channels with reCAPTCHA spam protection
+- **Automatic Account Creation:** New clients auto-registered with credentials sent via email
 - **Rich File Attachments:** Support for all document and media types via Cloudflare R2 API
 - **Intelligent Workflow:** Admin approval/rejection with detailed reasoning and automated notifications
 - **Advanced Priority Management:** Urgent, high, medium, low prioritization with Google Calendar integration
 - **Comprehensive Status Tracking:** 8-stage status progression with Firebase real-time updates
 - **Budget Estimation:** Automated and manual budget approval processes with Maya Business integration
 - **Payment Integration:** Seamless Maya Business gateway with webhook processing and automated workflows
+- **Bulk Operations:** Bulk status changes, priority updates, and CSV export capabilities
 
 ### 🎯 Project Management
 - **Automated Project Creation:** From approved and paid service requests via Maya Business webhook integration
-- **Dynamic Team Assembly:** Multi-adiutor assignment with Google Calendar availability checking
+- **Project Templates:** Reusable templates with predefined phases, tasks, and settings for faster project setup
+- **Dynamic Team Assembly:** Multi-adiutor assignment with rate type selection (hourly/fixed rate)
+- **Flexible Rate Types:** Support for both hourly-based and fixed-rate compensation with approval workflows
 - **Advanced Budget Tracking:** Real-time budget monitoring with Maya Business payment integration
 - **Milestone Management:** Phase-based project progression with Google Calendar deadline tracking
 - **Status Orchestration:** 6-tier project status management with Firebase real-time notifications
+- **Group Chat:** Automated project group chat creation for team collaboration
 - **Completion Workflows:** Structured handoff and closure processes with Brevo email automation
 - **Timeline Analytics:** Deadline tracking and performance metrics via Google Calendar API integration
+- **CRM Notes:** Client relationship management with note-taking and history tracking
 
 ### ✅ Task Management System
 - **Dual Creation Modes:** Admin and adiutor task creation with automated Brevo email notifications
+- **Subtask Management:** Break down tasks into manageable subtasks with progress tracking
+- **Deliverable System:** Define required deliverables with approval/rejection workflows
 - **Smart Assignment Validation:** Automatic team membership verification with Google Calendar availability
 - **Dynamic Progress Tracking:** Real-time status and percentage updates via Firebase notifications
 - **Granular Budget Allocation:** Task-level budget management integrated with Maya Business tracking
 - **Budget Change Requests:** Structured approval workflow with Brevo email notifications and Firebase alerts
+- **Bulk Subtask Creation:** Add multiple subtasks at once for efficient task breakdown
+- **Drag-and-Drop Reordering:** Intuitive task and subtask reordering within projects
+- **File Uploads:** Upload deliverables with file/link support via Cloudflare R2
 - **Completion Verification:** Multi-stage task completion process with Zoom meeting integration for reviews
 - **Performance Analytics:** Task efficiency and timeline analysis with Google Calendar integration
+
+### ⏱️ Time Tracking & Earnings Management
+- **Real-Time Timer:** Start/stop time tracking with live running timer for accurate billable hours
+- **Automatic Calculations:** Earnings automatically calculated based on hourly rate × tracked time
+- **Time Entry Management:** Edit or delete time entries before admin approval
+- **Max Hours Enforcement:** Prevent budget overruns with maximum hours limits per assignment
+- **Hour Increase Requests:** Adiutors can request additional hours with justification
+- **Approval Workflow:** Admin approval/rejection of time entries with adjustment capability
+- **Earnings Dashboard:** Comprehensive view of total, approved, pending, and paid earnings
+- **Wallet System:** Real-time balance tracking with transaction history
+- **Payout Requests:** Adiutors can request payouts when ready with status tracking
+- **Payout Processing:** Multi-stage payout workflow (pending → processing → completed)
+- **Earnings Analytics:** Admin dashboard with leaderboard, project costs, and audit logs
+- **Rate Types:** Support for both hourly rates (with max hours) and fixed rates (upon completion)
 
 ### 📁 Advanced Document Management
 - **Cloud-Native Storage:** Integrated Cloudflare R2 API infrastructure with global CDN distribution
@@ -123,6 +148,9 @@ A comprehensive project execution and management platform designed to facilitate
 - **Multi-Level Attachments:** Project, task, and request-level documents with role-based access control
 - **Secure Access Control:** Firebase Authentication-integrated role-based document permissions and sharing controls
 - **Version Management:** Document history and revision tracking with automated backup via Azure Database
+- **Trash & Restore:** Soft delete documents with restore capability and permanent deletion
+- **Bulk Operations:** Bulk upload, archive, restore, and delete operations
+- **Deliverable Approvals:** Approve/reject deliverable documents with feedback
 - **CDN Distribution:** Global content delivery optimization through Cloudflare edge network
 
 ### ☁️ Cloud Infrastructure (Cloudflare R2 + Azure)
@@ -134,13 +162,17 @@ A comprehensive project execution and management platform designed to facilitate
 - **Database Management:** Microsoft Azure Database for MySQL with automated backups and scaling
 - **Setup:** [R2 Configuration Guide](CLOUDFLARE_R2_SETUP.md) | [Azure Database Setup](AZURE_DATABASE_SETUP.md)
 
-### 💬 Communication & Feedback
+### 💬 Communication & Collaboration
+- **Project Messaging:** Real-time chat between clients and admins with file attachments
+- **Group Chat:** Team collaboration chat for admins and adiutors on projects
+- **Meeting Scheduling:** Request, approve, and reschedule meetings with calendar integration
+- **Real-Time Notifications:** Instant push notifications via Firebase FCM with badge counts
 - **Multi-Channel Feedback:** Client satisfaction tracking via Brevo email campaigns and Firebase notifications
 - **Advanced Rating System:** 5-star ratings with detailed comments and automated Brevo follow-up emails
 - **Admin Response Framework:** Structured feedback management with Brevo email templates and workflows
 - **Communication History:** Complete interaction audit trails stored in Azure Database with full searchability
-- **Notification System:** Real-time updates via Firebase FCM with email backup through Brevo SMTP
-- **Feedback Analytics:** Satisfaction trends and insights with automated reporting via Brevo analytics integration
+- **Announcements:** System-wide announcements with target audience selection
+- **Notification Preferences:** User-controlled notification settings and preferences
 - **Video Meetings:** Zoom API integration for client feedback sessions and project reviews
 
 ### 👥 Advanced User Management
@@ -167,21 +199,60 @@ A comprehensive project execution and management platform designed to facilitate
 - **Activity Tracking:** Comprehensive audit and activity logs stored in Azure Database with real-time Firebase updates
 - **Firebase Integration:** Complete push notification infrastructure with advanced targeting and analytics
 
+### 🎁 Loyalty & Rewards Program
+- **Tiered Loyalty System:** Multi-tier loyalty program (Bronze, Silver, Gold, Platinum) with progressive benefits
+- **Points Earning:** Earn points on every payment with tier-based multipliers
+- **Points Redemption:** Redeem points for discounts on service requests
+- **Coupon Management:** Create and manage public or user-specific discount coupons
+- **Coupon Validation:** Real-time coupon code validation with usage limits and expiration
+- **Stackable Discounts:** Apply both coupons and loyalty points for maximum savings
+- **Usage Tracking:** Comprehensive coupon usage history and analytics
+- **Bulk Coupon Generation:** Generate multiple unique coupon codes for campaigns
+- **Loyalty Dashboard:** Client view of current tier, points balance, and benefits
+- **Loyalty Analytics:** Admin analytics with leaderboard and tier distribution
+- **Point Expiration:** Automated point expiration with warning notifications
+- **Transaction History:** Complete points earning and redemption history
+
+### 🤝 Referral Program
+- **Referral Code System:** Unique referral codes for each client with tracking
+- **Tiered Rewards:** Earn credits based on referred client's spending tiers
+- **Credit Management:** Referral credits stored as wallet balance for future use
+- **Credit Withdrawal:** Request withdrawal of earned credits with approval workflow
+- **Referral Tracking:** Complete referral history with status and earnings
+- **Share Options:** Email invitations and shareable referral links
+- **Referral Analytics:** Admin dashboard with conversion rates and revenue tracking
+- **Processing Workflow:** Multi-stage referral processing (pending → verified → credited)
+- **Withdrawal Management:** Admin approval and processing of credit withdrawals
+- **Invitation System:** Send referral invitations directly from the platform
+- **Code Validation:** Real-time validation of referral codes during registration
+- **Export Capabilities:** Export referral data and reports to CSV
+
+### 🔄 Revision Management
+- **Multi-Level Revisions:** Support for document, task, and project-level revisions
+- **Revision Requests:** Clients can request revisions with detailed descriptions
+- **Admin Approval:** Review and approve/reject revision requests with reason
+- **Adiutor Assignment:** Assign revisions to specific adiutors with deadline
+- **Revision Completion:** Upload revised deliverables with notes
+- **Status Tracking:** Track revision status from request through completion
+- **History Tracking:** Complete audit trail of all revision requests and completions
+- **Reassignment:** Ability to reassign revisions to different team members
+- **Cancellation:** Clients can cancel pending revision requests
+
 ### 💳 Financial Management
 - **Payment Gateway Integration:** Maya Business API for complete payment processing with webhook automation
 - **Budget Management:** Project and task-level budget controls with real-time Maya Business transaction tracking
 - **Change Request System:** Structured budget modification workflow with Brevo email notifications and approvals
 - **Financial Reporting:** Revenue tracking and financial analytics integrated with Maya Business transaction data
 - **Payment History:** Complete transaction audit trails with Maya Business API integration and Azure Database storage
+- **Receipt Generation:** Automated receipt generation and download for all payments
 - **Billing Automation:** Automated invoicing via Brevo email templates and Maya Business payment link generation
 
-### ⏱️ Time Tracking & Productivity
-- **Integrated Time Tracking:** Built-in timer and manual entry systems
-- **Productivity Analytics:** Efficiency metrics and performance tracking
-- **Timesheet Management:** Automated timesheet generation and approval
-- **Billing Integration:** Time-based billing and rate calculations
-- **Project Time Allocation:** Resource planning and time budgeting
-- **Performance Insights:** Individual and team productivity metrics
+### 📊 Showcase & Portfolio Management
+- **Project Showcase:** Display completed projects on public website
+- **Portfolio Gallery:** Grid layout with project thumbnails and details
+- **Technology Stack Display:** Automatically fetch technology logos via Brandfetch API
+- **Public Visibility:** Share successful projects as marketing material
+- **Project Details:** Detailed project pages with description, tech stack, and images
 
 ## User Roles & Access Levels
 
@@ -252,16 +323,65 @@ A comprehensive project execution and management platform designed to facilitate
 ### 🔄 Complete Service Delivery Workflow
 
 ```
-┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────────┐
-│   Client    │───▶│   Service    │───▶│   Payment   │───▶│   Project    │
-│   Request   │    │   Review     │    │ Processing  │    │   Creation   │
-└─────────────┘    └──────────────┘    └─────────────┘    └──────────────┘
-                            │                                       │
-                            ▼                                       ▼
-┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────────┐
-│   Client    │◀───│   Feedback   │◀───│    Task     │◀───│   Team      │
-│ Satisfaction│    │ Collection   │    │ Execution   │    │ Assignment  │
-└─────────────┘    └──────────────┘    └─────────────┘    └──────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                     COMPLETE PROJECT LIFECYCLE                          │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  PHASE 1: CLIENT REQUEST                                                │
+│  ├── Public or authenticated service request submission                 │
+│  ├── Automatic account creation for new clients                         │
+│  ├── File attachments via Cloudflare R2                                 │
+│  └── reCAPTCHA spam protection                                          │
+│                                                                         │
+│  PHASE 2: ADMIN REVIEW                                                  │
+│  ├── Review request details and client history                          │
+│  ├── Set approved budget and payment type                               │
+│  ├── Approve or reject with reason                                      │
+│  └── Send payment request notification                                  │
+│                                                                         │
+│  PHASE 3: PAYMENT & DISCOUNTS                                           │
+│  ├── Client applies coupons and/or loyalty points                       │
+│  ├── Maya payment gateway integration                                   │
+│  ├── Automatic payment confirmation via webhook                         │
+│  └── Loyalty points earned on payment                                   │
+│                                                                         │
+│  PHASE 4: PROJECT SETUP                                                 │
+│  ├── Use project template for faster setup                              │
+│  ├── Assign adiutors with rate type (hourly/fixed)                      │
+│  ├── Create tasks with subtasks and deliverables                        │
+│  ├── Automatic group chat creation                                      │
+│  └── Google Calendar sync for deadlines                                 │
+│                                                                         │
+│  PHASE 5: EXECUTION & TRACKING                                          │
+│  ├── Adiutors accept assignments                                        │
+│  ├── Time tracking with real-time timer                                 │
+│  ├── Upload deliverables for approval                                   │
+│  ├── Request hour increases or budget changes                           │
+│  ├── Real-time messaging and collaboration                              │
+│  └── Progress tracking and status updates                               │
+│                                                                         │
+│  PHASE 6: APPROVAL & EARNINGS                                           │
+│  ├── Admin approves time entries (with adjustments)                     │
+│  ├── Approve or reject deliverables                                     │
+│  ├── Earnings calculated automatically                                  │
+│  ├── Adiutors request payouts                                           │
+│  └── Admin processes payouts                                            │
+│                                                                         │
+│  PHASE 7: COMPLETION & FEEDBACK                                         │
+│  ├── Client reviews completed work                                      │
+│  ├── Request revisions if needed                                        │
+│  ├── Submit feedback and ratings                                        │
+│  ├── Mark project as completed                                          │
+│  └── Generate completion reports                                        │
+│                                                                         │
+│  ONGOING: LOYALTY & REFERRALS                                           │
+│  ├── Earn loyalty points on payments                                    │
+│  ├── Tier progression (Bronze → Platinum)                               │
+│  ├── Share referral codes with others                                   │
+│  ├── Earn credits from successful referrals                             │
+│  └── Withdraw referral credits                                          │
+│                                                                         │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 📋 Detailed Process Flow
@@ -1081,55 +1201,132 @@ Monitor API performance through the admin dashboard:
 ### ✅ Fully Implemented Features
 
 #### Core Platform Functionality
-- **Service Request Lifecycle:** Complete end-to-end request processing
-- **Project Management:** Advanced project creation, team assignment, and tracking
-- **Task Management:** Comprehensive task breakdown, assignment, and completion workflows
-- **User Management:** Multi-role system with granular permissions and profiles
-- **Document Management:** Cloud-based storage with intelligent organization
-- **Payment Processing:** Maya gateway integration with automated workflows
-- **Feedback System:** Client satisfaction tracking with detailed analytics
+- **Service Request Lifecycle:** Complete end-to-end request processing with bulk operations
+- **Project Management:** Advanced project creation with templates, team assignment, and rate type selection
+- **Task Management:** Comprehensive task breakdown with subtasks, deliverables, and drag-and-drop reordering
+- **User Management:** Multi-role system (Admin, Client, Adiutor) with granular permissions and profiles
+- **Client Management:** CRM features with notes, archived clients, and export capabilities
+- **Document Management:** Cloud-based storage with trash/restore and bulk operations
+- **Payment Processing:** Maya gateway integration with webhook automation and receipt generation
+- **Feedback System:** 5-star ratings with detailed comments and admin responses
 
 #### Advanced Features
-- **AI-Powered Chatbot:** Google Gemini integration with context awareness
-- **Real-Time Dashboard:** Interactive charts and live performance metrics
+- **AI-Powered Chatbot:** Google Gemini integration with 1-hour conversation persistence
+- **Real-Time Dashboard:** Interactive Chart.js visualizations with CSV export
 - **Custom Report Builder:** Flexible reporting with multiple export formats
-- **Notification System:** Multi-channel notification delivery
-- **Time Tracking:** Integrated productivity and billing management
+- **Notification System:** Firebase FCM push notifications with in-app notification center
+- **Time Tracking & Earnings:** Real-time timer, automatic earnings calculation, and max hours enforcement
+- **Payout Management:** Complete payout workflow with request, processing, and completion stages
+- **Earnings Analytics:** Admin dashboard with leaderboard, project costs, and audit logs
 - **Budget Management:** Dynamic budget allocation with change request workflows
-- **Cloud Storage:** Cloudflare R2 integration with CDN distribution
+- **Cloud Storage:** Cloudflare R2 integration with global CDN distribution
+
+#### Loyalty & Rewards System ⭐
+- **Tiered Loyalty Program:** Four-tier system (Bronze, Silver, Gold, Platinum) with progressive benefits
+- **Points System:** Earn points on payments with tier-based multipliers
+- **Points Redemption:** Redeem points for discounts on service requests
+- **Coupon Management:** Create, manage, and track discount coupons
+- **Bulk Coupon Generation:** Generate multiple unique codes for campaigns
+- **Stackable Discounts:** Combine coupons and loyalty points
+- **Loyalty Analytics:** Admin dashboard with leaderboard and tier distribution
+- **Point Expiration:** Automated expiration with warning notifications
+
+#### Referral Program ⭐
+- **Referral Code System:** Unique codes for each client with complete tracking
+- **Tiered Rewards:** Credits earned based on referred client spending levels
+- **Credit Wallet:** Store and manage earned referral credits
+- **Credit Withdrawal:** Request withdrawal with admin approval workflow
+- **Invitation System:** Send email invitations with referral links
+- **Referral Analytics:** Conversion rates, revenue tracking, and performance metrics
+- **Code Validation:** Real-time validation during registration
+- **Export Reports:** CSV export of referral data and analytics
+
+#### Revision Management ⭐
+- **Multi-Level Revisions:** Document, task, and project-level revision requests
+- **Client Requests:** Submit revision requests with detailed descriptions
+- **Admin Workflow:** Approve/reject requests with adiutor assignment
+- **Revision Completion:** Upload revised deliverables with completion notes
+- **Status Tracking:** Complete audit trail from request through completion
+- **Reassignment:** Flexibility to reassign revisions to different team members
+
+#### Communication & Collaboration ⭐
+- **Project Messaging:** Real-time chat between clients and admins with file attachments
+- **Group Chat:** Team collaboration for admins and adiutors
+- **Meeting Scheduling:** Request, approve, reschedule, and reject meetings
+- **Announcements:** System-wide announcements with audience targeting
+- **Real-Time Notifications:** Firebase push notifications with badge counts
+- **Email Notifications:** Brevo SMTP for all system notifications
+- **Notification Preferences:** User-controlled settings
+
+#### Project & Task Features ⭐
+- **Project Templates:** Reusable templates with phases, tasks, and settings
+- **Rate Type Support:** Both hourly rates (with max hours) and fixed rates
+- **Fixed Rate Approval:** Admin approval workflow for fixed-rate assignments
+- **Subtask Management:** Create, edit, toggle, and reorder subtasks
+- **Deliverable System:** Define requirements, upload deliverables, approve/reject
+- **Bulk Operations:** Bulk subtask creation and task status changes
+- **Hour Increase Requests:** Adiutors request additional hours with approval workflow
+- **Budget Change Requests:** Request and approve task budget modifications
+- **Task Reordering:** Drag-and-drop task and subtask reordering
+
+#### Time Tracking & Payouts ⭐
+- **Real-Time Timer:** Start/stop timer with live tracking
+- **Automatic Calculations:** Earnings = hourly rate × tracked hours
+- **Max Hours Enforcement:** Prevent budget overruns automatically
+- **Time Entry Management:** Edit/delete entries before approval
+- **Approval with Adjustments:** Admin can approve, reject, or adjust billable hours
+- **Earnings Dashboard:** Total, approved, pending, and paid earnings
+- **Wallet System:** Real-time balance and transaction history
+- **Payout Requests:** Adiutors initiate payout requests
+- **Payout Processing:** Three-stage workflow (pending → processing → completed)
+- **Earnings Analytics:** Leaderboard, project costs, audit logs, payout history
+
+#### Public Website Features
+- **Service Showcase:** Display portfolio projects with technology stack
+- **AI Chatbot:** Floating widget on all public pages
+- **Referral Program Page:** Public information about referral benefits
+- **Client Testimonials:** Social proof and success stories
+- **FAQ Section:** Comprehensive frequently asked questions
+- **About & Terms Pages:** Company information and legal pages
 
 #### Technical Infrastructure
-- **Authentication System:** Laravel Sanctum with Auth0 integration
-- **Database Optimization:** Query optimization and intelligent indexing
+- **Authentication System:** Laravel Sanctum with Firebase Authentication for SSO
+- **Social Login:** Google and Facebook login via Firebase
+- **Database Optimization:** Query optimization and intelligent indexing with Azure MySQL
 - **API Framework:** RESTful API with comprehensive documentation
 - **Security Framework:** Role-based access control with policy enforcement
+- **Rate Limiting:** Login, registration, and password reset rate limiting
+- **Account Lockout:** Automatic lockout protection against brute force
 - **Performance Monitoring:** Real-time application and infrastructure monitoring
+- **Audit Logging:** Complete audit trails for critical operations
 
 ### 🚧 Areas for Future Enhancement
 
-#### Communication & Collaboration
-- **Real-Time Messaging:** Direct chat system between clients and adiutors
-- **Video Conferencing:** Integrated meeting and collaboration tools
-- **Activity Feeds:** Real-time project activity and update streams
-- **Team Collaboration:** Advanced collaboration features for project teams
-
 #### Advanced Analytics & AI
-- **Predictive Analytics:** AI-powered project success prediction
+- **Predictive Analytics:** AI-powered project success prediction and risk assessment
 - **Resource Optimization:** Intelligent resource allocation recommendations
-- **Performance Insights:** Advanced productivity and efficiency analytics
 - **Market Intelligence:** Industry trend analysis and competitive insights
+- **AI-Powered Insights:** Automated performance recommendations and optimizations
 
 #### Mobile & API Expansion
-- **Mobile Application:** Native iOS and Android applications
-- **API Marketplace:** Third-party integration capabilities
+- **Mobile Application:** Native iOS and Android applications with full feature parity
+- **API Marketplace:** Third-party integration marketplace and plugin system
 - **Webhook Framework:** Advanced webhook system for external integrations
+- **Public API:** Developer API for third-party integrations
 - **Export/Import Tools:** Advanced data migration and integration utilities
 
 #### Enterprise Features
-- **Multi-Tenant Architecture:** Support for multiple organizations
+- **Multi-Tenant Architecture:** Support for multiple organizations and sub-accounts
 - **Advanced Permissions:** Fine-grained permission and policy management
-- **Compliance Framework:** SOC 2, GDPR, and industry compliance tools
-- **Audit & Governance:** Advanced audit trails and governance frameworks
+- **Compliance Framework:** SOC 2, GDPR, and industry-specific compliance tools
+- **White Label:** Customizable branding for enterprise clients
+- **SSO Integration:** Additional enterprise SSO providers (Azure AD, Okta, etc.)
+
+#### Collaboration Enhancements
+- **Video Conferencing:** Built-in video calls (currently using external Zoom integration)
+- **Screen Sharing:** Direct screen sharing for project reviews
+- **Activity Feeds:** Real-time project activity streams and updates
+- **Collaborative Editing:** Real-time document collaboration features
 
 ### 🔄 Recent Improvements & Updates
 
